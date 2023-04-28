@@ -5,8 +5,6 @@ import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "./IStakeable.sol";
 import "./IUnderlyingStakeable.sol";
 
-import "hardhat/console.sol";
-
 contract StakeManager {
     using SafeERC20 for IERC20;
 
@@ -192,7 +190,6 @@ contract StakeManager {
         uint40 stakeId
     ) internal returns(uint96 delta) {
         if (staker != stakeIdToOwner[stakeId]) {
-            console.log("checking in stake end for");
             revert StakeNotOwned(staker, stakeIdToOwner[stakeId]);
         }
         // calculate the balance before
