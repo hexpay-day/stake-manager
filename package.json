@@ -23,7 +23,9 @@
   },
   "dependencies": {
     "@openzeppelin/contracts": "^4.8.3",
+    "@types/debug": "^4.1.7",
     "@types/yargs": "^17.0.24",
+    "debug": "^4.3.4",
     "dotenv": "^16.0.3",
     "hardhat-gas-reporter": "git+https://github.com/3commascapital/hardhat-gas-reporter.git#with-build",
     "hardhat-tracer": "^2.2.2",

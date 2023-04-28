@@ -1,10 +1,38 @@
 import { impersonateAccount, loadFixture, stopImpersonatingAccount, time } from "@nomicfoundation/hardhat-network-helpers"
-import { expect } from "chai"
+import * as Chai from "chai"
 import * as hre from "hardhat"
 import * as ethers from 'ethers'
 import { HEX } from "../artifacts/types/contracts/reference/Hex.sol"
 import * as withArgs from '@nomicfoundation/hardhat-chai-matchers/withArgs'
 import { days } from "@nomicfoundation/hardhat-network-helpers/dist/src/helpers/time/duration"
+const expect = Chai.expect
+
+Chai.Assertion.addMethod('printGasUsage', function (this: any) {
+  let subject = this._obj
+  if (typeof subject === "function") {
+    subject = subject()
+  }
+  const target: ethers.providers.TransactionResponse | Promise<ethers.providers.TransactionResponse> = subject
+  const printGasUsed = async (
+    [tx]:
+    [ethers.providers.TransactionResponse],
+  ) => {
+    const prev = hre.tracer.gasCost
+    hre.tracer.gasCost = true
+    await hre.run('trace', {
+      hash: tx.hash,
+    })
+    hre.tracer.gasCost = prev
+  }
+  const derivedPromise = Promise.all([
+    target,
+  ])
+    .then(printGasUsed)
+
+  this.then = derivedPromise.then.bind(derivedPromise)
+  this.catch = derivedPromise.catch.bind(derivedPromise)
+  return this
+})
 
 describe("StakeEnder", function () {
   const hexAddress = hre.ethers.utils.getAddress('0x2b591e99afe9f32eaa6214f7b7629768c40eeb39')
@@ -115,7 +143,7 @@ describe("StakeEnder", function () {
       await expect(x.stakeEnder.connect(signer1).depositToken(x.oneMillion))
         .to.emit(x.hex, 'Transfer')
         .withArgs(signer1.address, x.stakeEnder.address, x.oneMillion)
-      let stakeId!: number;
+      let stakeId!: number
       await expect(x.stakeEnder.connect(signer1).stakeStart(x.oneMillion, 10))
         .to.emit(x.hex, 'Transfer')
         .withArgs(x.stakeEnder.address, hre.ethers.constants.AddressZero, x.oneMillion)
@@ -146,7 +174,7 @@ describe("StakeEnder", function () {
       const x = await loadFixture(deployFixture)
       const [signer1, signer2, signer3, signer4] = x.signers
       // const signerStakes = 2
-      // let signer1StakeId1!: number;
+      // let signer1StakeId1!: number
       await x.stakeEnder.connect(signer1).depositToken(x.oneMillion)
       await x.stakeEnder.connect(signer2).depositToken(x.oneMillion)
       await x.stakeEnder.connect(signer3).depositToken(x.oneMillion)
@@ -161,16 +189,16 @@ describe("StakeEnder", function () {
         .eventually.to.equal(signer1.address)
       await expect(x.stakeEnder.stakeIdToOwner(x.nextStakeId + 1n))
         .eventually.to.equal(signer1.address)
-      await time.setNextBlockTimestamp(days(5) + await time.latest())
       await expect(x.stakeEnder.connect(signer2).multicall([
-        x.stakeEnder.interface.encodeFunctionData('stakeStart', [x.oneMillion / 2n, 5]),
-        x.stakeEnder.interface.encodeFunctionData('stakeStart', [x.oneMillion / 2n, 15]),
+        x.stakeEnder.interface.encodeFunctionData('stakeStart', [x.oneMillion / 2n, 10]),
+        x.stakeEnder.interface.encodeFunctionData('stakeStart', [x.oneMillion / 2n, 20]),
       ], false))
         .to.emit(x.hex, 'StakeStart')
         .withArgs(withArgs.anyValue, x.stakeEnder.address, x.nextStakeId + 2n)
         .to.emit(x.hex, 'StakeStart')
         .withArgs(withArgs.anyValue, x.stakeEnder.address, x.nextStakeId + 3n)
-      await time.setNextBlockTimestamp(days(6) + await time.latest())
+      await time.setNextBlockTimestamp(days(11) + await time.latest())
+      // await time.setNextBlockTimestamp(days(5) + await time.latest())
       const greaterThan0 = (value: ethers.BigNumber) => value.gt(0)
       await expect(x.stakeEnder.connect(signer4).multicall([
         x.stakeEnder.interface.encodeFunctionData('stakeEnder', [2, x.nextStakeId + 2n, false]),
@@ -194,6 +222,7 @@ describe("StakeEnder", function () {
         .withArgs(x.stakeEnder.address, signer1.address, greaterThan0)
         .to.emit(x.hex, 'Transfer')
         .withArgs(x.stakeEnder.address, signer2.address, greaterThan0)
+        .printGasUsage()
     })
   })
 })
