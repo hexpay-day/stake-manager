@@ -125,6 +125,13 @@ contract StakeManager {
     function _currentDay(address targetAddress) internal view returns(uint256) {
         return IStakeable(targetAddress).currentDay();
     }
+    /**
+     * chesk to see if a stake index and id combination are endable
+     * @param stakeIndex the stake index to attempt to end
+     * @param stakeId the stake id to end
+     * @notice if the stake id at the provided stake index does not match the
+     * provided stake id the function will fail with StakeIdMismatch
+     */
     function _stakeDateIsEndable(
         uint216 stakeIndex,
         uint40 stakeId
@@ -136,6 +143,9 @@ contract StakeManager {
         }
         return (stake.lockedDay + stake.stakedDays) <= _currentDay(_target);
     }
+    /**
+     * gets unattributed tokens floating in the contract
+     */
     function _getUnattributed() view internal returns(uint256) {
         return IERC20(target).balanceOf(address(this)) - tokensAttributed;
     }
@@ -143,7 +153,11 @@ contract StakeManager {
     function _depositTokenFrom(address staker, uint96 amount) internal {
         IERC20(target).transferFrom(staker, address(this), amount);
     }
-    /** transfers a token to a recipient */
+    /**
+     * transfers tokens to a recipient
+     * @param to where to send the tokens
+     * @param amount the number of tokens to send
+     */
     function _withdrawTokenTo(address to, uint96 amount) internal {
         IERC20(target).transfer(to, amount);
     }
@@ -155,7 +169,7 @@ contract StakeManager {
      */
     function _stakeStartFor(
         address staker,
-        uint256 amount,
+        uint96 amount,
         uint256 newStakedDays
     ) internal returns(uint256) {
         // get future index of stake
@@ -247,29 +261,28 @@ contract StakeManager {
         uint160 delta
     ) internal {
         Settings memory settings = stakeIdToSettings[stakeId];
-        uint144 d = uint144(delta);
-        uint256 tip = _computeMagnitude(settings.tipMethod, settings.tipMagnitude, d);
+        uint256 d = uint144(delta);
+        uint256 tip = _computeMagnitude(settings.tipMethod, settings.tipMagnitude, uint144(d));
         if (tip > 0) {
             // because we do not set a var for you to collect unattributed tokens
             // it must be done at the end
-            d -= uint144(tip);
+            d -= tip;
         }
         address staker = stakeIdToOwner[stakeId];
         if (settings.withdrawableMethod > 0) {
-            uint96 toWithdraw = uint96(_computeMagnitude(settings.withdrawableMethod, settings.withdrawableMagnitude, d));
+            uint96 toWithdraw = uint96(_computeMagnitude(settings.withdrawableMethod, settings.withdrawableMagnitude, uint144(d)));
             // we have to keep this delta outside of the unchecked block
             // in case someone sets a magnitude that is too high
             d -= toWithdraw;
             _addToWithdrawable(staker, toWithdraw);
         }
         if (settings.newStakeDays > 0) {
-            uint256 nextStakeId = _stakeStartFor(staker, d, settings.newStakeDays);
+            uint256 nextStakeId = _stakeStartFor(staker, uint96(d), settings.newStakeDays);
             if (settings.copySettings == 1) {
                 // settings will be maintained for the new stake
                 _logSettingsUpdate(nextStakeId, settings);
             }
-        }
-        if (d > 0) {
+        } else if (d > 0) {
             _withdrawTokenTo(stakeIdToOwner[stakeId], uint96(d));
         }
         // this data should still be available in logs
