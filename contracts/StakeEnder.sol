@@ -19,7 +19,7 @@ contract StakeEnder is IStakeable, Multicall, StakeManager {
     function stakeStart(uint256 amount, uint256 newStakedDays) external {
         address staker = msg.sender;
         _deductWithdrawable(staker, uint96(amount));
-        _stakeStartFor(staker, amount, newStakedDays);
+        _stakeStartFor(staker, uint96(amount), newStakedDays);
     }
     /**
      * end your own stake and skips tip computing

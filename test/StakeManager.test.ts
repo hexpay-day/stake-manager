@@ -197,26 +197,39 @@ describe("StakeEnder", function () {
         .withArgs(withArgs.anyValue, x.stakeEnder.address, x.nextStakeId + 3n)
       await time.setNextBlockTimestamp(days(11) + await time.latest())
       // await time.setNextBlockTimestamp(days(5) + await time.latest())
-      const greaterThan0 = (value: ethers.BigNumber) => value.gt(0)
+      const greaterThan0 = (value: ethers.BigNumber) => value.toBigInt() > 0n
       await expect(x.stakeEnder.connect(signer4).multicall([
         x.stakeEnder.interface.encodeFunctionData('stakeEnder', [2, x.nextStakeId + 2n, false]),
         x.stakeEnder.interface.encodeFunctionData('stakeEnder', [0, x.nextStakeId, false]),
       ], false))
-        .to.changeTokenBalances(x.hex,
-          [x.stakeEnder.address, signer1.address, signer2.address],
-          [0, greaterThan0, greaterThan0],
-        )
-        .printGasUsage()
+        .to.emit(x.hex, 'Transfer')
+        .withArgs(hre.ethers.constants.AddressZero, x.stakeEnder.address, greaterThan0)
+        .to.emit(x.hex, 'Transfer')
+        .withArgs(x.stakeEnder.address, signer1.address, greaterThan0)
+        .to.emit(x.hex, 'Transfer')
+        .withArgs(x.stakeEnder.address, signer2.address, greaterThan0)
+      const limit = await x.stakeEnder.percentMagnitudeLimit()
+      // this setting provides almost 30k gas savings
+      await x.stakeEnder.connect(signer1).updateSettings(x.nextStakeId + 1n, {
+        tipMethod: 0,
+        tipMagnitude: 0,
+        withdrawableMethod: 3,
+        withdrawableMagnitude: limit,
+        newStakeDays: 0,
+        copySettings: 0,
+      })
       await time.setNextBlockTimestamp(days(10) + await time.latest())
       // this is going to be tricky
       await expect(x.stakeEnder.connect(signer4).multicall([
         x.stakeEnder.interface.encodeFunctionData('stakeEnder', [1, x.nextStakeId + 1n, false]),
         x.stakeEnder.interface.encodeFunctionData('stakeEnder', [0, x.nextStakeId + 3n, false]),
       ], false))
-        .to.changeTokenBalances(x.hex,
-          [x.stakeEnder.address, signer1.address, signer2.address],
-          [0, greaterThan0, greaterThan0],
-        )
+        .to.emit(x.hex, 'Transfer')
+        .withArgs(hre.ethers.constants.AddressZero, x.stakeEnder.address, greaterThan0)
+        .to.emit(x.hex, 'Transfer')
+        .withArgs(x.stakeEnder.address, signer2.address, greaterThan0)
+        // .not.to.emit(x.hex, 'Transfer')
+        // .withArgs(x.stakeEnder.address, signer1.address, greaterThan0)
         .printGasUsage()
     })
   })

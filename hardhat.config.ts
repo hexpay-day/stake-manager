@@ -94,8 +94,9 @@ const config: HardhatUserConfig = {
     ],
   },
   tracer: ((enabled) => ({
-    showAddresses: enabled,
-    defaultVerbosity: enabled ? 4 : 0,
+    opcodes: conf.args.tracerOpcodes.length ? conf.args.tracerOpcodes as string[] : undefined,
+    showAddresses: false,
+    defaultVerbosity: conf.args.tracerVerbosity,
     enableAllOpcodes: enabled,
     gasCost: enabled,
     enabled,
