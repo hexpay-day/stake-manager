@@ -8,7 +8,6 @@ import * as fs from 'fs'
 import * as path from 'path'
 import "@nomicfoundation/hardhat-toolbox";
 import 'hardhat-tracer'
-import 'hardhat-gas-trackooor'
 import 'hardhat-gas-reporter'
 import 'hardhat-dependency-compiler'
 import * as ethers from "ethers";
