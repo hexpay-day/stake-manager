@@ -173,8 +173,6 @@ describe("StakeEnder", function () {
     it('multiple can be ended in the same transaction by anyone', async () => {
       const x = await loadFixture(deployFixture)
       const [signer1, signer2, signer3, signer4] = x.signers
-      // const signerStakes = 2
-      // let signer1StakeId1!: number
       await x.stakeEnder.connect(signer1).depositToken(x.oneMillion)
       await x.stakeEnder.connect(signer2).depositToken(x.oneMillion)
       await x.stakeEnder.connect(signer3).depositToken(x.oneMillion)
