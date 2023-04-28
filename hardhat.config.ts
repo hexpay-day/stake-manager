@@ -1,9 +1,17 @@
-import { HardhatUserConfig } from "hardhat/config";
+import type { HardhatUserConfig } from "hardhat/config";
+import type {
+  Artifact,
+  HardhatNetworkUserConfig,
+  NetworkUserConfig,
+} from "hardhat/types";
+import * as fs from 'fs'
+import * as path from 'path'
 import "@nomicfoundation/hardhat-toolbox";
-import { HardhatNetworkUserConfig, NetworkUserConfig } from "hardhat/types";
 import 'hardhat-tracer'
+import 'hardhat-gas-trackooor'
 import 'hardhat-gas-reporter'
 import 'hardhat-dependency-compiler'
+import * as ethers from "ethers";
 
 import * as conf from './src/config'
 
@@ -43,6 +51,12 @@ const settings = {
   },
 }
 
+let hexArtifact = {} as unknown as Artifact;
+try {
+  const hexArtifactBuffer = fs.readFileSync(path.join(__dirname, 'artifacts', 'contracts', 'reference', 'Hex.sol', 'HEX.json'))
+  hexArtifact = JSON.parse(hexArtifactBuffer.toString())
+} catch (err) {}
+
 const config: HardhatUserConfig = {
   solidity: {
     compilers: [{
@@ -67,6 +81,13 @@ const config: HardhatUserConfig = {
     enabled: true,
     gasPrice: 100,
     coinmarketcap: conf.args.coinmarketcap,
+    showMethodSig: true,
+    remoteContracts: [{
+      abi: hexArtifact.abi,
+      name: 'HEX',
+      address: ethers.utils.getAddress('0x2b591e99afe9f32eaa6214f7b7629768c40eeb39'),
+      bytecode: hexArtifact.bytecode,
+    }],
   },
   dependencyCompiler: {
     paths: [
@@ -74,10 +95,10 @@ const config: HardhatUserConfig = {
     ],
   },
   tracer: ((enabled) => ({
-    showAddresses: !enabled,
+    showAddresses: enabled,
     defaultVerbosity: enabled ? 4 : 0,
-    enableAllOpcodes: !enabled,
-    gasCost: !enabled,
+    enableAllOpcodes: enabled,
+    gasCost: enabled,
     enabled,
   }))(false),
 };
