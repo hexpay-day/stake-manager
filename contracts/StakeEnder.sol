@@ -28,7 +28,7 @@ contract StakeEnder is IStakeable, Multicall, StakeManager {
      * @notice this is not payable to match the underlying contract
      */
     function stakeEnd(uint256 stakeIndex, uint40 stakeId) external {
-        _stakeEndFor(msg.sender, uint56(stakeIndex), stakeId);
+        _stakeEnder(uint56(stakeIndex), stakeId);
     }
     /**
      * gets stake store for a provided staker and index

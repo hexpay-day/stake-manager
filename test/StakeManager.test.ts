@@ -141,7 +141,7 @@ describe("StakeEnder", function () {
         .withArgs(withArgs.anyValue, x.stakeEnder.address, x.nextStakeId + 1n)
     })
   })
-  describe('stakeEndFor', () => {
+  describe('stakeEnder', () => {
     it('multiple can be ended in the same transaction by anyone', async () => {
       const x = await loadFixture(deployFixture)
       const [signer1, signer2, signer3, signer4] = x.signers
@@ -173,8 +173,8 @@ describe("StakeEnder", function () {
       await time.setNextBlockTimestamp(days(6) + await time.latest())
       const greaterThan0 = (value: ethers.BigNumber) => value.gt(0)
       await expect(x.stakeEnder.connect(signer4).multicall([
-        x.stakeEnder.interface.encodeFunctionData('stakeEndFor', [signer2.address, 2, x.nextStakeId + 2n, false]),
-        x.stakeEnder.interface.encodeFunctionData('stakeEndFor', [signer1.address, 0, x.nextStakeId, false]),
+        x.stakeEnder.interface.encodeFunctionData('stakeEnder', [2, x.nextStakeId + 2n, false]),
+        x.stakeEnder.interface.encodeFunctionData('stakeEnder', [0, x.nextStakeId, false]),
       ], false))
         .to.emit(x.hex, 'Transfer')
         .withArgs(hre.ethers.constants.AddressZero, x.stakeEnder.address, greaterThan0)
@@ -185,8 +185,8 @@ describe("StakeEnder", function () {
       await time.setNextBlockTimestamp(days(10) + await time.latest())
       // this is going to be tricky
       await expect(x.stakeEnder.connect(signer4).multicall([
-        x.stakeEnder.interface.encodeFunctionData('stakeEndFor', [signer1.address, 1, x.nextStakeId + 1n, false]),
-        x.stakeEnder.interface.encodeFunctionData('stakeEndFor', [signer2.address, 0, x.nextStakeId + 3n, false]),
+        x.stakeEnder.interface.encodeFunctionData('stakeEnder', [1, x.nextStakeId + 1n, false]),
+        x.stakeEnder.interface.encodeFunctionData('stakeEnder', [0, x.nextStakeId + 3n, false]),
       ], false))
         .to.emit(x.hex, 'Transfer')
         .withArgs(hre.ethers.constants.AddressZero, x.stakeEnder.address, greaterThan0)
