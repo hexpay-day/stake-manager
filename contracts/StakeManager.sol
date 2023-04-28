@@ -75,7 +75,7 @@ contract StakeManager {
     /**
      * @notice the owner of this stake has given consent for this stake to be ended early
      */
-    mapping(uint256 => bool) public stakeIdAllowsEarlyEnd;
+    mapping(uint256 => bool) public stakeIdConsentEarlyEnd;
     /**
      * @notice settings of stakes indexed by the stake id
      */
@@ -423,7 +423,7 @@ contract StakeManager {
             if (skipEnded) {
                 return false;
             }
-            if (!stakeIdAllowsEarlyEnd[stakeId]) {
+            if (!stakeIdConsentEarlyEnd[stakeId]) {
                 address _target = target;
                 IStakeable.StakeStore memory stake = _getStake(_target, uint96(stakeIndex));
                 revert StakeNotEndable(uint128(_currentDay(_target)), stake.lockedDay + stake.stakedDays);
@@ -436,8 +436,8 @@ contract StakeManager {
         uint256 len = stakeEnds.length;
         do {
             bytes32 stakeEnd = stakeEnds[i];
-            uint216 stakeIndex = uint216(uint256(stakeEnd) >> 48);
-            uint40 stakeId = uint40(uint256(stakeEnd) >> 8);
+            uint216 stakeIndex = uint216(uint256(stakeEnd) >> 40);
+            uint40 stakeId = uint40(uint256(stakeEnd));
             if (_isStakeEndable(uint208(stakeIndex), stakeId, true)) {
                 _stakeEnder(stakeIndex, stakeId);
             }
@@ -456,7 +456,7 @@ contract StakeManager {
         bool state
     ) internal {
         if (stakeIdToOwner[stakeId] == staker) {
-            stakeIdAllowsEarlyEnd[stakeId] = state;
+            stakeIdConsentEarlyEnd[stakeId] = state;
             emit UpdateConsentEarlyEnd(stakeId);
         }
     }

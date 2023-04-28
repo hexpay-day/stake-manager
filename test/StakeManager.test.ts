@@ -202,24 +202,21 @@ describe("StakeEnder", function () {
         x.stakeEnder.interface.encodeFunctionData('stakeEnder', [2, x.nextStakeId + 2n, false]),
         x.stakeEnder.interface.encodeFunctionData('stakeEnder', [0, x.nextStakeId, false]),
       ], false))
-        .to.emit(x.hex, 'Transfer')
-        .withArgs(hre.ethers.constants.AddressZero, x.stakeEnder.address, greaterThan0)
-        .to.emit(x.hex, 'Transfer')
-        .withArgs(x.stakeEnder.address, signer1.address, greaterThan0)
-        .to.emit(x.hex, 'Transfer')
-        .withArgs(x.stakeEnder.address, signer2.address, greaterThan0)
+        .to.changeTokenBalances(x.hex,
+          [x.stakeEnder.address, signer1.address, signer2.address],
+          [0, greaterThan0, greaterThan0],
+        )
+        .printGasUsage()
       await time.setNextBlockTimestamp(days(10) + await time.latest())
       // this is going to be tricky
       await expect(x.stakeEnder.connect(signer4).multicall([
         x.stakeEnder.interface.encodeFunctionData('stakeEnder', [1, x.nextStakeId + 1n, false]),
         x.stakeEnder.interface.encodeFunctionData('stakeEnder', [0, x.nextStakeId + 3n, false]),
       ], false))
-        .to.emit(x.hex, 'Transfer')
-        .withArgs(hre.ethers.constants.AddressZero, x.stakeEnder.address, greaterThan0)
-        .to.emit(x.hex, 'Transfer')
-        .withArgs(x.stakeEnder.address, signer1.address, greaterThan0)
-        .to.emit(x.hex, 'Transfer')
-        .withArgs(x.stakeEnder.address, signer2.address, greaterThan0)
+        .to.changeTokenBalances(x.hex,
+          [x.stakeEnder.address, signer1.address, signer2.address],
+          [0, greaterThan0, greaterThan0],
+        )
         .printGasUsage()
     })
   })
