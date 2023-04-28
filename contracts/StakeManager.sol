@@ -91,8 +91,12 @@ contract StakeManager {
     constructor(address targetAddress) {
         target = targetAddress;
     }
+    /**
+     * adds a balance to the provided staker of the magnitude given in amount
+     * @param staker the staker to add a withdrawable balance to
+     * @param amount the amount to add to the staker's withdrawable balance as well as the attributed tokens
+     */
     function _addToWithdrawable(address staker, uint96 amount) internal {
-        // the reason we can do unchecked here is because we do not have to
         unchecked {
             withdrawableBalanceOf[staker] += amount;
             tokensAttributed += amount;
