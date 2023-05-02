@@ -1,31 +1,14 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.17;
 
-import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import "./IStakeable.sol";
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "./IsolatedStakeManager.sol";
 import "./IUnderlyingStakeable.sol";
+import "./IsolatedStakeManager.sol";
+import "./Stakeable.sol";
+import "./IStakeable.sol";
 
-contract StakeManager {
-    using SafeERC20 for IERC20;
-
-    struct Settings {
-        // 1 word;
-        uint8 tipMethod;
-        uint104 tipMagnitude;
-        // used as a percentage
-        uint8 withdrawableMethod;
-        uint104 withdrawableMagnitude;
-        // the rest goes into a new stake if the number of days are set
-        uint16 newStakeDays;
-        uint16 copySettings; // doesn't need 16bits, but better to have 256 total
-    }
-    /**
-     * an event to signal that settings to direct funds
-     * at the end of a stake have been updated
-     * @param stakeId the stake id that was updated
-     * @param settings the newly updated settings
-     */
-    event UpdatedSettings(uint256 indexed stakeId, Settings indexed settings);
+contract StakeManager is Stakeable {
     /**
      * signals to enders that the early end state has changed
      * @param stakeId the stake id whos allow early end state has changed
@@ -34,6 +17,7 @@ contract StakeManager {
      * allowing, then disallowing early ending may cause enders to ignore stakes
      */
     event UpdateConsentEarlyEnd(uint256 indexed stakeId);
+    // event StakeStart(address indexed staker, uint256 indexed stakeId);
     /**
      * @notice this event is thrown when the stake id provided
      * does not match what is expected given other contextual information
@@ -41,33 +25,28 @@ contract StakeManager {
      */
     error StakeIdMismatch(uint128 provided, uint128 expected);
     /**
-     * @notice this error is thrown when the stake in question
-     * is not owned by the expected address
-     */
-    error StakeNotOwned(address provided, address expected);
-    /**
      * @notice this error is thrown when the stake being ended is not yet ended
      */
-    error StakeNotEndable(uint128 provided, uint128 expected);
+    error StakeNotEndable(uint96 provided, uint160 expected);
     /**
      * @notice error is thrown when there is not enough funding to do the required operation
      */
     error NotEnoughFunding(uint128 provided, uint128 expected);
-
     /**
      * @notice this var is re-defined here to keep the computeMagnitude method pure
      * at the cost of one extra byteword during deployment
      */
-    uint256 public constant percentMagnitudeLimit = 1_000_000_000_000_000;
-    /**
-     * @notice the underlying, target contract to interact with
-     */
-    address public immutable target;
+    uint256 public constant percentMagnitudeLimit = type(uint64).max;
     /**
      * @notice a global denoting the number of tokens attributed to addresses
      * @dev this value provides a useful "before" value whenever tokens are moving
      */
     uint256 public tokensAttributed;
+    /**
+     * @notice a mapping of a key that contains a modifier and the owning address
+     * pointing to the address of the contract created by the stake manager
+     */
+    mapping(address => address) public isolatedStakeManagers;
     /**
      * @notice the owner of a stake indexed by the stake id
      */
@@ -77,81 +56,33 @@ contract StakeManager {
      */
     mapping(uint256 => bool) public stakeIdConsentEarlyEnd;
     /**
-     * @notice settings of stakes indexed by the stake id
-     */
-    mapping(uint256 => Settings) public stakeIdToSettings;
-    /**
-     * @notice an invariant that tracks how much underlying token is owned by a particular address
-     */
-    mapping(address => uint256) public withdrawableBalanceOf;
-    /**
      * creates the internal stake ender contract
-     * @param targetAddress the targeted contract of the underlying asset
      */
-    constructor(address targetAddress) {
-        target = targetAddress;
-    }
-    /**
-     * adds a balance to the provided staker of the magnitude given in amount
-     * @param staker the staker to add a withdrawable balance to
-     * @param amount the amount to add to the staker's withdrawable balance as well as the attributed tokens
-     */
-    function _addToWithdrawable(address staker, uint96 amount) internal {
-        unchecked {
-            withdrawableBalanceOf[staker] += amount;
-            tokensAttributed += amount;
-        }
-    }
-    /**
-     * deduce an amount from the provided account
-     * @param account the account to deduct funds from
-     * @param amount the amount of funds to deduct
-     */
-    function _deductWithdrawable(address account, uint96 amount) internal returns(uint256) {
-        uint256 withdrawable = withdrawableBalanceOf[account];
-        if (amount == 0) {
-            amount = uint96(withdrawable);
-        }
-        if (withdrawable < amount) {
-            revert NotEnoughFunding(uint128(withdrawable), amount);
-        }
-        withdrawableBalanceOf[account] = withdrawable - amount;
-        unchecked {
-            tokensAttributed -= amount;
-        }
-        return amount;
-    }
+    constructor() {}
     /** checks the current day on the provided target */
-    function _currentDay(address targetAddress) internal view returns(uint256) {
-        return IStakeable(targetAddress).currentDay();
+    function _currentDay() internal view returns(uint256) {
+        return IStakeable(0x2b591e99afE9f32eAA6214f7B7629768c40Eeb39).currentDay();
     }
     /**
      * chesk to see if a stake index and id combination are endable
-     * @param stakeIndex the stake index to attempt to end
-     * @param stakeId the stake id to end
+     * @param stake the stake to attempt to end
      * @notice if the stake id at the provided stake index does not match the
      * provided stake id the function will fail with StakeIdMismatch
      */
-    function _stakeDateIsEndable(
-        uint216 stakeIndex,
-        uint40 stakeId
+    function _stakeIsEnded(
+        IStakeable.StakeStore memory stake
     ) internal view returns(bool) {
-        address _target = target;
-        IStakeable.StakeStore memory stake = _getStake(_target, uint96(stakeIndex));
-        if (stake.stakeId != stakeId) {
-            revert StakeIdMismatch(stake.stakeId, uint128(stakeId));
-        }
-        return (stake.lockedDay + stake.stakedDays) <= _currentDay(_target);
+        return (stake.lockedDay + stake.stakedDays) >= _currentDay();
     }
     /**
      * gets unattributed tokens floating in the contract
      */
     function _getUnattributed() view internal returns(uint256) {
-        return IERC20(target).balanceOf(address(this)) - tokensAttributed;
+        return IERC20(0x2b591e99afE9f32eAA6214f7B7629768c40Eeb39).balanceOf(address(this)) - tokensAttributed;
     }
     /** deposits tokens from a staker and marks them for that staker */
     function _depositTokenFrom(address staker, uint96 amount) internal {
-        IERC20(target).transferFrom(staker, address(this), amount);
+        IERC20(0x2b591e99afE9f32eAA6214f7B7629768c40Eeb39).transferFrom(staker, address(this), amount);
     }
     /**
      * transfers tokens to a recipient
@@ -159,193 +90,90 @@ contract StakeManager {
      * @param amount the number of tokens to send
      */
     function _withdrawTokenTo(address to, uint96 amount) internal {
-        IERC20(target).transfer(to, amount);
+        IERC20(0x2b591e99afE9f32eAA6214f7B7629768c40Eeb39).transfer(to, amount);
     }
     /**
      * start a stake for the staker given the amount and number of days
-     * @param staker the staker to start a stake for
+     * @param stakerConfig the config for starting a stake
+     * @param staker the underlying owner of the stake
      * @param amount the amount to add to the stake
      * @param newStakedDays the number of days that the stake should run
      */
     function _stakeStartFor(
-        address staker,
-        uint96 amount,
-        uint256 newStakedDays
+        uint96 stakerConfig, address staker,
+        uint96 amount, uint160 newStakedDays
     ) internal returns(uint256) {
         // get future index of stake
-        address _target = target;
-        uint256 index = IUnderlyingStakeable(_target).stakeCount(address(this));
+        address _target = 0x2b591e99afE9f32eAA6214f7B7629768c40Eeb39;
+        address custodian = stakerConfig == 0 ? isolatedStakeManagers[staker] : address(this);
+        address step1 = stakerConfig == 0 ? custodian : _target;
+        uint256 index = IUnderlyingStakeable(_target).stakeCount(custodian);
         // start the stake
-        IERC20(_target).approve(_target, amount);
-        IStakeable(_target).stakeStart(amount, newStakedDays);
+        if (stakerConfig == 0) {
+            IERC20(_target).approve(step1, amount);
+        }
+        IStakeable(step1).stakeStart(amount, newStakedDays);
         // get the stake id
-        IStakeable.StakeStore memory stake = _getStake(_target, uint96(index));
+        IStakeable.StakeStore memory stake = _getStake(custodian, uint96(index));
         // attribute stake to the staker
-        stakeIdToOwner[stake.stakeId] = staker;
-        return stake.stakeId;
+        uint40 stakeId = stake.stakeId;
+        stakeIdToOwner[stakeId] = staker;
+        // emit StakeStart(staker, stakeId);
+        return stakeId;
     }
     /**
      * gets the stake store at the provided index
-     * @param targetAddress the contract to target
      * @param index the index of the stake to get
      */
-    function _getStake(address targetAddress, uint96 index) internal view returns(IStakeable.StakeStore memory) {
-    return IStakeable(targetAddress).stakeLists(address(this), index);
+    function _getStake(address custodian, uint96 index) internal view returns(IStakeable.StakeStore memory) {
+        return IStakeable(0x2b591e99afE9f32eAA6214f7B7629768c40Eeb39).stakeLists(custodian, index);
     }
     /**
      * ends a stake for someone else
      * @param stakeIndex the stake index on the underlying contract to end
      * @param stakeId the stake id on the underlying contract to end
      */
-    function _stakeEnder(
-        uint216 stakeIndex,
-        uint40 stakeId
+    function _stakeEnd(
+        uint8 stakerConfig, address owner, uint56 stakeIndex, uint40 stakeId
     ) internal returns(uint96 delta) {
         // calculate the balance before
-        address _target = target;
+        address _target = 0x2b591e99afE9f32eAA6214f7B7629768c40Eeb39;
         // cannot use tokens attributed here because of tipping
         uint256 balanceBefore = IERC20(_target).balanceOf(address(this));
-        // end the stake - attributed to contract
-        IStakeable(_target).stakeEnd(stakeIndex, stakeId);
+        // end the stake - attributed to contract or through the managed stake
+        IStakeable(stakerConfig == 0 ? owner : _target).stakeEnd(stakeIndex, stakeId);
         // because the delta is only available in the logs
         // we need to calculate the delta to use it
         delta = uint96(IERC20(_target).balanceOf(address(this)) - balanceBefore);
-        // directs funds from the end stake to their final resting place
-        _directFunds(stakeId, delta);
+        delete stakeIdToOwner[stakeId];
     }
     /**
      * compute a useful value from 2 inputs
      * @param method the method to use to compute a result
-     * @param y a primary magnitude to use - a constant function
+     * @param y a primary magnitude to use - a constant
      * @param x a secondary magnitude to use - generally the amount of the end stake
      */
     function _computeMagnitude(
-        uint8 method,
-        uint104 x,
-        uint144 y
-    ) internal pure returns(uint256 tip) {
-        if (method == 0) {
-            return 0;
-        } else if (method == 1) {
-            return y;
-        } else if (method == 2) {
-            return x;
-        } else if (method == 3) {
-            return (uint256(x) * y) / 1_000_000_000_000_000;
-        }
-    }
-    /**
-     * update the settings for a stake id
-     * @param stakeId the stake id to update settings for
-     * @param settings an object that holds settings values
-     * to inform end stakers how to handle the stake
-     */
-    function _logSettingsUpdate(
-        uint256 stakeId,
-        Settings memory settings
-    ) internal {
-        stakeIdToSettings[stakeId] = settings;
-        emit UpdatedSettings(stakeId, settings);
-    }
-    /**
-     * directs available funds to the next step
-     * @param stakeId the stake id to end stake
-     * @param delta the magnitude of funds allowed to direct by this method
-     * @notice the tip for the end staker is not assigned to anything
-     * meaning that it must be collected at the end of the multicall
-     * this is done to reduce sloads
-     * if you do not collect the unattributed tokens, anyone will be able to
-     */
-    function _directFunds(
-        uint96 stakeId,
-        uint160 delta
-    ) internal {
-        Settings memory settings = stakeIdToSettings[stakeId];
-        uint256 d = uint144(delta);
-        uint256 tip = _computeMagnitude(settings.tipMethod, settings.tipMagnitude, uint144(d));
-        if (tip > 0) {
-            // because we do not set a var for you to collect unattributed tokens
-            // it must be done at the end
-            d -= tip;
-        }
-        address staker = stakeIdToOwner[stakeId];
-        if (settings.withdrawableMethod > 0) {
-            uint96 toWithdraw = uint96(_computeMagnitude(settings.withdrawableMethod, settings.withdrawableMagnitude, uint144(d)));
-            // we have to keep this delta outside of the unchecked block
-            // in case someone sets a magnitude that is too high
-            d -= toWithdraw;
-            _addToWithdrawable(staker, toWithdraw);
-        }
-        if (settings.newStakeDays > 0) {
-            uint256 nextStakeId = _stakeStartFor(staker, uint96(d), settings.newStakeDays);
-            if (settings.copySettings == 1) {
-                // settings will be maintained for the new stake
-                _logSettingsUpdate(nextStakeId, settings);
+        uint64 method, uint96 x, uint96 y,
+        IStakeable.StakeStore memory stake
+    ) internal pure returns(uint256) {
+        if (method < 4) {
+            if (method < 2) {
+                if (method == 0) return 0; // 0
+                return y; // 1
             }
-        } else if (d > 0) {
-            _withdrawTokenTo(stakeIdToOwner[stakeId], uint96(d));
+            if (method == 2) return x; // 2
+            // % of total
+            return (uint256(x) * y) / type(uint64).max; // 3
+        } else if (method < 8) {
+            if (method < 6) {
+                // % of origination
+                if (method == 4) return (uint256(x) * stake.stakedHearts) / type(uint64).max; // 4
+                // % of yield
+                return uint256(x) * (y - stake.stakedHearts) / type(uint64).max; // 5
+            }
         }
-        // this data should still be available in logs
-        delete stakeIdToOwner[stakeId];
-        delete stakeIdToSettings[stakeId];
-    }
-    /**
-     * checks that the stake in the index matches the stake id
-     * @param stakeIndex the stake index of the stake
-     * @param stakeId the stake id expected
-     * @dev use this method to bail out of your transaction
-     * for example, if you are ending 3 stakes, and 1 of them is ended by someone else
-     */
-    function checkStakeEnded(uint216 stakeIndex, uint40 stakeId) external view {
-        IStakeable.StakeStore memory stake = _getStake(target, uint96(stakeIndex));
-        if (stake.stakeId != stakeId) {
-            revert StakeIdMismatch(stake.stakeId, stakeId);
-        }
-    }
-    /**
-     * transfer a given number of tokens to the contract to be used by the contract's methods
-     * @param amount the number of tokens to transfer to the contract
-     * @notice an extra layer of protection is provided by this method
-     * and can be refused by calling the dangerous version
-     */
-    function depositToken(uint96 amount) external payable {
-        // transfer token to contract
-        _depositTokenFrom(msg.sender, amount);
-        _addToWithdrawable(msg.sender, amount);
-    }
-    function depositTokenTo(address to, uint96 amount) external payable {
-        _depositTokenFrom(msg.sender, amount);
-        _addToWithdrawable(to, amount);
-    }
-    /**
-     * transfer a given number of tokens to the contract to be used by the contract's methods
-     * @param amount the number of tokens to transfer to the contract
-     * @notice this is the dangerous version of the deposit token method
-     * if you are using this method, you should be using it with the purpose
-     * of multicalling and disallowing failures (aka revert if any fail)
-     * if you do not, you are at risk of losing your funds to the next transaction
-     */
-    function depositTokenDangerous(uint256 amount) external payable {
-        _depositTokenFrom(msg.sender, uint96(amount));
-    }
-    /**
-     * transfer an amount of tokens currently attributed to the withdrawable balance of the sender
-     * @param to the to of the funds
-     * @param amount the amount that should be deducted from the sender's balance
-     */
-    function withdrawTokenTo(address to, uint96 amount) external payable {
-        _withdrawTokenTo(to, uint96(_deductWithdrawable(msg.sender, amount)));
-    }
-    /**
-     * updates settings under a stake id to the provided settings struct
-     * @param stakeId the stake id to update
-     * @param settings the settings to update the stake id to
-     */
-    function updateSettings(uint256 stakeId, Settings calldata settings) external payable {
-        if (stakeIdToOwner[stakeId] != msg.sender) {
-            revert StakeNotOwned(msg.sender, stakeIdToOwner[stakeId]);
-        }
-        _logSettingsUpdate(uint96(stakeId), settings);
+        return 0;
     }
     /**
      * gets the amount of unattributed tokens
@@ -361,40 +189,17 @@ contract StakeManager {
     function clamp(uint128 amount, uint128 max) external pure returns(uint256) {
         return _clamp(amount, max);
     }
+    /**
+     * clamp a given amount to the maximum amount
+     * use the maximum amount if no amount is requested
+     * @param amount the amount requested by another function
+     * @param max the limit that the value can be
+     */
     function _clamp(uint128 amount, uint128 max) internal pure returns(uint256) {
         if (amount == 0) {
             return max;
         }
         return amount > max ? max : amount;
-    }
-    /**
-     * collect unattributed tokens and send to recipient of choice
-     * @notice when 0 is passed, withdraw maximum available
-     * or in other words, all unattributed tokens
-     */
-    function collectUnattributed(
-        address to,
-        uint88 amount,
-        bool transferOut
-    ) external payable {
-        uint256 max = _getUnattributed();
-        uint256 withdrawable = _clamp(amount, uint128(max));
-        if (withdrawable > 0) {
-            if (transferOut) {
-                _withdrawTokenTo(to, uint96(withdrawable));
-            } else {
-                _addToWithdrawable(to, uint96(withdrawable));
-            }
-        }
-    }
-    /**
-     * computes a magnitude from the provided values
-     * @param stakeId the stake id to get settings for
-     * @param y the value to supply as a secondary magnitude
-     */
-    function computeEnderTip(uint112 stakeId, uint144 y) external view returns(uint256) {
-        Settings memory settings = stakeIdToSettings[stakeId];
-        return _computeMagnitude(settings.tipMethod, settings.tipMagnitude, y);
     }
     /**
      * compute a magnitude given an x and y
@@ -403,86 +208,82 @@ contract StakeManager {
      * @param y the second value as input
      */
     function computeMagnitude(
-        uint8 method,
-        uint104 x,
-        uint144 y
+        uint64 method, uint96 x, uint96 y,
+        IStakeable.StakeStore memory stake
     ) external pure returns(uint256) {
-        return _computeMagnitude(method, x, y);
+        return _computeMagnitude(method, x, y, stake);
     }
     /**
-     * end a stake for someone other than the sender of the transaction
-     * @param stakeIndex the stake index on the underlying contract to end
-     * @param stakeId the stake id on the underlying contract to end
-     * @param skipEnded skips the end stake if the stake has already been ended
+     * @param staker the underlying owner of the stake
      */
-    function stakeEnder(
-        uint208 stakeIndex,
-        uint40 stakeId,
-        bool skipEnded
-    ) external payable {
-        if (_isStakeEndable(stakeIndex, stakeId, skipEnded)) {
-            _stakeEnder(stakeIndex, stakeId);
+    function _getIsolatedStakeManager(address staker) internal returns(address existing) {
+        existing = isolatedStakeManagers[staker];
+        if (existing != address(0)) {
+            return existing;
         }
+        // this scopes up to 2 stake managers to a single address
+        // one that can only be ended by the staker one that can be ended by the stake manager
+        existing = address(new IsolatedStakeManager{salt: keccak256(abi.encode(staker))}());
+        isolatedStakeManagers[staker] = existing;
     }
-    function isStakeEndable(
-        uint208 stakeIndex,
-        uint40 stakeId,
-        bool skipEnded
-    ) external view returns(bool) {
-        return _isStakeEndable(stakeIndex, stakeId, skipEnded);
-    }
-    function _isStakeEndable(
-        uint208 stakeIndex,
-        uint40 stakeId,
-        bool skipEnded
-    ) internal view returns(bool) {
-        if (!_stakeDateIsEndable(stakeIndex, stakeId)) {
-            if (skipEnded) {
-                return false;
-            }
-            if (!stakeIdConsentEarlyEnd[stakeId]) {
-                address _target = target;
-                IStakeable.StakeStore memory stake = _getStake(_target, uint96(stakeIndex));
-                revert StakeNotEndable(uint128(_currentDay(_target)), stake.lockedDay + stake.stakedDays);
-            }
-        }
-        return true;
-    }
-    function stakeEnderMany(bytes32[] calldata stakeEnds) external payable {
-        uint256 i;
-        uint256 len = stakeEnds.length;
-        do {
-            bytes32 stakeEnd = stakeEnds[i];
-            uint216 stakeIndex = uint216(uint256(stakeEnd) >> 40);
-            uint40 stakeId = uint40(uint256(stakeEnd));
-            if (_isStakeEndable(uint208(stakeIndex), stakeId, true)) {
-                _stakeEnder(stakeIndex, stakeId);
-            }
-            ++i;
-        } while(i < len);
+    function getIsolatedStakeManager(address staker) external returns(address) {
+        return _getIsolatedStakeManager(staker);
     }
     /**
-     * signal to enders that early ending is or is not allowed
-     * @param staker the staker that gave consent to early end stake
-     * @param stakeId the stake id in question
-     * @param state the state to change the allow early end to
+     * starts a stake from the provided amount
+     * @param amount amount of tokens to stake
+     * @param newStakedDays the number of days for this new stake
+     * @dev this method interface matches the original underlying token contract
      */
-    function _consentEarlyEnd(
-        address staker,
-        uint88 stakeId,
-        bool state
+    function stakeStart(uint256 amount, uint256 newStakedDays) external override {
+        // ensures amount under/from sender is sufficient
+        _depositTokenFrom(msg.sender, uint96(amount));
+        _getIsolatedStakeManager(msg.sender); // ensure the contract exists first
+        _stakeStartFor(
+            0, msg.sender,
+            uint96(amount), uint160(newStakedDays)
+        );
+    }
+    /**
+     * end your own stake which is custodied by the stake manager. skips tip computing
+     * @param stakeIndex the index on the underlying contract to end stake
+     * @param stakeId the stake id from the underlying contract to end stake
+     * @notice this is not payable to match the underlying contract
+     * @notice this moves funds back to the sender to make behavior match underlying token
+     * @notice this method only checks that the sender owns the stake it does not care
+     * if it is managed in a created contract and externally endable by this contract (1)
+     * or requires that the staker send start and end methods (0)
+     */
+    function stakeEnd(uint256 stakeIndex, uint40 stakeId) external override {
+        _stakeEndByOwner(0, msg.sender, uint48(stakeIndex), stakeId);
+    }
+    /**
+     * end a stake that the sender owns as if they are interacting with
+     * the underlying contract
+     * @param stakerConfig where the stake is being custodied
+     * @param stakeIndex the index under which the stake is held
+     * @param stakeId the id of the stake
+     */
+    function managedStakeEnd(uint8 stakerConfig, uint48 stakeIndex, uint40 stakeId) external {
+        _stakeEndByOwner(stakerConfig, msg.sender, stakeIndex, stakeId);
+    }
+    /**
+     * end a stake given its owner
+     * @param stakerConfig where the stake is being custodied
+     * @param staker the staker that owns the stake
+     * @param stakeIndex the index under which the stake is held
+     * @param stakeId the id of the stake
+     * @notice that tokens are sent to the sending address as if one were
+     * interacting with the underlying contract
+     */
+    function _stakeEndByOwner(
+        uint8 stakerConfig, address staker, uint48 stakeIndex, uint40 stakeId
     ) internal {
-        if (stakeIdToOwner[stakeId] == staker) {
-            stakeIdConsentEarlyEnd[stakeId] = state;
-            emit UpdateConsentEarlyEnd(stakeId);
+        if (stakeIdToOwner[stakeId] != staker) {
+            revert StakeNotEndable(stakeId, uint160(staker));
         }
-    }
-    /**
-     * signal to enders that early ending is or is not allowed
-     * @param stakeId the stake id in question
-     * @param state the state of the early end flag
-     */
-    function consentEarlyEnd(uint248 stakeId, bool state) external payable {
-        _consentEarlyEnd(msg.sender, uint88(stakeId), state);
+        address custodian = stakerConfig == 0 ? isolatedStakeManagers[staker] : address(this);
+        uint96 amount = uint96(_stakeEnd(stakerConfig, custodian, stakeIndex, stakeId));
+        _withdrawTokenTo(staker, amount);
     }
 }

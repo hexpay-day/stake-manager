@@ -80,7 +80,7 @@ const config: HardhatUserConfig = {
     enabled: true,
     gasPrice: 100,
     coinmarketcap: conf.args.coinmarketcap,
-    showMethodSig: true,
+    // showMethodSig: true,
     remoteContracts: [{
       abi: hexArtifact.abi,
       name: 'HEX',

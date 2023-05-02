@@ -2,9 +2,11 @@ import { impersonateAccount, loadFixture, stopImpersonatingAccount, time } from 
 import * as Chai from "chai"
 import * as hre from "hardhat"
 import * as ethers from 'ethers'
+import _ from 'lodash'
 import { HEX } from "../artifacts/types/contracts/reference/Hex.sol"
 import * as withArgs from '@nomicfoundation/hardhat-chai-matchers/withArgs'
 import { days } from "@nomicfoundation/hardhat-network-helpers/dist/src/helpers/time/duration"
+import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers"
 const expect = Chai.expect
 
 Chai.Assertion.addMethod('printGasUsage', function (this: any) {
@@ -34,68 +36,57 @@ Chai.Assertion.addMethod('printGasUsage', function (this: any) {
   return this
 })
 
-describe("StakeEnder", function () {
-  const hexAddress = hre.ethers.utils.getAddress('0x2b591e99afe9f32eaa6214f7b7629768c40eeb39')
-  const deployFixture = async () => {
-    const StakeEnder = await hre.ethers.getContractFactory('StakeEnder')
-    const StakeManager = await hre.ethers.getContractFactory('StakeManager')
-    const stakeEnder = await StakeEnder.deploy(hexAddress)
-    await stakeEnder.deployed()
-    const signers = await hre.ethers.getSigners()
-    const pulsexSacrificeAddress = hre.ethers.utils.getAddress('0x075e72a5edf65f0a5f44699c7654c1a76941ddc8')
-    await impersonateAccount(pulsexSacrificeAddress)
-    const pulsexSacrificeSigner = await hre.ethers.getSigner(pulsexSacrificeAddress)
-    const hexArtifact = await hre.artifacts.readArtifact('HEX')
-    const hex = await hre.ethers.getContractAtFromArtifact(hexArtifact, hexAddress, pulsexSacrificeSigner) as HEX
-    // hre.tracer.printNext = true
-    const oneMillion = hre.ethers.utils.parseUnits('1000000', await hex.decimals()).toBigInt()
-    await Promise.all(signers.slice(0, 20).map(async (signer) => {
-      await Promise.all([
-        // allow infinite flow
-        hex.connect(signer)
-          .approve(stakeEnder.address, hre.ethers.constants.MaxUint256),
-        hex.transfer(signer.address, oneMillion),
-      ])
-    }))
-    await stopImpersonatingAccount(pulsexSacrificeAddress)
-    const [, , , , , , stakeIdBN] = await hex.globalInfo()
-    return {
-      nextStakeId: stakeIdBN.toBigInt() + 1n,
-      hex,
-      oneMillion,
-      signers,
-      stakeEnder,
-      StakeEnder,
-      StakeManager,
-    }
+const hexAddress = hre.ethers.utils.getAddress('0x2b591e99afe9f32eaa6214f7b7629768c40eeb39')
+const pulsexSacrificeAddress = hre.ethers.utils.getAddress('0x075e72a5edf65f0a5f44699c7654c1a76941ddc8')
+const deployFixture = async () => {
+  const StakeManager = await hre.ethers.getContractFactory('StakeManager')
+  const ConsentualStakeManager = await hre.ethers.getContractFactory('ConsentualStakeManager')
+  const stakeManager = await ConsentualStakeManager.deploy()
+  await stakeManager.deployed()
+  const signers = await hre.ethers.getSigners()
+  await impersonateAccount(pulsexSacrificeAddress)
+  const pulsexSacrificeSigner = await hre.ethers.getSigner(pulsexSacrificeAddress)
+  const hexArtifact = await hre.artifacts.readArtifact('HEX')
+  const hex = await hre.ethers.getContractAtFromArtifact(hexArtifact, hexAddress, pulsexSacrificeSigner) as HEX
+  // hre.tracer.printNext = true
+  const oneMillion = hre.ethers.utils.parseUnits('1000000', await hex.decimals()).toBigInt()
+  await Promise.all(signers.slice(0, 20).map(async (signer) => {
+    await Promise.all([
+      // allow infinite flow
+      hex.connect(signer)
+        .approve(stakeManager.address, hre.ethers.constants.MaxUint256),
+      hex.transfer(signer.address, oneMillion),
+    ])
+  }))
+  await stopImpersonatingAccount(pulsexSacrificeAddress)
+  const [, , , , , , stakeIdBN] = await hex.globalInfo()
+  return {
+    nextStakeId: stakeIdBN.toBigInt() + 1n,
+    hex,
+    oneMillion,
+    signers,
+    stakeManager,
+    StakeManager,
+    ConsentualStakeManager,
   }
-  // We define a fixture to reuse the same setup in every test.
-  // We use loadFixture to run this setup once, snapshot that state,
-  // and reset Hardhat Network to that snapshot in every test.
-  // async function deployOneYearLockFixture() {
-  //   const ONE_YEAR_IN_SECS = 365 * 24 * 60 * 60
-  //   const ONE_GWEI = 1_000_000_000
+}
 
-  //   const lockedAmount = ONE_GWEI
-  //   const unlockTime = (await time.latest()) + ONE_YEAR_IN_SECS
+const moveForwardDays = async (limit: number, signer: SignerWithAddress, x: Awaited<ReturnType<typeof deployFixture>>) => {
+  let i = 0;
+  do {
+    await time.setNextBlockTimestamp(days(1) + await time.latest())
+    await x.hex.connect(signer).stakeStart(hre.ethers.utils.parseUnits('1', 8), 1)
+    i += 1
+  } while(i < limit)
+}
 
-  //   // Contracts are deployed using the first signer/account by default
-  //   const [owner, otherAccount] = await ethers.getSigners()
-
-  //   const Lock = await ethers.getContractFactory("Lock")
-  //   const lock = await Lock.deploy(unlockTime, { value: lockedAmount })
-
-  //   return { lock, unlockTime, lockedAmount, owner, otherAccount }
-  // }
-
+describe("StakeEnder", function () {
   describe("deployment", function () {
-    it("should set the target address", async function () {
-      const x = await loadFixture(deployFixture)
-      await expect(x.stakeEnder.target()).eventually.to.equal(hexAddress)
-    })
     it('should have a percentMagnitudeLimit', async function() {
       const x = await loadFixture(deployFixture)
-      await expect(x.stakeEnder.percentMagnitudeLimit()).eventually.to.equal(1_000_000_000_000_000n)
+      await expect(x.stakeManager.percentMagnitudeLimit()).eventually.to.equal(
+        hre.ethers.BigNumber.from(2).pow(64).toBigInt() - 1n
+      )
     })
   })
 
@@ -103,133 +94,184 @@ describe("StakeEnder", function () {
     it("should not allow too much to be withdrawn", async function () {
       const x = await loadFixture(deployFixture)
       const [signer1, signer2, signer3] = x.signers
-      await expect(x.stakeEnder.connect(signer1).depositToken(x.oneMillion))
+      await expect(x.stakeManager.connect(signer1).depositToken(x.oneMillion))
         .to.emit(x.hex, 'Transfer')
-        .withArgs(signer1.address, x.stakeEnder.address, x.oneMillion)
-      await expect(x.stakeEnder.connect(signer2).depositToken(x.oneMillion))
+        .withArgs(signer1.address, x.stakeManager.address, x.oneMillion)
+      await expect(x.stakeManager.connect(signer2).depositToken(x.oneMillion))
         .to.emit(x.hex, 'Transfer')
-        .withArgs(signer2.address, x.stakeEnder.address, x.oneMillion)
-      await expect(x.hex.balanceOf(x.stakeEnder.address))
+        .withArgs(signer2.address, x.stakeManager.address, x.oneMillion)
+      await expect(x.hex.balanceOf(x.stakeManager.address))
         .eventually.to.equal(x.oneMillion * 2n)
-      await expect(x.stakeEnder.connect(signer3).withdrawTokenTo(signer1.address, 1))
+      await expect(x.stakeManager.connect(signer3).withdrawTokenTo(signer1.address, 1))
         .to.be.revertedWithCustomError(x.StakeManager, 'NotEnoughFunding')
-        .withArgs(0, 1)
-      await expect(x.stakeEnder.connect(signer2).withdrawTokenTo(signer1.address, 1n + x.oneMillion))
+        .withArgs(1, 0)
+      await expect(x.stakeManager.connect(signer2).withdrawTokenTo(signer1.address, 1n + x.oneMillion))
         .to.be.revertedWithCustomError(x.StakeManager, 'NotEnoughFunding')
-        .withArgs(x.oneMillion, 1n + x.oneMillion)
+        .withArgs(1n + x.oneMillion, x.oneMillion)
     })
     it('should allow the contract to define how much to withdraw', async function () {
       const x = await loadFixture(deployFixture)
       const [signer1, signer2] = x.signers
-      await expect(x.stakeEnder.connect(signer1).depositToken(x.oneMillion))
+      await expect(x.stakeManager.connect(signer1).depositToken(x.oneMillion))
         .to.emit(x.hex, 'Transfer')
-        .withArgs(signer1.address, x.stakeEnder.address, x.oneMillion)
-      await expect(x.stakeEnder.connect(signer2).depositTokenTo(signer1.address, x.oneMillion))
+        .withArgs(signer1.address, x.stakeManager.address, x.oneMillion)
+      await expect(x.stakeManager.connect(signer2).depositTokenTo(signer1.address, x.oneMillion))
         .to.emit(x.hex, 'Transfer')
-        .withArgs(signer2.address, x.stakeEnder.address, x.oneMillion)
-      await expect(x.stakeEnder.withdrawableBalanceOf(signer1.address))
+        .withArgs(signer2.address, x.stakeManager.address, x.oneMillion)
+      await expect(x.stakeManager.withdrawableBalanceOf(signer1.address))
         .eventually.to.equal(x.oneMillion * 2n)
-      await expect(x.stakeEnder.withdrawableBalanceOf(signer2.address))
+      await expect(x.stakeManager.withdrawableBalanceOf(signer2.address))
         .eventually.to.equal(0)
-      await expect(x.stakeEnder.connect(signer1).withdrawTokenTo(signer1.address, 0))
+      await expect(x.stakeManager.connect(signer1).withdrawTokenTo(signer1.address, 0))
         .to.emit(x.hex, 'Transfer')
-        .withArgs(x.stakeEnder.address, signer1.address, x.oneMillion * 2n)
+        .withArgs(x.stakeManager.address, signer1.address, x.oneMillion * 2n)
+    })
+  })
+  describe('depositing tokens', async () => {
+    it('can transfer tokens from sender to contract', async function() {
+      const x = await loadFixture(deployFixture)
+      const [signer1] = x.signers
+      await expect(x.stakeManager.connect(signer1).depositToken(x.oneMillion))
+        .to.emit(x.hex, 'Transfer')
+        .withArgs(signer1.address, x.stakeManager.address, x.oneMillion)
     })
   })
   describe('stake starts', () => {
     it('can only be initiated from the owning address', async function () {
       const x = await loadFixture(deployFixture)
       const [signer1] = x.signers
-      await expect(x.stakeEnder.connect(signer1).depositToken(x.oneMillion))
+      const isolatedStakeManager = await x.stakeManager.callStatic.getIsolatedStakeManager(signer1.address)
+      await expect(x.stakeManager.connect(signer1).stakeStart(x.oneMillion, 10))
         .to.emit(x.hex, 'Transfer')
-        .withArgs(signer1.address, x.stakeEnder.address, x.oneMillion)
-      let stakeId!: number
-      await expect(x.stakeEnder.connect(signer1).stakeStart(x.oneMillion, 10))
+        .withArgs(signer1.address, x.stakeManager.address, x.oneMillion)
         .to.emit(x.hex, 'Transfer')
-        .withArgs(x.stakeEnder.address, hre.ethers.constants.AddressZero, x.oneMillion)
+        .withArgs(x.stakeManager.address, isolatedStakeManager, x.oneMillion)
+        .to.emit(x.hex, 'Transfer')
+        .withArgs(isolatedStakeManager, hre.ethers.constants.AddressZero, x.oneMillion)
         .to.emit(x.hex, 'StakeStart')
-        .withArgs(() => true, x.stakeEnder.address, (value: number) => {
-          stakeId = value
-          return true
-        })
-      await expect(x.stakeEnder.stakeIdToOwner(stakeId))
+        .withArgs(() => true, isolatedStakeManager, x.nextStakeId)
+      await expect(x.stakeManager.stakeIdToOwner(x.nextStakeId))
         .eventually.to.equal(signer1.address)
     })
     it('multiple can be started in the same tx by the ender at the direction of the owner', async () => {
       const x = await loadFixture(deployFixture)
       const [signer1] = x.signers
-      await x.stakeEnder.connect(signer1).depositToken(x.oneMillion)
-      await expect(x.stakeEnder.connect(signer1).multicall([
-        x.stakeEnder.interface.encodeFunctionData('stakeStart', [x.oneMillion / 2n, 10]),
-        x.stakeEnder.interface.encodeFunctionData('stakeStart', [x.oneMillion / 2n, 20]),
+      const isolatedStakeManager = await x.stakeManager.callStatic.getIsolatedStakeManager(signer1.address)
+      await expect(x.stakeManager.connect(signer1).multicall([
+        x.stakeManager.interface.encodeFunctionData('stakeStart', [x.oneMillion / 2n, 10]),
+        x.stakeManager.interface.encodeFunctionData('stakeStart', [x.oneMillion / 2n, 20]),
       ], false))
         .to.emit(x.hex, 'StakeStart')
-        .withArgs(withArgs.anyValue, x.stakeEnder.address, x.nextStakeId)
+        .withArgs(withArgs.anyValue, isolatedStakeManager, x.nextStakeId)
         .to.emit(x.hex, 'StakeStart')
-        .withArgs(withArgs.anyValue, x.stakeEnder.address, x.nextStakeId + 1n)
+        .withArgs(withArgs.anyValue, isolatedStakeManager, x.nextStakeId + 1n)
     })
   })
-  describe('stakeEnder', () => {
-    it('multiple can be ended in the same transaction by anyone', async () => {
+  describe('stakeEnd', () => {
+    it('multiple can be ended and restarted in the same transaction', async () => {
       const x = await loadFixture(deployFixture)
       const [signer1, signer2, signer3, signer4] = x.signers
-      await x.stakeEnder.connect(signer1).depositToken(x.oneMillion)
-      await x.stakeEnder.connect(signer2).depositToken(x.oneMillion)
-      await x.stakeEnder.connect(signer3).depositToken(x.oneMillion)
-      // add in 4 so that balance is always non zero (better gas tests)
-      await x.stakeEnder.connect(signer4).depositToken(x.oneMillion)
-      await x.stakeEnder.connect(signer1).multicall([
-        x.stakeEnder.interface.encodeFunctionData('stakeStart', [x.oneMillion / 2n, 10]),
-        x.stakeEnder.interface.encodeFunctionData('stakeStart', [x.oneMillion / 2n, 20]),
+      const isolatedStakeManager1 = await x.stakeManager.callStatic.getIsolatedStakeManager(signer1.address)
+      await x.stakeManager.connect(signer1).multicall([
+        x.stakeManager.interface.encodeFunctionData('stakeStart', [x.oneMillion / 2n, 10]),
+        x.stakeManager.interface.encodeFunctionData('stakeStart', [x.oneMillion / 2n, 20]),
       ], false)
 
-      await expect(x.stakeEnder.stakeIdToOwner(x.nextStakeId))
+      await expect(x.stakeManager.stakeIdToOwner(x.nextStakeId))
         .eventually.to.equal(signer1.address)
-      await expect(x.stakeEnder.stakeIdToOwner(x.nextStakeId + 1n))
+      await expect(x.stakeManager.stakeIdToOwner(x.nextStakeId + 1n))
         .eventually.to.equal(signer1.address)
-      await expect(x.stakeEnder.connect(signer2).multicall([
-        x.stakeEnder.interface.encodeFunctionData('stakeStart', [x.oneMillion / 2n, 10]),
-        x.stakeEnder.interface.encodeFunctionData('stakeStart', [x.oneMillion / 2n, 20]),
+
+      await moveForwardDays(11, signer4, x)
+      await expect(x.stakeManager.connect(signer1).multicall([
+        x.stakeManager.interface.encodeFunctionData('stakeEnd', [0, x.nextStakeId]),
+        x.stakeManager.interface.encodeFunctionData('stakeStart', [x.oneMillion / 2n, 20]),
+      ], false))
+        .to.emit(x.hex, 'StakeEnd')
+        .withArgs(withArgs.anyValue, withArgs.anyValue, isolatedStakeManager1, x.nextStakeId)
+        .to.emit(x.hex, 'StakeStart')
+        .withArgs(withArgs.anyValue, isolatedStakeManager1, x.nextStakeId + 2n + 11n)
+    })
+  })
+  describe('stakeEndByConsent', () => {
+    it('can start stakes and end them - all managed by a single contract', async function () {
+      this.timeout(100_000_000)
+      const x = await loadFixture(deployFixture)
+      const [signer1, signer2, signer3, signer4] = x.signers
+      const days = 369
+      const half1 = Math.floor(days / 2)
+      const half2 = days - half1
+      await expect(x.stakeManager.connect(signer1).multicall([
+        x.stakeManager.interface.encodeFunctionData('stakeStartFromBalance', [1, x.oneMillion / 2n, half1]),
+        x.stakeManager.interface.encodeFunctionData('stakeStartFromBalance', [1, x.oneMillion / 2n, days]),
       ], false))
         .to.emit(x.hex, 'StakeStart')
-        .withArgs(withArgs.anyValue, x.stakeEnder.address, x.nextStakeId + 2n)
+        .withArgs(withArgs.anyValue, x.stakeManager.address, x.nextStakeId)
         .to.emit(x.hex, 'StakeStart')
-        .withArgs(withArgs.anyValue, x.stakeEnder.address, x.nextStakeId + 3n)
-      await time.setNextBlockTimestamp(days(11) + await time.latest())
-      // await time.setNextBlockTimestamp(days(5) + await time.latest())
-      const greaterThan0 = (value: ethers.BigNumber) => value.toBigInt() > 0n
-      await expect(x.stakeEnder.connect(signer4).multicall([
-        x.stakeEnder.interface.encodeFunctionData('stakeEnder', [2, x.nextStakeId + 2n, false]),
-        x.stakeEnder.interface.encodeFunctionData('stakeEnder', [0, x.nextStakeId, false]),
+        .withArgs(withArgs.anyValue, x.stakeManager.address, x.nextStakeId + 1n)
+      await expect(x.stakeManager.connect(signer2).multicall([
+        x.stakeManager.interface.encodeFunctionData('stakeStartFromBalance', [1, x.oneMillion / 2n, half1]),
+        x.stakeManager.interface.encodeFunctionData('stakeStartFromBalance', [1, x.oneMillion / 2n, days]),
       ], false))
-        .to.emit(x.hex, 'Transfer')
-        .withArgs(hre.ethers.constants.AddressZero, x.stakeEnder.address, greaterThan0)
-        .to.emit(x.hex, 'Transfer')
-        .withArgs(x.stakeEnder.address, signer1.address, greaterThan0)
-        .to.emit(x.hex, 'Transfer')
-        .withArgs(x.stakeEnder.address, signer2.address, greaterThan0)
-      const limit = await x.stakeEnder.percentMagnitudeLimit()
-      // this setting provides almost 30k gas savings
-      await x.stakeEnder.connect(signer1).updateSettings(x.nextStakeId + 1n, {
-        tipMethod: 0,
-        tipMagnitude: 0,
-        withdrawableMethod: 3,
-        withdrawableMagnitude: limit,
-        newStakeDays: 0,
-        copySettings: 0,
-      })
-      await time.setNextBlockTimestamp(days(10) + await time.latest())
-      // this is going to be tricky
-      await expect(x.stakeEnder.connect(signer4).multicall([
-        x.stakeEnder.interface.encodeFunctionData('stakeEnder', [1, x.nextStakeId + 1n, false]),
-        x.stakeEnder.interface.encodeFunctionData('stakeEnder', [0, x.nextStakeId + 3n, false]),
+        .to.emit(x.hex, 'StakeStart')
+        .withArgs(withArgs.anyValue, x.stakeManager.address, x.nextStakeId + 2n)
+        .to.emit(x.hex, 'StakeStart')
+        .withArgs(withArgs.anyValue, x.stakeManager.address, x.nextStakeId + 3n)
+      await expect(x.stakeManager.connect(signer3).multicall([
+        x.stakeManager.interface.encodeFunctionData('stakeStartFromBalance', [1, x.oneMillion / 2n, half1]),
+        x.stakeManager.interface.encodeFunctionData('stakeStartFromBalance', [1, x.oneMillion / 2n, days]),
       ], false))
+        .to.emit(x.hex, 'StakeStart')
+        .withArgs(withArgs.anyValue, x.stakeManager.address, x.nextStakeId + 4n)
+        .to.emit(x.hex, 'StakeStart')
+        .withArgs(withArgs.anyValue, x.stakeManager.address, x.nextStakeId + 5n)
+      // all 4 stakes are applied to the single manager (optimized)
+      await expect(x.hex.stakeCount(x.stakeManager.address))
+        .eventually.to.equal(6)
+      await moveForwardDays(half1 + 1, signer4, x)
+      await expect(x.stakeManager.connect(signer4).multicall([
+        x.stakeManager.interface.encodeFunctionData('stakeEndByConsent', [1, signer3.address, 4, x.nextStakeId + 4n, false]),
+        x.stakeManager.interface.encodeFunctionData('stakeEndByConsent', [1, signer2.address, 2, x.nextStakeId + 2n, false]),
+        x.stakeManager.interface.encodeFunctionData('stakeEndByConsent', [1, signer1.address, 0, x.nextStakeId + 0n, false]),
+      ], false))
+        .to.emit(x.hex, 'StakeEnd')
+        .withArgs(withArgs.anyUint, withArgs.anyUint, x.stakeManager.address, x.nextStakeId + 4n)
+        .to.emit(x.hex, 'StakeEnd')
+        .withArgs(withArgs.anyUint, withArgs.anyUint, x.stakeManager.address, x.nextStakeId + 2n)
+        .to.emit(x.hex, 'StakeEnd')
+        .withArgs(withArgs.anyUint, withArgs.anyUint, x.stakeManager.address, x.nextStakeId + 0n)
         .to.emit(x.hex, 'Transfer')
-        .withArgs(hre.ethers.constants.AddressZero, x.stakeEnder.address, greaterThan0)
+        .withArgs(hre.ethers.constants.AddressZero, x.stakeManager.address, withArgs.anyUint)
         .to.emit(x.hex, 'Transfer')
-        .withArgs(x.stakeEnder.address, signer2.address, greaterThan0)
-        // .not.to.emit(x.hex, 'Transfer')
-        // .withArgs(x.stakeEnder.address, signer1.address, greaterThan0)
+        .withArgs(x.stakeManager.address, hre.ethers.constants.AddressZero, withArgs.anyUint)
+        // .printGasUsage()
+      await moveForwardDays(half2, signer4, x)
+      const count = await x.hex.stakeCount(x.stakeManager.address)
+      const list = await Promise.all((new Array(count.toNumber())).fill(null).map((_a, i) => {
+        return x.hex.stakeLists(x.stakeManager.address, i)
+      }))
+      await expect(x.stakeManager.connect(signer4).stakeEndByConsentForMany(([
+        [signer3.address, x.nextStakeId + 5n],
+        [signer1.address, x.nextStakeId + 3n],
+        [signer2.address, x.nextStakeId + 1n],
+      ] as [string, bigint][]).map(([staker, stakeId]) => ({
+        stakerConfig: 1,
+        staker,
+        stakeIndex: _.findIndex(list, {
+          stakeId: hre.ethers.BigNumber.from(stakeId).toNumber(),
+        }),
+        stakeId,
+      }))))
+        .to.emit(x.hex, 'StakeEnd')
+        .withArgs(withArgs.anyUint, withArgs.anyUint, x.stakeManager.address, x.nextStakeId + 5n)
+        .to.emit(x.hex, 'StakeEnd')
+        .withArgs(withArgs.anyUint, withArgs.anyUint, x.stakeManager.address, x.nextStakeId + 1n)
+        .to.emit(x.hex, 'StakeEnd')
+        .withArgs(withArgs.anyUint, withArgs.anyUint, x.stakeManager.address, x.nextStakeId + 3n)
+        .to.emit(x.hex, 'Transfer')
+        .withArgs(hre.ethers.constants.AddressZero, x.stakeManager.address, withArgs.anyUint)
+        .to.emit(x.hex, 'Transfer')
+        .withArgs(x.stakeManager.address, hre.ethers.constants.AddressZero, withArgs.anyUint)
         .printGasUsage()
     })
   })

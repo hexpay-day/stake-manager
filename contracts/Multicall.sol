@@ -1,6 +1,10 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.17;
 
+/**
+ * this multicall extension is useful for permissioned calls
+ * in other words, calls that operate on the senders funds or settings
+ */
 contract Multicall {
   event TxFailed(uint256 index);
   function multicall(bytes[] calldata calls, bool allowFailures) external payable {

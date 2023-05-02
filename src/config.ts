@@ -25,6 +25,8 @@ export const args = yargs.options({
       'STATICCALL',
       'CALL',
       'DELEGATECALL',
+      // 'SLOAD',
+      // 'SSTORE',
     ],
     describe: 'opcodes used for traacing',
   },
