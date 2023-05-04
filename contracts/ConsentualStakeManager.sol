@@ -354,11 +354,7 @@ contract ConsentualStakeManager is StakeManager, EIP712 {
   function stakeStartFromBalance(
     bool internallyManaged, uint256 amount, uint256 newStakedDays
   ) external payable {
-    address manager = address(this);
-    if (internallyManaged) {
-      manager = _getIsolatedStakeManager(msg.sender);
-    }
-    _depositTokenFrom(msg.sender, manager, amount);
+    _depositTokenFrom(msg.sender, amount);
     _setDefaultSettings(_stakeStartFor(
       internallyManaged, msg.sender,
       amount, newStakedDays
@@ -368,11 +364,7 @@ contract ConsentualStakeManager is StakeManager, EIP712 {
     bool internallyManaged, address to,
     uint256 amount, uint256 newStakedDays
   ) external payable {
-    address manager = address(this);
-    if (internallyManaged) {
-      manager = _getIsolatedStakeManager(to);
-    }
-    _depositTokenFrom(msg.sender, manager, amount);
+    _depositTokenFrom(msg.sender, amount);
     _setDefaultSettings(_stakeStartFor(
       internallyManaged, to,
       amount, newStakedDays
@@ -388,11 +380,7 @@ contract ConsentualStakeManager is StakeManager, EIP712 {
     bool internallyManaged, address to,
     uint256 amount, uint256 newStakedDays
   ) external payable {
-    address manager = address(this);
-    if (internallyManaged) {
-      manager = _getIsolatedStakeManager(to);
-    }
-    _depositTokenFrom(msg.sender, manager, amount);
+    _depositTokenFrom(msg.sender, amount);
     _setDefaultSettings(_stakeStartFor(
       internallyManaged, to,
       _deductWithdrawable(msg.sender, amount), newStakedDays
@@ -450,17 +438,9 @@ contract ConsentualStakeManager is StakeManager, EIP712 {
     bool internallyManaged, address to,
     uint256 amount, uint256 newStakedDays
   ) external payable {
-    amount = _clamp(amount, _getUnattributed());
-    if (internallyManaged) {
-      address manager = _getIsolatedStakeManager(to);
-      unchecked {
-        tokensAttributed = tokensAttributed - amount;
-      }
-      _withdrawTokenTo(manager, amount);
-    }
     _setDefaultSettings(_stakeStartFor(
       internallyManaged, to,
-      amount, newStakedDays
+      _clamp(amount, _getUnattributed()), newStakedDays
     ), newStakedDays);
   }
   /**
@@ -471,7 +451,7 @@ contract ConsentualStakeManager is StakeManager, EIP712 {
    */
   function depositToken(uint256 amount) external payable {
     // transfer token to contract
-    _depositTokenFrom(msg.sender, address(this), amount);
+    _depositTokenFrom(msg.sender, amount);
     _addToWithdrawable(msg.sender, amount);
   }
   /**
@@ -481,7 +461,7 @@ contract ConsentualStakeManager is StakeManager, EIP712 {
    * @param amount the amount of tokens
    */
   function depositTokenTo(address to, uint256 amount) external payable {
-    _depositTokenFrom(msg.sender, address(this), amount);
+    _depositTokenFrom(msg.sender, amount);
     _addToWithdrawable(to, amount);
   }
   /**
@@ -494,7 +474,7 @@ contract ConsentualStakeManager is StakeManager, EIP712 {
    * @dev only the sender can be considered to be consenting to this action
    */
   function depositTokenDangerous(uint256 amount) external payable {
-    _depositTokenFrom(msg.sender, address(this), amount);
+    _depositTokenFrom(msg.sender, amount);
   }
   /**
    * collect unattributed tokens and send to recipient of choice

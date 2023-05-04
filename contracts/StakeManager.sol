@@ -66,12 +66,8 @@ contract StakeManager is Stakeable, UnderlyingStakeable {
     return (stake.lockedDay + stake.stakedDays) >= _currentDay();
   }
   /** deposits tokens from a staker and marks them for that staker */
-  function _depositTokenFrom(
-    address staker,
-    address recipient,
-    uint256 amount
-  ) internal {
-    IERC20(0x2b591e99afE9f32eAA6214f7B7629768c40Eeb39).transferFrom(staker, recipient, amount);
+  function _depositTokenFrom(address staker, uint256 amount) internal {
+    IERC20(0x2b591e99afE9f32eAA6214f7B7629768c40Eeb39).transferFrom(staker, address(this), amount);
   }
   /**
    * transfers tokens to a recipient
@@ -95,10 +91,16 @@ contract StakeManager is Stakeable, UnderlyingStakeable {
     // get future index of stake
     address _target = 0x2b591e99afE9f32eAA6214f7B7629768c40Eeb39;
     address custodian = internallyManaged ? address(this) : isolatedStakeManagers[staker];
-    address stakingContract = internallyManaged ? _target : custodian;
+    address step1 = internallyManaged ? _target : custodian;
     uint256 index = IUnderlyingStakeable(_target).stakeCount(custodian);
     // start the stake
-    IStakeable(stakingContract).stakeStart(amount, newStakedDays);
+    if (!internallyManaged) {
+      if (amount == 0) {
+        revert NotAllowed();
+      }
+      IERC20(_target).approve(step1, amount);
+    }
+    IStakeable(step1).stakeStart(amount, newStakedDays);
     // get the stake id
     stakeId = IStakeable(_target).stakeLists(custodian, index).stakeId;
     // attribute stake to the staker
@@ -159,7 +161,7 @@ contract StakeManager is Stakeable, UnderlyingStakeable {
    */
   function stakeStart(uint256 amount, uint256 newStakedDays) external override {
     // ensures amount under/from sender is sufficient
-    _depositTokenFrom(msg.sender, address(this), amount);
+    _depositTokenFrom(msg.sender, amount);
     _getIsolatedStakeManager(msg.sender); // ensure the contract exists first
     _stakeStartFor(
       false, msg.sender,
@@ -167,21 +169,17 @@ contract StakeManager is Stakeable, UnderlyingStakeable {
     );
   }
   /**
-   * start a managed stake either in the public or isolated space
+   * stake tokens for a provided number of days
    * @param internallyManaged flag to start the stake against the owner or against this contract
-   * @param amount the number of tokens to use to start the stake
-   * @param newStakedDays the number of days to stake for
+   * @param amount the number of tokens to start staking
+   * @param newStakedDays the number of days to stake
    */
   function managedStakeStart(
     bool internallyManaged,
     uint256 amount,
     uint256 newStakedDays
   ) external payable {
-    address manager = address(this);
-    if (!internallyManaged) {
-      manager = _getIsolatedStakeManager(msg.sender);
-    }
-    _depositTokenFrom(msg.sender, manager, amount);
+    _depositTokenFrom(msg.sender, amount);
     _stakeStartFor(
       internallyManaged, msg.sender,
       amount, newStakedDays

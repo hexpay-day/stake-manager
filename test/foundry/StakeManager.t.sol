@@ -16,7 +16,8 @@ contract TestConsentualStakeManager is Test {
   address public pulsexSacrifice = 0x075e72a5eDf65F0A5f44699c7654C1a76941Ddc8;
   uint256 public decimalShift;
   uint256 public startingBalance;
-  constructor() Test() {
+  uint256 public lastStakeId;
+  function setUp() public {
     stkMngr = new ConsentualStakeManager();
     uint256 decimals = IERC20Metadata(hx).decimals();
     decimalShift = 10**decimals;
@@ -31,16 +32,18 @@ contract TestConsentualStakeManager is Test {
       IERC20(hx).approve(address(stkMngr), type(uint256).max);
       vm.stopPrank();
     }
-  }
-  function setUp() public {
+    lastStakeId = IUnderlyingStakeable(hx).stakeCount(address(stkMngr));
     assertEq(IERC20(hx).balanceOf(vm.addr(1)), startingBalance);
     assertEq(IERC20(hx).balanceOf(vm.addr(100)), startingBalance);
   }
-  function _moveDay(address marcher) internal {
-    vm.warp(block.timestamp * (24*60*60));
-    vm.startPrank(marcher);
-    IStakeable(hx).stakeStart(1 * decimalShift, 5555);
-    vm.stopPrank();
+  function _moveDays(address marcher, uint256 numDays) internal {
+    while (numDays > 0) {
+      vm.startPrank(marcher);
+      vm.warp(block.timestamp * (24*60*60));
+      IStakeable(hx).stakeStart(1 * decimalShift, 5555);
+      vm.stopPrank();
+      numDays = numDays - 1;
+    }
   }
   function testPercentMagnitudeLimit() public {
     assertEq(stkMngr.percentMagnitudeLimit(), type(uint64).max);
@@ -112,5 +115,37 @@ contract TestConsentualStakeManager is Test {
     _withdrawToken(vm.addr(1), vm.addr(2), startingBalance / 2);
     assertEq(IERC20(hx).balanceOf(vm.addr(2)), startingBalance * 3 / 2);
     _transferTo(vm.addr(2), vm.addr(1), startingBalance / 2);
+  }
+  function _stakeStart(address sender, uint256 amount, uint256 stakeDays) internal {
+    vm.startPrank(sender);
+    stkMngr.stakeStart(amount, stakeDays);
+    vm.stopPrank();
+  }
+  function _stakeEndByConsentForMany(
+    address ender,
+    ConsentualStakeManager.StakeInfo[] memory list
+  ) public {
+    vm.startPrank(ender);
+    stkMngr.stakeEndByConsentForMany(list);
+    vm.stopPrank();
+  }
+  function testStakeStarts() public {
+    _stakeStart(vm.addr(1), startingBalance / 10, 20);
+    _stakeStart(vm.addr(2), startingBalance / 10, 20);
+    _moveDays(vm.addr(5), 21);
+    ConsentualStakeManager.StakeInfo[] memory list = new ConsentualStakeManager.StakeInfo[](2);
+    list[0] = ConsentualStakeManager.StakeInfo({
+      internallyManaged: false,
+      staker: vm.addr(1),
+      stakeIndex: 0,
+      stakeId: lastStakeId
+    });
+    list[1] = ConsentualStakeManager.StakeInfo({
+      internallyManaged: false,
+      staker: vm.addr(2),
+      stakeIndex: 1,
+      stakeId: lastStakeId + 1
+    });
+    _stakeEndByConsentForMany(vm.addr(5), list);
   }
 }

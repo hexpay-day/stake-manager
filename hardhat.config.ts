@@ -120,7 +120,8 @@ const config: HardhatUserConfig = {
     }),
   },
   paths: {
-    sources: "./artifacts",
+    artifacts: './artifacts',
+    sources: "./contracts",
     cache: "./cache_hardhat",
   },
   tracer: ((enabled) => ({
