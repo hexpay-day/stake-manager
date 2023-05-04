@@ -7,12 +7,21 @@ import type {
 import * as fs from 'fs'
 import * as path from 'path'
 import "@nomicfoundation/hardhat-toolbox";
+import "hardhat-preprocessor"
 import 'hardhat-tracer'
 import 'hardhat-gas-reporter'
 import 'hardhat-dependency-compiler'
 import * as ethers from "ethers";
 
 import * as conf from './src/config'
+
+function getRemappings() {
+  return fs
+    .readFileSync("remappings.txt", "utf8")
+    .split("\n")
+    .filter(Boolean) // remove empty lines
+    .map((line) => line.trim().split("="));
+}
 
 const pulsechainV4: HardhatNetworkUserConfig = {
   forking: {
@@ -92,6 +101,25 @@ const config: HardhatUserConfig = {
     paths: [
       '@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol',
     ],
+  },
+  preprocess: {
+    eachLine: () => ({
+      transform: (line: string) => {
+        if (line.match(/^\s*import /i)) {
+          for (const [from, to] of getRemappings()) {
+            if (line.includes(from)) {
+              line = line.replace(from, to);
+              break;
+            }
+          }
+        }
+        return line;
+      },
+    }),
+  },
+  paths: {
+    sources: "./src",
+    cache: "./cache_hardhat",
   },
   tracer: ((enabled) => ({
     opcodes: conf.args.tracerOpcodes.length ? conf.args.tracerOpcodes as string[] : undefined,
