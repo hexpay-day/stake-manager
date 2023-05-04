@@ -24,15 +24,15 @@ contract StakeManager is Stakeable, UnderlyingStakeable {
      * does not match what is expected given other contextual information
      * such as an index
      */
-    error StakeIdMismatch(uint128 provided, uint128 expected);
+    error StakeIdMismatch(uint256 provided, uint256 expected);
     /**
      * @notice this error is thrown when the stake being ended is not yet ended
      */
-    error StakeNotEndable(uint96 provided, uint160 expected);
+    error StakeNotEndable(uint256 provided, uint256 expected);
     /**
      * @notice error is thrown when there is not enough funding to do the required operation
      */
-    error NotEnoughFunding(uint128 provided, uint128 expected);
+    error NotEnoughFunding(uint256 provided, uint256 expected);
     /**
      * @notice this var is re-defined here to keep the computeMagnitude method pure
      * at the cost of one extra byteword during deployment
@@ -82,7 +82,7 @@ contract StakeManager is Stakeable, UnderlyingStakeable {
         return IERC20(0x2b591e99afE9f32eAA6214f7B7629768c40Eeb39).balanceOf(address(this)) - tokensAttributed;
     }
     /** deposits tokens from a staker and marks them for that staker */
-    function _depositTokenFrom(address staker, uint96 amount) internal {
+    function _depositTokenFrom(address staker, uint256 amount) internal {
         IERC20(0x2b591e99afE9f32eAA6214f7B7629768c40Eeb39).transferFrom(staker, address(this), amount);
     }
     /**
@@ -90,27 +90,27 @@ contract StakeManager is Stakeable, UnderlyingStakeable {
      * @param to where to send the tokens
      * @param amount the number of tokens to send
      */
-    function _withdrawTokenTo(address to, uint96 amount) internal {
+    function _withdrawTokenTo(address to, uint256 amount) internal {
         IERC20(0x2b591e99afE9f32eAA6214f7B7629768c40Eeb39).transfer(to, amount);
     }
     /**
      * start a stake for the staker given the amount and number of days
-     * @param stakerConfig the config for starting a stake
+     * @param internallyManaged the config for starting a stake
      * @param staker the underlying owner of the stake
      * @param amount the amount to add to the stake
      * @param newStakedDays the number of days that the stake should run
      */
     function _stakeStartFor(
-        uint96 stakerConfig, address staker,
-        uint96 amount, uint160 newStakedDays
+        bool internallyManaged, address staker,
+        uint256 amount, uint256 newStakedDays
     ) internal returns(uint256 stakeId) {
         // get future index of stake
         address _target = 0x2b591e99afE9f32eAA6214f7B7629768c40Eeb39;
-        address custodian = stakerConfig == uint256(0) ? isolatedStakeManagers[staker] : address(this);
-        address step1 = stakerConfig == uint256(0) ? custodian : _target;
+        address custodian = internallyManaged ? address(this) : isolatedStakeManagers[staker];
+        address step1 = internallyManaged ? _target : custodian;
         uint256 index = IUnderlyingStakeable(_target).stakeCount(custodian);
         // start the stake
-        if (stakerConfig == uint256(0)) {
+        if (!internallyManaged) {
             if (amount == 0) {
               revert NotAllowed();
             }
@@ -127,7 +127,7 @@ contract StakeManager is Stakeable, UnderlyingStakeable {
      * gets the stake store at the provided index
      * @param index the index of the stake to get
      */
-    function _getStake(address custodian, uint96 index) internal view returns(IStakeable.StakeStore memory) {
+    function _getStake(address custodian, uint256 index) internal view returns(IStakeable.StakeStore memory) {
         return IStakeable(0x2b591e99afE9f32eAA6214f7B7629768c40Eeb39).stakeLists(custodian, index);
     }
     /**
@@ -136,19 +136,20 @@ contract StakeManager is Stakeable, UnderlyingStakeable {
      * @param stakeId the stake id on the underlying contract to end
      */
     function _stakeEnd(
-        uint8 stakerConfig, address owner, uint56 stakeIndex, uint40 stakeId
-    ) internal returns(uint96 delta) {
+        bool internallyManaged, address owner, uint256 stakeIndex, uint256 stakeId
+    ) internal returns(uint256 delta) {
         // calculate the balance before
         address _target = 0x2b591e99afE9f32eAA6214f7B7629768c40Eeb39;
         // cannot use tokens attributed here because of tipping
         uint256 balanceBefore = IERC20(_target).balanceOf(address(this));
-        address stakeTrigger = stakerConfig == uint256(0) ? owner : _target;
+        address stakeTrigger = internallyManaged ? _target : owner;
         // end the stake - attributed to contract or through the managed stake
-        IStakeable(stakeTrigger).stakeEnd(stakeIndex, stakeId);
+        IStakeable(stakeTrigger).stakeEnd(stakeIndex, uint40(stakeId));
+
         // because the delta is only available in the logs
         // we need to calculate the delta to use it
         unchecked {
-            delta = uint96(IERC20(_target).balanceOf(address(this)) - balanceBefore);
+            delta = IERC20(_target).balanceOf(address(this)) - balanceBefore;
         }
         delete stakeIdToOwner[stakeId];
     }
@@ -159,22 +160,22 @@ contract StakeManager is Stakeable, UnderlyingStakeable {
      * @param x a secondary magnitude to use - generally the amount of the end stake
      */
     function _computeMagnitude(
-        uint64 method, uint96 x, uint96 y,
+        uint256 method, uint256 x, uint256 y,
         IStakeable.StakeStore memory stake
     ) internal pure returns(uint256 amount) {
         unchecked {
             if (method < 4) {
                 if (method < 2) {
                     // 0 remains 0
-                    if (method == 1) amount = uint256(y); // 1
+                    if (method == 1) amount = y; // 1
                 } else {
-                    if (method == 2) amount = uint256(x); // 2
-                    else amount = (uint256(x) * y) / type(uint64).max; // 3 - % of total
+                    if (method == 2) amount = x; // 2
+                    else amount = (x * y) / type(uint64).max; // 3 - % of total
                 }
             } else if (method < 8) {
                 if (method < 6) {
-                    if (method == 4) amount = (uint256(x) * stake.stakedHearts) / type(uint64).max; // 4 - % of origination
-                    else amount = uint256(x) * (y - stake.stakedHearts) / type(uint64).max; // 5 - % of yield
+                    if (method == 4) amount = (x * stake.stakedHearts) / type(uint64).max; // 4 - % of origination
+                    else amount = x * (y - stake.stakedHearts) / type(uint64).max; // 5 - % of yield
                 }
             }
             return amount;
@@ -191,7 +192,7 @@ contract StakeManager is Stakeable, UnderlyingStakeable {
      * @param amount the requested or input amount
      * @param max the maximum amount that the value can be
      */
-    function clamp(uint128 amount, uint128 max) external pure returns(uint256) {
+    function clamp(uint256 amount, uint256 max) external pure returns(uint256) {
         return _clamp(amount, max);
     }
     /**
@@ -200,7 +201,7 @@ contract StakeManager is Stakeable, UnderlyingStakeable {
      * @param amount the amount requested by another function
      * @param max the limit that the value can be
      */
-    function _clamp(uint128 amount, uint128 max) internal pure returns(uint256) {
+    function _clamp(uint256 amount, uint256 max) internal pure returns(uint256) {
         if (amount == 0) {
             return max;
         }
@@ -213,7 +214,7 @@ contract StakeManager is Stakeable, UnderlyingStakeable {
      * @param y the second value as input
      */
     function computeMagnitude(
-        uint64 method, uint96 x, uint96 y,
+        uint256 method, uint256 x, uint256 y,
         IStakeable.StakeStore memory stake
     ) external pure returns(uint256) {
         return _computeMagnitude(method, x, y, stake);
@@ -242,11 +243,11 @@ contract StakeManager is Stakeable, UnderlyingStakeable {
      */
     function stakeStart(uint256 amount, uint256 newStakedDays) external override {
         // ensures amount under/from sender is sufficient
-        _depositTokenFrom(msg.sender, uint96(amount));
+        _depositTokenFrom(msg.sender, amount);
         _getIsolatedStakeManager(msg.sender); // ensure the contract exists first
         _stakeStartFor(
-            0, msg.sender,
-            uint96(amount), uint160(newStakedDays)
+            false, msg.sender,
+            amount, newStakedDays
         );
     }
     /**
@@ -260,21 +261,21 @@ contract StakeManager is Stakeable, UnderlyingStakeable {
      * or requires that the staker send start and end methods (0)
      */
     function stakeEnd(uint256 stakeIndex, uint40 stakeId) external override {
-        _stakeEndByOwner(0, msg.sender, uint48(stakeIndex), stakeId);
+        _stakeEndByOwner(false, msg.sender, stakeIndex, stakeId);
     }
     /**
      * end a stake that the sender owns as if they are interacting with
      * the underlying contract
-     * @param stakerConfig where the stake is being custodied
+     * @param internallyManaged where the stake is being custodied
      * @param stakeIndex the index under which the stake is held
      * @param stakeId the id of the stake
      */
-    function managedStakeEnd(uint8 stakerConfig, uint48 stakeIndex, uint40 stakeId) external {
-        _stakeEndByOwner(stakerConfig, msg.sender, stakeIndex, stakeId);
+    function managedStakeEnd(bool internallyManaged, uint256 stakeIndex, uint256 stakeId) external {
+        _stakeEndByOwner(internallyManaged, msg.sender, stakeIndex, stakeId);
     }
     /**
      * end a stake given its owner
-     * @param stakerConfig where the stake is being custodied
+     * @param internallyManaged where the stake is being custodied
      * @param staker the staker that owns the stake
      * @param stakeIndex the index under which the stake is held
      * @param stakeId the id of the stake
@@ -282,13 +283,13 @@ contract StakeManager is Stakeable, UnderlyingStakeable {
      * interacting with the underlying contract
      */
     function _stakeEndByOwner(
-        uint8 stakerConfig, address staker, uint48 stakeIndex, uint40 stakeId
+        bool internallyManaged, address staker, uint256 stakeIndex, uint256 stakeId
     ) internal {
         if (stakeIdToOwner[stakeId] != staker) {
             revert StakeNotEndable(stakeId, uint160(staker));
         }
-        address custodian = stakerConfig == uint256(0) ? isolatedStakeManagers[staker] : address(this);
-        uint96 amount = uint96(_stakeEnd(stakerConfig, custodian, stakeIndex, stakeId));
+        address custodian = internallyManaged ? address(this) : isolatedStakeManagers[staker];
+        uint256 amount = _stakeEnd(internallyManaged, custodian, stakeIndex, stakeId);
         _withdrawTokenTo(staker, amount);
     }
 }

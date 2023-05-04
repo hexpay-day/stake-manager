@@ -35,7 +35,7 @@ contract ConsentualStakeManager is StakeManager, EIP712 {
     /**
      * @notice an error for when the stake is about to be ended but conditions have not allowed it
      */
-    error StakeNotEnded(uint96 provided, uint160 expected);
+    error StakeNotEnded(uint256 provided, uint256 expected);
     /**
      * @notice this error is thrown when the stake in question
      * is not owned by the expected address
@@ -54,6 +54,11 @@ contract ConsentualStakeManager is StakeManager, EIP712 {
      */
     mapping(address => uint256) public withdrawableBalanceOf;
     /**
+     * @notice this is a globally shared pool of nonces - all methods draw from this pool
+     * we use bool here because we do not indend a pathway to delete
+     */
+    mapping(address => mapping(uint256 => bool)) public signerToNonceConsumed;
+    /**
      * creates the internal stake ender contract
      */
     constructor()
@@ -66,12 +71,12 @@ contract ConsentualStakeManager is StakeManager, EIP712 {
      * @param stakeId the stake id to get settings for
      * @param y the value to supply as a secondary magnitude
      */
-    function computeEnderTip(uint8 stakerConfig, uint88 index, uint64 stakeId, uint96 y) external view returns(uint256) {
+    function computeEnderTip(bool internallyManaged, uint256 index, uint256 stakeId, uint256 y) external view returns(uint256) {
         uint256 settings = stakeIdToSettings[stakeId];
-        address custodian = stakerConfig == uint256(0) ? isolatedStakeManagers[stakeIdToOwner[stakeId]] : address(this);
+        address custodian = internallyManaged ? address(this) : isolatedStakeManagers[stakeIdToOwner[stakeId]];
         IStakeable.StakeStore memory stake = _getStake(custodian, index);
         return _computeMagnitude(
-            uint8(settings << 0 >> (256 - 8)), uint64(settings << 8 >> (256 - 6)), y,
+            settings >> 248, settings << 8 >> 192, y,
             stake
         );
     }
@@ -80,10 +85,10 @@ contract ConsentualStakeManager is StakeManager, EIP712 {
      * @param staker the staker to add a withdrawable balance to
      * @param amount the amount to add to the staker's withdrawable balance as well as the attributed tokens
      */
-    function _addToWithdrawable(address staker, uint96 amount) internal {
+    function _addToWithdrawable(address staker, uint256 amount) internal {
         unchecked {
-            withdrawableBalanceOf[staker] += amount;
-            tokensAttributed += amount;
+            withdrawableBalanceOf[staker] = withdrawableBalanceOf[staker] + amount;
+            tokensAttributed = tokensAttributed + amount;
         }
     }
     /**
@@ -93,16 +98,16 @@ contract ConsentualStakeManager is StakeManager, EIP712 {
      * @notice after a deduction, funds could be considered "unattributed"
      * and if they are left in such a state they could be picked up by anyone else
      */
-    function _deductWithdrawable(address account, uint96 amount) internal returns(uint256) {
+    function _deductWithdrawable(address account, uint256 amount) internal returns(uint256) {
         uint256 withdrawable = withdrawableBalanceOf[account];
         if (amount == 0) {
-            amount = uint96(withdrawable); // overflow protection
+            amount = withdrawable; // overflow protection
         } else if (withdrawable < amount) {
-            revert NotEnoughFunding(amount, uint128(withdrawable));
+            revert NotEnoughFunding(amount, withdrawable);
         }
-        withdrawableBalanceOf[account] = withdrawable - amount;
         unchecked {
-            tokensAttributed -= amount;
+            withdrawableBalanceOf[account] = withdrawable - amount;
+            tokensAttributed = tokensAttributed - amount;
         }
         return amount;
     }
@@ -125,36 +130,37 @@ contract ConsentualStakeManager is StakeManager, EIP712 {
      * @param settings the settings to update the stake id to
      */
     function updateSettings(uint256 stakeId, Settings calldata settings) external payable {
-        _verifyEndableStakeOwnership(msg.sender, uint96(stakeId));
+        _verifyEndableStakeOwnership(msg.sender, stakeId);
         _logSettingsUpdate(stakeId, _encodeSettings(settings));
     }
-    function _verifyEndableStakeOwnership(address owner, uint96 stakeId) internal view {
+    function _verifyEndableStakeOwnership(address owner, uint256 stakeId) internal view {
         if (stakeIdToOwner[stakeId] != owner) {
             revert StakeNotOwned(owner, stakeIdToOwner[stakeId]);
         }
     }
     /**
      * end a stake for someone other than the sender of the transaction
-     * @param stakerConfig whether or not the stake is held internally
+     * @param internallyManaged whether or not the stake is held internally
      * @param staker the staker's account
      * @param stakeId the stake id on the underlying contract to end
      */
     function stakeEndByConsent(
-        uint8 stakerConfig, address staker, uint40 stakeIndex, uint40 stakeId, bool skipIdMismatch
+        address staker, bool skipIdMismatch, bool internallyManaged,
+        uint256 stakeIndex, uint256 stakeId
     ) external payable returns(uint256) {
-        address custodian = stakerConfig == uint256(0) ? isolatedStakeManagers[staker] : address(this);
+        address custodian = internallyManaged ? address(this) : isolatedStakeManagers[staker];
         IStakeable.StakeStore memory stake = _getStake(custodian, stakeIndex);
         if (stake.stakeId != stakeId && skipIdMismatch) {
             return 0;
         }
         return _stakeEndByConsent(
-            stakerConfig, staker, stakeIndex, stakeId,
+            internallyManaged, staker, stakeIndex, stakeId,
             stake
         );
     }
     /**
      * end a stake with the consent of the underlying staker
-     * @param stakerConfig the instantiation of the owned list of stakes
+     * @param internallyManaged the instantiation of the owned list of stakes
      * @param staker the underlying staker themselves
      * @param stakeId stake id of the stake to end - idempotency key
      * and to ensure that the stake is available after it is deleted on the underlying contract
@@ -166,33 +172,35 @@ contract ConsentualStakeManager is StakeManager, EIP712 {
      * if consent abilities is < 4 then there is no consent given for early ending
      */
     function _stakeEndByConsent(
-        uint8 stakerConfig, address staker, uint56 stakeIndex, uint40 stakeId,
+        bool internallyManaged, address staker,
+        uint256 stakeIndex, uint256 stakeId,
         IStakeable.StakeStore memory stake
     ) internal returns(uint256) {
         uint256 settings = stakeIdToSettings[stakeId];
-        uint256 consentAbilities = settings << 240 >> (256 - 8);
+        uint256 consentAbilities = settings << 240 >> 248;
         if (!_stakeIsEnded(stake) && consentAbilities < 4) {
-            revert StakeNotEnded(uint96(_currentDay()), stake.lockedDay + stake.stakedDays);
+            revert StakeNotEnded(_currentDay(), stake.lockedDay + stake.stakedDays);
         }
         if (consentAbilities < 2) {
             revert NotAllowed();
         }
         // consent has been confirmed
         uint256 delta = _stakeEnd(
-            stakerConfig, staker, stakeIndex, uint40(stakeId)
+            internallyManaged, staker, stakeIndex, stakeId
         );
-        return _directFunds(
-            stakerConfig, staker,
-            uint96(delta), stakeId,
+        _directFunds(
+            internallyManaged, staker,
+            delta, stakeId,
             settings,
             stake
         );
+        return delta;
     }
     struct StakeInfo {
-        uint8 stakerConfig;
+        bool internallyManaged;
         address staker;
-        uint48 stakeIndex;
-        uint40 stakeId;
+        uint256 stakeIndex;
+        uint256 stakeId;
     }
     /**
      * end many stakes at the same time
@@ -203,19 +211,25 @@ contract ConsentualStakeManager is StakeManager, EIP712 {
      * are attempting to end stake the same stakes
      */
     function stakeEndByConsentForMany(StakeInfo[] calldata stakeEnds) external payable {
+        bool internallyManaged;
+        address custodian;
+        address staker;
+        StakeInfo calldata stakeInfo;
         uint256 i;
+        uint256 stakeIndex;
+        uint256 stakeId;
         uint256 len = stakeEnds.length;
         do {
-            StakeInfo calldata stakeInfo = stakeEnds[i];
-            uint8 stakerConfig = stakeInfo.stakerConfig;
-            address staker = stakeInfo.staker;
-            uint48 stakeIndex = stakeInfo.stakeIndex;
-            uint40 stakeId = stakeInfo.stakeId;
-            address custodian = stakerConfig == uint256(0) ? isolatedStakeManagers[staker] : address(this);
+            stakeInfo = stakeEnds[i];
+            internallyManaged = stakeInfo.internallyManaged;
+            staker = stakeInfo.staker;
+            stakeIndex = stakeInfo.stakeIndex;
+            stakeId = stakeInfo.stakeId;
+            custodian = internallyManaged ? address(this) : isolatedStakeManagers[staker];
             IStakeable.StakeStore memory stake = _getStake(custodian, stakeIndex);
             if (stake.stakeId == stakeId) {
                 _stakeEndByConsent(
-                    stakerConfig, staker, stakeIndex, stakeId,
+                    internallyManaged, staker, stakeIndex, stakeId,
                     stake
                 );
             }
@@ -230,32 +244,32 @@ contract ConsentualStakeManager is StakeManager, EIP712 {
      * @param newStakedDays the number of days to stake for
      */
     function stakeStartFromWithdrawable(
-        uint8 stakerConfig, uint96 amount, uint152 newStakedDays
+        bool internallyManaged, uint256 amount, uint256 newStakedDays
     ) external payable {
-        _setDefaultSettings(uint40(_stakeStartFor(
-            stakerConfig, msg.sender,
-            uint96(_deductWithdrawable(msg.sender, amount)), newStakedDays
-        )), newStakedDays);
+        _setDefaultSettings(_stakeStartFor(
+            internallyManaged, msg.sender,
+            _deductWithdrawable(msg.sender, amount), newStakedDays
+        ), newStakedDays);
     }
-    function _setDefaultSettings(uint40 stakeId, uint216 stakeDays) internal {
-        stakeIdToSettings[stakeId] = _encodeSettings(_defaultSettings(stakeDays));
+    function _setDefaultSettings(uint256 stakeId, uint256 stakeDays) internal {
+        stakeIdToSettings[stakeId] = uint256(0x00000000000000000000000000000000000001000000000000000001000003ff) | (stakeDays << 16);
     }
     function readEncodedSettings(
         uint256 settings,
-        uint128 fromEnd, uint128 length
+        uint256 fromEnd, uint256 length
     ) external pure returns(uint256) {
       return _readEncodedSettings(settings, fromEnd, length);
     }
     function _readEncodedSettings(
         uint256 settings,
-        uint128 fromEnd, uint128 length
+        uint256 fromEnd, uint256 length
     ) internal pure returns(uint256) {
-        return (settings << fromEnd >> (256 - length));
+        return settings << fromEnd >> (256 - length);
     }
     function _updateEncodedSettings(
         uint256 settings,
         uint256 value,
-        uint128 from, uint128 to
+        uint256 from, uint256 to
     ) internal pure returns(uint256) {
         return (settings >> from << from) | (value << from) | (settings << to >> to);
     }
@@ -288,23 +302,23 @@ contract ConsentualStakeManager is StakeManager, EIP712 {
         return _encodeSettings(_defaultSettings(stakeDays));
     }
     function stakeStartFromBalance(
-        uint8 stakerConfig, uint96 amount, uint152 newStakedDays
+        bool internallyManaged, uint256 amount, uint256 newStakedDays
     ) external payable {
         _depositTokenFrom(msg.sender, amount);
-        _setDefaultSettings(uint40(_stakeStartFor(
-            stakerConfig, msg.sender,
+        _setDefaultSettings(_stakeStartFor(
+            internallyManaged, msg.sender,
             amount, newStakedDays
-        )), newStakedDays);
+        ), newStakedDays);
     }
     function stakeStartFromBalanceFor(
-        uint96 stakerConfig, address to,
-        uint96 amount, uint160 newStakedDays
+        bool internallyManaged, address to,
+        uint256 amount, uint256 newStakedDays
     ) external payable {
         _depositTokenFrom(msg.sender, amount);
-        _setDefaultSettings(uint40(_stakeStartFor(
-            stakerConfig, to,
+        _setDefaultSettings(_stakeStartFor(
+            internallyManaged, to,
             amount, newStakedDays
-        )), newStakedDays);
+        ), newStakedDays);
     }
     /**
      * start a numbeer of stakes for an address from the withdrawable
@@ -313,30 +327,30 @@ contract ConsentualStakeManager is StakeManager, EIP712 {
      * @param newStakedDays the number of days to stake for
      */
     function stakeStartFromWithdrawableFor(
-        uint96 stakerConfig, address staker,
-        uint96 amount, uint160 newStakedDays
+        bool internallyManaged, address staker,
+        uint256 amount, uint256 newStakedDays
     ) external payable {
-        _setDefaultSettings(uint40(_stakeStartFor(
-            stakerConfig, staker,
-            uint96(_deductWithdrawable(msg.sender, amount)), uint160(newStakedDays)
-        )), newStakedDays);
+        _setDefaultSettings(_stakeStartFor(
+            internallyManaged, staker,
+            _deductWithdrawable(msg.sender, amount), newStakedDays
+        ), newStakedDays);
     }
     function stakeStartFromUnattributed(
-        uint8 stakerConfig, uint96 amount, uint152 newStakedDays
+        bool internallyManaged, uint256 amount, uint256 newStakedDays
     ) external payable {
-        _setDefaultSettings(uint40(_stakeStartFor(
-            stakerConfig, msg.sender,
-            uint96(_clamp(amount, uint128(_getUnattributed()))), newStakedDays
-        )), newStakedDays);
+        _setDefaultSettings(_stakeStartFor(
+            internallyManaged, msg.sender,
+            _clamp(amount, _getUnattributed()), newStakedDays
+        ), newStakedDays);
     }
     function stakeStartFromUnattributedFor(
-        uint96 stakerConfig, address staker,
-        uint96 amount, uint160 newStakedDays
+        bool internallyManaged, address staker,
+        uint256 amount, uint256 newStakedDays
     ) external payable {
-        _setDefaultSettings(uint40(_stakeStartFor(
-            stakerConfig, staker,
-            uint96(_clamp(amount, uint128(_getUnattributed()))), newStakedDays
-        )), newStakedDays);
+        _setDefaultSettings(_stakeStartFor(
+            internallyManaged, staker,
+            _clamp(amount, _getUnattributed()), newStakedDays
+        ), newStakedDays);
     }
     /**
      * transfer a given number of tokens to the contract to be used by the contract's methods
@@ -344,7 +358,7 @@ contract ConsentualStakeManager is StakeManager, EIP712 {
      * @notice an extra layer of protection is provided by this method
      * and can be refused by calling the dangerous version
      */
-    function depositToken(uint96 amount) external payable {
+    function depositToken(uint256 amount) external payable {
         // transfer token to contract
         _depositTokenFrom(msg.sender, amount);
         _addToWithdrawable(msg.sender, amount);
@@ -355,7 +369,7 @@ contract ConsentualStakeManager is StakeManager, EIP712 {
      * @param to the account to give ownership over tokens
      * @param amount the amount of tokens
      */
-    function depositTokenTo(address to, uint96 amount) external payable {
+    function depositTokenTo(address to, uint256 amount) external payable {
         _depositTokenFrom(msg.sender, amount);
         _addToWithdrawable(to, amount);
     }
@@ -369,7 +383,7 @@ contract ConsentualStakeManager is StakeManager, EIP712 {
      * @dev only the sender can be considered to be consenting to this action
      */
     function depositTokenDangerous(uint256 amount) external payable {
-        _depositTokenFrom(msg.sender, uint96(amount));
+        _depositTokenFrom(msg.sender, amount);
     }
     /**
      * collect unattributed tokens and send to recipient of choice
@@ -377,15 +391,15 @@ contract ConsentualStakeManager is StakeManager, EIP712 {
      * or in other words, all unattributed tokens
      */
     function collectUnattributed(
-        address to, uint96 amount,
-        bool transferOut
+        bool transferOut, address to,
+        uint256 amount
     ) external payable {
-        uint256 withdrawable = _clamp(amount, uint128(_getUnattributed()));
+        uint256 withdrawable = _clamp(amount, _getUnattributed());
         if (withdrawable > 0) {
             if (transferOut) {
-                _withdrawTokenTo(to, uint96(withdrawable));
+                _withdrawTokenTo(to, withdrawable);
             } else {
-                _addToWithdrawable(to, uint96(withdrawable));
+                _addToWithdrawable(to, withdrawable);
             }
         }
     }
@@ -394,8 +408,8 @@ contract ConsentualStakeManager is StakeManager, EIP712 {
      * @param to the to of the funds
      * @param amount the amount that should be deducted from the sender's balance
      */
-    function withdrawTokenTo(address to, uint96 amount) external payable {
-        _withdrawTokenTo(to, uint96(_deductWithdrawable(msg.sender, amount)));
+    function withdrawTokenTo(address to, uint256 amount) external payable {
+        _withdrawTokenTo(to, _deductWithdrawable(msg.sender, amount));
     }
     /**
      * directs available funds to the next step
@@ -407,62 +421,68 @@ contract ConsentualStakeManager is StakeManager, EIP712 {
      * if you do not collect the unattributed tokens, anyone will be able to
      */
     function _directFunds(
-        uint96 stakerConfig, address staker,
-        uint96 delta, uint160 stakeId,
+        bool internallyManaged, address staker,
+        uint256 delta, uint256 stakeId,
         uint256 settings,
         IStakeable.StakeStore memory stake
-    ) internal returns(uint256) {
-        uint96 d = uint96(delta);
-        uint8 tipMethod = uint8(settings << 0 >> (256 - 8));
+    ) internal {
+        uint256 tipMethod = settings << 0 >> 248;
         if (tipMethod > 0) {
             uint256 tip = _computeMagnitude(
-                tipMethod, uint64(settings << 8 >> (256 - 6)), d,
+                tipMethod, settings << 8 >> 192, delta,
                 stake
             );
             // because we do not set a var for you to collect unattributed tokens
             // it must be done at the end
-            d -= uint96(tip > d ? d : tip);
+            unchecked {
+                delta = delta - (tip > delta ? delta : tip);
+            }
         }
-        uint96 toWithdraw;
-        uint64 withdrawableMethod = uint8(settings << 72 >> (256 - 8));
+        uint256 toWithdraw;
+        uint256 withdrawableMethod = settings << 72 >> 248;
         if (withdrawableMethod > 0) {
-            toWithdraw = uint96(_computeMagnitude(
-              withdrawableMethod, uint64(settings << 80 >> (256 - 6)), d,
+            toWithdraw = _computeMagnitude(
+              withdrawableMethod, settings << 80 >> 192, delta,
               stake
-            ));
+            );
             // we have to keep this delta outside of the unchecked block
             // in case someone sets a magnitude that is too high
-            d -= uint96(toWithdraw > d ? d : toWithdraw); // checks for underflow
+            unchecked {
+                delta = delta - (toWithdraw > delta ? delta : toWithdraw); // checks for underflow
+            }
             _withdrawTokenTo(staker, toWithdraw);
         }
-        uint64 newStakeMethod = uint8(settings << 144 >> (256 - 8));
+        uint256 newStakeMethod = settings << 144 >> 248;
         if (newStakeMethod > 0) {
-            uint96 endStakeAmount = uint96(_computeMagnitude(
-              newStakeMethod, uint64(settings << 152 >> (256 - 6)), d,
+            uint256 newStakeAmount = _computeMagnitude(
+              newStakeMethod, settings << 152 >> 192, delta,
               stake
-            ));
-            uint16 newStakeDays = uint16(_computeMagnitude(
-              uint8(settings << 216 >> (256 - 8)), uint64(settings << 232 >> (256 - 1)), stake.stakedDays,
-              stake
-            ));
-            d -= uint96(endStakeAmount > d ? d : endStakeAmount); // checks for underflow
-            uint256 nextStakeId = _stakeStartFor(
-                stakerConfig, staker,
-                endStakeAmount, newStakeDays
             );
-            uint8 copyIterations = uint8(settings << 240 >> (256 - 8));
+            uint256 newStakeDays = _computeMagnitude(
+              settings << 216 >> 248, settings << 232 >> 240, stake.stakedDays,
+              stake
+            );
+            unchecked {
+                delta = delta - (newStakeAmount > delta ? delta : newStakeAmount); // checks for underflow
+            }
+            uint256 nextStakeId = _stakeStartFor(
+                internallyManaged, staker,
+                newStakeAmount, newStakeDays
+            );
+            uint256 copyIterations = settings << 240 >> 248;
             if (copyIterations > 1) {
-                copyIterations = copyIterations - 1;
+                unchecked {
+                    copyIterations = copyIterations - 1;
+                }
                 // settings will be maintained for the new stake
                 _logSettingsUpdate(nextStakeId, settings);
             }
         }
-        if (d > 0) {
-            _addToWithdrawable(staker, d);
+        if (delta > 0) {
+            _addToWithdrawable(staker, delta);
         }
         // this data should still be available in logs
         delete stakeIdToSettings[stakeId];
-        return delta;
     }
     /**
      * signal to enders that early ending is or is not allowed
@@ -471,9 +491,8 @@ contract ConsentualStakeManager is StakeManager, EIP712 {
      * @param state the state to change the allow early end to
      */
     function _consentEarlyEnd(
-        address staker,
-        uint88 stakeId,
-        bool state
+        address staker, bool state,
+        uint256 stakeId
     ) internal {
         if (stakeIdToOwner[stakeId] == staker) {
             stakeIdConsentEarlyEnd[stakeId] = state;
@@ -485,13 +504,9 @@ contract ConsentualStakeManager is StakeManager, EIP712 {
      * @param stakeId the stake id in question
      * @param state the state of the early end flag
      */
-    function consentEarlyEnd(uint248 stakeId, bool state) external payable {
-        _consentEarlyEnd(msg.sender, uint88(stakeId), state);
+    function consentEarlyEnd(uint256 stakeId, bool state) external payable {
+        _consentEarlyEnd(msg.sender, state, stakeId);
     }
-    /**
-     * @notice this is a globally shared pool of nonces - all methods draw from this pool
-     */
-    mapping(address => mapping(uint256 => bool)) public signerToNonceConsumed;
     /**
      * verify a signature in a general way to reveal consent on an
      * operation over a stake id
@@ -506,7 +521,7 @@ contract ConsentualStakeManager is StakeManager, EIP712 {
     ) internal returns(address) {
         bytes32 digest = _hashTypedDataV4(hashedInput);
         address signer = ECDSA.recover(digest, signature);
-        if (signer != address(0)) {
+        if (signer == address(0)) {
             revert InvalidSignature();
         }
         if (signerToNonceConsumed[signer][nonce]) {
@@ -517,8 +532,8 @@ contract ConsentualStakeManager is StakeManager, EIP712 {
     }
     /**
      * show consent to early end stake by providing a singature
-     * @param stakeIndex the index where the corresponding stake id resides
      * @param skipIdMismatch skip the end staking process if the id provided
+     * @param stakeIndex the index where the corresponding stake id resides
      * @param earliestDay the earliest day that the stake can be ended
      * @param stakeId the stake id in question
      * @param nonce a nonce associated with the signature - used to cancel out signatures
@@ -528,29 +543,28 @@ contract ConsentualStakeManager is StakeManager, EIP712 {
      * or that day has not been reached then the method will fail
      */
     function stakeEndBySignature(
-        uint8 stakerConfig, address staker, uint48 stakeIndex, uint40 stakeId,
-        bool skipIdMismatch, uint16 earliestDay, uint232 nonce,
+        address staker, bool skipIdMismatch, bool internallyManaged,
+        uint256 stakeIndex, uint256 stakeId,
+        uint256 earliestDay, uint256 nonce,
         bytes calldata signature
     ) external payable returns(uint256) {
-        address custodian = stakerConfig == uint256(0) ? isolatedStakeManagers[staker] : address(this);
-        IStakeable.StakeStore memory stake = _getStake(custodian, uint96(stakeIndex));
+        address custodian = internallyManaged ? address(this) : isolatedStakeManagers[staker];
+        IStakeable.StakeStore memory stake = _getStake(custodian, stakeIndex);
         if (stake.stakeId != stakeId && skipIdMismatch) {
             return 0;
         }
-        uint256 currentDay = _currentDay();
-        if (currentDay < earliestDay) {
-            revert StakeNotEnded(uint96(earliestDay), uint160(currentDay));
+        if (_currentDay() < earliestDay) {
+            revert StakeNotEnded(earliestDay, _currentDay());
         }
         bytes32 hashedInput = keccak256(abi.encode(
-            keccak256("ConsentEarlyEnd(uint16 earliestDay,uint40 stakeId,uint200 nonce)"),
+            keccak256("ConsentEarlyEnd(uint256 earliestDay,uint256 stakeId,uint256 nonce)"),
             earliestDay,
             stakeId,
-            uint200(nonce)
+            nonce
         ));
-        address signer = _verifySignature(hashedInput, nonce, signature);
-        _verifyEndableStakeOwnership(signer, stakeId);
+        _verifyEndableStakeOwnership(_verifySignature(hashedInput, nonce, signature), stakeId);
         return _stakeEndByConsent(
-            stakerConfig, staker, stakeIndex, stakeId,
+            internallyManaged, staker, stakeIndex, stakeId,
             stake
         );
     }
@@ -565,12 +579,12 @@ contract ConsentualStakeManager is StakeManager, EIP712 {
      * running them at the end before the day ticks over such that you reduce sloads
      */
     function updateSettingsBySignature(
-        uint40 stakeId, uint216 nonce,
+        uint256 stakeId, uint256 nonce,
         Settings calldata settings,
         bytes calldata signature
     ) external payable {
         bytes32 hashedInput = keccak256(abi.encode(
-            keccak256("ConsentUpdateSettings(uint40 stakeId,uint216 nonce,(uint8,uint64,uint8,uint64,uint8,uint64,uint16,uint8,uint16) settings)"),
+            keccak256("ConsentUpdateSettings(uint256 stakeId,uint256 nonce,(uint8,uint64,uint8,uint64,uint8,uint64,uint16,uint8,uint16) settings)"),
             stakeId,
             nonce,
             settings
@@ -580,17 +594,17 @@ contract ConsentualStakeManager is StakeManager, EIP712 {
         return _logSettingsUpdate(stakeId, _encodeSettings(settings));
     }
     function withdrawTokenToBySignature(
-        address to, uint96 amount,
+        address to, uint256 amount,
         uint256 nonce,
         bytes calldata signature
     ) external payable {
         bytes32 hashedInput = keccak256(abi.encode(
-            keccak256("ConsentWithdrawTokenTo(address to,uint96 amount,uint256 nonce)"),
+            keccak256("ConsentWithdrawTokenTo(address to,uint256 amount,uint256 nonce)"),
             to,
             amount,
             nonce
         ));
         address signer = _verifySignature(hashedInput, nonce, signature);
-        _withdrawTokenTo(to, uint96(_deductWithdrawable(signer, amount)));
+        _withdrawTokenTo(to, _deductWithdrawable(signer, amount));
     }
 }
