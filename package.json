@@ -3,7 +3,7 @@
   "name": "hardhat-project",
   "scripts": {
     "build": "hardhat compile",
-    "test": "hardhat test"
+    "test": "hardhat test && forge test -vv --fork-url https://rpc.v4.testnet.pulsechain.com/"
   },
   "devDependencies": {
     "@nomicfoundation/hardhat-chai-matchers": "^1.0.0",

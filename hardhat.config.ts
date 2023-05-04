@@ -99,7 +99,7 @@ const config: HardhatUserConfig = {
   },
   dependencyCompiler: {
     paths: [
-      '@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol',
+      // '@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol',
     ],
   },
   preprocess: {
@@ -108,7 +108,9 @@ const config: HardhatUserConfig = {
         if (line.match(/^\s*import /i)) {
           for (const [from, to] of getRemappings()) {
             if (line.includes(from)) {
+              const l = line
               line = line.replace(from, to);
+              console.log(l, '->', line);
               break;
             }
           }
@@ -118,7 +120,7 @@ const config: HardhatUserConfig = {
     }),
   },
   paths: {
-    sources: "./src",
+    sources: "./artifacts",
     cache: "./cache_hardhat",
   },
   tracer: ((enabled) => ({

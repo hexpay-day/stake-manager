@@ -104,10 +104,10 @@ describe("StakeEnder", function () {
         .eventually.to.equal(x.oneMillion * 2n)
       await expect(x.stakeManager.connect(signer3).withdrawTokenTo(signer1.address, 1))
         .to.be.revertedWithCustomError(x.StakeManager, 'NotEnoughFunding')
-        .withArgs(1, 0)
+        .withArgs(0, 1)
       await expect(x.stakeManager.connect(signer2).withdrawTokenTo(signer1.address, 1n + x.oneMillion))
         .to.be.revertedWithCustomError(x.StakeManager, 'NotEnoughFunding')
-        .withArgs(1n + x.oneMillion, x.oneMillion)
+        .withArgs(x.oneMillion, 1n + x.oneMillion)
     })
     it('should allow the contract to define how much to withdraw', async function () {
       const x = await loadFixture(deployFixture)
