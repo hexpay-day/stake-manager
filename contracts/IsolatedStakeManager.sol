@@ -6,9 +6,10 @@ import "./Stakeable.sol";
 import "./IStakeable.sol";
 
 contract IsolatedStakeManager is Stakeable {
-    address public manager;
-    constructor() {
-        manager = msg.sender;
+    mapping(address => bool) public authorized;
+    constructor(address owner) {
+        authorized[msg.sender] = true;
+        authorized[owner] = true;
     }
     /**
      * stake a given amount of tokens for a given number of days
@@ -19,17 +20,16 @@ contract IsolatedStakeManager is Stakeable {
      * and end stakes are not occuring for a number of days
      */
     function stakeStart(uint256 newStakedHearts, uint256 newStakedDays) external override {
-        address _manager = manager;
-        if (msg.sender != _manager) {
+        if (!authorized[msg.sender]) {
             revert NotAllowed();
         }
         uint256 amount = newStakedHearts == 0 ? IERC20(0x2b591e99afE9f32eAA6214f7B7629768c40Eeb39).balanceOf(address(this)) : newStakedHearts;
-        IERC20(0x2b591e99afE9f32eAA6214f7B7629768c40Eeb39).transferFrom(_manager, address(this), amount);
+        IERC20(0x2b591e99afE9f32eAA6214f7B7629768c40Eeb39).transferFrom(msg.sender, address(this), amount);
         IStakeable(0x2b591e99afE9f32eAA6214f7B7629768c40Eeb39).stakeStart(amount, newStakedDays);
     }
     /** end a stake */
     function stakeEnd(uint256 stakeIndex, uint40 stakeId) external override {
-        if (msg.sender != manager) {
+        if (!authorized[msg.sender]) {
             revert NotAllowed();
         }
         IStakeable(0x2b591e99afE9f32eAA6214f7B7629768c40Eeb39).stakeEnd(stakeIndex, stakeId);

@@ -4,11 +4,12 @@ pragma solidity ^0.8.17;
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "./IsolatedStakeManager.sol";
 import "./IUnderlyingStakeable.sol";
+import "./UnderlyingStakeable.sol";
 import "./IsolatedStakeManager.sol";
 import "./Stakeable.sol";
 import "./IStakeable.sol";
 
-contract StakeManager is Stakeable {
+contract StakeManager is Stakeable, UnderlyingStakeable {
     /**
      * signals to enders that the early end state has changed
      * @param stakeId the stake id whos allow early end state has changed
@@ -102,24 +103,25 @@ contract StakeManager is Stakeable {
     function _stakeStartFor(
         uint96 stakerConfig, address staker,
         uint96 amount, uint160 newStakedDays
-    ) internal returns(uint256) {
+    ) internal returns(uint256 stakeId) {
         // get future index of stake
         address _target = 0x2b591e99afE9f32eAA6214f7B7629768c40Eeb39;
-        address custodian = stakerConfig == 0 ? isolatedStakeManagers[staker] : address(this);
-        address step1 = stakerConfig == 0 ? custodian : _target;
+        address custodian = stakerConfig == uint256(0) ? isolatedStakeManagers[staker] : address(this);
+        address step1 = stakerConfig == uint256(0) ? custodian : _target;
         uint256 index = IUnderlyingStakeable(_target).stakeCount(custodian);
         // start the stake
-        if (stakerConfig == 0) {
+        if (stakerConfig == uint256(0)) {
+            if (amount == 0) {
+              revert NotAllowed();
+            }
             IERC20(_target).approve(step1, amount);
         }
         IStakeable(step1).stakeStart(amount, newStakedDays);
         // get the stake id
-        IStakeable.StakeStore memory stake = _getStake(custodian, uint96(index));
+        stakeId = IStakeable(_target).stakeLists(custodian, index).stakeId;
         // attribute stake to the staker
-        uint40 stakeId = stake.stakeId;
         stakeIdToOwner[stakeId] = staker;
         // emit StakeStart(staker, stakeId);
-        return stakeId;
     }
     /**
      * gets the stake store at the provided index
@@ -140,11 +142,14 @@ contract StakeManager is Stakeable {
         address _target = 0x2b591e99afE9f32eAA6214f7B7629768c40Eeb39;
         // cannot use tokens attributed here because of tipping
         uint256 balanceBefore = IERC20(_target).balanceOf(address(this));
+        address stakeTrigger = stakerConfig == uint256(0) ? owner : _target;
         // end the stake - attributed to contract or through the managed stake
-        IStakeable(stakerConfig == 0 ? owner : _target).stakeEnd(stakeIndex, stakeId);
+        IStakeable(stakeTrigger).stakeEnd(stakeIndex, stakeId);
         // because the delta is only available in the logs
         // we need to calculate the delta to use it
-        delta = uint96(IERC20(_target).balanceOf(address(this)) - balanceBefore);
+        unchecked {
+            delta = uint96(IERC20(_target).balanceOf(address(this)) - balanceBefore);
+        }
         delete stakeIdToOwner[stakeId];
     }
     /**
@@ -156,24 +161,24 @@ contract StakeManager is Stakeable {
     function _computeMagnitude(
         uint64 method, uint96 x, uint96 y,
         IStakeable.StakeStore memory stake
-    ) internal pure returns(uint256) {
-        if (method < 4) {
-            if (method < 2) {
-                if (method == 0) return 0; // 0
-                return y; // 1
+    ) internal pure returns(uint256 amount) {
+        unchecked {
+            if (method < 4) {
+                if (method < 2) {
+                    // 0 remains 0
+                    if (method == 1) amount = uint256(y); // 1
+                } else {
+                    if (method == 2) amount = uint256(x); // 2
+                    else amount = (uint256(x) * y) / type(uint64).max; // 3 - % of total
+                }
+            } else if (method < 8) {
+                if (method < 6) {
+                    if (method == 4) amount = (uint256(x) * stake.stakedHearts) / type(uint64).max; // 4 - % of origination
+                    else amount = uint256(x) * (y - stake.stakedHearts) / type(uint64).max; // 5 - % of yield
+                }
             }
-            if (method == 2) return x; // 2
-            // % of total
-            return (uint256(x) * y) / type(uint64).max; // 3
-        } else if (method < 8) {
-            if (method < 6) {
-                // % of origination
-                if (method == 4) return (uint256(x) * stake.stakedHearts) / type(uint64).max; // 4
-                // % of yield
-                return uint256(x) * (y - stake.stakedHearts) / type(uint64).max; // 5
-            }
+            return amount;
         }
-        return 0;
     }
     /**
      * gets the amount of unattributed tokens
@@ -223,7 +228,7 @@ contract StakeManager is Stakeable {
         }
         // this scopes up to 2 stake managers to a single address
         // one that can only be ended by the staker one that can be ended by the stake manager
-        existing = address(new IsolatedStakeManager{salt: keccak256(abi.encode(staker))}());
+        existing = address(new IsolatedStakeManager{salt: keccak256(abi.encode(staker))}(staker));
         isolatedStakeManagers[staker] = existing;
     }
     function getIsolatedStakeManager(address staker) external returns(address) {
@@ -282,7 +287,7 @@ contract StakeManager is Stakeable {
         if (stakeIdToOwner[stakeId] != staker) {
             revert StakeNotEndable(stakeId, uint160(staker));
         }
-        address custodian = stakerConfig == 0 ? isolatedStakeManagers[staker] : address(this);
+        address custodian = stakerConfig == uint256(0) ? isolatedStakeManagers[staker] : address(this);
         uint96 amount = uint96(_stakeEnd(stakerConfig, custodian, stakeIndex, stakeId));
         _withdrawTokenTo(staker, amount);
     }
