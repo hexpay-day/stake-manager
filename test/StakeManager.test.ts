@@ -244,7 +244,7 @@ describe("StakeEnder", function () {
         .withArgs(hre.ethers.constants.AddressZero, x.stakeManager.address, withArgs.anyUint)
         .to.emit(x.hex, 'Transfer')
         .withArgs(x.stakeManager.address, hre.ethers.constants.AddressZero, withArgs.anyUint)
-        // .printGasUsage()
+        .printGasUsage()
       await moveForwardDays(half2, signer4, x)
       const count = await x.hex.stakeCount(x.stakeManager.address)
       const list = await Promise.all((new Array(count.toNumber())).fill(null).map((_a, i) => {
