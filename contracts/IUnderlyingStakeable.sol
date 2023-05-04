@@ -10,6 +10,6 @@ import "./IStakeable.sol";
  * when the stake is first created
  */
 interface IUnderlyingStakeable is IStakeable {
-    /** get the count of stakes for a staker */
-    function stakeCount(address stakerAddr) external view returns (uint256);
+  /** get the count of stakes for a staker */
+  function stakeCount(address stakerAddr) external view returns (uint256);
 }
