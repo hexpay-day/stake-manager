@@ -4,20 +4,21 @@ pragma solidity ^0.8.13;
 import "forge-std/Test.sol";
 import "contracts/UnderlyingStakeManager.sol";
 import "contracts/ConsentualStakeManager.sol";
+import "contracts/StakeManager.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import "contracts/IUnderlyingStakeable.sol";
 import "contracts/IStakeable.sol";
 
 contract TestConsentualStakeManager is Test {
-  ConsentualStakeManager public stkMngr;
+  StakeManager public stkMngr;
   address public hx = 0x2b591e99afE9f32eAA6214f7B7629768c40Eeb39;
   address public pulsexSacrifice = 0x075e72a5eDf65F0A5f44699c7654C1a76941Ddc8;
   uint256 public decimalShift;
   uint256 public startingBalance;
   uint256 public nextStakeId;
   function setUp() public {
-    stkMngr = new ConsentualStakeManager();
+    stkMngr = new StakeManager();
     uint256 decimals = IERC20Metadata(hx).decimals();
     decimalShift = 10**decimals;
     startingBalance = 1_000_000 * decimalShift;
@@ -187,13 +188,13 @@ contract TestConsentualStakeManager is Test {
     list[0] = ConsentualStakeManager.StakeInfo({
       internallyManaged: true,
       staker: vm.addr(1),
-      stakeIndex: 1,
+      stakeIndex: type(int256).min,
       stakeId: nextStakeId + 1
     });
     list[1] = ConsentualStakeManager.StakeInfo({
       internallyManaged: true,
       staker: vm.addr(1),
-      stakeIndex: 0,
+      stakeIndex: type(int256).min,
       stakeId: nextStakeId
     });
     _stakeEndByConsentForMany(vm.addr(1), list);

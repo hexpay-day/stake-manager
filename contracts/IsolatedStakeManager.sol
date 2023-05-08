@@ -23,7 +23,9 @@ contract IsolatedStakeManager is Stakeable {
     if (!authorized[msg.sender]) {
       revert NotAllowed();
     }
-    uint256 amount = newStakedHearts == 0 ? IERC20(0x2b591e99afE9f32eAA6214f7B7629768c40Eeb39).balanceOf(address(this)) : newStakedHearts;
+    uint256 amount = newStakedHearts == 0
+      ? IERC20(0x2b591e99afE9f32eAA6214f7B7629768c40Eeb39).balanceOf(address(this))
+      : newStakedHearts;
     IERC20(0x2b591e99afE9f32eAA6214f7B7629768c40Eeb39).transferFrom(msg.sender, address(this), amount);
     IStakeable(0x2b591e99afE9f32eAA6214f7B7629768c40Eeb39).stakeStart(amount, newStakedDays);
   }

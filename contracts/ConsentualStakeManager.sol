@@ -129,7 +129,12 @@ contract ConsentualStakeManager is UnderlyingStakeManager, EIP712 {
    * @param stakeId the stake id to get settings for
    * @param y the value to supply as a secondary magnitude
    */
-  function computeEnderTip(bool internallyManaged, uint256 index, uint256 stakeId, uint256 y) external view returns(uint256) {
+  function computeEnderTip(
+    bool internallyManaged,
+    uint256 index,
+    uint256 stakeId,
+    uint256 y
+  ) external view returns(uint256) {
     uint256 settings = stakeIdToSettings[stakeId];
     address custodian = internallyManaged ? address(this) : isolatedStakeManagers[stakeIdToOwner[stakeId]];
     IStakeable.StakeStore memory stake = _getStake(custodian, index);
@@ -383,8 +388,10 @@ contract ConsentualStakeManager is UnderlyingStakeManager, EIP712 {
     _setDefaultSettings(stakeId, newStakedDays);
   }
   /**
-   * stake a number of tokens for a given number of days, pulling from the unattributed tokens in this contract
-   * @param internallyManaged whether the stake will be originating from inside of this contract or a deerived, isolated one
+   * stake a number of tokens for a given number of days, pulling from
+   * the unattributed tokens in this contract
+   * @param internallyManaged whether the stake will be originating from
+   * inside of this contract or a deerived, isolated one
    * @param to the owner of the stake
    * @param amount the amount of tokens to stake
    * @param newStakedDays the number of days to stake
@@ -661,6 +668,7 @@ contract ConsentualStakeManager is UnderlyingStakeManager, EIP712 {
     bytes calldata signature
   ) external payable {
     bytes32 hashedInput = keccak256(abi.encode(
+      // solhint-disable-next-line
       keccak256("ConsentUpdateSettings(uint256 stakeId,uint256 nonce,(uint8,uint64,uint8,uint64,uint8,uint64,uint16,uint8,uint16) settings)"),
       stakeId,
       nonce,

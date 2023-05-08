@@ -34,5 +34,7 @@
     "typescript": "^5.0.4",
     "yargs": "^17.7.2"
   },
-  "dependencies": {}
+  "dependencies": {
+    "solhint": "^3.4.1"
+  }
 }
