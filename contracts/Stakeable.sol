@@ -15,6 +15,9 @@ abstract contract Stakeable is IStakeable, Multicall {
   function currentDay() virtual external view returns (uint256) {
     return IStakeable(0x2b591e99afE9f32eAA6214f7B7629768c40Eeb39).currentDay();
   }
+  function globalInfo() virtual external view returns(uint256[13] memory) {
+    return IStakeable(0x2b591e99afE9f32eAA6214f7B7629768c40Eeb39).globalInfo();
+  }
   /** start a stake */
   function stakeStart(uint256 newStakedHearts, uint256 newStakedDays) virtual external;
   /** end a stake */

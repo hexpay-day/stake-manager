@@ -3,10 +3,10 @@ dotenv.config()
 import * as yargs from 'yargs'
 
 export const args = yargs.options({
-  network: {
+  chain: {
     type: 'string',
     default: 'pulsechainV4',
-    describe: 'the network configuration to utilize',
+    describe: 'the chain configuration to utilize',
   },
   coinmarketcap: {
     type: 'string',

@@ -76,8 +76,8 @@ const config: HardhatUserConfig = {
     }],
   },
   networks: {
-    hardhat: hardhatNetworks[conf.args.network],
-    external: networks[conf.args.network],
+    hardhat: hardhatNetworks[conf.args.chain],
+    external: networks[conf.args.chain],
   },
   typechain: {
     target: 'ethers-v5',

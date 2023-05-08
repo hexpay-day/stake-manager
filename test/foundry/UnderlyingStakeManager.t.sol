@@ -2,13 +2,12 @@
 pragma solidity ^0.8.13;
 
 import "forge-std/Test.sol";
-import "contracts/StakeManager.sol";
+import "contracts/UnderlyingStakeManager.sol";
 import "contracts/ConsentualStakeManager.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import "contracts/IUnderlyingStakeable.sol";
 import "contracts/IStakeable.sol";
-import "forge-std/console2.sol";
 
 contract TestConsentualStakeManager is Test {
   ConsentualStakeManager public stkMngr;
@@ -16,7 +15,7 @@ contract TestConsentualStakeManager is Test {
   address public pulsexSacrifice = 0x075e72a5eDf65F0A5f44699c7654C1a76941Ddc8;
   uint256 public decimalShift;
   uint256 public startingBalance;
-  uint256 public lastStakeId;
+  uint256 public nextStakeId;
   function setUp() public {
     stkMngr = new ConsentualStakeManager();
     uint256 decimals = IERC20Metadata(hx).decimals();
@@ -32,14 +31,16 @@ contract TestConsentualStakeManager is Test {
       IERC20(hx).approve(address(stkMngr), type(uint256).max);
       vm.stopPrank();
     }
-    lastStakeId = IUnderlyingStakeable(hx).stakeCount(address(stkMngr));
+    uint256[13] memory globalInfo = IUnderlyingStakeable(hx).globalInfo();
+    // [, , , , , , stakeIdBN]
+    nextStakeId = globalInfo[6] + 1;
     assertEq(IERC20(hx).balanceOf(vm.addr(1)), startingBalance);
     assertEq(IERC20(hx).balanceOf(vm.addr(100)), startingBalance);
   }
   function _moveDays(address marcher, uint256 numDays) internal {
     while (numDays > 0) {
+      skip(24*60*60);
       vm.startPrank(marcher);
-      vm.warp(block.timestamp * (24*60*60));
       IStakeable(hx).stakeStart(1 * decimalShift, 5555);
       vm.stopPrank();
       numDays = numDays - 1;
@@ -81,13 +82,13 @@ contract TestConsentualStakeManager is Test {
     _depositToken(vm.addr(1), startingBalance);
     // bob cannot take alice's deposits
     vm.expectRevert(abi.encodeWithSelector(
-      StakeManager.NotEnoughFunding.selector,
+      UnderlyingStakeManager.NotEnoughFunding.selector,
       0, 1
     ));
     _withdrawToken(vm.addr(2), vm.addr(1), 1);
     // alice cannot take more than deposited
     vm.expectRevert(abi.encodeWithSelector(
-      StakeManager.NotEnoughFunding.selector,
+      UnderlyingStakeManager.NotEnoughFunding.selector,
       startingBalance, startingBalance + 1
     ));
     _withdrawToken(vm.addr(1), vm.addr(1), startingBalance + 1);
@@ -95,7 +96,7 @@ contract TestConsentualStakeManager is Test {
     assertEq(IERC20(hx).balanceOf(vm.addr(1)), startingBalance / 2);
     // alice still cannot take more than deposited
     vm.expectRevert(abi.encodeWithSelector(
-      StakeManager.NotEnoughFunding.selector,
+      UnderlyingStakeManager.NotEnoughFunding.selector,
       startingBalance / 2, startingBalance
     ));
     _withdrawToken(vm.addr(1), vm.addr(1), startingBalance);
@@ -121,6 +122,11 @@ contract TestConsentualStakeManager is Test {
     stkMngr.stakeStart(amount, stakeDays);
     vm.stopPrank();
   }
+  function _managedStakeStart(address sender, uint256 amount, uint256 stakeDays) internal {
+    vm.startPrank(sender);
+    stkMngr.managedStakeStart(true, amount, stakeDays);
+    vm.stopPrank();
+  }
   function _stakeEndByConsentForMany(
     address ender,
     ConsentualStakeManager.StakeInfo[] memory list
@@ -129,23 +135,67 @@ contract TestConsentualStakeManager is Test {
     stkMngr.stakeEndByConsentForMany(list);
     vm.stopPrank();
   }
-  function testStakeStarts() public {
-    _stakeStart(vm.addr(1), startingBalance / 10, 20);
-    _stakeStart(vm.addr(2), startingBalance / 10, 20);
+  function testStakeRestarts() public {
+    _stakeStart(vm.addr(1), startingBalance / 2, 20);
+    _stakeStart(vm.addr(1), startingBalance / 2, 20);
+    _moveDays(vm.addr(5), 21);
+    bytes[] memory calls = new bytes[](4);
+    calls[0] = abi.encodeWithSelector(
+      UnderlyingStakeManager.stakeEnd.selector,
+      1, nextStakeId + 1
+    );
+    calls[1] = abi.encodeWithSelector(
+      UnderlyingStakeManager.stakeEnd.selector,
+      0, nextStakeId
+    );
+    calls[2] = abi.encodeWithSelector(
+      UnderlyingStakeManager.stakeStart.selector,
+      startingBalance / 2, 20
+    );
+    calls[3] = abi.encodeWithSelector(
+      UnderlyingStakeManager.stakeStart.selector,
+      startingBalance / 2, 20
+    );
+    vm.startPrank(vm.addr(1));
+    Multicall(stkMngr).multicall(calls, false);
+    vm.stopPrank();
+  }
+  function _directStakeStart(address sender, uint256 amount, uint256 daysStaked) internal {
+    vm.startPrank(sender);
+    IStakeable(hx).stakeStart(amount, daysStaked);
+    vm.stopPrank();
+  }
+  function _directStakeEnd(address sender, uint256 index, uint256 stakeId) internal {
+    vm.startPrank(sender);
+    IStakeable(hx).stakeEnd(index, uint40(stakeId));
+    vm.stopPrank();
+  }
+  function testDirectStakeRestart() public {
+    _directStakeStart(vm.addr(1), startingBalance / 10, 20);
+    _directStakeStart(vm.addr(2), startingBalance / 10, 20);
+    _moveDays(vm.addr(5), 21);
+    _directStakeEnd(vm.addr(1), 0, nextStakeId);
+    _directStakeEnd(vm.addr(2), 0, nextStakeId + 1);
+    _directStakeStart(vm.addr(1), startingBalance / 10, 20);
+    _directStakeStart(vm.addr(2), startingBalance / 10, 20);
+  }
+  function testManagedStakeRestarts() public {
+    _managedStakeStart(vm.addr(1), startingBalance / 10, 20);
+    _managedStakeStart(vm.addr(1), startingBalance / 10, 20);
     _moveDays(vm.addr(5), 21);
     ConsentualStakeManager.StakeInfo[] memory list = new ConsentualStakeManager.StakeInfo[](2);
     list[0] = ConsentualStakeManager.StakeInfo({
-      internallyManaged: false,
+      internallyManaged: true,
       staker: vm.addr(1),
-      stakeIndex: 0,
-      stakeId: lastStakeId
+      stakeIndex: 1,
+      stakeId: nextStakeId + 1
     });
     list[1] = ConsentualStakeManager.StakeInfo({
-      internallyManaged: false,
-      staker: vm.addr(2),
-      stakeIndex: 1,
-      stakeId: lastStakeId + 1
+      internallyManaged: true,
+      staker: vm.addr(1),
+      stakeIndex: 0,
+      stakeId: nextStakeId
     });
-    _stakeEndByConsentForMany(vm.addr(5), list);
+    _stakeEndByConsentForMany(vm.addr(1), list);
   }
 }

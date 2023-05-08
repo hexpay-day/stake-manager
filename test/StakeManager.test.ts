@@ -3,7 +3,7 @@ import * as Chai from "chai"
 import * as hre from "hardhat"
 import * as ethers from 'ethers'
 import _ from 'lodash'
-import { HEX } from "../artifacts/types/contracts/reference/Hex.sol"
+import { IHEX } from "../artifacts/types/contracts/IHEX"
 import * as withArgs from '@nomicfoundation/hardhat-chai-matchers/withArgs'
 import { days } from "@nomicfoundation/hardhat-network-helpers/dist/src/helpers/time/duration"
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers"
@@ -41,13 +41,12 @@ const pulsexSacrificeAddress = hre.ethers.utils.getAddress('0x075e72a5edf65f0a5f
 const deployFixture = async () => {
   const StakeManager = await hre.ethers.getContractFactory('StakeManager')
   const ConsentualStakeManager = await hre.ethers.getContractFactory('ConsentualStakeManager')
-  const stakeManager = await ConsentualStakeManager.deploy()
+  const stakeManager = await StakeManager.deploy()
   await stakeManager.deployed()
   const signers = await hre.ethers.getSigners()
   await impersonateAccount(pulsexSacrificeAddress)
   const pulsexSacrificeSigner = await hre.ethers.getSigner(pulsexSacrificeAddress)
-  const hexArtifact = await hre.artifacts.readArtifact('HEX')
-  const hex = await hre.ethers.getContractAtFromArtifact(hexArtifact, hexAddress, pulsexSacrificeSigner) as HEX
+  const hex = await hre.ethers.getContractAt('IHEX', hexAddress, pulsexSacrificeSigner) as IHEX
   // hre.tracer.printNext = true
   const oneMillion = hre.ethers.utils.parseUnits('1000000', await hex.decimals()).toBigInt()
   await Promise.all(signers.slice(0, 20).map(async (signer) => {
@@ -202,24 +201,24 @@ describe("StakeEnder", function () {
       const half1 = Math.floor(days / 2)
       const half2 = days - half1
       await expect(x.stakeManager.connect(signer1).multicall([
-        x.stakeManager.interface.encodeFunctionData('stakeStartFromBalance', [true, x.oneMillion / 2n, half1]),
-        x.stakeManager.interface.encodeFunctionData('stakeStartFromBalance', [true, x.oneMillion / 2n, days]),
+        x.stakeManager.interface.encodeFunctionData('stakeStartFromBalanceFor', [true, signer1.address, x.oneMillion / 2n, half1]),
+        x.stakeManager.interface.encodeFunctionData('stakeStartFromBalanceFor', [true, signer1.address, x.oneMillion / 2n, days]),
       ], false))
         .to.emit(x.hex, 'StakeStart')
         .withArgs(withArgs.anyValue, x.stakeManager.address, x.nextStakeId)
         .to.emit(x.hex, 'StakeStart')
         .withArgs(withArgs.anyValue, x.stakeManager.address, x.nextStakeId + 1n)
       await expect(x.stakeManager.connect(signer2).multicall([
-        x.stakeManager.interface.encodeFunctionData('stakeStartFromBalance', [true, x.oneMillion / 2n, half1]),
-        x.stakeManager.interface.encodeFunctionData('stakeStartFromBalance', [true, x.oneMillion / 2n, days]),
+        x.stakeManager.interface.encodeFunctionData('stakeStartFromBalanceFor', [true, signer2.address, x.oneMillion / 2n, half1]),
+        x.stakeManager.interface.encodeFunctionData('stakeStartFromBalanceFor', [true, signer2.address, x.oneMillion / 2n, days]),
       ], false))
         .to.emit(x.hex, 'StakeStart')
         .withArgs(withArgs.anyValue, x.stakeManager.address, x.nextStakeId + 2n)
         .to.emit(x.hex, 'StakeStart')
         .withArgs(withArgs.anyValue, x.stakeManager.address, x.nextStakeId + 3n)
       await expect(x.stakeManager.connect(signer3).multicall([
-        x.stakeManager.interface.encodeFunctionData('stakeStartFromBalance', [true, x.oneMillion / 2n, half1]),
-        x.stakeManager.interface.encodeFunctionData('stakeStartFromBalance', [true, x.oneMillion / 2n, days]),
+        x.stakeManager.interface.encodeFunctionData('stakeStartFromBalanceFor', [true, signer3.address, x.oneMillion / 2n, half1]),
+        x.stakeManager.interface.encodeFunctionData('stakeStartFromBalanceFor', [true, signer3.address, x.oneMillion / 2n, days]),
       ], false))
         .to.emit(x.hex, 'StakeStart')
         .withArgs(withArgs.anyValue, x.stakeManager.address, x.nextStakeId + 4n)
@@ -230,9 +229,18 @@ describe("StakeEnder", function () {
         .eventually.to.equal(6)
       await moveForwardDays(half1 + 1, signer4, x)
       await expect(x.stakeManager.connect(signer4).multicall([
-        x.stakeManager.interface.encodeFunctionData('stakeEndByConsent', [signer3.address, false, true, 4, x.nextStakeId + 4n]),
-        x.stakeManager.interface.encodeFunctionData('stakeEndByConsent', [signer2.address, false, true, 2, x.nextStakeId + 2n]),
-        x.stakeManager.interface.encodeFunctionData('stakeEndByConsent', [signer1.address, false, true, 0, x.nextStakeId + 0n]),
+        x.ConsentualStakeManager.interface.encodeFunctionData('stakeEndByConsent', [
+          true, signer3.address,
+          ethers.constants.MinInt256, x.nextStakeId + 4n,
+        ]),
+        x.ConsentualStakeManager.interface.encodeFunctionData('stakeEndByConsent', [
+          true, signer2.address,
+          ethers.constants.MinInt256, x.nextStakeId + 2n,
+        ]),
+        x.ConsentualStakeManager.interface.encodeFunctionData('stakeEndByConsent', [
+          true, signer1.address,
+          ethers.constants.MinInt256, x.nextStakeId + 0n,
+        ]),
       ], false))
         .to.emit(x.hex, 'StakeEnd')
         .withArgs(withArgs.anyUint, withArgs.anyUint, x.stakeManager.address, x.nextStakeId + 4n)
