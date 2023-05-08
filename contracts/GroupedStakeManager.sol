@@ -164,6 +164,9 @@ contract GroupedStakeManager {
     }
     return amount > max ? max : amount;
   }
+  function clamp(uint256 amount, uint256 limit) external pure returns(uint256) {
+    return _clamp(amount, limit);
+  }
   function _hsiStakeStartFor(HsiStakeStartParams[] calldata params, uint256 limit) internal returns (uint256 total, address[] memory) {
     address hedron = 0x3819f64f282bf135d62168C1e513280dAF905e06;
     uint256 i;
