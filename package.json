@@ -2,8 +2,9 @@
   "license": "UNLICENSED",
   "name": "hardhat-project",
   "scripts": {
-    "build": "hardhat compile",
-    "test": "forge test"
+    "build": "solhint 'contracts/**/*.sol' && hardhat compile",
+    "test": "hardhat test",
+    "foundry:test": "forge test --fork-url 'https://rpc.v4.testnet.pulsechain.com' -vvv"
   },
   "devDependencies": {
     "@nomicfoundation/hardhat-chai-matchers": "^1.0.0",

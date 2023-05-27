@@ -245,7 +245,7 @@ contract ConsentualStakeManager is UnderlyingStakeManager, EIP712 {
     uint256 idx = stakeIndex < 0 ? stakeIdToIndex[stakeId] : uint256(stakeIndex);
     IStakeable.StakeStore memory stake = _getStake(custodian, idx);
     uint256 settings = stakeIdToSettings[stakeId];
-    uint256 consentAbilities = settings << 240 >> 248;
+    uint256 consentAbilities = uint16(settings);
     uint256 today = _currentDay();
     if (((stake.lockedDay + stake.stakedDays + 1) < today) && consentAbilities < 4) {
       revert StakeNotEnded(today, stake.lockedDay + stake.stakedDays);
@@ -335,8 +335,7 @@ contract ConsentualStakeManager is UnderlyingStakeManager, EIP712 {
       | uint256(settings.newStakeMagnitude) << 40
       | uint256(settings.newStakeDaysMethod) << 32
       | uint256(settings.newStakeDaysMagnitude) << 16
-      | uint256(settings.consentAbilities) << 8
-      | uint256(0);
+      | uint256(settings.consentAbilities);
   }
   function _defaultSettings(uint256 stakeDays) internal pure returns(Settings memory) {
     return Settings(
@@ -345,7 +344,7 @@ contract ConsentualStakeManager is UnderlyingStakeManager, EIP712 {
       uint8(1), uint64(0), // new stake amount
       uint8(1), uint16(stakeDays), // new stake days
       uint8(3), // "011" allow start and end stake
-      0
+      type(uint8).max
     );
   }
   function defaultSettings(uint256 stakeDays) external pure returns(Settings memory) {
@@ -549,7 +548,7 @@ contract ConsentualStakeManager is UnderlyingStakeManager, EIP712 {
         stake
       );
       uint256 newStakeDays = _computeMagnitude(
-        settings << 216 >> 248, settings << 232 >> 240, today,
+        settings << 216 >> 248, settings << 232 >> 248, today,
         stake
       );
       newStakeAmount = newStakeAmount > delta ? delta : newStakeAmount;
@@ -561,7 +560,12 @@ contract ConsentualStakeManager is UnderlyingStakeManager, EIP712 {
         newStakeAmount, newStakeDays
       );
       // settings will be maintained for the new stake
-      _logSettingsUpdate(nextStakeId, settings);
+      uint256 copyIterations = uint8(settings);
+      if (copyIterations > 0) {
+        --copyIterations;
+        settings |= copyIterations;
+        _logSettingsUpdate(nextStakeId, settings);
+      }
     }
     if (delta > 0) {
       _addToWithdrawable(staker, delta);
