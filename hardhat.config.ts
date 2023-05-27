@@ -32,13 +32,28 @@ const pulsechainV4: HardhatNetworkUserConfig = {
       hardforkHistory: {
         merge: 15_537_394,
         shanghai: 99_000_000,
-      }
+      },
+    },
+  },
+}
+
+const pulsechain: HardhatNetworkUserConfig = {
+  forking: {
+    url: 'https://rpc.pulsechain.com',
+  },
+  chains: {
+    369: {
+      hardforkHistory: {
+        merge: 17_233_001,
+        shanghai: 17_233_033,
+      },
     },
   },
 }
 
 const hardhatNetworks: Record<string, HardhatNetworkUserConfig> = {
   pulsechainV4,
+  pulsechain,
 }
 
 const defaultNetwork = {
@@ -50,6 +65,11 @@ const networks: Record<string, NetworkUserConfig> = {
     ...defaultNetwork,
     url: pulsechainV4.forking?.url,
     ...pulsechainV4,
+  },
+  pulsechain: {
+    ...defaultNetwork,
+    url: pulsechain.forking?.url,
+    ...pulsechain,
   },
 }
 const settings = {
