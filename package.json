@@ -4,7 +4,7 @@
   "scripts": {
     "build": "solhint 'contracts/**/*.sol' && hardhat compile",
     "test": "hardhat test",
-    "foundry:test": "forge test --fork-url 'https://rpc.v4.testnet.pulsechain.com' -vvv"
+    "foundry:test": "forge test --fork-url 'https://rpc.pulsechain.com' -vvv"
   },
   "devDependencies": {
     "@nomicfoundation/hardhat-chai-matchers": "^1.0.0",

@@ -9,12 +9,13 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import "contracts/IUnderlyingStakeable.sol";
 import "contracts/IStakeable.sol";
-// import "forge-std/console2.sol";
+import "forge-std/console2.sol";
 
 contract TestConsentualStakeManager is Test {
   StakeManager public stkMngr;
   address public hx = 0x2b591e99afE9f32eAA6214f7B7629768c40Eeb39;
   address public pulsexSacrifice = 0x075e72a5eDf65F0A5f44699c7654C1a76941Ddc8;
+  address public pulsexSacrificeMainnet = 0x5280aa3cF5D6246B8a17dFA3D75Db26617B73937;
   uint256 public decimalShift;
   uint256 public startingBalance;
   uint256 public nextStakeId;
@@ -23,7 +24,12 @@ contract TestConsentualStakeManager is Test {
     uint256 decimals = 8; //IERC20Metadata(hx).decimals();
     decimalShift = 10**decimals;
     startingBalance = 1_000_000 * decimalShift;
-    vm.startPrank(pulsexSacrifice);
+    address impersonate = pulsexSacrifice;
+    uint256 balanceOfWhale = IERC20(hx).balanceOf(impersonate);
+    if (balanceOfWhale == 0) {
+      impersonate = pulsexSacrificeMainnet;
+    }
+    vm.startPrank(impersonate);
     for (uint256 i = 1; i <= 100; ++i) {
       IERC20(hx).transfer(vm.addr(i), startingBalance);
     }
