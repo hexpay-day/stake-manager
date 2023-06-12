@@ -46,7 +46,7 @@ const deployFixture = async () => {
   const signers = await hre.ethers.getSigners()
   await impersonateAccount(pulsexSacrificeAddress)
   const pulsexSacrificeSigner = await hre.ethers.getSigner(pulsexSacrificeAddress)
-  const hex = await hre.ethers.getContractAt('IHEX', hexAddress, pulsexSacrificeSigner) as IHEX
+  const hex = await hre.ethers.getContractAt('contracts/IHex.sol:IHEX', hexAddress, pulsexSacrificeSigner) as IHEX
   // hre.tracer.printNext = true
   const oneMillion = hre.ethers.utils.parseUnits('1000000', await hex.decimals()).toBigInt()
   await Promise.all(signers.slice(0, 20).map(async (signer) => {
@@ -201,24 +201,24 @@ describe("StakeEnder", function () {
       const half1 = Math.floor(days / 2)
       const half2 = days - half1
       await expect(x.stakeManager.connect(signer1).multicall([
-        x.stakeManager.interface.encodeFunctionData('stakeStartFromBalanceFor', [true, signer1.address, x.oneMillion / 2n, half1]),
-        x.stakeManager.interface.encodeFunctionData('stakeStartFromBalanceFor', [true, signer1.address, x.oneMillion / 2n, days]),
+        x.stakeManager.interface.encodeFunctionData('stakeStartFromBalanceFor', [signer1.address, x.oneMillion / 2n, half1]),
+        x.stakeManager.interface.encodeFunctionData('stakeStartFromBalanceFor', [signer1.address, x.oneMillion / 2n, days]),
       ], false))
         .to.emit(x.hex, 'StakeStart')
         .withArgs(withArgs.anyValue, x.stakeManager.address, x.nextStakeId)
         .to.emit(x.hex, 'StakeStart')
         .withArgs(withArgs.anyValue, x.stakeManager.address, x.nextStakeId + 1n)
       await expect(x.stakeManager.connect(signer2).multicall([
-        x.stakeManager.interface.encodeFunctionData('stakeStartFromBalanceFor', [true, signer2.address, x.oneMillion / 2n, half1]),
-        x.stakeManager.interface.encodeFunctionData('stakeStartFromBalanceFor', [true, signer2.address, x.oneMillion / 2n, days]),
+        x.stakeManager.interface.encodeFunctionData('stakeStartFromBalanceFor', [signer2.address, x.oneMillion / 2n, half1]),
+        x.stakeManager.interface.encodeFunctionData('stakeStartFromBalanceFor', [signer2.address, x.oneMillion / 2n, days]),
       ], false))
         .to.emit(x.hex, 'StakeStart')
         .withArgs(withArgs.anyValue, x.stakeManager.address, x.nextStakeId + 2n)
         .to.emit(x.hex, 'StakeStart')
         .withArgs(withArgs.anyValue, x.stakeManager.address, x.nextStakeId + 3n)
       await expect(x.stakeManager.connect(signer3).multicall([
-        x.stakeManager.interface.encodeFunctionData('stakeStartFromBalanceFor', [true, signer3.address, x.oneMillion / 2n, half1]),
-        x.stakeManager.interface.encodeFunctionData('stakeStartFromBalanceFor', [true, signer3.address, x.oneMillion / 2n, days]),
+        x.stakeManager.interface.encodeFunctionData('stakeStartFromBalanceFor', [signer3.address, x.oneMillion / 2n, half1]),
+        x.stakeManager.interface.encodeFunctionData('stakeStartFromBalanceFor', [signer3.address, x.oneMillion / 2n, days]),
       ], false))
         .to.emit(x.hex, 'StakeStart')
         .withArgs(withArgs.anyValue, x.stakeManager.address, x.nextStakeId + 4n)

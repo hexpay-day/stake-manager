@@ -11,7 +11,7 @@ import "contracts/IUnderlyingStakeable.sol";
 import "contracts/IStakeable.sol";
 import "forge-std/console2.sol";
 
-contract TestConsentualStakeManager is Test {
+contract TestStakeManager is Test {
   StakeManager public stkMngr;
   address public hx = 0x2b591e99afE9f32eAA6214f7B7629768c40Eeb39;
   address public pulsexSacrifice = 0x075e72a5eDf65F0A5f44699c7654C1a76941Ddc8;
@@ -54,9 +54,6 @@ contract TestConsentualStakeManager is Test {
       numDays = numDays - 1;
     }
   }
-  function testPercentMagnitudeLimit() public {
-    assertEq(stkMngr.percentMagnitudeLimit(), type(uint64).max);
-  }
   function _depositToken(address sender, uint256 amount) internal {
     vm.startPrank(sender);
     stkMngr.depositToken(amount);
@@ -67,10 +64,44 @@ contract TestConsentualStakeManager is Test {
     stkMngr.withdrawTokenTo(receipient, amount);
     vm.stopPrank();
   }
-  function _transferTo(address sender, address recipient, uint256 amount) public {
+  function _transferTo(address sender, address recipient, uint256 amount) internal {
     vm.startPrank(sender);
     IERC20(hx).transfer(recipient, amount);
     vm.stopPrank();
+  }
+  function _stakeStart(address sender, uint256 amount, uint256 stakeDays) internal {
+    vm.startPrank(sender);
+    stkMngr.stakeStart(amount, stakeDays);
+    vm.stopPrank();
+  }
+  function _managedStakeStart(address sender, uint256 amount, uint256 stakeDays) internal {
+    vm.startPrank(sender);
+    stkMngr.stakeStart(amount, stakeDays);
+    vm.stopPrank();
+  }
+  function _stakeEndByConsentForMany(
+    address ender,
+    ConsentualStakeManager.StakeInfo[] memory list
+  ) internal {
+    vm.startPrank(ender);
+    stkMngr.stakeEndByConsentForMany(list);
+    vm.stopPrank();
+  }
+  function _directStakeStart(address sender, uint256 amount, uint256 daysStaked) internal {
+    vm.startPrank(sender);
+    IStakeable(hx).stakeStart(amount, daysStaked);
+    vm.stopPrank();
+  }
+  function _directStakeEnd(address sender, uint256 index, uint256 stakeId) internal {
+    vm.startPrank(sender);
+    IStakeable(hx).stakeEnd(index, uint40(stakeId));
+    vm.stopPrank();
+  }
+}
+
+contract TestConsentualStakeManager is TestStakeManager {
+  function testPercentMagnitudeLimit() public {
+    assertEq(stkMngr.percentMagnitudeLimit(), type(uint64).max);
   }
   function testDeposits() public {
     _depositToken(vm.addr(1), startingBalance);
@@ -125,23 +156,20 @@ contract TestConsentualStakeManager is Test {
     assertEq(IERC20(hx).balanceOf(vm.addr(2)), startingBalance * 3 / 2);
     _transferTo(vm.addr(2), vm.addr(1), startingBalance / 2);
   }
-  function _stakeStart(address sender, uint256 amount, uint256 stakeDays) internal {
-    vm.startPrank(sender);
-    stkMngr.stakeStart(amount, stakeDays);
-    vm.stopPrank();
+  function testDirectStakeRestartSingle() public {
+    _directStakeStart(vm.addr(1), startingBalance / 10, 20);
+    _moveDays(vm.addr(5), 21);
+    _directStakeEnd(vm.addr(1), 0, nextStakeId);
+    _directStakeStart(vm.addr(1), startingBalance / 10, 20);
   }
-  function _managedStakeStart(address sender, uint256 amount, uint256 stakeDays) internal {
-    vm.startPrank(sender);
-    stkMngr.managedStakeStart(true, amount, stakeDays);
-    vm.stopPrank();
-  }
-  function _stakeEndByConsentForMany(
-    address ender,
-    ConsentualStakeManager.StakeInfo[] memory list
-  ) public {
-    vm.startPrank(ender);
-    stkMngr.stakeEndByConsentForMany(list);
-    vm.stopPrank();
+  function testDirectStakeRestart() public {
+    _directStakeStart(vm.addr(1), startingBalance / 10, 20);
+    _directStakeStart(vm.addr(2), startingBalance / 10, 20);
+    _moveDays(vm.addr(5), 21);
+    _directStakeEnd(vm.addr(1), 0, nextStakeId);
+    _directStakeEnd(vm.addr(2), 0, nextStakeId + 1);
+    _directStakeStart(vm.addr(1), startingBalance / 10, 20);
+    _directStakeStart(vm.addr(2), startingBalance / 10, 20);
   }
   function testStakeRestarts() public {
     _stakeStart(vm.addr(1), startingBalance / 2, 20);
@@ -168,38 +196,17 @@ contract TestConsentualStakeManager is Test {
     Multicall(stkMngr).multicall(calls, false);
     vm.stopPrank();
   }
-  function _directStakeStart(address sender, uint256 amount, uint256 daysStaked) internal {
-    vm.startPrank(sender);
-    IStakeable(hx).stakeStart(amount, daysStaked);
-    vm.stopPrank();
-  }
-  function _directStakeEnd(address sender, uint256 index, uint256 stakeId) internal {
-    vm.startPrank(sender);
-    IStakeable(hx).stakeEnd(index, uint40(stakeId));
-    vm.stopPrank();
-  }
-  function testDirectStakeRestart() public {
-    _directStakeStart(vm.addr(1), startingBalance / 10, 20);
-    _directStakeStart(vm.addr(2), startingBalance / 10, 20);
-    _moveDays(vm.addr(5), 21);
-    _directStakeEnd(vm.addr(1), 0, nextStakeId);
-    _directStakeEnd(vm.addr(2), 0, nextStakeId + 1);
-    _directStakeStart(vm.addr(1), startingBalance / 10, 20);
-    _directStakeStart(vm.addr(2), startingBalance / 10, 20);
-  }
   function testManagedStakeRestarts() public {
     _managedStakeStart(vm.addr(1), startingBalance / 10, 20);
     _managedStakeStart(vm.addr(1), startingBalance / 10, 20);
     _moveDays(vm.addr(5), 21);
     ConsentualStakeManager.StakeInfo[] memory list = new ConsentualStakeManager.StakeInfo[](2);
     list[0] = ConsentualStakeManager.StakeInfo({
-      internallyManaged: true,
       staker: vm.addr(1),
       stakeIndex: type(int256).min,
       stakeId: nextStakeId + 1
     });
     list[1] = ConsentualStakeManager.StakeInfo({
-      internallyManaged: true,
       staker: vm.addr(1),
       stakeIndex: type(int256).min,
       stakeId: nextStakeId

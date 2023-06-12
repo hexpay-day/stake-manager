@@ -3,20 +3,21 @@ pragma solidity ^0.8.17;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "./Multicall.sol";
+import "./UnderlyingStakeable.sol";
 import "./IStakeable.sol";
 
-abstract contract Stakeable is IStakeable, Multicall {
+abstract contract Stakeable is IStakeable, Multicall, UnderlyingStakeable {
   error NotAllowed();
   /** gets the stake store at a particular index for a staker */
   function stakeLists(address staker, uint256 index) virtual view external returns(StakeStore memory) {
-    return IStakeable(0x2b591e99afE9f32eAA6214f7B7629768c40Eeb39).stakeLists(staker, index);
+    return IStakeable(target).stakeLists(staker, index);
   }
   /** checks the current day */
   function currentDay() virtual external view returns (uint256) {
-    return IStakeable(0x2b591e99afE9f32eAA6214f7B7629768c40Eeb39).currentDay();
+    return IStakeable(target).currentDay();
   }
   function globalInfo() virtual external view returns(uint256[13] memory) {
-    return IStakeable(0x2b591e99afE9f32eAA6214f7B7629768c40Eeb39).globalInfo();
+    return IStakeable(target).globalInfo();
   }
   /** start a stake */
   function stakeStart(uint256 newStakedHearts, uint256 newStakedDays) virtual external;
