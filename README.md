@@ -19,6 +19,7 @@ yarn run buid
 
 run tests
 ```bash
-yarn run test
-yarn run test --trace-error # with error traces
+yarn run foundry:test
+# yarn run test
+# yarn run test --trace-error # with error traces
 ```

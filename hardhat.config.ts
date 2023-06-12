@@ -81,7 +81,7 @@ const settings = {
 
 let hexArtifact = {} as unknown as Artifact;
 try {
-  const hexArtifactBuffer = fs.readFileSync(path.join(__dirname, 'artifacts', 'contracts', 'reference', 'Hex.sol', 'HEX.json'))
+  const hexArtifactBuffer = fs.readFileSync(path.join(__dirname, 'artifacts', 'contracts', 'reference', 'HEX.sol', 'HEX.json'))
   hexArtifact = JSON.parse(hexArtifactBuffer.toString())
 } catch (err) {}
 
