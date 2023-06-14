@@ -5,7 +5,7 @@ import "./StakeEnder.sol";
 import "./Multicall.sol";
 import "./UnderlyingStakeable.sol";
 
-contract MaximusStakeManager is UnderlyingStakeable, Multicall {
+contract MaximusStakeManager is UnderlyingStakeable {
   mapping(address => bool) public publicWhitelist;
   mapping(address => address) public stakeEnder;
   constructor() {
