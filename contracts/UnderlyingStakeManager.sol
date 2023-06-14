@@ -46,10 +46,6 @@ contract UnderlyingStakeManager is Stakeable {
    * creates the internal stake ender contract
    */
   constructor() {}
-  /** checks the current day on the provided target */
-  function _currentDay() internal view returns(uint256) {
-    return IStakeable(target).currentDay();
-  }
   /** deposits tokens from a staker and marks them for that staker */
   function _depositTokenFrom(address staker, uint256 amount) internal {
     IERC20(target).transferFrom(staker, address(this), amount);
@@ -87,13 +83,6 @@ contract UnderlyingStakeManager is Stakeable {
     stakeIdToIndex[stakeId] = index;
     // attribute stake to the staker
     stakeIdToOwner[stakeId] = staker;
-  }
-  /**
-   * gets the stake store at the provided index
-   * @param index the index of the stake to get
-   */
-  function _getStake(address custodian, uint256 index) internal view returns(IStakeable.StakeStore memory) {
-    return IStakeable(target).stakeLists(custodian, index);
   }
   /**
    * ends a stake for someone else

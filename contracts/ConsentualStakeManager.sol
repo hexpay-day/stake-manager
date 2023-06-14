@@ -239,7 +239,7 @@ contract ConsentualStakeManager is UnderlyingStakeManager, EIP712 {
     uint256 settings = stakeIdToSettings[stakeId];
     uint256 consentAbilities = uint16(settings);
     uint256 today = _currentDay();
-    if (((stake.lockedDay + stake.stakedDays + 1) < today) && consentAbilities < 4) {
+    if (((stake.lockedDay + stake.stakedDays) < today) && consentAbilities < 4) {
       revert StakeNotEnded(today, stake.lockedDay + stake.stakedDays);
     }
     if (staker != msg.sender && consentAbilities < 2) {
