@@ -19,5 +19,5 @@ This contract, or, more specifically it's factory, generates a contract based on
 * Ownership is a 2 step process - [OZ's Ownable2Step](https://docs.openzeppelin.com/contracts/4.x/api/access#Ownable2Step).
 * Start, end, and early end capabilities can be granted to any address and persist between each round of starting and ending stakes. For this reason it is best to only grant permission in 1 direction for each address.
 * Early end stake capabilities can be removed, even for the owner by adjusting permissions.
-
+* Can be ended by external, [multicall](https://github.com/mds1/multicall) contract and also has permissioned multicall which preserves `msg.sender`.
 

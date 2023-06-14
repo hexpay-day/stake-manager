@@ -19,26 +19,11 @@ contract IsolatedStakeManager is Stakeable, Ownable2Step {
    * @param settings allowed to start / end / early end stakes
    */
   function setAuthorized(address runner, uint256 settings) external onlyOwner {
+    if (settings > 7) {
+      revert NotAllowed();
+    }
     authorization[runner] = settings;
     emit UpdateAuthorized(runner, settings);
-  }
-  enum Capability {
-    START,
-    END,
-    EARLY_END
-  }
-  function isCapable(uint256 setting, Capability target) internal pure returns(bool) {
-    if (target == Capability.START) {
-      return setting == 1 || setting == 3 || setting == 5 || setting > 6;
-    } else if (target == Capability.END) {
-      return setting == 2 || setting == 3 || setting > 5;
-    } else {
-      // early end
-      return setting > 3;
-    }
-  }
-  function isEarlyEnding(StakeStore memory stake, uint256 currentDay) internal pure returns(bool) {
-    return (stake.lockedDay + stake.stakedDays) < currentDay;
   }
   /**
    * stake a given amount of tokens for a given number of days
@@ -50,7 +35,7 @@ contract IsolatedStakeManager is Stakeable, Ownable2Step {
    */
   function stakeStart(uint256 newStakedHearts, uint256 newStakedDays) external override {
     uint256 settings = authorization[msg.sender];
-    if (!isCapable(settings, Capability.START)) {
+    if (!checkBinary(settings, 0)) {
       revert NotAllowed();
     }
     address tokenHolder = owner();
@@ -62,14 +47,26 @@ contract IsolatedStakeManager is Stakeable, Ownable2Step {
   }
   /** end a stake */
   function stakeEnd(uint256 stakeIndex, uint40 stakeId) external override {
-    uint256 setting = authorization[msg.sender];
     StakeStore memory stake = _getStake(address(this), stakeIndex);
+    _endStake(stake, stakeIndex, stakeId);
+  }
+  function checkAndStakeEnd(uint256 stakeIndex, uint40 stakeId) external {
+    StakeStore memory stake = _getStake(address(this), stakeIndex);
+    if (stake.stakeId != stakeId) {
+      return;
+    }
+    _endStake(stake, stakeIndex, stakeId);
+  }
+  function _endStake(StakeStore memory stake, uint256 stakeIndex, uint40 stakeId) internal {
+    uint256 setting = authorization[msg.sender];
     if (isEarlyEnding(stake, _currentDay())) {
-      if (!isCapable(setting, Capability.EARLY_END)) {
+      // can early end stake
+      if (!checkBinary(setting, 2)) {
         revert NotAllowed();
       }
     } else {
-      if (!isCapable(setting, Capability.END)) {
+      // can end stake
+      if (!checkBinary(setting, 1)) {
         revert NotAllowed();
       }
     }
