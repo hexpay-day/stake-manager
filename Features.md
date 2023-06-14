@@ -8,7 +8,7 @@ This document outlines the features available in these contracts and how they mi
 - Consentual Stake Manager
 - Grouped Stake Manager
 
-### [Isolated Stake Manager](./contracts/IsolatedStakeManager.sol)
+### [IsolatedStakeManager.sol](./contracts/IsolatedStakeManager.sol)
 
 This contract, or, more specifically it's factory, generates a contract based on the owner of the stake. Some features to understand about this contract:
 * Anyone can create an Isolated Stake Manager (ISM) for any other address.
