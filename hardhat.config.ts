@@ -26,12 +26,13 @@ function getRemappings() {
 const pulsechainV4: HardhatNetworkUserConfig = {
   forking: {
     url: 'https://rpc.v4.testnet.pulsechain.com',
+    blockNumber: conf.args.blockNumber,
   },
   chains: {
     943: {
       hardforkHistory: {
         merge: 15_537_394,
-        shanghai: 99_000_000,
+        shanghai: 15_537_395,
       },
     },
   },
@@ -40,20 +41,29 @@ const pulsechainV4: HardhatNetworkUserConfig = {
 const pulsechain: HardhatNetworkUserConfig = {
   forking: {
     url: 'https://rpc.pulsechain.com',
+    blockNumber: conf.args.blockNumber,
   },
   chains: {
     369: {
       hardforkHistory: {
         merge: 17_233_001,
-        shanghai: 17_233_033,
+        shanghai: 17_233_001,
       },
     },
+  },
+}
+
+const ethereum: HardhatNetworkUserConfig = {
+  forking: {
+    url: 'https://rpc.ankr.com/eth',
+    blockNumber: conf.args.blockNumber,
   },
 }
 
 const hardhatNetworks: Record<string, HardhatNetworkUserConfig> = {
   pulsechainV4,
   pulsechain,
+  ethereum,
 }
 
 const defaultNetwork = {
@@ -61,6 +71,11 @@ const defaultNetwork = {
 }
 
 const networks: Record<string, NetworkUserConfig> = {
+  ethereum: {
+    ...defaultNetwork,
+    url: ethereum.forking?.url,
+    ...ethereum,
+  },
   pulsechainV4: {
     ...defaultNetwork,
     url: pulsechainV4.forking?.url,
@@ -81,7 +96,7 @@ const settings = {
 
 let hexArtifact = {} as unknown as Artifact;
 try {
-  const hexArtifactBuffer = fs.readFileSync(path.join(__dirname, 'artifacts', 'contracts', 'reference', 'HEX.sol', 'HEX.json'))
+  const hexArtifactBuffer = fs.readFileSync(path.join(__dirname, 'artifacts', 'contracts', 'reference', 'Hex.sol', 'HEX.json'))
   hexArtifact = JSON.parse(hexArtifactBuffer.toString())
 } catch (err) {}
 

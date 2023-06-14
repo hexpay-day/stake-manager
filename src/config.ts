@@ -30,4 +30,8 @@ export const args = yargs.options({
     ],
     describe: 'opcodes used for traacing',
   },
+  blockNumber: {
+    type: 'number',
+    require: false,
+  },
 }).env().parseSync()
