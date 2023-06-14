@@ -3,27 +3,15 @@ pragma solidity ^0.8.17;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/access/Ownable2Step.sol";
+import "./AuthorizationManager.sol";
 import "./Stakeable.sol";
 import "./IStakeable.sol";
 
-contract IsolatedStakeManager is Stakeable, Ownable2Step {
-  mapping(address => uint256) public authorization;
-  event UpdateAuthorized(address runner, uint256 startAuthorization);
-  constructor(address owner) {
-    authorization[owner] = 7; // can start, end, and early end stakes
+contract IsolatedStakeManager is Stakeable, Ownable2Step, AuthorizationManager {
+  constructor(address owner) AuthorizationManager(7) {
+    // can start, end, and early end stakes
+    authorization[bytes32(uint256(uint160(owner)))] = MAX_AUTHORIZATION;
     _transferOwnership(owner);
-  }
-  /**
-   * set the authorization status of an address
-   * @param runner the address to set the authorization flag of
-   * @param settings allowed to start / end / early end stakes
-   */
-  function setAuthorized(address runner, uint256 settings) external onlyOwner {
-    if (settings > 7) {
-      revert NotAllowed();
-    }
-    authorization[runner] = settings;
-    emit UpdateAuthorized(runner, settings);
   }
   /**
    * stake a given amount of tokens for a given number of days
@@ -34,8 +22,8 @@ contract IsolatedStakeManager is Stakeable, Ownable2Step {
    * and end stakes are not occuring for a number of days
    */
   function stakeStart(uint256 newStakedHearts, uint256 newStakedDays) external override {
-    uint256 settings = authorization[msg.sender];
-    if (!checkBinary(settings, 0)) {
+    uint256 setting = authorization[bytes32(uint256(uint160(msg.sender)))];
+    if (!checkBinary(setting, 0)) {
       revert NotAllowed();
     }
     address tokenHolder = owner();
@@ -58,7 +46,7 @@ contract IsolatedStakeManager is Stakeable, Ownable2Step {
     _endStake(stake, stakeIndex, stakeId);
   }
   function _endStake(StakeStore memory stake, uint256 stakeIndex, uint40 stakeId) internal {
-    uint256 setting = authorization[msg.sender];
+    uint256 setting = authorization[bytes32(uint256(uint160(msg.sender)))];
     if (isEarlyEnding(stake, _currentDay())) {
       // can early end stake
       if (!checkBinary(setting, 2)) {

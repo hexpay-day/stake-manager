@@ -5,15 +5,14 @@ import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "./IHedron.sol";
 import "./Multicall.sol";
-import "./UnderlyingStakeable.sol";
+import "./AuthorizationManager.sol";
 
-contract HSIStakeManager is UnderlyingStakeable, Multicall {
-  error NotEnoughFunding(uint256 provided, uint256 expected);
-  error NotAllowed();
+contract HSIStakeManager is AuthorizationManager {
   mapping(address => mapping(uint256 => address)) public tokenOwner;
   mapping(address => address) public hsiToOwner;
   address constant hedron = 0x3819f64f282bf135d62168C1e513280dAF905e06;
   address constant waatsa = 0x2520E62474bA3085693f856B3E93fa6C92a4EF48;
+  constructor() AuthorizationManager(7) {}
   /**
    * transfer stakes by their token ids
    * @param tokenId the token id to move to this contract
@@ -65,7 +64,8 @@ contract HSIStakeManager is UnderlyingStakeable, Multicall {
     address hsiAddress;
     do {
       hsiAddress = params[i].hsiAddress;
-      if (hsiToOwner[hsiAddress] == runner) {
+      // early end stake not allowed
+      if (hsiToOwner[hsiAddress] == runner || checkBinary(authorization[keccak256(abi.encode(msg.sender))], 2)) {
         hedronTokens += IHedron(hedron).mintInstanced(params[i].hsiIndex, hsiAddress);
       }
       ++i;

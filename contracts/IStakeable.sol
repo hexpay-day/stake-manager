@@ -24,8 +24,6 @@ interface IStakeable {
   function stakeEnd(uint256 stakeIndex, uint40 stakeId) external;
   /** checks the current day */
   function currentDay() external view returns (uint256);
-  /**
-   * gets global info for the system
-   */
+  /** gets global info for the system */
   function globalInfo() external view returns (uint256[13] memory);
 }

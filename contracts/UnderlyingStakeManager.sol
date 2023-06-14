@@ -18,21 +18,10 @@ contract UnderlyingStakeManager is Stakeable {
    * allowing, then disallowing early ending may cause enders to ignore stakes
    */
   event UpdateConsentEarlyEnd(uint256 indexed stakeId);
-  // event StakeStart(address indexed staker, uint256 indexed stakeId);
-  /**
-   * @notice this event is thrown when the stake id provided
-   * does not match what is expected given other contextual information
-   * such as an index
-   */
-  error StakeIdMismatch(uint256 provided, uint256 expected);
   /**
    * @notice this error is thrown when the stake being ended is not yet ended
    */
   error StakeNotEndable(uint256 provided, uint256 expected);
-  /**
-   * @notice error is thrown when there is not enough funding to do the required operation
-   */
-  error NotEnoughFunding(uint256 provided, uint256 expected);
   /**
    * @notice the owner of a stake indexed by the stake id
    */

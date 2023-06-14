@@ -22,6 +22,12 @@ This contract, or, more specifically it's factory, generates a contract based on
 * Can be ended by external, [multicall](https://github.com/mds1/multicall) contract
 * Has permissioned multicall which preserves `msg.sender`
 
-### [GroupedStakeManager.sol](./contracts/GroupedStakeManager.sol)
+### [HSIStakeManager.sol](./contracts/HSIStakeManager.sol)
 
-This contract holds
+This contract holds methods for managing hsi stakes.
+* Anyone can deposit hsi's, that do not have hedron lent against them, must be paid off.
+* HSI is detokenized and cannot come out so it is usually worth only depositing last minute / in remaining days before.
+* Ability to call multiple end stakes available.
+* Public multicall not available yet.
+* Rewards can be minted for all owned hsi's at the same time. So, no more single tx for each mint.
+* Send reward (hedron) or target (hex) tokens to any address.
