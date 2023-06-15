@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.17;
 
-import "./StakeEnder.sol";
+import "./MaximusStakeEnder.sol";
 import "./Multicall.sol";
 import "./UnderlyingStakeable.sol";
 
@@ -19,7 +19,7 @@ contract MaximusStakeManager is UnderlyingStakeable {
     if (!publicWhitelist[target]) {
       return;
     }
-    StakeEnder(_createEndStaker(feeTo)).stakeEnd(target, stakeId);
+    MaximusStakeEnder(_createEndStaker(feeTo)).stakeEnd(target, stakeId);
   }
   function endPublicStake(address target, uint256 stakeId) external {
     _endPublicStake(msg.sender, target, stakeId);
@@ -35,7 +35,7 @@ contract MaximusStakeManager is UnderlyingStakeable {
     if (stakeEnderAddress != address(0)) {
       return stakeEnderAddress;
     }
-    stakeEnderAddress = address(new StakeEnder{salt: keccak256(abi.encode(owner))}(owner));
+    stakeEnderAddress = address(new MaximusStakeEnder{salt: keccak256(abi.encode(owner))}(owner));
     stakeEnder[owner] = stakeEnderAddress;
   }
 }

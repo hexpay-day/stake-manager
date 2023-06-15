@@ -22,6 +22,11 @@ contract AuthorizationManager is UnderlyingStakeable {
     authorization[key] = settings;
     emit UpdateAuthorization(key, settings);
   }
+  modifier addressIsAuthorized(address target, uint256 index) {
+    if (checkBinary(authorization[bytes32(uint256(uint160(target)))], index)) {
+      _;
+    }
+  }
   function isCapable(uint256 setting, uint256 index) external pure returns(bool) {
     return checkBinary(setting, index);
   }

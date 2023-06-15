@@ -31,3 +31,14 @@ This contract holds methods for managing hsi stakes.
 * Public multicall not available yet.
 * Rewards can be minted for all owned hsi's at the same time. So, no more single tx for each mint.
 * Send reward (hedron) or target (hex) tokens to any address.
+Pending features:
+* Send end stake calls from external multicall
+
+### [MaximusStakeManager.sol](./contracts/MaximusStakeManager.sol)
+
+This contract generates intermediary, owned contracts to collect fees distributed by for maximus perpetuals ([base](https://etherscan.io/address/0xe9f84d418B008888A992Ff8c6D22389C2C3504e0), [trio](https://etherscan.io/address/0xF55cD1e399e1cc3D95303048897a680be3313308), [lucky](https://etherscan.io/address/0x6B0956258fF7bd7645aa35369B55B61b8e6d6140), [deci](https://etherscan.io/address/0x6b32022693210cD2Cfc466b9Ac0085DE8fC34eA6), and [maxi](https://etherscan.io/address/0x0d86EB9f43C57f6FF3BC9E23D8F9d82503f0e84b)).
+
+* Generates an intermediary contract for collecting fees from perpetuals with ease using previously provided (though not released) interface.
+* Only allows for current perpetuals to be ended - otherwise security vulnerability is opened up.
+* Create intermediary contract for any address.
+* Separate authorization levels for ending stakes, flushing tokens, withdrawing.
