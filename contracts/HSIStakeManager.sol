@@ -8,7 +8,6 @@ import "./Multicall.sol";
 import "./AuthorizationManager.sol";
 
 contract HSIStakeManager is AuthorizationManager {
-  mapping(address => mapping(uint256 => address)) public tokenOwner;
   mapping(address => address) public hsiToOwner;
   address constant hedron = 0x3819f64f282bf135d62168C1e513280dAF905e06;
   constructor() AuthorizationManager(3) {}
@@ -33,13 +32,6 @@ contract HSIStakeManager is AuthorizationManager {
   function _deposit721(address token, uint256 tokenId) internal returns(address owner) {
     owner = IERC721(token).ownerOf(tokenId);
     IERC721(token).transferFrom(msg.sender, address(this), tokenId);
-  }
-  function _withdraw721(address token, address to, uint256 tokenId) internal {
-    if (msg.sender != tokenOwner[token][tokenId]) {
-      revert NotAllowed();
-    }
-    delete tokenOwner[token][tokenId];
-    IERC721(token).transferFrom(address(this), to, tokenId);
   }
   struct HSIParams {
     uint96 hsiIndex;

@@ -33,7 +33,8 @@ This contract holds methods for managing hsi stakes.
 * Send reward (hedron) or target (hex) tokens to any address.
 * Send end stake calls from external multicall
 * Mint hedron tokens as final step before ending stake
-* Only owner can withdraw waatsa
+* Multiple end stakes owned by multiple addresses are possible to end at the same time.
+* Transfers are reduced when end stake owners are grouped.
 
 ### [MaximusStakeManager.sol](./contracts/MaximusStakeManager.sol)
 
