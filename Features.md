@@ -125,3 +125,5 @@ Each of these manipulations uses method 0-6 in the compute magnitude methods as 
 
 \* ```settings.magnitude * remaining_amount / (2^64)-1```<br>
 \** mostly useful for new stake days magnitude only<br>
+
+Note: if the configuration is malformed for settings passed into the `computeMagnitude` method, it can cause unwanted results. For instance, because the `currentDay` is passed as the `y` value during stake days computing, it does not make sense to return the `y` value, as occurs in method `1` because that could result in the stake days being > `5555`.
