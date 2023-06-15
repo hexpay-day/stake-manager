@@ -7,9 +7,10 @@ import "./IHedron.sol";
 contract ConsentualStakeManager is UnderlyingStakeManager {
   // 1 word;
   struct Settings {
+    // starts with full amount of end stake
     uint8 tipMethod;
     uint64 tipMagnitude;
-    // used as a percentage
+    // starts with amount of end stake - tip amount
     uint8 withdrawableMethod;
     uint64 withdrawableMagnitude;
     // the rest goes into a new stake if the number of days are set
@@ -17,7 +18,7 @@ contract ConsentualStakeManager is UnderlyingStakeManager {
     uint64 newStakeMagnitude;
     uint8 newStakeDaysMethod;
     uint16 newStakeDaysMagnitude;
-    uint8 copyIterations;
+    uint8 copyIterations; // 0 for do not restart, 1-254 as countdown, 255 as restart indefinitely
     uint8 consentAbilities; // 0/1 end, 00/10 early end, 100 mint hedron, 1000 mint hedron during end stake
   }
   /**
