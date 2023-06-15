@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.17;
 
-import "./ConsentualStakeManager.sol";
+import "./SignatureStakeManager.sol";
 
-contract StakeManager is ConsentualStakeManager {
-  constructor() ConsentualStakeManager() {}
+contract StakeManager is SignatureStakeManager {
+  constructor() SignatureStakeManager() {}
 }

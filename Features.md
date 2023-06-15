@@ -41,7 +41,24 @@ This contract holds methods for managing hsi stakes.
 This contract generates intermediary, owned contracts to collect fees distributed by for maximus perpetuals ([base](https://etherscan.io/address/0xe9f84d418B008888A992Ff8c6D22389C2C3504e0), [trio](https://etherscan.io/address/0xF55cD1e399e1cc3D95303048897a680be3313308), [lucky](https://etherscan.io/address/0x6B0956258fF7bd7645aa35369B55B61b8e6d6140), [deci](https://etherscan.io/address/0x6b32022693210cD2Cfc466b9Ac0085DE8fC34eA6), and [maxi](https://etherscan.io/address/0x0d86EB9f43C57f6FF3BC9E23D8F9d82503f0e84b)).
 
 * Generates an intermediary contract for collecting fees from perpetuals with ease using previously provided (though not released) interface.
-* Only allows for current perpetuals to be ended - otherwise security vulnerability is opened up.
-* Create intermediary contract for any address.
-* Separate authorization levels for ending stakes, flushing tokens, withdrawing.
-* Permissioned multicall
+* Only allows for current perpetuals to be ended - otherwise security vulnerability is opened up
+* Create intermediary contract for any address
+* Separate authorization levels for ending stakes, flushing tokens, withdrawing
+* Permissioned multicall available for multiple flush and withdrawal steps
+
+### [ConsentualStakeManager](./contracts/ConsentualStakeManager.sol)
+
+This contract is a singleton that holds all stakes in a single contract for gas efficiency and chaining purposes.
+
+* Settings for defining what to do with stakes when they are ended
+* Auto send funds to owner or attribute in internal accounting
+* Tip stake ender according to pre-defined functions
+* Restart stake using multiple functions up to 254 times or infinitely
+* Divide funds or pull percentage of interest off the top
+* Consent signalling by signature (eip712)
+* Automatic stake restarting - tokens never leave contract
+* External [multicall](https://github.com/mds1/multicall) compatible
+* Permissioned multicall available
+* Preference for silent failures to reduce failure cases (gas loss)
+* Removal of stake index requirement (internally tracked)
+* Settings to require final mint during stake end

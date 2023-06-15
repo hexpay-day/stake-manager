@@ -1,11 +1,10 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.17;
 
-import "@openzeppelin/contracts/utils/cryptography/EIP712.sol";
-import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 import "./UnderlyingStakeManager.sol";
+import "./IHedron.sol";
 
-contract ConsentualStakeManager is UnderlyingStakeManager, EIP712 {
+contract ConsentualStakeManager is UnderlyingStakeManager {
   // 1 word;
   struct Settings {
     uint8 tipMethod;
@@ -14,11 +13,11 @@ contract ConsentualStakeManager is UnderlyingStakeManager, EIP712 {
     uint8 withdrawableMethod;
     uint64 withdrawableMagnitude;
     // the rest goes into a new stake if the number of days are set
-    uint8 newStakeMethod;
+    uint8 newStakeMethod; // being non zero signals approval
     uint64 newStakeMagnitude;
     uint8 newStakeDaysMethod;
     uint16 newStakeDaysMagnitude;
-    uint8 consentAbilities; // 0/1 start, 00/10 end, 000/100 early end
+    uint8 consentAbilities; // 0/1 end, 00/10 early end, 100 mint hedron, 1000 mint hedron during end stake
     uint8 copyIterations;
   }
   /**
@@ -54,6 +53,7 @@ contract ConsentualStakeManager is UnderlyingStakeManager, EIP712 {
    * @notice settings of stakes indexed by the stake id
    */
   mapping(uint256 => uint256) public stakeIdToSettings;
+  mapping(address => uint256) public outstandingHedronTokens;
   /**
    * @notice an invariant that tracks how much underlying token is owned by a particular address
    */
@@ -68,13 +68,6 @@ contract ConsentualStakeManager is UnderlyingStakeManager, EIP712 {
    * we use bool here because we do not indend a pathway to delete
    */
   mapping(address => mapping(uint256 => bool)) public signerToNonceConsumed;
-  /**
-   * creates the internal stake ender contract
-   */
-  constructor()
-    UnderlyingStakeManager()
-    EIP712("ConsentualStakeManager", "0.0.0")
-  {}
   /**
    * compute a useful value from 2 inputs
    * @param method the method to use to compute a result
@@ -125,21 +118,21 @@ contract ConsentualStakeManager is UnderlyingStakeManager, EIP712 {
   }
   /**
    * computes a magnitude from the provided values
-   * @param index the index of the stake to check the ender tip for
    * @param stakeId the stake id to get settings for
    * @param y the value to supply as a secondary magnitude
    */
   function computeEnderTip(
-    uint256 index,
     uint256 stakeId,
     uint256 y
   ) external view returns(uint256) {
     uint256 settings = stakeIdToSettings[stakeId];
-    IStakeable.StakeStore memory stake = _getStake(address(this), index);
     return _computeMagnitude(
       settings >> 248, settings << 8 >> 192, y,
-      stake
+      _stakeById(stakeId)
     );
+  }
+  function _stakeById(uint256 stakeId) internal view returns(IStakeable.StakeStore memory) {
+    return _getStake(address(this), stakeIdToIndex[stakeId]);
   }
   /**
    * adds a balance to the provided staker of the magnitude given in amount
@@ -161,10 +154,8 @@ contract ConsentualStakeManager is UnderlyingStakeManager, EIP712 {
    */
   function _deductWithdrawable(address account, uint256 amount) internal returns(uint256) {
     uint256 withdrawable = withdrawableBalanceOf[account];
-    if (amount == 0) {
+    if (amount == 0 || withdrawable < amount) {
       amount = withdrawable; // overflow protection
-    } else if (withdrawable < amount) {
-      revert NotEnoughFunding(withdrawable, amount);
     }
     unchecked {
       withdrawableBalanceOf[account] = withdrawable - amount;
@@ -199,28 +190,17 @@ contract ConsentualStakeManager is UnderlyingStakeManager, EIP712 {
       revert StakeNotOwned(owner, stakeIdToOwner[stakeId]);
     }
   }
-  function _stakeFromInfo(
-    int256 stakeIndex, uint256 stakeId
-  ) internal view returns(IStakeable.StakeStore memory) {
-    return _getStake(address(this), stakeIndex < 0 ? stakeIdToIndex[stakeId] : uint256(stakeIndex));
-  }
   /**
    * end a stake for someone other than the sender of the transaction
-   * @param staker the staker's account
    * @param stakeId the stake id on the underlying contract to end
    */
   function stakeEndByConsent(
-    address staker,
-    int256 stakeIndex, uint256 stakeId
+    uint256 stakeId
   ) external payable returns(uint256 delta) {
-    return _stakeEndByConsent(
-      staker,
-      stakeIndex, stakeId
-    );
+    return _stakeEndByConsent(stakeId);
   }
   /**
    * end a stake with the consent of the underlying staker
-   * @param staker the underlying staker themselves
    * @param stakeId stake id of the stake to end - idempotency key
    * and to ensure that the stake is available after it is deleted on the underlying contract
    * @notice validation must be done externally to ensure that this stake can be ended
@@ -231,29 +211,35 @@ contract ConsentualStakeManager is UnderlyingStakeManager, EIP712 {
    * if consent abilities is < 4 then there is no consent given for early ending
    */
   function _stakeEndByConsent(
-    address staker,
-    int256 stakeIndex, uint256 stakeId
+    uint256 stakeId
   ) internal returns(uint256 delta) {
-    uint256 idx = stakeIndex < 0 ? stakeIdToIndex[stakeId] : uint256(stakeIndex);
+    uint256 idx = stakeIdToIndex[stakeId];
     IStakeable.StakeStore memory stake = _getStake(address(this), idx);
     uint256 settings = stakeIdToSettings[stakeId];
     uint256 consentAbilities = uint16(settings);
     uint256 today = _currentDay();
-    if (((stake.lockedDay + stake.stakedDays) < today) && consentAbilities < 4) {
-      revert StakeNotEnded(today, stake.lockedDay + stake.stakedDays);
+    if (((stake.lockedDay + stake.stakedDays) < today) && checkBinary(consentAbilities, 1)) {
+      return 0;
     }
-    if (staker != msg.sender && consentAbilities < 2) {
-      revert NotAllowed();
+    if (checkBinary(consentAbilities, 0)) {
+      return 0;
     }
     if (stakeId != stake.stakeId) {
       return 0;
     }
+    address staker = stakeIdToOwner[stakeId];
     // consent has been confirmed
+    if (checkBinary(settings, 3)) {
+      uint256 hedronTokens = IHedron(hedron).mintNative(stakeIdToIndex[stakeId], uint40(stakeId));
+      unchecked {
+        outstandingHedronTokens[staker] += hedronTokens;
+      }
+    }
     delta = _stakeEnd(
       idx, stakeId
     );
     _directFunds(
-      address(this),
+      staker,
       delta, stakeId,
       today,
       settings,
@@ -263,8 +249,7 @@ contract ConsentualStakeManager is UnderlyingStakeManager, EIP712 {
   }
   struct StakeInfo {
     address staker;
-    int256 stakeIndex;
-    uint256 stakeId;
+    uint96 stakeId;
   }
   /**
    * end many stakes at the same time
@@ -280,10 +265,7 @@ contract ConsentualStakeManager is UnderlyingStakeManager, EIP712 {
     uint256 len = stakeEnds.length;
     do {
       stakeInfo = stakeEnds[i];
-      _stakeEndByConsent(
-        stakeInfo.staker,
-        stakeInfo.stakeIndex, stakeInfo.stakeId
-      );
+      _stakeEndByConsent(stakeInfo.stakeId);
       unchecked {
         ++i;
       }
@@ -293,7 +275,7 @@ contract ConsentualStakeManager is UnderlyingStakeManager, EIP712 {
     return _defaultEncodedSettings(stakeDays);
   }
   function _defaultEncodedSettings(uint256 stakeDays) internal pure returns(uint256) {
-    return uint256(0x0000000000000000000000000000000000000100000000000000000100000300) | (stakeDays << 16);
+    return uint256(0x0000000000000000000000000000000000000100000000000000000100000dff) | (stakeDays << 16);
   }
   function _setDefaultSettings(uint256 stakeId, uint256 stakeDays) internal {
     stakeIdToSettings[stakeId] = _defaultEncodedSettings(stakeDays);
@@ -334,7 +316,7 @@ contract ConsentualStakeManager is UnderlyingStakeManager, EIP712 {
       uint8(0), uint64(0), // withdrawable
       uint8(1), uint64(0), // new stake amount
       uint8(1), uint16(stakeDays), // new stake days
-      uint8(3), // "011" allow start and end stake
+      uint8(13), // "1101" allow start and end stake
       type(uint8).max
     );
   }
@@ -553,8 +535,10 @@ contract ConsentualStakeManager is UnderlyingStakeManager, EIP712 {
       // settings will be maintained for the new stake
       uint256 copyIterations = uint8(settings);
       if (copyIterations > 0) {
-        --copyIterations;
-        settings |= copyIterations;
+        if (copyIterations < 255) {
+          --copyIterations;
+          settings |= copyIterations;
+        }
         _logSettingsUpdate(nextStakeId, settings);
       }
     }
@@ -564,127 +548,54 @@ contract ConsentualStakeManager is UnderlyingStakeManager, EIP712 {
     // this data should still be available in logs
     delete stakeIdToSettings[stakeId];
   }
+  // mint hedron rewards
+  struct HedronParams {
+    uint96 hsiIndex;
+    address hsiAddress;
+  }
+  address constant hedron = 0x3819f64f282bf135d62168C1e513280dAF905e06;
   /**
-   * signal to enders that early ending is or is not allowed
-   * @param staker the staker that gave consent to early end stake
-   * @param stakeId the stake id in question
-   * @param state the state to change the allow early end to
+   * mint rewards and transfer them to a provided address
+   * @param stakeIds list of stake ids to mint
+   * @notice any combination of owners can be passed, however, it is most efficient to order the hsi address by owner
    */
-  function _consentEarlyEnd(
-    address staker, bool state,
-    uint256 stakeId
-  ) internal {
-    if (stakeIdToOwner[stakeId] == staker) {
-      stakeIdConsentEarlyEnd[stakeId] = state;
-      emit UpdateConsentEarlyEnd(stakeId);
+  function mintRewards(uint64[] calldata stakeIds) external {
+    uint256 len = stakeIds.length;
+    uint256 i;
+    uint256 hedronTokens;
+    address currentOwner;
+    address to = stakeIdToOwner[stakeIds[0]];
+    uint256 stakeId;
+    do {
+      stakeId = stakeIds[i];
+      if (checkBinary(uint16(stakeIdToSettings[stakeId]), 2)) {
+        currentOwner = stakeIdToOwner[stakeId];
+        if (currentOwner != to) {
+          unchecked {
+            outstandingHedronTokens[to] += hedronTokens;
+          }
+          hedronTokens = 0;
+        }
+        to = currentOwner;
+        hedronTokens += IHedron(hedron).mintNative(stakeIdToIndex[stakeId], uint40(stakeId));
+      }
+      ++i;
+    } while (i < len);
+    if (hedronTokens > 0) {
+      unchecked {
+        outstandingHedronTokens[to] += hedronTokens;
+      }
     }
   }
   /**
-   * signal to enders that early ending is or is not allowed
-   * @param stakeId the stake id in question
-   * @param state the state of the early end flag
+   * send all or some subset of funds to a given address
+   * @param to destination of funds attributed to sender
+   * @param amount amount of funds to send. 0 defaults to all
    */
-  function consentEarlyEnd(uint256 stakeId, bool state) external payable {
-    _consentEarlyEnd(msg.sender, state, stakeId);
-  }
-  /**
-   * verify a signature in a general way to reveal consent on an
-   * operation over a stake id
-   * @param hashedInput the hashed input that you wish to check
-   * @param nonce the nonce presented to allow for reversals
-   * @param signature the signature presented claiming consent
-   */
-  function _verifySignature(
-    bytes32 hashedInput,
-    uint256 nonce,
-    bytes calldata signature
-  ) internal returns(address) {
-    bytes32 digest = _hashTypedDataV4(hashedInput);
-    address signer = ECDSA.recover(digest, signature);
-    if (signer == address(0)) {
-      revert InvalidSignature();
-    }
-    if (signerToNonceConsumed[signer][nonce]) {
-      revert NonceConsumed(signer, nonce);
-    }
-    signerToNonceConsumed[signer][nonce] = true;
-    return signer;
-  }
-  /**
-   * show consent to early end stake by providing a singature
-   * @param skipIdMismatch skip the end staking process if the id provided
-   * @param stakeIndex the index where the corresponding stake id resides
-   * @param earliestDay the earliest day that the stake can be ended
-   * @param stakeId the stake id in question
-   * @param nonce a nonce associated with the signature - used to cancel out signatures
-   * @param signature the signature proving consent to end the stake
-   * does not match the one at the index
-   * @notice if the earliest day does not match the signature
-   * or that day has not been reached then the method will fail
-   */
-  function stakeEndBySignature(
-    address staker, bool skipIdMismatch,
-    int256 stakeIndex, uint256 stakeId,
-    uint256 earliestDay, uint256 nonce,
-    bytes calldata signature
-  ) external payable returns(uint256 delta) {
-    IStakeable.StakeStore memory stake = _stakeFromInfo(stakeIndex, stakeId);
-    if (stake.stakeId != stakeId && skipIdMismatch) {
-      return 0;
-    }
-    if (_currentDay() < earliestDay) {
-      revert StakeNotEnded(earliestDay, _currentDay());
-    }
-    bytes32 hashedInput = keccak256(abi.encode(
-      keccak256("ConsentEarlyEnd(uint256 earliestDay,uint256 stakeId,uint256 nonce)"),
-      earliestDay,
-      stakeId,
-      nonce
-    ));
-    _verifyEndableStakeOwnership(_verifySignature(hashedInput, nonce, signature), stakeId);
-    delta = _stakeEndByConsent(
-      staker,
-      stakeIndex, stakeId
-    );
-  }
-  /**
-   * show consent for updating settings on a particular stake id
-   * @param stakeId the stake id to operate on
-   * @param nonce the globally shared nonce
-   * @param settings the settings to update to
-   * @param signature the signature showing consent
-   * @dev this method does not make sense to run until it is economically reasonable to do so
-   * which may mean collecting signatures throughout the day and
-   * running them at the end before the day ticks over such that you reduce sloads
-   */
-  function updateSettingsBySignature(
-    uint256 stakeId, uint256 nonce,
-    Settings calldata settings,
-    bytes calldata signature
-  ) external payable {
-    bytes32 hashedInput = keccak256(abi.encode(
-      // solhint-disable-next-line
-      keccak256("ConsentUpdateSettings(uint256 stakeId,uint256 nonce,(uint8,uint64,uint8,uint64,uint8,uint64,uint16,uint8,uint16) settings)"),
-      stakeId,
-      nonce,
-      settings
-    ));
-    address signer = _verifySignature(hashedInput, nonce, signature);
-    _verifyEndableStakeOwnership(signer, stakeId);
-    return _logSettingsUpdate(stakeId, _encodeSettings(settings));
-  }
-  function withdrawTokenToBySignature(
-    address to, uint256 amount,
-    uint256 nonce,
-    bytes calldata signature
-  ) external payable {
-    bytes32 hashedInput = keccak256(abi.encode(
-      keccak256("ConsentWithdrawTokenTo(address to,uint256 amount,uint256 nonce)"),
-      to,
-      amount,
-      nonce
-    ));
-    address signer = _verifySignature(hashedInput, nonce, signature);
-    _withdrawTokenTo(to, _deductWithdrawable(signer, amount));
+  function withdrawOutstandingHedron(address to, uint256 amount) external {
+    uint256 max = outstandingHedronTokens[msg.sender];
+    amount = amount == 0 || amount > max ? max : amount;
+    outstandingHedronTokens[msg.sender] = max - amount;
+    IERC20(hedron).transfer(to, amount);
   }
 }

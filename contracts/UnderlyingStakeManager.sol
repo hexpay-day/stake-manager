@@ -2,14 +2,11 @@
 pragma solidity ^0.8.17;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "./IsolatedStakeManager.sol";
-import "./IUnderlyingStakeable.sol";
 import "./UnderlyingStakeable.sol";
-import "./IsolatedStakeManager.sol";
 import "./Stakeable.sol";
-import "./IStakeable.sol";
+import "./Capable.sol";
 
-contract UnderlyingStakeManager is Stakeable {
+contract UnderlyingStakeManager is Stakeable, Capable {
   /**
    * signals to enders that the early end state has changed
    * @param stakeId the stake id whos allow early end state has changed
@@ -26,10 +23,6 @@ contract UnderlyingStakeManager is Stakeable {
    * @notice the owner of a stake indexed by the stake id
    */
   mapping(uint256 => address) public stakeIdToOwner;
-  /**
-   * @notice the owner of this stake has given consent for this stake to be ended early
-   */
-  mapping(uint256 => bool) public stakeIdConsentEarlyEnd;
   mapping(uint256 => uint256) public stakeIdToIndex;
   /**
    * creates the internal stake ender contract
@@ -65,10 +58,10 @@ contract UnderlyingStakeManager is Stakeable {
     uint256 amount, uint256 newStakedDays
   ) internal returns(uint256 stakeId) {
     // get future index of stake
-    uint256 index = IUnderlyingStakeable(target).stakeCount(address(this));
-    IStakeable(target).stakeStart(amount, newStakedDays);
+    uint256 index = UnderlyingStakeable(target).stakeCount(address(this));
+    Stakeable(target).stakeStart(amount, newStakedDays);
     // get the stake id
-    stakeId = IStakeable(target).stakeLists(address(this), index).stakeId;
+    stakeId = Stakeable(target).stakeLists(address(this), index).stakeId;
     stakeIdToIndex[stakeId] = index;
     // attribute stake to the staker
     stakeIdToOwner[stakeId] = staker;
@@ -86,9 +79,9 @@ contract UnderlyingStakeManager is Stakeable {
     uint256 balanceBefore = IERC20(target).balanceOf(address(this));
     address custodian = target;
     // end the stake - attributed to contract or through the managed stake
-    IStakeable(custodian).stakeEnd(stakeIndex, uint40(stakeId));
+    Stakeable(custodian).stakeEnd(stakeIndex, uint40(stakeId));
     delete stakeIdToIndex[stakeId];
-    if (IUnderlyingStakeable(target).stakeCount(address(this)) > stakeIndex) {
+    if (UnderlyingStakeable(target).stakeCount(address(this)) > stakeIndex) {
       stakeIdToIndex[_getStake(address(this), stakeIndex).stakeId] = stakeIndex;
     }
     // because the delta is only available in the logs
@@ -123,19 +116,7 @@ contract UnderlyingStakeManager is Stakeable {
    * or requires that the staker send start and end methods (0)
    */
   function stakeEnd(uint256 stakeIndex, uint40 stakeId) external override {
-    _stakeEndByOwner(msg.sender, stakeIndex, stakeId);
-  }
-  /**
-   * end a stake given its owner
-   * @param staker the staker that owns the stake
-   * @param stakeIndex the index under which the stake is held
-   * @param stakeId the id of the stake
-   * @notice that tokens are sent to the sending address as if one were
-   * interacting with the underlying contract
-   */
-  function _stakeEndByOwner(
-    address staker, uint256 stakeIndex, uint256 stakeId
-  ) internal {
+    address staker = msg.sender;
     if (stakeIdToOwner[stakeId] != staker) {
       revert StakeNotEndable(stakeId, uint160(staker));
     }
