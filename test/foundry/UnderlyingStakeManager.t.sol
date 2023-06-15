@@ -81,7 +81,7 @@ contract TestStakeManager is Test {
   }
   function _stakeEndByConsentForMany(
     address ender,
-    ConsentualStakeManager.StakeInfo[] memory list
+    uint256[] memory list
   ) internal {
     vm.startPrank(ender);
     stkMngr.stakeEndByConsentForMany(list);
@@ -121,13 +121,13 @@ contract TestConsentualStakeManager is TestStakeManager {
     _depositToken(vm.addr(1), startingBalance);
     // bob cannot take alice's deposits
     vm.expectRevert(abi.encodeWithSelector(
-      UnderlyingStakeManager.NotEnoughFunding.selector,
+      UnderlyingStakeable.NotEnoughFunding.selector,
       0, 1
     ));
     _withdrawToken(vm.addr(2), vm.addr(1), 1);
     // alice cannot take more than deposited
     vm.expectRevert(abi.encodeWithSelector(
-      UnderlyingStakeManager.NotEnoughFunding.selector,
+      UnderlyingStakeable.NotEnoughFunding.selector,
       startingBalance, startingBalance + 1
     ));
     _withdrawToken(vm.addr(1), vm.addr(1), startingBalance + 1);
@@ -135,7 +135,7 @@ contract TestConsentualStakeManager is TestStakeManager {
     assertEq(IERC20(hx).balanceOf(vm.addr(1)), startingBalance / 2);
     // alice still cannot take more than deposited
     vm.expectRevert(abi.encodeWithSelector(
-      UnderlyingStakeManager.NotEnoughFunding.selector,
+      UnderlyingStakeable.NotEnoughFunding.selector,
       startingBalance / 2, startingBalance
     ));
     _withdrawToken(vm.addr(1), vm.addr(1), startingBalance);
@@ -200,17 +200,9 @@ contract TestConsentualStakeManager is TestStakeManager {
     _managedStakeStart(vm.addr(1), startingBalance / 10, 20);
     _managedStakeStart(vm.addr(1), startingBalance / 10, 20);
     _moveDays(vm.addr(5), 21);
-    ConsentualStakeManager.StakeInfo[] memory list = new ConsentualStakeManager.StakeInfo[](2);
-    list[0] = ConsentualStakeManager.StakeInfo({
-      staker: vm.addr(1),
-      stakeIndex: type(int256).min,
-      stakeId: nextStakeId + 1
-    });
-    list[1] = ConsentualStakeManager.StakeInfo({
-      staker: vm.addr(1),
-      stakeIndex: type(int256).min,
-      stakeId: nextStakeId
-    });
+    uint256[] memory list = new uint256[](2);
+    list[0] = nextStakeId + 1;
+    list[1] = nextStakeId;
     _stakeEndByConsentForMany(vm.addr(1), list);
   }
 }

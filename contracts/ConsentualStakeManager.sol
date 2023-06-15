@@ -151,8 +151,10 @@ contract ConsentualStakeManager is UnderlyingStakeManager {
    */
   function _deductWithdrawable(address account, uint256 amount) internal returns(uint256) {
     uint256 withdrawable = withdrawableBalanceOf[account];
-    if (amount == 0 || withdrawable < amount) {
+    if (amount == 0) {
       amount = withdrawable; // overflow protection
+    } else if (withdrawable < amount) {
+      revert NotEnoughFunding(withdrawable, amount);
     }
     unchecked {
       withdrawableBalanceOf[account] = withdrawable - amount;
@@ -248,17 +250,17 @@ contract ConsentualStakeManager is UnderlyingStakeManager {
    * end many stakes at the same time
    * provides an optimized path for all stake ends
    * and assumes that detectable failures should be skipped
-   * @param stakeEnds a struct holding data for singular end stakes
+   * @param stakeIds stake ids to end
    * @notice this method should, generally, only be called when multiple enders
    * are attempting to end stake the same stakes
    */
-  function stakeEndByConsentForMany(StakeInfo[] calldata stakeEnds) external payable {
-    StakeInfo calldata stakeInfo;
+  function stakeEndByConsentForMany(uint256[] calldata stakeIds) external payable {
+    uint256 stakeId;
     uint256 i;
-    uint256 len = stakeEnds.length;
+    uint256 len = stakeIds.length;
     do {
-      stakeInfo = stakeEnds[i];
-      _stakeEndByConsent(stakeInfo.stakeId, false);
+      stakeId = stakeIds[i];
+      _stakeEndByConsent(stakeId, false);
       unchecked {
         ++i;
       }

@@ -199,24 +199,24 @@ describe("StakeEnder", function () {
       const half1 = Math.floor(days / 2)
       const half2 = days - half1
       await expect(x.stakeManager.connect(signer1).multicall([
-        x.stakeManager.interface.encodeFunctionData('stakeStartFromBalanceFor', [signer1.address, x.oneMillion / 2n, half1]),
-        x.stakeManager.interface.encodeFunctionData('stakeStartFromBalanceFor', [signer1.address, x.oneMillion / 2n, days]),
+        x.stakeManager.interface.encodeFunctionData('stakeStartFromBalanceFor', [signer1.address, x.oneMillion / 2n, half1, 0]),
+        x.stakeManager.interface.encodeFunctionData('stakeStartFromBalanceFor', [signer1.address, x.oneMillion / 2n, days, 0]),
       ], false))
         .to.emit(x.hex, 'StakeStart')
         .withArgs(withArgs.anyValue, x.stakeManager.address, x.nextStakeId)
         .to.emit(x.hex, 'StakeStart')
         .withArgs(withArgs.anyValue, x.stakeManager.address, x.nextStakeId + 1n)
       await expect(x.stakeManager.connect(signer2).multicall([
-        x.stakeManager.interface.encodeFunctionData('stakeStartFromBalanceFor', [signer2.address, x.oneMillion / 2n, half1]),
-        x.stakeManager.interface.encodeFunctionData('stakeStartFromBalanceFor', [signer2.address, x.oneMillion / 2n, days]),
+        x.stakeManager.interface.encodeFunctionData('stakeStartFromBalanceFor', [signer2.address, x.oneMillion / 2n, half1, 0]),
+        x.stakeManager.interface.encodeFunctionData('stakeStartFromBalanceFor', [signer2.address, x.oneMillion / 2n, days, 0]),
       ], false))
         .to.emit(x.hex, 'StakeStart')
         .withArgs(withArgs.anyValue, x.stakeManager.address, x.nextStakeId + 2n)
         .to.emit(x.hex, 'StakeStart')
         .withArgs(withArgs.anyValue, x.stakeManager.address, x.nextStakeId + 3n)
       await expect(x.stakeManager.connect(signer3).multicall([
-        x.stakeManager.interface.encodeFunctionData('stakeStartFromBalanceFor', [signer3.address, x.oneMillion / 2n, half1]),
-        x.stakeManager.interface.encodeFunctionData('stakeStartFromBalanceFor', [signer3.address, x.oneMillion / 2n, days]),
+        x.stakeManager.interface.encodeFunctionData('stakeStartFromBalanceFor', [signer3.address, x.oneMillion / 2n, half1, 0]),
+        x.stakeManager.interface.encodeFunctionData('stakeStartFromBalanceFor', [signer3.address, x.oneMillion / 2n, days, 0]),
       ], false))
         .to.emit(x.hex, 'StakeStart')
         .withArgs(withArgs.anyValue, x.stakeManager.address, x.nextStakeId + 4n)
@@ -228,16 +228,13 @@ describe("StakeEnder", function () {
       await moveForwardDays(half1 + 1, signer4, x)
       await expect(x.stakeManager.connect(signer4).multicall([
         x.ConsentualStakeManager.interface.encodeFunctionData('stakeEndByConsent', [
-          signer3.address,
-          ethers.constants.MinInt256, x.nextStakeId + 4n,
+          x.nextStakeId + 4n,
         ]),
         x.ConsentualStakeManager.interface.encodeFunctionData('stakeEndByConsent', [
-          signer2.address,
-          ethers.constants.MinInt256, x.nextStakeId + 2n,
+          x.nextStakeId + 2n,
         ]),
         x.ConsentualStakeManager.interface.encodeFunctionData('stakeEndByConsent', [
-          signer1.address,
-          ethers.constants.MinInt256, x.nextStakeId + 0n,
+          x.nextStakeId + 0n,
         ]),
       ], false))
         .to.emit(x.hex, 'StakeEnd')
@@ -256,18 +253,11 @@ describe("StakeEnder", function () {
       const list = await Promise.all((new Array(count.toNumber())).fill(null).map((_a, i) => {
         return x.hex.stakeLists(x.stakeManager.address, i)
       }))
-      await expect(x.stakeManager.connect(signer4).stakeEndByConsentForMany(([
-        [signer3.address, x.nextStakeId + 5n],
-        [signer1.address, x.nextStakeId + 3n],
-        [signer2.address, x.nextStakeId + 1n],
-      ] as [string, bigint][]).map(([staker, stakeId]) => ({
-        internallyManaged: true,
-        staker,
-        stakeIndex: _.findIndex(list, {
-          stakeId: hre.ethers.BigNumber.from(stakeId).toNumber(),
-        }),
-        stakeId,
-      }))))
+      await expect(x.stakeManager.connect(signer4).stakeEndByConsentForMany([
+        x.nextStakeId + 5n,
+        x.nextStakeId + 3n,
+        x.nextStakeId + 1n,
+      ]))
         .to.emit(x.hex, 'StakeEnd')
         .withArgs(withArgs.anyUint, withArgs.anyUint, x.stakeManager.address, x.nextStakeId + 5n)
         .to.emit(x.hex, 'StakeEnd')
