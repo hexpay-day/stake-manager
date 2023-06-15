@@ -44,3 +44,4 @@ This contract generates intermediary, owned contracts to collect fees distribute
 * Only allows for current perpetuals to be ended - otherwise security vulnerability is opened up.
 * Create intermediary contract for any address.
 * Separate authorization levels for ending stakes, flushing tokens, withdrawing.
+* Permissioned multicall

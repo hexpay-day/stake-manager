@@ -9,25 +9,27 @@ import "./AuthorizationManager.sol";
 import "./Multicall.sol";
 import { IGasReimberser } from './GasReimberser.sol';
 
-contract MaximusStakeEnder is Multicall, Ownable, AuthorizationManager {
+contract MaximusStakeEnder is Ownable2Step, AuthorizationManager {
   using Address for address payable;
-  constructor(address owner) AuthorizationManager(7) {}
+  constructor(address owner) AuthorizationManager(7) {
+    _transferOwnership(owner);
+  }
   function stakeEnd(address target, uint256 stakeId) external {
     if (!checkBinary(authorization[bytes32(uint256(uint160(msg.sender)))], 0)) {
       return;
     }
     IPublicEndStakeable(target).endStakeHEX(0, uint40(stakeId));
   }
-  function flushNative(address target) external addressIsAuthorized(msg.sender, 1) {
+  function flushNative(address target) external senderIsAuthorized(1) {
     IGasReimberser(target).flush();
   }
-  function flushErc20(address target, address token) external addressIsAuthorized(msg.sender, 1) {
+  function flushErc20(address target, address token) external senderIsAuthorized(1) {
     IGasReimberser(target).flush_erc20(token);
   }
   function withdrawNative(
     address payable recipient,
     uint256 amount
-  ) external addressIsAuthorized(msg.sender, 2) {
+  ) external senderIsAuthorized(2) {
     uint256 bal = address(this).balance;
     amount = amount == 0 || amount > bal ? bal : amount;
     if (amount > 0) {
@@ -38,7 +40,7 @@ contract MaximusStakeEnder is Multicall, Ownable, AuthorizationManager {
     address recipient,
     address token,
     uint256 amount
-  ) external addressIsAuthorized(msg.sender, 2) {
+  ) external senderIsAuthorized(2) {
     uint256 bal = IERC20(token).balanceOf(address(this));
     amount = amount == 0 || amount > bal ? bal : amount;
     if (amount > 0) {
