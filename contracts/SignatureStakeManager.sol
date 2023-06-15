@@ -57,7 +57,7 @@ contract SignatureStakeManager is ConsentualStakeManager, EIP712 {
       stakeId,
       nonce
     ));
-    _verifyEndableStakeOwnership(_verifySignature(hashedInput, nonce, signature), stakeId);
+    _verifyStakeOwnership(_verifySignature(hashedInput, nonce, signature), stakeId);
     delta = _stakeEndByConsent(stakeId);
   }
   /**
@@ -83,7 +83,7 @@ contract SignatureStakeManager is ConsentualStakeManager, EIP712 {
       settings
     ));
     address signer = _verifySignature(hashedInput, nonce, signature);
-    _verifyEndableStakeOwnership(signer, stakeId);
+    _verifyStakeOwnership(signer, stakeId);
     return _logSettingsUpdate(stakeId, _encodeSettings(settings));
   }
   /**

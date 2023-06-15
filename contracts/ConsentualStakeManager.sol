@@ -182,10 +182,10 @@ contract ConsentualStakeManager is UnderlyingStakeManager {
    * @param settings the settings to update the stake id to
    */
   function updateSettings(uint256 stakeId, Settings calldata settings) external payable {
-    _verifyEndableStakeOwnership(msg.sender, stakeId);
+    _verifyStakeOwnership(msg.sender, stakeId);
     _logSettingsUpdate(stakeId, _encodeSettings(settings));
   }
-  function _verifyEndableStakeOwnership(address owner, uint256 stakeId) internal view {
+  function _verifyStakeOwnership(address owner, uint256 stakeId) internal view {
     if (stakeIdToOwner[stakeId] != owner) {
       revert StakeNotOwned(owner, stakeIdToOwner[stakeId]);
     }
