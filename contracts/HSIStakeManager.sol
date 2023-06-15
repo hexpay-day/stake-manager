@@ -75,7 +75,6 @@ contract HSIStakeManager is AuthorizationManager {
     uint256 targetTokens;
     uint256 hedronTokens;
     uint256 i;
-    address runner = msg.sender;
     address hsiAddress = params[0].hsiAddress;
     uint256 index;
     address currentOwner;
@@ -89,11 +88,9 @@ contract HSIStakeManager is AuthorizationManager {
           hedronTokens = 0;
           targetTokens = 0;
         }
-        if (runner == hsiToOwner[hsiAddress]) {
-          index = params[i].hsiIndex;
-          hedronTokens += IHedron(hedron).mintInstanced(index, hsiAddress);
-          targetTokens += IHedron(hedron).hexStakeEnd(index, hsiAddress);
-        }
+        index = params[i].hsiIndex;
+        hedronTokens += IHedron(hedron).mintInstanced(index, hsiAddress);
+        targetTokens += IHedron(hedron).hexStakeEnd(index, hsiAddress);
       }
       ++i;
     } while (i < len);
