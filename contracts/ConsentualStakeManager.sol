@@ -195,15 +195,11 @@ contract ConsentualStakeManager is UnderlyingStakeManager {
     return _stakeEndByConsent(stakeId, false);
   }
   /**
-   * end a stake with the consent of the underlying staker
-   * @param stakeId stake id of the stake to end - idempotency key
-   * and to ensure that the stake is available after it is deleted on the underlying contract
-   * @notice validation must be done externally to ensure that this stake can be ended
-   * @dev validations internal to this method include
-   * 1) stake has ended or settings are such that consent has been granted
-   * 2) staker config is not (0) meaning that the staker wishes to manage the list of stakes themselves
-   * @dev if consent abilities is < 2 that is a blanket ask to not allow for end stakes by consent
-   * if consent abilities is < 4 then there is no consent given for early ending
+   * end a stake with the consent of the underlying staker's settings
+   * @param stakeId the stake id to end
+   * @param skipEarlyCheck used when early end stake check happens external to this method
+   * @return delta the amount of hex at the end of the stake (consumed by _directFunds)
+   * @notice hedron minting happens as last step before end stake
    */
   function _stakeEndByConsent(
     uint256 stakeId, bool skipEarlyCheck
@@ -474,7 +470,7 @@ contract ConsentualStakeManager is UnderlyingStakeManager {
     uint256 settings,
     IStakeable.StakeStore memory stake
   ) internal {
-    uint256 tipMethod = settings << 0 >> 248;
+    uint256 tipMethod = settings >> 248;
     if (tipMethod > 0) {
       uint256 tip = _computeMagnitude(
         tipMethod, settings << 8 >> 192, delta,
@@ -535,7 +531,7 @@ contract ConsentualStakeManager is UnderlyingStakeManager {
       _addToWithdrawable(staker, delta);
     }
     // this data should still be available in logs
-    delete stakeIdToSettings[stakeId];
+    stakeIdToSettings[stakeId] = 0;
   }
   // mint hedron rewards
   struct HedronParams {
