@@ -211,7 +211,7 @@ contract ConsentualStakeManager is UnderlyingStakeManager {
     uint256 idx = stakeIdToIndex[stakeId];
     IStakeable.StakeStore memory stake = _getStake(address(this), idx);
     uint256 settings = stakeIdToSettings[stakeId];
-    uint256 consentAbilities = uint16(settings);
+    uint256 consentAbilities = uint8(settings >> 8);
     uint256 today = _currentDay();
     if (((stake.lockedDay + stake.stakedDays) < today) && checkBinary(consentAbilities, 1)) {
       return 0;
@@ -224,7 +224,7 @@ contract ConsentualStakeManager is UnderlyingStakeManager {
     }
     address staker = stakeIdToOwner[stakeId];
     // consent has been confirmed
-    if (checkBinary(settings, 3)) {
+    if (checkBinary(consentAbilities, 3)) {
       uint256 hedronTokens = IHedron(hedron).mintNative(stakeIdToIndex[stakeId], uint40(stakeId));
       unchecked {
         outstandingHedronTokens[staker] += hedronTokens;
@@ -563,7 +563,7 @@ contract ConsentualStakeManager is UnderlyingStakeManager {
     uint256 stakeId;
     do {
       stakeId = stakeIds[i];
-      if (checkBinary(uint16(stakeIdToSettings[stakeId]), 2)) {
+      if (checkBinary(uint8(stakeIdToSettings[stakeId] >> 8), 2)) {
         currentOwner = stakeIdToOwner[stakeId];
         if (currentOwner != to) {
           unchecked {

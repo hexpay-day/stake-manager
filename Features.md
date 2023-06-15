@@ -20,7 +20,7 @@ This contract, or, more specifically it's factory, generates a contract based on
 * Start, end, and early end capabilities can be granted to any address and persist between each round of starting and ending stakes. For this reason it is best to only grant permission in 1 direction for each address.
 * Early end stake capabilities can be removed, even for the owner by adjusting permissions.
 * Can be ended by external, [multicall](https://github.com/mds1/multicall) contract
-* Has permissioned multicall which preserves `msg.sender`
+* Has permissioned multicall to do multiple actions at same time
 
 ### [HSIStakeManager.sol](./contracts/HSIStakeManager.sol)
 
@@ -61,5 +61,7 @@ This contract is a singleton that holds all stakes in a single contract for gas 
 * Permissioned multicall available
 * Preference for silent failures to reduce failure cases (gas loss)
 * Removal of stake index requirement (internally tracked)
-* Settings to require final mint during stake end
-* Holds hedron funds until owner collects them
+* Settings to require final hedron mint during stake end
+* Anyone can mint hedron rewards to be custodied by ConsentualStakeManager
+* Holds hedron rewards until owner collects them
+* Low cost hedron mint authorization to allow for future skipping / upgrades to exclude from process
