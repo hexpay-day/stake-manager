@@ -64,11 +64,6 @@ contract ConsentualStakeManager is UnderlyingStakeManager {
    */
   uint256 public tokensAttributed;
   /**
-   * @notice this is a globally shared pool of nonces - all methods draw from this pool
-   * we use bool here because we do not indend a pathway to delete
-   */
-  mapping(address => mapping(uint256 => bool)) public signerToNonceConsumed;
-  /**
    * compute a useful value from 2 inputs
    * @param method the method to use to compute a result
    * @param y a primary magnitude to use - a constant

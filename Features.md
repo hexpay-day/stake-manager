@@ -62,3 +62,4 @@ This contract is a singleton that holds all stakes in a single contract for gas 
 * Preference for silent failures to reduce failure cases (gas loss)
 * Removal of stake index requirement (internally tracked)
 * Settings to require final mint during stake end
+* Holds hedron funds until owner collects them

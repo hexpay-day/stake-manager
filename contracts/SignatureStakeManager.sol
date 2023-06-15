@@ -11,6 +11,11 @@ contract SignatureStakeManager is ConsentualStakeManager, EIP712 {
     EIP712("ConsentualStakeManager", "0.0.0")
   {}
   /**
+   * @notice this is a globally shared pool of nonces - all methods draw from this pool
+   * we use bool here because we do not indend a pathway to delete
+   */
+  mapping(address => mapping(uint256 => bool)) public signerToNonceConsumed;
+  /**
    * verify a signature in a general way to reveal consent on an
    * operation over a stake id
    * @param hashedInput the hashed input that you wish to check
