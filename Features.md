@@ -65,3 +65,64 @@ This contract is a singleton that holds all stakes in a single contract for gas 
 * Anyone can mint hedron rewards to be custodied by ConsentualStakeManager
 * Holds hedron rewards until owner collects them
 * Low cost hedron mint authorization to allow for future skipping / upgrades to exclude from process
+
+### [Settings](./contracts/ConsentualStakeManager.sol)
+
+The settings struct holds all relevant settings for determining what tokens should go where when a stake is done as well as what the end stake call should do at the end of a stake.
+
+The properties of the settings object are as follows:
+
+| name | type | description |
+|------|------|-------------|
+| `tipMethod`             | `uint8`  | method to compute magnitude of tip to stake ender |
+| `tipMagnitude`          | `uint64` | input to manipulate amount minted at end stake |
+| `withdrawableMethod`    | `uint8`  | method to compute magnitude of hex, after tip, to send to staker |
+| `withdrawableMagnitude` | `uint64` | input to manipulate amount transfered to staker at end stake |
+| `newStakeMethod`        | `uint8`  | method to compute magnitude of hex to add to new stake* |
+| `newStakeMagnitude`     | `uint64` | input to manipulate amount of hex to add to new stake after tip and transfer to owner |
+| `newStakeDaysMethod`    | `uint8`  | method to compute the number of days the new stake should last |
+| `newStakeDaysMagnitude` | `uint16` | input to compute number of days new stake should last |
+| `consentAbilities`      | `uint8`  | set of binary permissions to signal which actions can be taken on the stake |
+| `copyIterations`        | `uint8`  | a limiter on how many times the stake should be restarted** |
+
+\* value below minimum signals no new stake should be created<br>
+\** 0 = do not restart, 1-254 = countdown mechanism, 255 = always restart
+
+
+### [#computeMagnitude](./contracts/ConsentualStakeManager.sol)
+
+Compute magnitude is probably the most confusing method in the repo. Once broken down, it is fairly simple, but has a fair number of options which can make it confusing. Below is a breakdown of the options and features.
+
+There are 4 inputs: `method`, `x`, `y`, and `stake`
+
+The `method` arg determines which path (if statement) should be used. Each of these methods has its own implications for mutating the x and y values to result in another value.
+
+The situations where this method is used includes the following:
+* Compute ender tip
+* Compute withdrawable magnitude (how much to send to staker)
+* Compute new stake magnitude
+* Compute new stake days
+
+These situations can broadly be put into 2 categories: 1 manipulating inputs around an amount of hex to do something. Manipulating inputs around a number of days to do something.
+
+##### Amount manipulation
+
+The 3 main directions that determines what is done with the hex after the stake ends is as follows:
+1. restart a stake
+1. tip the ender
+1. send to owner
+
+Each of these manipulations uses method 0-6 in the compute magnitude methods as follows:
+
+* `0` - returns zero
+* `1` - returns the `y` value, i.e. the input of remaining hex
+* `2` - returns the `x` value, i.e. the magnitude held in the the settings
+* `3` - * returns a percentage of `y`, with `x`, the value on the settings struct as it's magnifier over `(2^64)-1`
+* `4` - returns a percentage of the principle - using the `stakedHearts` property of the stake
+* `5` - returns a percentage of the yield, i.e. `hexAmount - stakedHearts` to be used as `y`
+* `6` - ** returns the `stakedDays` property, repeating the number of days, even if stake end occurs late
+* `7` - ** returns a number of days to keep stake on a schedule, even if the end stake happens x days later than t-0 `today - lockedDay - 1 > stakedDays` then the staked days is repeated, otherwise correct for the number of delayed days.†
+
+<br>\* ```settings.magnitude * remaining_amount / (2^64)-1```
+<br>\** mostly useful for new stake days magnitude only
+<br>† early end stakes do not get to be restarted

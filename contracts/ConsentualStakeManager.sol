@@ -17,8 +17,8 @@ contract ConsentualStakeManager is UnderlyingStakeManager {
     uint64 newStakeMagnitude;
     uint8 newStakeDaysMethod;
     uint16 newStakeDaysMagnitude;
-    uint8 consentAbilities; // 0/1 end, 00/10 early end, 100 mint hedron, 1000 mint hedron during end stake
     uint8 copyIterations;
+    uint8 consentAbilities; // 0/1 end, 00/10 early end, 100 mint hedron, 1000 mint hedron during end stake
   }
   /**
    * an event to signal that settings to direct funds
@@ -66,13 +66,16 @@ contract ConsentualStakeManager is UnderlyingStakeManager {
   /**
    * compute a useful value from 2 inputs
    * @param method the method to use to compute a result
-   * @param y a primary magnitude to use - a constant
-   * @param x a secondary magnitude to use - generally the amount of the end stake
+   * @param x a primary magnitude to use - a constant held in settings - max value (2^64)-1
+   * @param y a secondary magnitude to use - generally the amount of the end stake
+   * @param stake the stake being operated over
    */
   function _computeMagnitude(
     uint256 method, uint256 x, uint256 y,
     IStakeable.StakeStore memory stake
   ) internal pure returns(uint256 amount) {
+    // we can use unchecked here because all minuses (-)
+    // are checked before they are run
     unchecked {
       if (method < 4) {
         if (method < 2) {
@@ -88,11 +91,21 @@ contract ConsentualStakeManager is UnderlyingStakeManager {
           else amount = x * (y - stake.stakedHearts) / type(uint64).max; // 5 - % of yield
         } else {
           // day methods - y = currentDay
-          if (method == 6) amount = stake.stakedDays; // 6 - repeat number of days
+          uint256 stakedDays = stake.stakedDays;
+          if (method == 6) amount = stakedDays; // 6 - repeat number of days
           else {
-            // 7 - start a ladder, spaced appropriately, even if end stake happens late
-            if (stake.stakedDays < y - stake.lockedDay - 1) amount = stake.stakedDays; // early end
-            else amount = stake.stakedDays - (y - stake.lockedDay + 1 + stake.stakedDays); // not early end
+            // 7 - start an equally spaced ladder, even if end stake happens late
+            uint256 lockedDay = stake.lockedDay;
+            uint256 daysAfterLock = y - lockedDay;
+            if (daysAfterLock == stakedDays) amount = stakedDays; // ended on first available day (most cases)
+            else {
+              // did not end on first available day
+              if (daysAfterLock >= stakedDays) {
+                // presumptive value extrapolated backward
+                lockedDay = y - (daysAfterLock % (stakedDays + 1));
+              } // else locked day was last presumptive locked day
+              amount = stakedDays - (y - lockedDay);
+            }
           }
         }
       }
@@ -206,16 +219,16 @@ contract ConsentualStakeManager is UnderlyingStakeManager {
   ) internal returns(uint256 delta) {
     uint256 idx = stakeIdToIndex[stakeId];
     IStakeable.StakeStore memory stake = _getStake(address(this), idx);
+    if (idx == 0 && stakeId != stake.stakeId) {
+      return 0;
+    }
     uint256 settings = stakeIdToSettings[stakeId];
-    uint256 consentAbilities = uint8(settings >> 8);
+    uint256 consentAbilities = uint8(settings);
     uint256 today = _currentDay();
     if (!skipEarlyCheck && ((stake.lockedDay + stake.stakedDays) < today) && checkBinary(consentAbilities, 1)) {
       return 0;
     }
     if (checkBinary(consentAbilities, 0)) {
-      return 0;
-    }
-    if (stakeId != stake.stakeId) {
       return 0;
     }
     address staker = stakeIdToOwner[stakeId];
@@ -266,7 +279,7 @@ contract ConsentualStakeManager is UnderlyingStakeManager {
     return _defaultEncodedSettings(stakeDays);
   }
   function _defaultEncodedSettings(uint256 stakeDays) internal pure returns(uint256) {
-    return uint256(0x0000000000000000000000000000000000000100000000000000000100000dff) | (stakeDays << 16);
+    return uint256(0x000000000000000000000000000000000000010000000000000000010000ff0d) | (stakeDays << 16);
   }
   function _setDefaultSettings(uint256 stakeId, uint256 stakeDays) internal {
     stakeIdToSettings[stakeId] = _defaultEncodedSettings(stakeDays);
@@ -292,8 +305,8 @@ contract ConsentualStakeManager is UnderlyingStakeManager {
       | uint256(settings.newStakeMagnitude) << 40
       | uint256(settings.newStakeDaysMethod) << 32
       | uint256(settings.newStakeDaysMagnitude) << 16
-      | uint256(settings.consentAbilities) << 8
-      | uint256(settings.copyIterations);
+      | uint256(settings.copyIterations) << 8
+      | uint256(settings.consentAbilities);
   }
   function _defaultSettings(uint256 stakeDays) internal pure returns(Settings memory) {
     return Settings(
@@ -506,25 +519,27 @@ contract ConsentualStakeManager is UnderlyingStakeManager {
         stake
       );
       uint256 newStakeDays = _computeMagnitude(
-        settings << 216 >> 248, settings << 232 >> 248, today,
+        settings << 216 >> 248, settings << 224 >> 240, today,
         stake
       );
-      newStakeAmount = newStakeAmount > delta ? delta : newStakeAmount;
-      unchecked {
-        delta = delta - newStakeAmount; // checks for underflow
-      }
-      uint256 nextStakeId = _stakeStartFor(
-        staker,
-        newStakeAmount, newStakeDays
-      );
-      // settings will be maintained for the new stake
-      uint256 copyIterations = uint8(settings);
-      if (copyIterations > 0) {
-        if (copyIterations < 255) {
-          --copyIterations;
-          settings |= copyIterations;
+      if (newStakeDays > 0) {
+        newStakeAmount = newStakeAmount > delta ? delta : newStakeAmount;
+        unchecked {
+          delta = delta - newStakeAmount; // checks for underflow
         }
-        _logSettingsUpdate(nextStakeId, settings);
+        uint256 nextStakeId = _stakeStartFor(
+          staker,
+          newStakeAmount, newStakeDays
+        );
+        // settings will be maintained for the new stake
+        uint256 copyIterations = uint8(settings >> 8);
+        if (copyIterations > 0) {
+          if (copyIterations < 255) {
+            --copyIterations;
+            settings |= copyIterations;
+          }
+          _logSettingsUpdate(nextStakeId, settings);
+        }
       }
     }
     if (delta > 0) {
