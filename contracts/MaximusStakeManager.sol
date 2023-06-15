@@ -15,11 +15,17 @@ contract MaximusStakeManager is UnderlyingStakeable {
     publicWhitelist[0xF55cD1e399e1cc3D95303048897a680be3313308] = true; // trio
     publicWhitelist[0xe9f84d418B008888A992Ff8c6D22389C2C3504e0] = true; // base
   }
-  function endPublicStake(address target, uint256 stakeId) external {
+  function _endPublicStake(address feeTo, address target, uint256 stakeId) internal {
     if (!publicWhitelist[target]) {
       return;
     }
-    StakeEnder(_createEndStaker(msg.sender)).stakeEnd(target, stakeId);
+    StakeEnder(_createEndStaker(feeTo)).stakeEnd(target, stakeId);
+  }
+  function endPublicStake(address target, uint256 stakeId) external {
+    _endPublicStake(msg.sender, target, stakeId);
+  }
+  function endPublicStakeAs(address feeTo, address target, uint256 stakeId) external {
+    _endPublicStake(feeTo, target, stakeId);
   }
   function createEndStaker(address owner) external returns(address) {
     return _createEndStaker(owner);
