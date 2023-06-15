@@ -192,7 +192,7 @@ contract ConsentualStakeManager is UnderlyingStakeManager {
   function stakeEndByConsent(
     uint256 stakeId
   ) external payable returns(uint256 delta) {
-    return _stakeEndByConsent(stakeId);
+    return _stakeEndByConsent(stakeId, false);
   }
   /**
    * end a stake with the consent of the underlying staker
@@ -206,14 +206,14 @@ contract ConsentualStakeManager is UnderlyingStakeManager {
    * if consent abilities is < 4 then there is no consent given for early ending
    */
   function _stakeEndByConsent(
-    uint256 stakeId
+    uint256 stakeId, bool skipEarlyCheck
   ) internal returns(uint256 delta) {
     uint256 idx = stakeIdToIndex[stakeId];
     IStakeable.StakeStore memory stake = _getStake(address(this), idx);
     uint256 settings = stakeIdToSettings[stakeId];
     uint256 consentAbilities = uint8(settings >> 8);
     uint256 today = _currentDay();
-    if (((stake.lockedDay + stake.stakedDays) < today) && checkBinary(consentAbilities, 1)) {
+    if (!skipEarlyCheck && ((stake.lockedDay + stake.stakedDays) < today) && checkBinary(consentAbilities, 1)) {
       return 0;
     }
     if (checkBinary(consentAbilities, 0)) {
@@ -260,7 +260,7 @@ contract ConsentualStakeManager is UnderlyingStakeManager {
     uint256 len = stakeEnds.length;
     do {
       stakeInfo = stakeEnds[i];
-      _stakeEndByConsent(stakeInfo.stakeId);
+      _stakeEndByConsent(stakeInfo.stakeId, false);
       unchecked {
         ++i;
       }
@@ -287,13 +287,6 @@ contract ConsentualStakeManager is UnderlyingStakeManager {
   ) internal pure returns(uint256) {
     return settings << fromEnd >> (256 - length);
   }
-  function _updateEncodedSettings(
-    uint256 settings,
-    uint256 value,
-    uint256 from, uint256 to
-  ) internal pure returns(uint256) {
-    return (settings >> from << from) | (value << from) | (settings << to >> to);
-  }
   function _encodeSettings(Settings memory settings) internal pure returns(uint256 baseline) {
     return uint256(settings.tipMethod) << 248
       | uint256(settings.tipMagnitude) << 184
@@ -303,7 +296,8 @@ contract ConsentualStakeManager is UnderlyingStakeManager {
       | uint256(settings.newStakeMagnitude) << 40
       | uint256(settings.newStakeDaysMethod) << 32
       | uint256(settings.newStakeDaysMagnitude) << 16
-      | uint256(settings.consentAbilities);
+      | uint256(settings.consentAbilities) << 8
+      | uint256(settings.copyIterations);
   }
   function _defaultSettings(uint256 stakeDays) internal pure returns(Settings memory) {
     return Settings(
@@ -311,8 +305,8 @@ contract ConsentualStakeManager is UnderlyingStakeManager {
       uint8(0), uint64(0), // withdrawable
       uint8(1), uint64(0), // new stake amount
       uint8(1), uint16(stakeDays), // new stake days
-      uint8(13), // "1101" allow start and end stake
-      type(uint8).max
+      uint8(13), // "1101" allow end stake, no early end, hedron minting, end hedron mint
+      type(uint8).max // restart forever
     );
   }
   function defaultSettings(uint256 stakeDays) external pure returns(Settings memory) {

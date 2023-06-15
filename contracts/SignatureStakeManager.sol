@@ -63,7 +63,7 @@ contract SignatureStakeManager is ConsentualStakeManager, EIP712 {
       nonce
     ));
     _verifyStakeOwnership(_verifySignature(hashedInput, nonce, signature), stakeId);
-    delta = _stakeEndByConsent(stakeId);
+    delta = _stakeEndByConsent(stakeId, true);
   }
   /**
    * show consent for updating settings on a particular stake id
