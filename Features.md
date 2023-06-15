@@ -123,5 +123,5 @@ Each of these manipulations uses method 0-6 in the compute magnitude methods as 
 * `6` - ** returns the `stakedDays` property, repeating the number of days, even if stake end occurs late
 * `7` - ** returns a number of days to keep stake on a schedule, even if the end stake happens x days later than t-0 `today - lockedDay - 1 > stakedDays` then the staked days is repeated, otherwise correct for the number of delayed days.
 
-<br>\* ```settings.magnitude * remaining_amount / (2^64)-1```
-<br>\** mostly useful for new stake days magnitude only
+\* ```settings.magnitude * remaining_amount / (2^64)-1```<br>
+\** mostly useful for new stake days magnitude only<br>
