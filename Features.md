@@ -121,8 +121,7 @@ Each of these manipulations uses method 0-6 in the compute magnitude methods as 
 * `4` - returns a percentage of the principle - using the `stakedHearts` property of the stake
 * `5` - returns a percentage of the yield, i.e. `hexAmount - stakedHearts` to be used as `y`
 * `6` - ** returns the `stakedDays` property, repeating the number of days, even if stake end occurs late
-* `7` - ** returns a number of days to keep stake on a schedule, even if the end stake happens x days later than t-0 `today - lockedDay - 1 > stakedDays` then the staked days is repeated, otherwise correct for the number of delayed days.†
+* `7` - ** returns a number of days to keep stake on a schedule, even if the end stake happens x days later than t-0 `today - lockedDay - 1 > stakedDays` then the staked days is repeated, otherwise correct for the number of delayed days.
 
 <br>\* ```settings.magnitude * remaining_amount / (2^64)-1```
 <br>\** mostly useful for new stake days magnitude only
-<br>† early end stakes do not get to be restarted
