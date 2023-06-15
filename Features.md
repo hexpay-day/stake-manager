@@ -31,8 +31,9 @@ This contract holds methods for managing hsi stakes.
 * Public multicall not available yet.
 * Rewards can be minted for all owned hsi's at the same time. So, no more single tx for each mint.
 * Send reward (hedron) or target (hex) tokens to any address.
-Pending features:
 * Send end stake calls from external multicall
+* Mint hedron tokens as final step before ending stake
+* Only owner can withdraw waatsa
 
 ### [MaximusStakeManager.sol](./contracts/MaximusStakeManager.sol)
 

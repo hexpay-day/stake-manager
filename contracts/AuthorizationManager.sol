@@ -27,6 +27,12 @@ contract AuthorizationManager is UnderlyingStakeable {
       _;
     }
   }
+  function isAddressAuthorized(address target, uint256 index) view internal returns(bool) {
+    return checkBinary(authorization[bytes32(uint256(uint160(target)))], index);
+  }
+  function isAuthorized(bytes32 key, uint256 index) view internal returns(bool) {
+    return checkBinary(authorization[key], index);
+  }
   function isCapable(uint256 setting, uint256 index) external pure returns(bool) {
     return checkBinary(setting, index);
   }
