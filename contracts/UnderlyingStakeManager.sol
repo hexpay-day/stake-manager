@@ -8,14 +8,6 @@ import "./Capable.sol";
 
 contract UnderlyingStakeManager is Stakeable, Capable {
   /**
-   * signals to enders that the early end state has changed
-   * @param stakeId the stake id whos allow early end state has changed
-   * @notice the state of the early end is not stored in the log
-   * this is because, generally, early ending should only go one way
-   * allowing, then disallowing early ending may cause enders to ignore stakes
-   */
-  event UpdateConsentEarlyEnd(uint256 indexed stakeId);
-  /**
    * @notice this error is thrown when the stake being ended is not yet ended
    */
   error StakeNotEndable(uint256 provided, uint256 expected);

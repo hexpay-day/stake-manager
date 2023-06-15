@@ -28,22 +28,10 @@ contract ConsentualStakeManager is UnderlyingStakeManager {
    */
   event UpdatedSettings(uint256 indexed stakeId, uint256 settings);
   /**
-   * @notice nonce has been consumed
-   */
-  error NonceConsumed(address signer, uint256 nonce);
-  /**
-   * @notice an error for when the stake is about to be ended but conditions have not allowed it
-   */
-  error StakeNotEnded(uint256 provided, uint256 expected);
-  /**
    * @notice this error is thrown when the stake in question
    * is not owned by the expected address
    */
   error StakeNotOwned(address provided, address expected);
-  /**
-   * @notice the signature was invalid / did not match the data
-   */
-  error InvalidSignature();
   /**
    * @notice this var is re-defined here to keep the computeMagnitude method pure
    * at the cost of one extra byteword during deployment
@@ -282,7 +270,7 @@ contract ConsentualStakeManager is UnderlyingStakeManager {
     return uint256(0x000000000000000000000000000000000000010000000000000000010000ff0d) | (stakeDays << 16);
   }
   function _setDefaultSettings(uint256 stakeId, uint256 stakeDays) internal {
-    stakeIdToSettings[stakeId] = _defaultEncodedSettings(stakeDays);
+    _logSettingsUpdate(stakeId, _defaultEncodedSettings(stakeDays));
   }
   function readEncodedSettings(
     uint256 settings,
@@ -329,7 +317,9 @@ contract ConsentualStakeManager is UnderlyingStakeManager {
    */
   function stakeStartFromBalanceFor(
     address to,
-    uint256 amount, uint256 newStakedDays
+    uint256 amount,
+    uint256 newStakedDays,
+    uint256 settings
   ) external payable returns(uint256 stakeId) {
     _depositTokenFrom(msg.sender, amount);
     // tokens are essentially unattributed at this point
@@ -337,7 +327,20 @@ contract ConsentualStakeManager is UnderlyingStakeManager {
       to,
       amount, newStakedDays
     );
-    _setDefaultSettings(stakeId, newStakedDays);
+    _logSettings(stakeId, newStakedDays, settings);
+  }
+  /**
+   * save a newly started stake's settings
+   * @param stakeId the id of the newly minted stake
+   * @param newStakedDays the number of days that the stake is supposed to last
+   * @param settings optional settings passed by stake starter
+   */
+  function _logSettings(uint256 stakeId, uint256 newStakedDays, uint256 settings) internal {
+    if (settings == 0) {
+      _setDefaultSettings(stakeId, newStakedDays);
+    } else {
+      _logSettingsUpdate(stakeId, settings);
+    }
   }
   /**
    * start a numbeer of stakes for an address from the withdrawable
@@ -347,14 +350,16 @@ contract ConsentualStakeManager is UnderlyingStakeManager {
    */
   function stakeStartFromWithdrawableFor(
     address to,
-    uint256 amount, uint256 newStakedDays
+    uint256 amount,
+    uint256 newStakedDays,
+    uint256 settings
   ) external payable returns(uint256 stakeId) {
     stakeId = _stakeStartFor(
       to,
       // we can only conclude that the sender has authorized this deduction
       _deductWithdrawable(msg.sender, amount), newStakedDays
     );
-    _setDefaultSettings(stakeId, newStakedDays);
+    _logSettings(stakeId, newStakedDays, settings);
   }
   /**
    * stake a number of tokens for a given number of days, pulling from
@@ -365,13 +370,15 @@ contract ConsentualStakeManager is UnderlyingStakeManager {
    */
   function stakeStartFromUnattributedFor(
     address to,
-    uint256 amount, uint256 newStakedDays
+    uint256 amount,
+    uint256 newStakedDays,
+    uint256 settings
   ) external payable returns(uint256 stakeId) {
     stakeId = _stakeStartFor(
       to,
       _clamp(amount, _getUnattributed()), newStakedDays
     );
-    _setDefaultSettings(stakeId, newStakedDays);
+    _logSettings(stakeId, newStakedDays, settings);
   }
   /**
    * gets unattributed tokens floating in the contract
@@ -568,7 +575,7 @@ contract ConsentualStakeManager is UnderlyingStakeManager {
     uint256 stakeId;
     do {
       stakeId = stakeIds[i];
-      if (checkBinary(uint8(stakeIdToSettings[stakeId] >> 8), 2)) {
+      if (checkBinary(uint8(stakeIdToSettings[stakeId]), 2)) {
         currentOwner = stakeIdToOwner[stakeId];
         if (currentOwner != to) {
           unchecked {

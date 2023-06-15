@@ -11,6 +11,18 @@ contract SignatureStakeManager is ConsentualStakeManager, EIP712 {
     EIP712("ConsentualStakeManager", "0.0.0")
   {}
   /**
+   * @notice nonce has been consumed
+   */
+  error NonceConsumed(address signer, uint256 nonce);
+  /**
+   * @notice an error for when the stake is about to be ended but conditions have not allowed it
+   */
+  error StakeNotEnded(uint256 provided, uint256 expected);
+  /**
+   * @notice the signature was invalid / did not match the data
+   */
+  error InvalidSignature();
+  /**
    * @notice this is a globally shared pool of nonces - all methods draw from this pool
    * we use bool here because we do not indend a pathway to delete
    */
