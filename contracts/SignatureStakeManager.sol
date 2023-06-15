@@ -77,7 +77,7 @@ contract SignatureStakeManager is ConsentualStakeManager, EIP712 {
   ) external payable {
     bytes32 hashedInput = keccak256(abi.encode(
       // solhint-disable-next-line
-      keccak256("ConsentUpdateSettings(uint256 stakeId,uint256 nonce,(uint8,uint64,uint8,uint64,uint8,uint64,uint16,uint8,uint16) settings)"),
+      keccak256("ConsentUpdateSettings(uint256 stakeId,uint256 nonce,(uint8,uint64,uint8,uint64,uint8,uint64,uint8,uint16,uint8,uint8) settings)"),
       stakeId,
       nonce,
       settings
