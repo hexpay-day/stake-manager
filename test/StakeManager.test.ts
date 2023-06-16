@@ -79,7 +79,6 @@ describe("StakeManager", function () {
     it('multiple can be started in the same tx by the ender at the direction of the owner', async () => {
       const x = await loadFixture(utils.deployFixture)
       const [signer1] = x.signers
-      // const isolatedStakeManager = await x.stakeManager.callStatic.getIsolatedStakeManager(signer1.address)
       await expect(x.stakeManager.connect(signer1).multicall([
         x.stakeManager.interface.encodeFunctionData('stakeStart', [x.oneMillion / 2n, 10]),
         x.stakeManager.interface.encodeFunctionData('stakeStart', [x.oneMillion / 2n, 20]),
@@ -94,7 +93,6 @@ describe("StakeManager", function () {
     it('multiple can be ended and restarted in the same transaction', async () => {
       const x = await loadFixture(utils.deployFixture)
       const [signer1, signer2, signer3, signer4] = x.signers
-      // const isolatedStakeManager1 = await x.stakeManager.callStatic.getIsolatedStakeManager(signer1.address)
       await x.stakeManager.connect(signer1).multicall([
         x.stakeManager.interface.encodeFunctionData('stakeStart', [x.oneMillion / 2n, 10]),
         x.stakeManager.interface.encodeFunctionData('stakeStart', [x.oneMillion / 2n, 20]),
