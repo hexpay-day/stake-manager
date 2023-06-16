@@ -249,10 +249,6 @@ describe("StakeEnder", function () {
         .withArgs(x.stakeManager.address, hre.ethers.constants.AddressZero, withArgs.anyUint)
         .printGasUsage()
       await moveForwardDays(half2, signer4, x)
-      const count = await x.hex.stakeCount(x.stakeManager.address)
-      const list = await Promise.all((new Array(count.toNumber())).fill(null).map((_a, i) => {
-        return x.hex.stakeLists(x.stakeManager.address, i)
-      }))
       await expect(x.stakeManager.connect(signer4).stakeEndByConsentForMany([
         x.nextStakeId + 5n,
         x.nextStakeId + 3n,
