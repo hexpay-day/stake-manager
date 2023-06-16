@@ -2,32 +2,10 @@
 pragma solidity ^0.8.17;
 
 import "./UnderlyingStakeManager.sol";
+import "./EncodableSettings.sol";
 import "./IHedron.sol";
 
-contract ConsentualStakeManager is UnderlyingStakeManager {
-  // 1 word;
-  struct Settings {
-    // starts with full amount of end stake
-    uint8 tipMethod;
-    uint64 tipMagnitude;
-    // starts with amount of end stake - tip amount
-    uint8 withdrawableMethod;
-    uint64 withdrawableMagnitude;
-    // the rest goes into a new stake if the number of days are set
-    uint8 newStakeMethod; // being non zero signals approval
-    uint64 newStakeMagnitude;
-    uint8 newStakeDaysMethod;
-    uint16 newStakeDaysMagnitude;
-    uint8 copyIterations; // 0 for do not restart, 1-254 as countdown, 255 as restart indefinitely
-    uint8 consentAbilities; // 0/1 end, 00/10 early end, 100 mint hedron, 1000 mint hedron during end stake
-  }
-  /**
-   * an event to signal that settings to direct funds
-   * at the end of a stake have been updated
-   * @param stakeId the stake id that was updated
-   * @param settings the newly updated settings
-   */
-  event UpdatedSettings(uint256 indexed stakeId, uint256 settings);
+contract ConsentualStakeManager is UnderlyingStakeManager, EncodableSettings {
   /**
    * @notice this error is thrown when the stake in question
    * is not owned by the expected address
@@ -41,7 +19,6 @@ contract ConsentualStakeManager is UnderlyingStakeManager {
   /**
    * @notice settings of stakes indexed by the stake id
    */
-  mapping(uint256 => uint256) public stakeIdToSettings;
   mapping(address => uint256) public outstandingHedronTokens;
   /**
    * @notice an invariant that tracks how much underlying token is owned by a particular address
@@ -122,7 +99,7 @@ contract ConsentualStakeManager is UnderlyingStakeManager {
     uint256 stakeId,
     uint256 y
   ) external view returns(uint256) {
-    uint256 settings = stakeIdToSettings[stakeId];
+    uint256 settings = idToSettings[stakeId];
     return _computeMagnitude(
       settings >> 248, settings << 8 >> 192, y,
       _stakeById(stakeId)
@@ -163,19 +140,6 @@ contract ConsentualStakeManager is UnderlyingStakeManager {
     return amount;
   }
   /**
-   * update the settings for a stake id
-   * @param stakeId the stake id to update settings for
-   * @param settings an object that holds settings values
-   * to inform end stakers how to handle the stake
-   */
-  function _logSettingsUpdate(
-    uint256 stakeId,
-    uint256 settings
-  ) internal {
-    stakeIdToSettings[stakeId] = settings;
-    emit UpdatedSettings(stakeId, settings);
-  }
-  /**
    * updates settings under a stake id to the provided settings struct
    * @param stakeId the stake id to update
    * @param settings the settings to update the stake id to
@@ -213,7 +177,7 @@ contract ConsentualStakeManager is UnderlyingStakeManager {
     if (idx == 0 && stakeId != stake.stakeId) {
       return 0;
     }
-    uint256 settings = stakeIdToSettings[stakeId];
+    uint256 settings = idToSettings[stakeId];
     uint256 consentAbilities = uint8(settings);
     uint256 today = _currentDay();
     if (!skipEarlyCheck && ((stake.lockedDay + stake.stakedDays) < today) && !checkBinary(consentAbilities, 1)) {
@@ -265,52 +229,6 @@ contract ConsentualStakeManager is UnderlyingStakeManager {
         ++i;
       }
     } while(i < len);
-  }
-  function defaultEncodedSettings(uint256 stakeDays) external pure returns(uint256) {
-    return _defaultEncodedSettings(stakeDays);
-  }
-  function _defaultEncodedSettings(uint256 stakeDays) internal pure returns(uint256) {
-    return uint256(0x000000000000000000000000000000000000010000000000000000010000ff0d) | (stakeDays << 16);
-  }
-  function _setDefaultSettings(uint256 stakeId, uint256 stakeDays) internal {
-    _logSettingsUpdate(stakeId, _defaultEncodedSettings(stakeDays));
-  }
-  function readEncodedSettings(
-    uint256 settings,
-    uint256 fromEnd, uint256 length
-  ) external pure returns(uint256) {
-    return _readEncodedSettings(settings, fromEnd, length);
-  }
-  function _readEncodedSettings(
-    uint256 settings,
-    uint256 fromEnd, uint256 length
-  ) internal pure returns(uint256) {
-    return settings << fromEnd >> (256 - length);
-  }
-  function _encodeSettings(Settings memory settings) internal pure returns(uint256 baseline) {
-    return uint256(settings.tipMethod) << 248
-      | uint256(settings.tipMagnitude) << 184
-      | uint256(settings.withdrawableMethod) << 176
-      | uint256(settings.withdrawableMagnitude) << 112
-      | uint256(settings.newStakeMethod) << 104
-      | uint256(settings.newStakeMagnitude) << 40
-      | uint256(settings.newStakeDaysMethod) << 32
-      | uint256(settings.newStakeDaysMagnitude) << 16
-      | uint256(settings.copyIterations) << 8
-      | uint256(settings.consentAbilities);
-  }
-  function _defaultSettings(uint256 stakeDays) internal pure returns(Settings memory) {
-    return Settings(
-      uint8(0), uint64(0), // tip
-      uint8(0), uint64(0), // withdrawable
-      uint8(1), uint64(0), // new stake amount
-      uint8(1), uint16(stakeDays), // new stake days
-      uint8(13), // "1101" allow end stake, no early end, hedron minting, end hedron mint
-      type(uint8).max // restart forever
-    );
-  }
-  function defaultSettings(uint256 stakeDays) external pure returns(Settings memory) {
-    return _defaultSettings(stakeDays);
   }
   /**
    * stake a given number of tokens for a given number of days
@@ -556,7 +474,7 @@ contract ConsentualStakeManager is UnderlyingStakeManager {
       _addToWithdrawable(staker, delta);
     }
     // this data should still be available in logs
-    stakeIdToSettings[stakeId] = 0;
+    idToSettings[stakeId] = 0;
   }
   // mint hedron rewards
   struct HedronParams {
@@ -577,7 +495,7 @@ contract ConsentualStakeManager is UnderlyingStakeManager {
     uint256 stakeId;
     do {
       stakeId = stakeIds[i];
-      if (checkBinary(uint8(stakeIdToSettings[stakeId]), 2)) {
+      if (checkBinary(uint8(idToSettings[stakeId]), 2)) {
         currentOwner = stakeIdToOwner[stakeId];
         if (currentOwner != to) {
           unchecked {

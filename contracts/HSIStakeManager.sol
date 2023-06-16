@@ -8,6 +8,9 @@ import "./Multicall.sol";
 import "./AuthorizationManager.sol";
 
 contract HSIStakeManager is AuthorizationManager {
+  /**
+   * a mapping of hsi addresses to the address that deposited the hsi into this contract
+   */
   mapping(address => address) public hsiToOwner;
   constructor() AuthorizationManager(3) {}
   /**
@@ -25,6 +28,12 @@ contract HSIStakeManager is AuthorizationManager {
   function isAuthorized(address runner, address hsiAddress, uint256 index) external view returns(bool) {
     return _isAuthorized(keccak256(abi.encode(runner, hsiAddress)), index);
   }
+  /**
+   * provide authorization to addresses, as the owner of the hsi
+   * @param runner the address that will run methods in the future
+   * @param hsiAddress the hsi address that this setting should be scoped to
+   * @param setting the setting number that holds 256 flags
+   */
   function setAuthorization(address runner, address hsiAddress, uint256 setting) external {
     if (hsiToOwner[hsiAddress] != msg.sender) {
       revert NotAllowed();
@@ -40,9 +49,10 @@ contract HSIStakeManager is AuthorizationManager {
     address hsiAddress;
   }
   /**
-   * mint rewards and transfer them to a provided address
+   * mint rewards and transfer them the owner of each hsi
    * @param params variable params for each call
-   * @notice any combination of owners can be passed, however, it is most efficient to order the hsi address by owner
+   * @notice any combination of owners can be passed,
+   * however, it is most efficient to order the hsi address by owner
    */
   function mintRewards(HSIParams[] calldata params) external {
     uint256 len = params.length;

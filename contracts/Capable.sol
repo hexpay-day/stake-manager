@@ -2,6 +2,11 @@
 pragma solidity ^0.8.17;
 
 contract Capable {
+  /**
+   * check if the number, in binary form, has a 1 at the provided index
+   * @param setting the setting number that holds up to 256 flags as 1/0
+   * @param index the index to check for a 1
+   */
   function isCapable(uint256 setting, uint256 index) external pure returns(bool) {
     return checkBinary(setting, index);
   }
