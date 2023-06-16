@@ -39,50 +39,33 @@ contract IsolatedStakeManager is Stakeable, Ownable2Step, AuthorizationManager {
   /** end a stake */
   function stakeEnd(uint256 stakeIndex, uint40 stakeId) external override {
     StakeStore memory stake = _getStake(address(this), stakeIndex);
-    _endStake(stake, stakeIndex, stakeId);
+    if (!_settingsCheck(stake)) {
+      revert NotAllowed();
+    }
+    _endStake(stakeIndex, stakeId);
   }
   function checkAndStakeEnd(uint256 stakeIndex, uint40 stakeId) external {
     StakeStore memory stake = _getStake(address(this), stakeIndex);
-    if (stake.stakeId != stakeId) {
+    if (stake.stakeId != stakeId || !_settingsCheck(stake)) {
       return;
     }
-    _endStake(stake, stakeIndex, stakeId);
+    _endStake(stakeIndex, stakeId);
   }
-  function _endStake(StakeStore memory stake, uint256 stakeIndex, uint40 stakeId) internal {
-    uint256 setting = authorization[bytes32(uint256(uint160(msg.sender)))];
-    if (isEarlyEnding(stake, _currentDay())) {
-      // can early end stake
-      if (!checkBinary(setting, 2)) {
-        revert NotAllowed();
-      }
-    } else {
-      // can end stake
-      if (!checkBinary(setting, 1)) {
-        revert NotAllowed();
-      }
-    }
+  function _endStake(uint256 stakeIndex, uint40 stakeId) internal {
     IStakeable(target).stakeEnd(stakeIndex, stakeId);
     IERC20(target).transfer(
       owner(),
       IERC20(target).balanceOf(address(this))
     );
   }
-}
-
-contract IsolatedStakeManagerFactory {
-  /**
-   * @notice a mapping of a key that contains a modifier and the owning address
-   * pointing to the address of the contract created by the stake manager
-   */
-  mapping(address => address) public isolatedStakeManagers;
-  function upsertManager(address staker) external returns(address existing) {
-    existing = isolatedStakeManagers[staker];
-    if (existing != address(0)) {
-      return existing;
+  function _settingsCheck(StakeStore memory stake) internal view returns(bool) {
+    uint256 setting = authorization[bytes32(uint256(uint160(msg.sender)))];
+    if (isEarlyEnding(stake, _currentDay())) {
+      // can early end stake
+      return checkBinary(setting, 2);
+    } else {
+      // can end stake
+      return checkBinary(setting, 1);
     }
-    // this scopes up to 2 stake managers to a single address
-    // one that can only be ended by the staker one that can be ended by the stake manager
-    existing = address(new IsolatedStakeManager{salt: keccak256(abi.encode(staker))}(staker));
-    isolatedStakeManagers[staker] = existing;
   }
 }

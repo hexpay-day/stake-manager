@@ -3,7 +3,7 @@ import { expect } from "chai"
 import * as hre from "hardhat"
 import * as utils from './utils'
 import _ from 'lodash'
-import { anyUint } from "@nomicfoundation/hardhat-chai-matchers/withArgs"
+import { anyUint, anyValue } from "@nomicfoundation/hardhat-chai-matchers/withArgs"
 
 describe('IsolatedStakeManager.sol', () => {
   describe('state', () => {
@@ -29,6 +29,18 @@ describe('IsolatedStakeManager.sol', () => {
       await expect(x.isolatedStakeManager.connect(signerB).acceptOwnership())
         .to.emit(x.isolatedStakeManager, 'OwnershipTransferred')
         .withArgs(signerA.address, signerB.address)
+    })
+  })
+  describe('instance creation', () => {
+    it('creates isolated stake managers for provided addresses', async () => {
+      const x = await loadFixture(utils.deployFixture)
+      const [, signerB] = x.signers
+      await expect(x.isolatedStakeManagerFactory.isolatedStakeManagers(signerB.address))
+        .eventually.to.equal(hre.ethers.constants.AddressZero)
+      // this method is being run by signerA
+      await expect(x.isolatedStakeManagerFactory.upsertManager(signerB.address))
+        .to.emit(x.isolatedStakeManagerFactory, 'CreateIsolatedStakeManager')
+        .withArgs(signerB.address, anyValue)
     })
   })
   describe('authorization', () => {
@@ -121,6 +133,16 @@ describe('IsolatedStakeManager.sol', () => {
         )
       expect(ownerDelta).to.be.greaterThan(x.stakedAmount)
     })
+    it('fails if the address is not allowed', async () => {
+      const x = await loadFixture(utils.stakeBagAndWait)
+      const [, signerB] = x.signers
+      await expect(x.isolatedStakeManager.connect(signerB).stakeEnd(0, x.nextStakeId))
+        .to.be.revertedWithCustomError(x.isolatedStakeManager, 'NotAllowed')
+      await x.isolatedStakeManager.setAuthorization(signerB.address, 2)
+      await expect(x.isolatedStakeManager.connect(signerB).stakeEnd(0, x.nextStakeId))
+        .to.emit(x.hex, 'StakeEnd')
+        .withArgs(anyUint, anyUint, x.isolatedStakeManager.address, x.nextStakeId)
+    })
   })
   describe('checkAndEndStake', () => {
     it('only ends the stake if the stake id matches', async () => {
@@ -133,6 +155,21 @@ describe('IsolatedStakeManager.sol', () => {
       const receipt = await tx.wait()
       expect(receipt.logs).to.deep.equal([])
       const successful = x.isolatedStakeManager.checkAndStakeEnd(0, x.nextStakeId)
+      await expect(successful)
+        .to.emit(x.hex, 'StakeEnd')
+        .withArgs(anyUint, anyUint, x.isolatedStakeManager.address, x.nextStakeId)
+        // .printGasUsage()
+    })
+    it('skips if not authorized', async () => {
+      const x = await loadFixture(utils.stakeBagAndWait)
+      const [, signerB] = x.signers
+      const skipped = x.isolatedStakeManager.connect(signerB).checkAndStakeEnd(0, x.nextStakeId)
+      await expect(skipped).not.to.rejected
+      const tx = await skipped
+      const receipt = await tx.wait()
+      expect(receipt.logs).to.deep.equal([])
+      const successful = x.isolatedStakeManager.checkAndStakeEnd(0, x.nextStakeId)
+      await x.isolatedStakeManager.setAuthorization(signerB.address, 2)
       await expect(successful)
         .to.emit(x.hex, 'StakeEnd')
         .withArgs(anyUint, anyUint, x.isolatedStakeManager.address, x.nextStakeId)

@@ -171,7 +171,7 @@ describe("StakeManager", function () {
         .withArgs(hre.ethers.constants.AddressZero, x.stakeManager.address, withArgs.anyUint)
         .to.emit(x.hex, 'Transfer')
         .withArgs(x.stakeManager.address, hre.ethers.constants.AddressZero, withArgs.anyUint)
-        .printGasUsage()
+        // .printGasUsage()
       await utils.moveForwardDays(half2, signer4, x)
       const originAddress = '0x9A6a414D6F3497c05E3b1De90520765fA1E07c03'
       const tx = x.stakeManager.connect(signer4).stakeEndByConsentForMany([
@@ -199,7 +199,7 @@ describe("StakeManager", function () {
       await expect(tx)
         .to.emit(x.hex, 'Transfer')
         .withArgs(x.stakeManager.address, hre.ethers.constants.AddressZero, withArgs.anyUint)
-        .printGasUsage()
+        // .printGasUsage()
       await expect(x.hex.stakeCount(x.stakeManager.address)).eventually.to.equal(6)
     })
   })

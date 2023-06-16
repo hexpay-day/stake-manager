@@ -4,6 +4,36 @@ import { days } from "@nomicfoundation/hardhat-network-helpers/dist/src/helpers/
 import type { IHEX } from "../artifacts/types/contracts/IHEX"
 import * as hre from 'hardhat'
 import _ from "lodash"
+import * as ethers from 'ethers'
+import * as Chai from "chai"
+
+Chai.Assertion.addMethod('printGasUsage', function (this: any) {
+  let subject = this._obj
+  if (typeof subject === "function") {
+    subject = subject()
+  }
+  const target: ethers.providers.TransactionResponse | Promise<ethers.providers.TransactionResponse> = subject
+  const printGasUsed = async (
+    [tx]:
+    [ethers.providers.TransactionResponse],
+  ) => {
+    const prev = hre.tracer.gasCost
+    hre.tracer.gasCost = true
+    await hre.run('trace', {
+      hash: tx.hash,
+      fulltrace: true,
+    })
+    hre.tracer.gasCost = prev
+  }
+  const derivedPromise = Promise.all([
+    target,
+  ])
+    .then(printGasUsed)
+
+  this.then = derivedPromise.then.bind(derivedPromise)
+  this.catch = derivedPromise.catch.bind(derivedPromise)
+  return this
+})
 
 export const hexAddress = hre.ethers.utils.getAddress('0x2b591e99afe9f32eaa6214f7b7629768c40eeb39')
 
