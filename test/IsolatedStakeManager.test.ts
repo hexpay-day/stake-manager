@@ -106,18 +106,36 @@ describe('IsolatedStakeManager.sol', () => {
   describe('stakeEnd', () => {
     it('ends stakes', async () => {
       const x = await loadFixture(utils.stakeBagAndWait)
+      const [signer] = x.signers
+      const balanceBefore = await x.hex.balanceOf(signer.address)
       const tx = x.isolatedStakeManager.stakeEnd(0, x.nextStakeId)
       await expect(tx)
         .to.emit(x.hex, 'StakeEnd')
         .withArgs(anyUint, anyUint, x.isolatedStakeManager.address, x.nextStakeId)
       const owner = await x.isolatedStakeManager.owner()
-      const ownerBalance = await x.hex.balanceOf(owner)
+      const ownerDelta = (await x.hex.balanceOf(owner)).sub(balanceBefore).toBigInt()
       await expect(tx)
         .changeTokenBalances(x.hex,
           [owner, x.isolatedStakeManager.address],
-          [ownerBalance, 0],
+          [ownerDelta, 0],
         )
-      expect(ownerBalance).to.be.greaterThan(x.oneMillion)
+      expect(ownerDelta).to.be.greaterThan(x.stakedAmount)
+    })
+  })
+  describe('checkAndEndStake', () => {
+    it('only ends the stake if the stake id matches', async () => {
+      // this test shows that external enders can be assured that their
+      // multicall(s) will not fail if the have the wrong data
+      const x = await loadFixture(utils.stakeBagAndWait)
+      const skipped = x.isolatedStakeManager.checkAndStakeEnd(0, x.nextStakeId + 1n)
+      await expect(skipped).not.to.rejected
+      const tx = await skipped
+      const receipt = await tx.wait()
+      expect(receipt.logs).to.deep.equal([])
+      const successful = x.isolatedStakeManager.checkAndStakeEnd(0, x.nextStakeId)
+      await expect(successful)
+        .to.emit(x.hex, 'StakeEnd')
+        .withArgs(anyUint, anyUint, x.isolatedStakeManager.address, x.nextStakeId)
     })
   })
 })

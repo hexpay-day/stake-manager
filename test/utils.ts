@@ -59,11 +59,16 @@ export const stakeBagAndWait = async () => {
   const x = await loadFixture(deployFixture)
   const days = 30
   const signer = x.signers[x.signers.length - 1]
-  await x.isolatedStakeManager.stakeStart(x.oneMillion, days)
+  const stakedAmount = x.oneMillion / 10n
+  await x.isolatedStakeManager.stakeStart(stakedAmount, days)
+  await x.isolatedStakeManager.stakeStart(stakedAmount, days + 1)
+  await x.isolatedStakeManager.stakeStart(stakedAmount, days + 100)
   await moveForwardDays(days + 1, signer, x)
   return {
     ...x,
     days,
+    stakedDays: [days, days + 1, days + 100],
+    stakedAmount,
   }
 }
 
