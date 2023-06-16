@@ -168,10 +168,14 @@ contract IsolatedStakeManager is Stakeable, Ownable2Step, AuthorizationManager {
       IStakeable(target).stakeStart(stakedHearts, newStakedDays);
     }
   }
-  function _transferFromOwner(uint256 newStakedHearts) internal {
+  /**
+   * transfer a number of hearts from the owner to this contract
+   * @param amount number of hearts to transfer from owner
+   */
+  function _transferFromOwner(uint256 amount) internal {
     if (_isCapable(_getAddressSetting(msg.sender), 4)) {
       revert NotAllowed();
     }
-    IERC20(target).transferFrom(owner(), address(this), newStakedHearts);
+    IERC20(target).transferFrom(owner(), address(this), amount);
   }
 }
