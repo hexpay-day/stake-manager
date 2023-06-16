@@ -3,6 +3,7 @@ import { expect } from "chai"
 import * as hre from "hardhat"
 import * as utils from './utils'
 import _ from 'lodash'
+import { anyUint } from "@nomicfoundation/hardhat-chai-matchers/withArgs"
 
 describe('IsolatedStakeManager.sol', () => {
   describe('state', () => {
@@ -56,6 +57,67 @@ describe('IsolatedStakeManager.sol', () => {
       const [, signerB] = x.signers
       await expect(x.isolatedStakeManager.connect(signerB).setAuthorization(signerB.address, 5))
         .eventually.to.rejectedWith('Ownable: caller is not the owner')
+    })
+    it('provides info on authorization', async () => {
+      const x = await loadFixture(utils.deployFixture)
+      const [signerA, signerB] = x.signers
+      await expect(x.isolatedStakeManager.isAddressAuthorized(signerA.address, 2))
+        .eventually.to.equal(true)
+      await expect(x.isolatedStakeManager.isAddressAuthorized(signerB.address, 2))
+        .eventually.to.equal(false)
+      await x.isolatedStakeManager.setAuthorization(signerB.address, 4)
+      await expect(x.isolatedStakeManager.isAddressAuthorized(signerB.address, 2))
+        .eventually.to.equal(true)
+    })
+  })
+  describe('stakeStart', () => {
+    it('starts stakes', async () => {
+      const x = await loadFixture(utils.deployFixture)
+      const [signer] = x.signers
+      const tx = x.isolatedStakeManager.stakeStart(x.oneMillion, 30)
+      await expect(tx)
+        .to.emit(x.hex, 'StakeStart')
+        .withArgs(anyUint, x.isolatedStakeManager.address, x.nextStakeId)
+        .to.emit(x.hex, 'Transfer')
+        .withArgs(signer.address, x.isolatedStakeManager.address, x.oneMillion)
+        .to.emit(x.hex, 'Transfer')
+        .withArgs(x.isolatedStakeManager.address, hre.ethers.constants.AddressZero, x.oneMillion)
+      await expect(tx)
+        .changeTokenBalances(x.hex,
+          [signer, x.isolatedStakeManager],
+          [x.oneMillion * -1n, 0],
+        )
+    })
+    it('can start stakes from tokens already in the manager', async () => {
+      const x = await loadFixture(utils.deployFixture)
+      const [signer] = x.signers
+      const stakeAmount = 1_000n * (10n**BigInt(x.decimals))
+      const tx = x.hex.connect(signer).transfer(x.isolatedStakeManager.address, stakeAmount)
+      await expect(tx)
+        .changeTokenBalances(x.hex,
+          [signer, x.isolatedStakeManager],
+          [stakeAmount * -1n, stakeAmount],
+        )
+      await expect(x.isolatedStakeManager.stakeStart(0, 30))
+        .to.emit(x.hex, 'StakeStart')
+        .withArgs(anyUint, x.isolatedStakeManager.address, x.nextStakeId)
+    })
+  })
+  describe('stakeEnd', () => {
+    it('ends stakes', async () => {
+      const x = await loadFixture(utils.stakeBagAndWait)
+      const tx = x.isolatedStakeManager.stakeEnd(0, x.nextStakeId)
+      await expect(tx)
+        .to.emit(x.hex, 'StakeEnd')
+        .withArgs(anyUint, anyUint, x.isolatedStakeManager.address, x.nextStakeId)
+      const owner = await x.isolatedStakeManager.owner()
+      const ownerBalance = await x.hex.balanceOf(owner)
+      await expect(tx)
+        .changeTokenBalances(x.hex,
+          [owner, x.isolatedStakeManager.address],
+          [ownerBalance, 0],
+        )
+      expect(ownerBalance).to.be.greaterThan(x.oneMillion)
     })
   })
 })

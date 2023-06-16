@@ -12,3 +12,5 @@ forge-cache
 out
 bin
 cache_hardhat
+
+contracts/hardhat-dependency-compiler
