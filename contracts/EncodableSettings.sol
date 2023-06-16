@@ -27,14 +27,10 @@ contract EncodableSettings {
    * @param settings the newly updated settings
    */
   event UpdatedSettings(uint256 indexed stakeId, uint256 settings);
-  function defaultEncodedSettings() external pure returns(uint256) {
-    return _defaultEncodedSettings();
-  }
-  function _defaultEncodedSettings() internal pure returns(uint256) {
-    return uint256(0x000000000000000000000000000000000000010000000000000000060000ff01);
-  }
+  uint256 public constant DEFAULT_ENCODED_SETTINGS
+    = uint256(0x000000000000000000000000000000000000010000000000000000060000ff01);
   function _setDefaultSettings(uint256 stakeId) internal {
-    _logSettingsUpdate(stakeId, _defaultEncodedSettings());
+    _logSettingsUpdate(stakeId, DEFAULT_ENCODED_SETTINGS);
   }
   /**
    * update the settings for a stake id
@@ -144,6 +140,10 @@ contract EncodableSettings {
        * restarting is signalled by using settings above
        * no "starts" as in pull from external address
        * is ever allowed except by sender
+       *
+       * the reason why the hedron flags are 0 by default is because
+       * it may be worthwhile for hedron developers to build on top of this contract
+       * and it is poor form to force people in the future to have to cancel out the past
        */
       uint8(1)
     );

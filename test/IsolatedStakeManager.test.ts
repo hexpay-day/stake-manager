@@ -119,19 +119,19 @@ describe('IsolatedStakeManager.sol', () => {
     it('ends stakes', async () => {
       const x = await loadFixture(utils.stakeBagAndWait)
       const [signer] = x.signers
-      const balanceBefore = await x.hex.balanceOf(signer.address)
+      const balanceBefore = await x.hex.balanceOf(x.isolatedStakeManager.address)
       const tx = x.isolatedStakeManager.stakeEnd(0, x.nextStakeId)
       await expect(tx)
         .to.emit(x.hex, 'StakeEnd')
         .withArgs(anyUint, anyUint, x.isolatedStakeManager.address, x.nextStakeId)
       const owner = await x.isolatedStakeManager.owner()
-      const ownerDelta = (await x.hex.balanceOf(owner)).sub(balanceBefore).toBigInt()
+      const contractHoldings = (await x.hex.balanceOf(x.isolatedStakeManager.address)).sub(balanceBefore).toBigInt()
       await expect(tx)
         .changeTokenBalances(x.hex,
           [owner, x.isolatedStakeManager.address],
-          [ownerDelta, 0],
+          [0, contractHoldings],
         )
-      expect(ownerDelta).to.be.greaterThan(x.stakedAmount)
+      expect(contractHoldings).to.be.greaterThan(x.stakedAmount)
     })
     it('fails if the address is not allowed', async () => {
       const x = await loadFixture(utils.stakeBagAndWait)
