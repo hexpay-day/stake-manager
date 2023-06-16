@@ -12,12 +12,13 @@ import { IGasReimberser } from './GasReimberser.sol';
 contract MaximusStakeEnder is Ownable2Step, AuthorizationManager {
   using Address for address payable;
   constructor(address owner) AuthorizationManager(7) {
+    _setAddressAuthorization(owner, MAX_AUTHORIZATION);
     _transferOwnership(owner);
   }
-  function stakeEnd(address target, uint256 stakeId) external {
-    if (!checkBinary(authorization[bytes32(uint256(uint160(msg.sender)))], 0)) {
-      return;
-    }
+  function setAuthorization(address target, uint256 setting) external onlyOwner {
+    _setAddressAuthorization(target, setting);
+  }
+  function stakeEnd(address target, uint256 stakeId) external senderIsAuthorized(0) {
     IPublicEndStakeable(target).endStakeHEX(0, uint40(stakeId));
   }
   function flushNative(address target) external senderIsAuthorized(1) {

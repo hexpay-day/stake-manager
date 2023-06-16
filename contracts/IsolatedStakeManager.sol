@@ -10,8 +10,11 @@ import "./IStakeable.sol";
 contract IsolatedStakeManager is Stakeable, Ownable2Step, AuthorizationManager {
   constructor(address owner) AuthorizationManager(7) {
     // can start, end, and early end stakes
-    authorization[bytes32(uint256(uint160(owner)))] = MAX_AUTHORIZATION;
+    _setAddressAuthorization(owner, MAX_AUTHORIZATION);
     _transferOwnership(owner);
+  }
+  function setAuthorization(address target, uint256 setting) external onlyOwner {
+    _setAddressAuthorization(target, setting);
   }
   /**
    * stake a given amount of tokens for a given number of days

@@ -23,6 +23,9 @@ contract AuthorizationManager is UnderlyingStakeable, Capable {
     authorization[key] = settings;
     emit UpdateAuthorization(key, settings);
   }
+  function _setAddressAuthorization(address account, uint256 settings) internal {
+    _setAuthorization(bytes32(uint256(uint160(account))), settings);
+  }
   modifier senderIsAuthorized(uint256 index) {
     if (checkBinary(authorization[bytes32(uint256(uint160(msg.sender)))], index)) {
       _;
