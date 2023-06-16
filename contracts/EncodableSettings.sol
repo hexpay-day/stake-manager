@@ -13,6 +13,7 @@ contract EncodableSettings {
     // the rest goes into a new stake if the number of days are set
     uint8 newStakeMethod; // being non zero signals approval
     uint64 newStakeMagnitude;
+    // useful to use methods 6+7 for stake days
     uint8 newStakeDaysMethod;
     uint16 newStakeDaysMagnitude;
     uint8 copyIterations; // 0 for do not restart, 1-254 as countdown, 255 as restart indefinitely
@@ -26,14 +27,14 @@ contract EncodableSettings {
    * @param settings the newly updated settings
    */
   event UpdatedSettings(uint256 indexed stakeId, uint256 settings);
-  function defaultEncodedSettings(uint256 stakeDays) external pure returns(uint256) {
-    return _defaultEncodedSettings(stakeDays);
+  function defaultEncodedSettings() external pure returns(uint256) {
+    return _defaultEncodedSettings();
   }
-  function _defaultEncodedSettings(uint256 stakeDays) internal pure returns(uint256) {
-    return uint256(0x000000000000000000000000000000000000010000000000000000010000ff0d) | (stakeDays << 16);
+  function _defaultEncodedSettings() internal pure returns(uint256) {
+    return uint256(0x000000000000000000000000000000000000010000000000000000060000ff01);
   }
-  function _setDefaultSettings(uint256 stakeId, uint256 stakeDays) internal {
-    _logSettingsUpdate(stakeId, _defaultEncodedSettings(stakeDays));
+  function _setDefaultSettings(uint256 stakeId) internal {
+    _logSettingsUpdate(stakeId, _defaultEncodedSettings());
   }
   /**
    * update the settings for a stake id
@@ -109,17 +110,48 @@ contract EncodableSettings {
       uint8( encoded)
     );
   }
-  function _defaultSettings(uint256 stakeDays) internal pure returns(Settings memory settings) {
+  function _defaultSettings() internal pure returns(Settings memory settings) {
     return Settings(
+      /*
+       * by default, there is no tip
+       * assume that stakers will manage their own stakes at bare minimum
+       */
       uint8(0), uint64(0), // tip
+      /*
+       * by default, no tokens are ever sent back to the originating staker
+       * assume that stakers wish to keep tokens in this singleton contract for efficiency purposes
+       */
       uint8(0), uint64(0), // withdrawable
+      /*
+       * by default, assume that all tokens minted from an end stake
+       * should go directly into a new stake
+       */
       uint8(1), uint64(0), // new stake amount
-      uint8(1), uint16(stakeDays), // new stake days
-      type(uint8).max, // restart forever
-      uint8(13) // "1101" allow end stake, no early end, hedron minting, end hedron mint
+      /*
+       * by default, assume that by using this contract, users want efficiency gains
+       * so by default, restarting their stakes are the most efficient means of managing tokens
+       */
+      uint8(6), uint16(0),
+      255, // restart forever
+      /*
+       * 0x01 -> 0001
+       * by index:
+       * 3: do not allow end hedron mint (0)
+       * 2: do not allow continuous hedron mint (0)
+       * 1: do not allow early end (0)
+       * 0: allow end stake in general (1)
+       *
+       * restarting is signalled by using settings above
+       * no "starts" as in pull from external address
+       * is ever allowed except by sender
+       */
+      uint8(1)
     );
   }
-  function defaultSettings(uint256 stakeDays) external pure returns(Settings memory) {
-    return _defaultSettings(stakeDays);
+  /**
+   * exposes the default settings to external
+   */
+  function defaultSettings() external pure returns(Settings memory) {
+    return _defaultSettings();
   }
 }

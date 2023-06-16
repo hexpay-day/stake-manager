@@ -2,10 +2,10 @@
 pragma solidity ^0.8.17;
 
 import "./UnderlyingStakeManager.sol";
-import "./EncodableSettings.sol";
+import "./SingletonHedronManager.sol";
 import "./IHedron.sol";
 
-contract ConsentualStakeManager is UnderlyingStakeManager, EncodableSettings {
+contract ConsentualStakeManager is SingletonHedronManager {
   /**
    * @notice this error is thrown when the stake in question
    * is not owned by the expected address
@@ -16,10 +16,6 @@ contract ConsentualStakeManager is UnderlyingStakeManager, EncodableSettings {
    * at the cost of one extra byteword during deployment
    */
   uint256 public constant percentMagnitudeLimit = type(uint64).max;
-  /**
-   * @notice settings of stakes indexed by the stake id
-   */
-  mapping(address => uint256) public outstandingHedronTokens;
   /**
    * @notice an invariant that tracks how much underlying token is owned by a particular address
    */
@@ -189,10 +185,7 @@ contract ConsentualStakeManager is UnderlyingStakeManager, EncodableSettings {
     address staker = stakeIdToOwner[stakeId];
     // consent has been confirmed
     if (checkBinary(consentAbilities, 3)) {
-      uint256 hedronTokens = IHedron(hedron).mintNative(stakeIdToIndex[stakeId], uint40(stakeId));
-      unchecked {
-        outstandingHedronTokens[staker] += hedronTokens;
-      }
+      _attributeLegacyHedron(staker, _mintLegacyNative(stakeId));
     }
     delta = _stakeEnd(
       idx, stakeId
@@ -248,17 +241,16 @@ contract ConsentualStakeManager is UnderlyingStakeManager, EncodableSettings {
       to,
       amount, newStakedDays
     );
-    _logSettings(stakeId, newStakedDays, settings);
+    _logSettings(stakeId, settings);
   }
   /**
    * save a newly started stake's settings
    * @param stakeId the id of the newly minted stake
-   * @param newStakedDays the number of days that the stake is supposed to last
    * @param settings optional settings passed by stake starter
    */
-  function _logSettings(uint256 stakeId, uint256 newStakedDays, uint256 settings) internal {
+  function _logSettings(uint256 stakeId, uint256 settings) internal {
     if (settings == 0) {
-      _setDefaultSettings(stakeId, newStakedDays);
+      _setDefaultSettings(stakeId);
     } else {
       _logSettingsUpdate(stakeId, settings);
     }
@@ -280,7 +272,7 @@ contract ConsentualStakeManager is UnderlyingStakeManager, EncodableSettings {
       // we can only conclude that the sender has authorized this deduction
       _deductWithdrawable(msg.sender, amount), newStakedDays
     );
-    _logSettings(stakeId, newStakedDays, settings);
+    _logSettings(stakeId, settings);
   }
   /**
    * stake a number of tokens for a given number of days, pulling from
@@ -299,7 +291,7 @@ contract ConsentualStakeManager is UnderlyingStakeManager, EncodableSettings {
       to,
       _clamp(amount, _getUnattributed()), newStakedDays
     );
-    _logSettings(stakeId, newStakedDays, settings);
+    _logSettings(stakeId, settings);
   }
   /**
    * gets unattributed tokens floating in the contract
@@ -475,54 +467,5 @@ contract ConsentualStakeManager is UnderlyingStakeManager, EncodableSettings {
     }
     // this data should still be available in logs
     idToSettings[stakeId] = 0;
-  }
-  // mint hedron rewards
-  struct HedronParams {
-    uint96 hsiIndex;
-    address hsiAddress;
-  }
-  /**
-   * mint rewards and transfer them to a provided address
-   * @param stakeIds list of stake ids to mint
-   * @notice any combination of owners can be passed, however, it is most efficient to order the hsi address by owner
-   */
-  function mintRewards(uint64[] calldata stakeIds) external {
-    uint256 len = stakeIds.length;
-    uint256 i;
-    uint256 hedronTokens;
-    address currentOwner;
-    address to = stakeIdToOwner[stakeIds[0]];
-    uint256 stakeId;
-    do {
-      stakeId = stakeIds[i];
-      if (checkBinary(uint8(idToSettings[stakeId]), 2)) {
-        currentOwner = stakeIdToOwner[stakeId];
-        if (currentOwner != to) {
-          unchecked {
-            outstandingHedronTokens[to] += hedronTokens;
-          }
-          hedronTokens = 0;
-        }
-        to = currentOwner;
-        hedronTokens += IHedron(hedron).mintNative(stakeIdToIndex[stakeId], uint40(stakeId));
-      }
-      ++i;
-    } while (i < len);
-    if (hedronTokens > 0) {
-      unchecked {
-        outstandingHedronTokens[to] += hedronTokens;
-      }
-    }
-  }
-  /**
-   * send all or some subset of funds to a given address
-   * @param to destination of funds attributed to sender
-   * @param amount amount of funds to send. 0 defaults to all
-   */
-  function withdrawOutstandingHedron(address to, uint256 amount) external {
-    uint256 max = outstandingHedronTokens[msg.sender];
-    amount = amount == 0 || amount > max ? max : amount;
-    outstandingHedronTokens[msg.sender] = max - amount;
-    IERC20(hedron).transfer(to, amount);
   }
 }
