@@ -30,7 +30,7 @@ contract SingletonHedronManager is EncodableSettings, UnderlyingStakeManager {
     uint256 stakeId;
     do {
       stakeId = stakeIds[i];
-      if (checkBinary(uint8(idToSettings[stakeId]), 2)) {
+      if (_isCapable(uint8(idToSettings[stakeId]), 2)) {
         currentOwner = stakeIdToOwner[stakeId];
         if (currentOwner != to) {
           _attributeLegacyHedron(to, hedronTokens);

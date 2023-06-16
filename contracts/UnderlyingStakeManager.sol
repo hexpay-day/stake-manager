@@ -50,7 +50,7 @@ contract UnderlyingStakeManager is Stakeable, Capable {
     uint256 amount, uint256 newStakedDays
   ) internal returns(uint256 stakeId) {
     // get future index of stake
-    uint256 index = UnderlyingStakeable(target).stakeCount(address(this));
+    uint256 index = _stakeCount();
     Stakeable(target).stakeStart(amount, newStakedDays);
     // get the stake id
     stakeId = Stakeable(target).stakeLists(address(this), index).stakeId;
@@ -68,18 +68,18 @@ contract UnderlyingStakeManager is Stakeable, Capable {
   ) internal returns(uint256 delta) {
     // calculate the balance before
     // cannot use tokens attributed here because of tipping
-    uint256 balanceBefore = IERC20(target).balanceOf(address(this));
+    uint256 balanceBefore = _getBalance();
     address custodian = target;
     // end the stake - attributed to contract or through the managed stake
     Stakeable(custodian).stakeEnd(stakeIndex, uint40(stakeId));
     delete stakeIdToIndex[stakeId];
-    if (UnderlyingStakeable(target).stakeCount(address(this)) > stakeIndex) {
+    if (_stakeCount() > stakeIndex) {
       stakeIdToIndex[_getStake(address(this), stakeIndex).stakeId] = stakeIndex;
     }
     // because the delta is only available in the logs
     // we need to calculate the delta to use it
     unchecked {
-      delta = IERC20(target).balanceOf(address(this)) - balanceBefore;
+      delta = _getBalance() - balanceBefore;
     }
     delete stakeIdToOwner[stakeId];
   }

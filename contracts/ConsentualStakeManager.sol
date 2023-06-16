@@ -176,15 +176,15 @@ contract ConsentualStakeManager is SingletonHedronManager {
     uint256 settings = idToSettings[stakeId];
     uint256 consentAbilities = uint8(settings);
     uint256 today = _currentDay();
-    if (!skipEarlyCheck && ((stake.lockedDay + stake.stakedDays) < today) && !checkBinary(consentAbilities, 1)) {
+    if (!skipEarlyCheck && ((stake.lockedDay + stake.stakedDays) < today) && !_isCapable(consentAbilities, 1)) {
       return 0;
     }
-    if (!checkBinary(consentAbilities, 0)) {
+    if (!_isCapable(consentAbilities, 0)) {
       return 0;
     }
     address staker = stakeIdToOwner[stakeId];
     // consent has been confirmed
-    if (checkBinary(consentAbilities, 3)) {
+    if (_isCapable(consentAbilities, 3)) {
       _attributeLegacyHedron(staker, _mintLegacyNative(stakeId));
     }
     delta = _stakeEnd(
@@ -297,7 +297,7 @@ contract ConsentualStakeManager is SingletonHedronManager {
    * gets unattributed tokens floating in the contract
    */
   function _getUnattributed() view internal returns(uint256) {
-    return IERC20(target).balanceOf(address(this)) - tokensAttributed;
+    return _getBalance() - tokensAttributed;
   }
   /**
    * gets the amount of unattributed tokens

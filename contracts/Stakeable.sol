@@ -27,7 +27,15 @@ abstract contract Stakeable is IStakeable, UnderlyingStakeable {
   function globalInfo() virtual external view returns(uint256[13] memory) {
     return IStakeable(target).globalInfo();
   }
-  function isEarlyEnding(StakeStore memory stake, uint256 targetDay) internal pure returns(bool) {
+  /**
+   * check whether or not the stake is being ended early
+   * @param stake the stake in question
+   * @param targetDay the day to check whether it will be categorized as ending early
+   */
+  function isEarlyEnding(StakeStore memory stake, uint256 targetDay) external pure returns(bool) {
+    return _isEarlyEnding(stake, targetDay);
+  }
+  function _isEarlyEnding(StakeStore memory stake, uint256 targetDay) internal pure returns(bool) {
     return (stake.lockedDay + stake.stakedDays) < targetDay;
   }
   /** start a stake */

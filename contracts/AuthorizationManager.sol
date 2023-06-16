@@ -43,7 +43,7 @@ contract AuthorizationManager is UnderlyingStakeable, Capable {
     _setAuthorization(bytes32(uint256(uint160(account))), settings);
   }
   modifier senderIsAuthorized(uint256 index) {
-    if (checkBinary(authorization[bytes32(uint256(uint160(msg.sender)))], index)) {
+    if (_isCapable(authorization[bytes32(uint256(uint160(msg.sender)))], index)) {
       _;
     }
   }
@@ -72,6 +72,9 @@ contract AuthorizationManager is UnderlyingStakeable, Capable {
    * @param index the index of the setting flag to check
    */
   function _isAuthorized(bytes32 key, uint256 index) view internal returns(bool) {
-    return checkBinary(authorization[key], index);
+    return _isCapable(authorization[key], index);
+  }
+  function _getAddressSetting(address target) view internal returns(uint256) {
+    return authorization[bytes32(uint256(uint160(target)))];
   }
 }
