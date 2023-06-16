@@ -216,10 +216,10 @@ contract ConsentualStakeManager is UnderlyingStakeManager {
     uint256 settings = stakeIdToSettings[stakeId];
     uint256 consentAbilities = uint8(settings);
     uint256 today = _currentDay();
-    if (!skipEarlyCheck && ((stake.lockedDay + stake.stakedDays) < today) && checkBinary(consentAbilities, 1)) {
+    if (!skipEarlyCheck && ((stake.lockedDay + stake.stakedDays) < today) && !checkBinary(consentAbilities, 1)) {
       return 0;
     }
-    if (checkBinary(consentAbilities, 0)) {
+    if (!checkBinary(consentAbilities, 0)) {
       return 0;
     }
     address staker = stakeIdToOwner[stakeId];

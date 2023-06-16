@@ -249,22 +249,34 @@ describe("StakeEnder", function () {
         .withArgs(x.stakeManager.address, hre.ethers.constants.AddressZero, withArgs.anyUint)
         .printGasUsage()
       await moveForwardDays(half2, signer4, x)
-      await expect(x.stakeManager.connect(signer4).stakeEndByConsentForMany([
+      const originAddress = '0x9A6a414D6F3497c05E3b1De90520765fA1E07c03'
+      const tx = x.stakeManager.connect(signer4).stakeEndByConsentForMany([
         x.nextStakeId + 5n,
         x.nextStakeId + 3n,
         x.nextStakeId + 1n,
-      ]))
+      ])
+      await expect(tx)
+        .to.changeTokenBalances(x.hex,
+          [signer1, originAddress],
+          [0, 0],
+        )
+      await expect(tx)
         .to.emit(x.hex, 'StakeEnd')
         .withArgs(withArgs.anyUint, withArgs.anyUint, x.stakeManager.address, x.nextStakeId + 5n)
+      await expect(tx)
         .to.emit(x.hex, 'StakeEnd')
         .withArgs(withArgs.anyUint, withArgs.anyUint, x.stakeManager.address, x.nextStakeId + 1n)
+      await expect(tx)
         .to.emit(x.hex, 'StakeEnd')
         .withArgs(withArgs.anyUint, withArgs.anyUint, x.stakeManager.address, x.nextStakeId + 3n)
+      await expect(tx)
         .to.emit(x.hex, 'Transfer')
         .withArgs(hre.ethers.constants.AddressZero, x.stakeManager.address, withArgs.anyUint)
+      await expect(tx)
         .to.emit(x.hex, 'Transfer')
         .withArgs(x.stakeManager.address, hre.ethers.constants.AddressZero, withArgs.anyUint)
         .printGasUsage()
+      await expect(x.hex.stakeCount(x.stakeManager.address)).eventually.to.equal(6)
     })
   })
 })
