@@ -15,6 +15,9 @@ contract MaximusStakeEnder is Ownable2Step, AuthorizationManager {
     _setAddressAuthorization(owner, MAX_AUTHORIZATION);
     _transferOwnership(owner);
   }
+  function isAuthorized(address runner, uint256 index) external view returns(bool) {
+    return _isAddressAuthorized(runner, index);
+  }
   function setAuthorization(address target, uint256 setting) external onlyOwner {
     _setAddressAuthorization(target, setting);
   }

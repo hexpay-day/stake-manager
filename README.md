@@ -75,4 +75,4 @@ Technical Resources:
 
 _Ok, but there must be limits to this solution._
 
-There are. One prominant one is that gas costs won't make a difference if the base gas fee is still too high to fit within a single transaction. At the current limit of 1 ether transaction fee limit, the base fee must be less than 85gwei. This is a reasonable expectation within, say, a month timeframe for now and will be more relevant to more people if the price of native currencies increases, but both of those points could change in the future.
+There are. One prominant limitation is that gas costs won't make a difference if the base gas fee is still too high to fit within a single transaction. At the current limit of 1 ether transaction fee limit, the base fee must be less than 85gwei. This is a reasonable expectation within, say, a month timeframe for now and will be more relevant to more people if the price of native currencies increases, but both of those points could change in the future.

@@ -31,10 +31,20 @@ contract AuthorizationManager is UnderlyingStakeable, Capable {
       _;
     }
   }
-  function isAddressAuthorized(address target, uint256 index) view internal returns(bool) {
+  /**
+   * check if an address is authorized to perform an action
+   * this index will be different for each implementation
+   * @param target the address to verify is authorized to do an action
+   * @param index the index of the bit to check
+   * @dev the index is an index of the bits as in binary (1/0)
+   */
+  function isAddressAuthorized(address target, uint256 index) view external returns(bool) {
+    return _isAddressAuthorized(target, index);
+  }
+  function _isAddressAuthorized(address target, uint256 index) view internal returns(bool) {
     return checkBinary(authorization[bytes32(uint256(uint160(target)))], index);
   }
-  function isAuthorized(bytes32 key, uint256 index) view internal returns(bool) {
+  function _isAuthorized(bytes32 key, uint256 index) view internal returns(bool) {
     return checkBinary(authorization[key], index);
   }
 }

@@ -22,6 +22,9 @@ contract HSIStakeManager is AuthorizationManager {
     // erc721 is burned - no owner - only hsi address remains
     hsiToOwner[hsiAddress] = owner;
   }
+  function isAuthorized(address runner, address hsiAddress, uint256 index) external view returns(bool) {
+    return _isAuthorized(keccak256(abi.encode(runner, hsiAddress)), index);
+  }
   function setAuthorization(address runner, address hsiAddress, uint256 setting) external {
     if (hsiToOwner[hsiAddress] != msg.sender) {
       revert NotAllowed();
@@ -50,7 +53,7 @@ contract HSIStakeManager is AuthorizationManager {
     address to = hsiToOwner[hsiAddress];
     do {
       hsiAddress = params[i].hsiAddress;
-      if (isAuthorized(keccak256(abi.encode(msg.sender, hsiAddress)), 0)) {
+      if (_isAuthorized(keccak256(abi.encode(msg.sender, hsiAddress)), 0)) {
         currentOwner = hsiToOwner[hsiAddress];
         if (currentOwner != to) {
           IERC20(hedron).transfer(to, hedronTokens);
@@ -80,7 +83,7 @@ contract HSIStakeManager is AuthorizationManager {
     address to = hsiToOwner[hsiAddress];
     do {
       hsiAddress = params[i].hsiAddress;
-      if (isAuthorized(keccak256(abi.encode(msg.sender, hsiAddress)), 1)) {
+      if (_isAuthorized(keccak256(abi.encode(msg.sender, hsiAddress)), 1)) {
         currentOwner = hsiToOwner[hsiAddress];
         if (currentOwner != to) {
           _payout(to, hedronTokens, targetTokens);
