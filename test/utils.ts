@@ -40,6 +40,8 @@ export const hexAddress = hre.ethers.utils.getAddress('0x2b591e99afe9f32eaa6214f
 export const pulsexSacrificeAddress = hre.ethers.utils.getAddress('0x075e72a5edf65f0a5f44699c7654c1a76941ddc8')
 
 export const deployFixture = async () => {
+  const Capable = await hre.ethers.getContractFactory('Capable')
+  const capable = await Capable.deploy()
   const StakeManager = await hre.ethers.getContractFactory('StakeManager')
   const ConsentualStakeManager = await hre.ethers.getContractFactory('ConsentualStakeManager')
   const stakeManager = await StakeManager.deploy()
@@ -82,6 +84,7 @@ export const deployFixture = async () => {
     ConsentualStakeManager,
     isolatedStakeManagerFactory,
     isolatedStakeManager,
+    capable,
   }
 }
 
@@ -93,12 +96,17 @@ export const stakeBagAndWait = async () => {
   await x.isolatedStakeManager.stakeStart(stakedAmount, days)
   await x.isolatedStakeManager.stakeStart(stakedAmount, days + 1)
   await x.isolatedStakeManager.stakeStart(stakedAmount, days + 100)
+  const nsid = x.nextStakeId
+  const stakeIds = [nsid, nsid + 1n, nsid + 2n, nsid + 3n]
   await moveForwardDays(days + 1, signer, x)
+  const [, , , , , , stakeIdBN] = await x.hex.globalInfo()
   return {
     ...x,
     days,
     stakedDays: [days, days + 1, days + 100],
     stakedAmount,
+    nextStakeId: stakeIdBN.toBigInt() + 1n,
+    stakeIds,
   }
 }
 

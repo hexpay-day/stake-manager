@@ -3,7 +3,7 @@
   "name": "hardhat-project",
   "scripts": {
     "build": "solhint 'contracts/**/*.sol' && hardhat compile",
-    "test": "hardhat test",
+    "test": "hardhat coverage",
     "foundry:test": "forge test --fork-url 'https://rpc.pulsechain.com' -vvv"
   },
   "devDependencies": {
@@ -29,7 +29,7 @@
     "hardhat-preprocessor": "^0.1.5",
     "hardhat-tracer": "^2.2.2",
     "lodash": "^4.17.21",
-    "solidity-coverage": "^0.8.1",
+    "solidity-coverage": "^0.8.2",
     "ts-node": "^10.9.1",
     "typechain": "^8.1.0",
     "typescript": "^5.0.4",

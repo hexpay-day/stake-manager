@@ -9,6 +9,7 @@ import * as path from 'path'
 import "@nomicfoundation/hardhat-toolbox";
 import "hardhat-preprocessor"
 import 'hardhat-tracer'
+import 'solidity-coverage'
 import 'hardhat-gas-reporter'
 import 'hardhat-dependency-compiler'
 import * as ethers from "ethers";

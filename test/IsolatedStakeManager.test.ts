@@ -118,12 +118,12 @@ describe('IsolatedStakeManager.sol', () => {
   describe('stakeEnd', () => {
     it('ends stakes', async () => {
       const x = await loadFixture(utils.stakeBagAndWait)
-      const [signer] = x.signers
+      const [nextStakeId] = x.stakeIds
       const balanceBefore = await x.hex.balanceOf(x.isolatedStakeManager.address)
-      const tx = x.isolatedStakeManager.stakeEnd(0, x.nextStakeId)
+      const tx = x.isolatedStakeManager.stakeEnd(0, nextStakeId)
       await expect(tx)
         .to.emit(x.hex, 'StakeEnd')
-        .withArgs(anyUint, anyUint, x.isolatedStakeManager.address, x.nextStakeId)
+        .withArgs(anyUint, anyUint, x.isolatedStakeManager.address, nextStakeId)
       const owner = await x.isolatedStakeManager.owner()
       const contractHoldings = (await x.hex.balanceOf(x.isolatedStakeManager.address)).sub(balanceBefore).toBigInt()
       await expect(tx)
@@ -136,12 +136,13 @@ describe('IsolatedStakeManager.sol', () => {
     it('fails if the address is not allowed', async () => {
       const x = await loadFixture(utils.stakeBagAndWait)
       const [, signerB] = x.signers
-      await expect(x.isolatedStakeManager.connect(signerB).stakeEnd(0, x.nextStakeId))
+      const [nextStakeId] = x.stakeIds
+      await expect(x.isolatedStakeManager.connect(signerB).stakeEnd(0, nextStakeId))
         .to.be.revertedWithCustomError(x.isolatedStakeManager, 'NotAllowed')
       await x.isolatedStakeManager.setAuthorization(signerB.address, 2)
-      await expect(x.isolatedStakeManager.connect(signerB).stakeEnd(0, x.nextStakeId))
+      await expect(x.isolatedStakeManager.connect(signerB).stakeEnd(0, nextStakeId))
         .to.emit(x.hex, 'StakeEnd')
-        .withArgs(anyUint, anyUint, x.isolatedStakeManager.address, x.nextStakeId)
+        .withArgs(anyUint, anyUint, x.isolatedStakeManager.address, nextStakeId)
     })
   })
   describe('checkAndEndStake', () => {
@@ -149,30 +150,65 @@ describe('IsolatedStakeManager.sol', () => {
       // this test shows that external enders can be assured that their
       // multicall(s) will not fail if the have the wrong data
       const x = await loadFixture(utils.stakeBagAndWait)
-      const skipped = x.isolatedStakeManager.checkAndStakeEnd(0, x.nextStakeId + 1n)
+      const [nextStakeId] = x.stakeIds
+      const skipped = x.isolatedStakeManager.checkAndStakeEnd(0, nextStakeId + 1n)
       await expect(skipped).not.to.rejected
       const tx = await skipped
       const receipt = await tx.wait()
       expect(receipt.logs).to.deep.equal([])
-      const successful = x.isolatedStakeManager.checkAndStakeEnd(0, x.nextStakeId)
+      const successful = x.isolatedStakeManager.checkAndStakeEnd(0, nextStakeId)
       await expect(successful)
         .to.emit(x.hex, 'StakeEnd')
-        .withArgs(anyUint, anyUint, x.isolatedStakeManager.address, x.nextStakeId)
+        .withArgs(anyUint, anyUint, x.isolatedStakeManager.address, nextStakeId)
         // .printGasUsage()
     })
     it('skips if not authorized', async () => {
       const x = await loadFixture(utils.stakeBagAndWait)
       const [, signerB] = x.signers
-      const skipped = x.isolatedStakeManager.connect(signerB).checkAndStakeEnd(0, x.nextStakeId)
+      const [nextStakeId] = x.stakeIds
+      const skipped = x.isolatedStakeManager.connect(signerB).checkAndStakeEnd(0, nextStakeId)
       await expect(skipped).not.to.rejected
       const tx = await skipped
       const receipt = await tx.wait()
       expect(receipt.logs).to.deep.equal([])
-      const successful = x.isolatedStakeManager.checkAndStakeEnd(0, x.nextStakeId)
+      const successful = x.isolatedStakeManager.checkAndStakeEnd(0, nextStakeId)
       await x.isolatedStakeManager.setAuthorization(signerB.address, 2)
       await expect(successful)
         .to.emit(x.hex, 'StakeEnd')
-        .withArgs(anyUint, anyUint, x.isolatedStakeManager.address, x.nextStakeId)
+        .withArgs(anyUint, anyUint, x.isolatedStakeManager.address, nextStakeId)
+    })
+  })
+  describe('transferFromOwner', () => {
+    it('transfers from the owner', async () => {
+      const x = await loadFixture(utils.stakeBagAndWait)
+      const [signer] = x.signers
+      await expect(x.isolatedStakeManager.transferFromOwner(x.stakedAmount))
+        .to.emit(x.hex, 'Transfer')
+        .withArgs(signer.address, x.isolatedStakeManager.address, x.stakedAmount)
+    })
+    it('disallows transfers unless specifically allowed by authorization settings', async () => {
+      const x = await loadFixture(utils.stakeBagAndWait)
+      const [, signerB] = x.signers
+      await expect(x.isolatedStakeManager.connect(signerB).transferFromOwner(x.stakedAmount))
+        .to.revertedWithCustomError(x.isolatedStakeManager, 'NotAllowed')
+    })
+  })
+  describe('setStartAuthorization', () => {
+    it('allows other addresses to start stakes for a fixed number of days', async () => {
+      const x = await loadFixture(utils.stakeBagAndWait)
+      const [signerA, signerB] = x.signers
+      await expect(x.isolatedStakeManager.transferFromOwner(x.stakedAmount))
+        .to.emit(x.hex, 'Transfer')
+        .withArgs(signerA.address, x.isolatedStakeManager.address, x.stakedAmount)
+      await expect(x.isolatedStakeManager.connect(signerB).stakeStartWithAuthorization(100))
+        .to.revertedWithCustomError(x.isolatedStakeManager, 'NotAllowed')
+
+      await expect(x.isolatedStakeManager.setStartAuthorization(signerB.address, 100, 1))
+        .to.emit(x.isolatedStakeManager, 'UpdateAuthorization')
+
+      await expect(x.isolatedStakeManager.connect(signerB).stakeStartWithAuthorization(100))
+        .to.emit(x.hex, 'StakeStart')
+        .withArgs(anyUint, x.isolatedStakeManager.address, x.nextStakeId)
     })
   })
 })
