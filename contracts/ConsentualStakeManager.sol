@@ -563,7 +563,6 @@ contract ConsentualStakeManager is UnderlyingStakeManager {
     uint96 hsiIndex;
     address hsiAddress;
   }
-  address constant hedron = 0x3819f64f282bf135d62168C1e513280dAF905e06;
   /**
    * mint rewards and transfer them to a provided address
    * @param stakeIds list of stake ids to mint

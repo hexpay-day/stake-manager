@@ -5,9 +5,9 @@ import "./Capable.sol";
 import "./UnderlyingStakeable.sol";
 
 contract AuthorizationManager is UnderlyingStakeable, Capable {
-  mapping(bytes32 => uint256) public authorization;
+  mapping(bytes32 key => uint256) public authorization;
   event UpdateAuthorization(bytes32 key, uint256 settings);
-  uint256 immutable MAX_AUTHORIZATION;
+  uint256 public immutable MAX_AUTHORIZATION;
   constructor(uint256 maxAuthorization) {
     MAX_AUTHORIZATION = maxAuthorization;
   }

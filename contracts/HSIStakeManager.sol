@@ -9,7 +9,6 @@ import "./AuthorizationManager.sol";
 
 contract HSIStakeManager is AuthorizationManager {
   mapping(address => address) public hsiToOwner;
-  address constant hedron = 0x3819f64f282bf135d62168C1e513280dAF905e06;
   constructor() AuthorizationManager(3) {}
   /**
    * transfer stakes by their token ids
