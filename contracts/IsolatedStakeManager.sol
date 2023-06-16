@@ -5,7 +5,6 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/access/Ownable2Step.sol";
 import "./AuthorizationManager.sol";
 import "./Stakeable.sol";
-import "./IStakeable.sol";
 
 contract IsolatedStakeManager is Stakeable, Ownable2Step, AuthorizationManager {
   constructor(address owner) AuthorizationManager(7) {
@@ -34,7 +33,7 @@ contract IsolatedStakeManager is Stakeable, Ownable2Step, AuthorizationManager {
       ? IERC20(target).balanceOf(tokenHolder)
       : newStakedHearts;
     IERC20(target).transferFrom(tokenHolder, address(this), amount);
-    IStakeable(target).stakeStart(amount, newStakedDays);
+    Stakeable(target).stakeStart(amount, newStakedDays);
   }
   /** end a stake */
   function stakeEnd(uint256 stakeIndex, uint40 stakeId) external override {
@@ -52,7 +51,7 @@ contract IsolatedStakeManager is Stakeable, Ownable2Step, AuthorizationManager {
     _endStake(stakeIndex, stakeId);
   }
   function _endStake(uint256 stakeIndex, uint40 stakeId) internal {
-    IStakeable(target).stakeEnd(stakeIndex, stakeId);
+    Stakeable(target).stakeEnd(stakeIndex, stakeId);
     IERC20(target).transfer(
       owner(),
       IERC20(target).balanceOf(address(this))
