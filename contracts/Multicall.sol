@@ -8,13 +8,7 @@ pragma solidity ^0.8.17;
 contract Multicall {
   error BlockHash();
   error Deadline();
-  event TxFailed(uint256 index);
-  modifier checkCurrentBlockhash(bytes32 currentBlockhash) {
-    if (blockhash(block.number) != currentBlockhash) {
-      revert BlockHash();
-    }
-    _;
-  }
+  event TxFailed(uint256 indexed index, bytes result);
   modifier checkPreviousBlockhash(bytes32 previousBlockhash) {
     if (blockhash(block.number - 1) != previousBlockhash) {
       revert BlockHash();
@@ -27,12 +21,23 @@ contract Multicall {
     }
     _;
   }
+  /**
+   * call a series of functions on a contract that inherits this method
+   * @param data the calls to perform on this contract
+   * @param allowFailures whether to allow failures or to error out
+   */
   function multicall(
     bytes[] calldata data,
     bool allowFailures
   ) external payable {
     _multicall(data, allowFailures);
   }
+  /**
+   * call multiple methods and pass a deadline, after which the transaction should fail
+   * @param deadline the timestamp, in seconds
+   * @param data the calldata to run on the external method
+   * @param allowFailures allows failures when true
+   */
   function multicallWithDeadline(
     uint256 deadline,
     bytes[] calldata data,
@@ -44,17 +49,12 @@ contract Multicall {
   {
     _multicall(data, allowFailures);
   }
-  function multicallWithCurrentBlockHash(
-    bytes32 currentBlockhash,
-    bytes[] calldata data,
-    bool allowFailures
-  )
-    external
-    payable
-    checkCurrentBlockhash(currentBlockhash)
-  {
-    _multicall(data, allowFailures);
-  }
+  /**
+   * pass the previous block hash to enable mev uncle bandit protection
+   * @param previousBlockhash the previously mined block - useful for mev protected uncle bandit risks
+   * @param data the calldata to run on the external method
+   * @param allowFailures allows failures when true
+   */
   function multicallWithPreviousBlockHash(
     bytes32 previousBlockhash,
     bytes[] calldata data,
@@ -76,24 +76,18 @@ contract Multicall {
   function _multicall(bytes[] calldata calls, bool allowFailures) internal {
     uint256 len = calls.length;
     uint256 i;
-    if (allowFailures) {
-      do {
-        (bool success, ) = address(this).delegatecall(calls[i]);
-        if (!success) {
-          emit TxFailed(i);
-        }
-        ++i;
-      } while (i < len);
-    } else {
-      do {
-        (bool success, bytes memory result) = address(this).delegatecall(calls[i]);
-        if (!success) {
+    do {
+      (bool success, bytes memory result) = address(this).delegatecall(calls[i]);
+      if (!success) {
+        if (allowFailures) {
+          emit TxFailed(i, result);
+        } else {
           assembly {
             revert(add(result, 0x20), mload(result))
           }
         }
-        ++i;
-      } while (i < len);
-    }
+      }
+      ++i;
+    } while (i < len);
   }
 }
