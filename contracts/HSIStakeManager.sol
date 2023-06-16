@@ -108,6 +108,12 @@ contract HSIStakeManager is AuthorizationManager {
     } while (i < len);
     _payout(to, hedronTokens, targetTokens);
   }
+  /**
+   * transfer tokens to a given address
+   * @param to send tokens to this address
+   * @param hedronTokens the number of hedron tokens to send
+   * @param targetTokens the number of hex tokens to send
+   */
   function _payout(
     address to,
     uint256 hedronTokens,

@@ -2,7 +2,7 @@
 pragma solidity ^0.8.17;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "./IUnderlyingStakeable.sol";
+import "./IHEX.sol";
 import "./Multicall.sol";
 
 contract UnderlyingStakeable is Multicall {
@@ -17,7 +17,7 @@ contract UnderlyingStakeable is Multicall {
     return _stakeCount();
   }
   function _stakeCount() internal view returns(uint256) {
-    return IUnderlyingStakeable(target).stakeCount(address(this));
+    return IHEX(target).stakeCount(address(this));
   }
   function _getBalance() internal view returns(uint256) {
     return IERC20(target).balanceOf(address(this));
