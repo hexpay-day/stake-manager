@@ -1,9 +1,7 @@
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers"
 import { expect } from "chai"
-// import * as hre from "hardhat"
 import * as utils from './utils'
 import _ from 'lodash'
-// import { anyUint, anyValue } from "@nomicfoundation/hardhat-chai-matchers/withArgs"
 
 describe('Capable.sol', () => {
   describe('isCapable', () => {

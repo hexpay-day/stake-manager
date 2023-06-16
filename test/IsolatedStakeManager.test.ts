@@ -70,6 +70,14 @@ describe('IsolatedStakeManager.sol', () => {
       await expect(x.isolatedStakeManager.connect(signerB).setAuthorization(signerB.address, 5))
         .eventually.to.rejectedWith('Ownable: caller is not the owner')
     })
+    it('cannot provide a value greater than the max', async () => {
+      const x = await loadFixture(utils.deployFixture)
+      const [, signerB] = x.signers
+      await expect(x.isolatedStakeManager.MAX_AUTHORIZATION())
+        .eventually.to.equal(31)
+      await expect(x.isolatedStakeManager.setAuthorization(signerB.address, 32))
+        .to.revertedWithCustomError(x.isolatedStakeManager, 'NotAllowed')
+    })
     it('provides info on authorization', async () => {
       const x = await loadFixture(utils.deployFixture)
       const [signerA, signerB] = x.signers
