@@ -36,7 +36,7 @@ abstract contract Stakeable is IStakeable, UnderlyingStakeable {
     return _isEarlyEnding(stake, targetDay);
   }
   function _isEarlyEnding(StakeStore memory stake, uint256 targetDay) internal pure returns(bool) {
-    return (stake.lockedDay + stake.stakedDays) < targetDay;
+    return (stake.lockedDay + stake.stakedDays) > targetDay;
   }
   /** start a stake */
   function stakeStart(uint256 newStakedHearts, uint256 newStakedDays) virtual external;

@@ -124,6 +124,13 @@ describe('IsolatedStakeManager.sol', () => {
         .to.emit(x.hex, 'StakeStart')
         .withArgs(anyUint, x.isolatedStakeManager.address, x.nextStakeId)
     })
+    it('cannot start stakes without authorization', async () => {
+      const x = await loadFixture(utils.deployFixture)
+      const [signerA, signerB] = x.signers
+      await x.hex.connect(signerA).transfer(x.isolatedStakeManager.address, x.stakedAmount)
+      await expect(x.isolatedStakeManager.connect(signerB).stakeStart(x.stakedAmount, 30))
+        .to.revertedWithCustomError(x.isolatedStakeManager, 'NotAllowed')
+    })
   })
   describe('stakeEnd', () => {
     it('ends stakes', async () => {
@@ -153,6 +160,13 @@ describe('IsolatedStakeManager.sol', () => {
       await expect(x.isolatedStakeManager.connect(signerB).stakeEnd(0, nextStakeId))
         .to.emit(x.hex, 'StakeEnd')
         .withArgs(anyUint, anyUint, x.isolatedStakeManager.address, nextStakeId)
+    })
+    it('fails if caller is unable to end stake early', async () => {
+      const x = await loadFixture(utils.stakeBagAndWait)
+      const [, nextStakeId] = x.stakeIds
+      const [, signerB] = x.signers
+      await expect(x.isolatedStakeManager.connect(signerB).stakeEnd(1, nextStakeId))
+        .to.revertedWithCustomError(x.isolatedStakeManager, 'NotAllowed')
     })
   })
   describe('checkAndEndStake', () => {
@@ -203,6 +217,27 @@ describe('IsolatedStakeManager.sol', () => {
         .to.revertedWithCustomError(x.isolatedStakeManager, 'NotAllowed')
     })
   })
+  describe('transferToOwner', () => {
+    it('transfers tokens to the owner', async () => {
+      const x = await loadFixture(utils.stakeBagAndWait)
+      const [signerA] = x.signers
+      await x.isolatedStakeManager.transferFromOwner(x.stakedAmount)
+      await expect(x.isolatedStakeManager.transferToOwner())
+        .to.emit(x.hex, 'Transfer')
+        .withArgs(x.isolatedStakeManager.address, signerA.address, x.stakedAmount)
+    })
+    it('disallows unauthorized transfers', async () => {
+      const x = await loadFixture(utils.stakeBagAndWait)
+      const [signerA, signerB] = x.signers
+      await x.isolatedStakeManager.transferFromOwner(x.stakedAmount)
+      await expect(x.isolatedStakeManager.connect(signerB).transferToOwner())
+        .to.revertedWithCustomError(x.isolatedStakeManager, 'NotAllowed')
+      await x.isolatedStakeManager.setAuthorization(signerB.address, 8)
+      await expect(x.isolatedStakeManager.connect(signerB).transferToOwner())
+        .to.emit(x.hex, 'Transfer')
+        .withArgs(x.isolatedStakeManager.address, signerA.address, x.stakedAmount)
+    })
+  })
   describe('setStartAuthorization', () => {
     it('allows other addresses to start stakes for a fixed number of days', async () => {
       const x = await loadFixture(utils.stakeBagAndWait)
@@ -215,6 +250,8 @@ describe('IsolatedStakeManager.sol', () => {
 
       await expect(x.isolatedStakeManager.setStartAuthorization(signerB.address, 100, 1))
         .to.emit(x.isolatedStakeManager, 'UpdateAuthorization')
+      await expect(x.isolatedStakeManager.startAuthorizationKey(signerB.address, 100))
+        .eventually.to.equal(utils.numberToBytes32((BigInt(signerB.address) << 16n) + 100n))
 
       await expect(x.isolatedStakeManager.connect(signerB).stakeStartWithAuthorization(100))
         .to.emit(x.hex, 'StakeStart')

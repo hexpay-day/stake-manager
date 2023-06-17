@@ -44,7 +44,7 @@ export const deployFixture = async () => {
   const capable = await Capable.deploy()
   const StakeManager = await hre.ethers.getContractFactory('StakeManager')
   const ConsentualStakeManager = await hre.ethers.getContractFactory('ConsentualStakeManager')
-  const stakeManager = await StakeManager.deploy()
+  const stakeManager = await ConsentualStakeManager.deploy()
   await stakeManager.deployed()
   const _signers = await hre.ethers.getSigners()
   const signers = _signers.slice(0, 20)
@@ -157,6 +157,10 @@ export const moveForwardDays = async (
   } while(i < limit)
 }
 
-export const addressToBytes32 = (signer: SignerWithAddress) => hre.ethers.utils.hexZeroPad(signer.address.toLowerCase(), 32)
+export const addressToBytes32 = (signer: SignerWithAddress) => toBytes32(signer.address)
+
+export const numberToBytes32 = (num: bigint) => hre.ethers.utils.hexZeroPad(hre.ethers.BigNumber.from(num).toHexString(), 32)
+
+export const toBytes32 = (addr: string) => hre.ethers.utils.hexZeroPad(addr.toLowerCase(), 32)
 
 export const deadline = () => Math.floor(_.now() / 1000) + 100

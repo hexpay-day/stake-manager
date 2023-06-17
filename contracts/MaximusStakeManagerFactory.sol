@@ -14,8 +14,8 @@ contract MaximusStakeManagerFactory {
    * @param target the maximus perpetual contract to target
    * @param stakeId the stake id to pass to the maximus perpetual to end
    */
-  function endPublicStake(uint256 index, address target, uint256 stakeId) external {
-    _endPublicStake(msg.sender, index, target, stakeId);
+  function stakeEnd(uint256 index, address target, uint256 stakeId) external {
+    _stakeEnd(msg.sender, index, target, stakeId);
   }
   /**
    * end the public stake on a provided perpetual contract
@@ -26,8 +26,8 @@ contract MaximusStakeManagerFactory {
    * @notice the fee to address is used in leu of the sender
    * this allows calls from public multicall contracts to be utilized
    */
-  function endPublicStakeAs(address origination, uint256 index, address target, uint256 stakeId) external {
-    _endPublicStake(origination, index, target, stakeId);
+  function stakeEndAs(address origination, uint256 index, address target, uint256 stakeId) external {
+    _stakeEnd(origination, index, target, stakeId);
   }
   /**
    * calls the stakeEnd method on the underlying stake manager
@@ -36,7 +36,7 @@ contract MaximusStakeManagerFactory {
    * @param target the maximus perpetual contract to target
    * @param stakeId the stake id to pass to the maximus perpetual to end
    */
-  function _endPublicStake(address origination, uint256 index, address target, uint256 stakeId) internal {
+  function _stakeEnd(address origination, uint256 index, address target, uint256 stakeId) internal {
     MaximusStakeManager(_createStakeManager(origination, index)).stakeEnd(target, stakeId);
   }
   /**

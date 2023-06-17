@@ -58,6 +58,21 @@ describe('MaximusStakeManager.sol', () => {
         .to.emit(x.hex, 'StakeEnd')
         .withArgs(anyUint, anyUint, x.base, stake.stakeId)
     })
+    it('can end the perpetual\'s stake from the factory', async () => {
+      const x = await loadFixture(utils.endOfBaseFixture)
+      const stake = await x.hex.stakeLists(x.base, 0)
+      await expect(x.maximusStakeManagerFactory.stakeEnd(0, x.base, stake.stakeId))
+        .to.emit(x.hex, 'StakeEnd')
+        .withArgs(anyUint, anyUint, x.base, stake.stakeId)
+    })
+    it('can end the perpetual\'s stake from the factory on behalf of another address', async () => {
+      const x = await loadFixture(utils.endOfBaseFixture)
+      const [signerA, signerB] = x.signers
+      const stake = await x.hex.stakeLists(x.base, 0)
+      await expect(x.maximusStakeManagerFactory.connect(signerB).stakeEndAs(signerA.address, 0, x.base, stake.stakeId))
+        .to.emit(x.hex, 'StakeEnd')
+        .withArgs(anyUint, anyUint, x.base, stake.stakeId)
+    })
     it('fails if perpetual is not whitelisted', async () => {
       const x = await loadFixture(utils.endOfBaseFixture)
       const [, , signerC] = x.signers

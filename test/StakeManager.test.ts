@@ -112,6 +112,13 @@ describe("StakeManager", function () {
     })
   })
   describe('stakeEnd', () => {
+    it('ends a stake', async () => {
+      const x = await loadFixture(utils.deployFixture)
+      await x.stakeManager.stakeStart(x.stakedAmount, 3)
+      await utils.moveForwardDays(4, x.signers[0], x)
+      await expect(x.stakeManager.stakeEnd(0, x.nextStakeId + 1n))
+        .to.revertedWithCustomError(x.stakeManager, 'StakeNotEndable')
+    })
     it('multiple can be ended and restarted in the same transaction', async () => {
       const x = await loadFixture(utils.deployFixture)
       const [signer1, signer2, signer3, signer4] = x.signers

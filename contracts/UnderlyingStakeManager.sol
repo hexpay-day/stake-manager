@@ -10,7 +10,7 @@ contract UnderlyingStakeManager is Stakeable, Capable {
   /**
    * @notice this error is thrown when the stake being ended is not yet ended
    */
-  error StakeNotEndable(uint256 provided, uint256 expected);
+  error StakeNotEndable(uint256 provided, address staker);
   /**
    * @notice the owner of a stake indexed by the stake id
    */
@@ -110,7 +110,7 @@ contract UnderlyingStakeManager is Stakeable, Capable {
   function stakeEnd(uint256 stakeIndex, uint40 stakeId) external override {
     address staker = msg.sender;
     if (stakeIdToOwner[stakeId] != staker) {
-      revert StakeNotEndable(stakeId, uint160(staker));
+      revert StakeNotEndable(stakeId, staker);
     }
     uint256 amount = _stakeEnd(stakeIndex, stakeId);
     _withdrawTokenTo(staker, amount);

@@ -99,6 +99,12 @@ contract IsolatedStakeManager is Stakeable, Ownable2Step, AuthorizationManager {
     _endStake(stakeIndex, stakeId);
   }
   /**
+   * transfers tokens to the owner of the contract
+   */
+  function transferToOwner() external payable {
+    _transferToOwner();
+  }
+  /**
    * ends the stake on the underlying target contract (HEX)
    * and transfers tokens to the owner
    * @param stakeIndex the index of the stake in ownership list
@@ -131,7 +137,7 @@ contract IsolatedStakeManager is Stakeable, Ownable2Step, AuthorizationManager {
    * transfer balance to the owner of this contract
    */
   function _transferToOwner() internal {
-    if (_isCapable(_getAddressSetting(msg.sender), 3)) {
+    if (!_isCapable(_getAddressSetting(msg.sender), 3)) {
       revert NotAllowed();
     }
     IERC20(target).transfer(owner(), _getBalance());
