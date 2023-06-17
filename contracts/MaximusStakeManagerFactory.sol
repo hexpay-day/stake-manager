@@ -7,7 +7,7 @@ import "./UnderlyingStakeable.sol";
 
 contract MaximusStakeManagerFactory {
   event CreateMaximusStakeManager(address origination, uint256 index, address instance);
-  mapping(bytes32 => address) public stakeManager;
+  mapping(bytes32 => address payable) public stakeManager;
   /**
    * end a stake on a provided perpetual contract
    * @param index the index of the salt to use (usually 0)
@@ -44,8 +44,11 @@ contract MaximusStakeManagerFactory {
    * @param origination the address that would be the origination salt of the stake manager
    * @param index the index of the salt to use (usually 0)
    */
-  function createStakeManager(address origination, uint256 index) external returns(address) {
+  function createStakeManager(address origination, uint256 index) external returns(address payable) {
     return _createStakeManager(origination, index);
+  }
+  function stakeManagerByInput(address origination, uint256 index) external view returns(address payable) {
+    return stakeManager[_stakeManagerKey(origination, index)];
   }
   function stakeManagerKey(address origination, uint256 index) external pure returns(bytes32) {
     return _stakeManagerKey(origination, index);
@@ -53,13 +56,13 @@ contract MaximusStakeManagerFactory {
   function _stakeManagerKey(address origination, uint256 index) internal pure returns(bytes32) {
     return keccak256(abi.encode(origination, index));
   }
-  function _createStakeManager(address origination, uint256 index) internal returns(address stakeManagerAddress) {
+  function _createStakeManager(address origination, uint256 index) internal returns(address payable stakeManagerAddress) {
     bytes32 key = _stakeManagerKey(origination, index);
     stakeManagerAddress = stakeManager[key];
     if (stakeManagerAddress != address(0)) {
       return stakeManagerAddress;
     }
-    stakeManagerAddress = address(new MaximusStakeManager{salt: key}(origination));
+    stakeManagerAddress = payable(address(new MaximusStakeManager{salt: key}(origination)));
     stakeManager[key] = stakeManagerAddress;
     emit CreateMaximusStakeManager(origination, index, stakeManagerAddress);
   }

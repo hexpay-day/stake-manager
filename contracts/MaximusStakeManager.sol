@@ -12,6 +12,7 @@ import { IGasReimberser } from './GasReimberser.sol';
 contract MaximusStakeManager is Ownable2Step, AuthorizationManager {
   using Address for address payable;
   mapping(address => bool) public perpetualWhitelist;
+  receive() external payable {}
   constructor(address owner) AuthorizationManager(7) {
     /**
      * by index:
@@ -66,7 +67,7 @@ contract MaximusStakeManager is Ownable2Step, AuthorizationManager {
    * flush native token into this contract
    * @param target the perpetual pool to call flush on
    */
-  function flushNative(address target) external senderIsAuthorized(1) isPerpetual(target) {
+  function flushNative(address target) external senderIsAuthorized(1) {
     IGasReimberser(target).flush();
   }
   /**
@@ -74,7 +75,7 @@ contract MaximusStakeManager is Ownable2Step, AuthorizationManager {
    * @param target the perpetual pool to call flush on
    * @param token the token address to flush into this contract
    */
-  function flushErc20(address target, address token) external senderIsAuthorized(1) isPerpetual(target) {
+  function flushErc20(address target, address token) external senderIsAuthorized(1) {
     IGasReimberser(target).flush_erc20(token);
   }
   /**

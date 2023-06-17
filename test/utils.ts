@@ -75,7 +75,10 @@ export const deployFixture = async () => {
   const MaximusStakeManagerFactory = await hre.ethers.getContractFactory('MaximusStakeManagerFactory')
   const maximusStakeManagerFactory = await MaximusStakeManagerFactory.deploy()
   await maximusStakeManagerFactory.deployed()
+  const base = '0xe9f84d418B008888A992Ff8c6D22389C2C3504e0'
+  const stakedAmount = oneMillion / 10n
   return {
+    stakedAmount,
     nextStakeId: stakeIdBN.toBigInt() + 1n,
     hex,
     decimals,
@@ -89,16 +92,35 @@ export const deployFixture = async () => {
     capable,
     MaximusStakeManagerFactory,
     maximusStakeManagerFactory,
+    base,
   }
 }
 
 export const maximusFactoryInstanceFixture = async () => {
   const x = await loadFixture(deployFixture)
   const [signerA] = x.signers
-  const maximusStakeManager = await x.maximusStakeManagerFactory.createStakeManager(signerA.address, 0)
+  await x.maximusStakeManagerFactory.createStakeManager(signerA.address, 0)
+  const stakeManagerAddress = await x.maximusStakeManagerFactory.stakeManagerByInput(signerA.address, 0)
+  const maximusStakeManager = await hre.ethers.getContractAt('MaximusStakeManager', stakeManagerAddress)
   return {
     ...x,
     maximusStakeManager,
+  }
+}
+
+export const endOfBaseFixture = async () => {
+  const x = await loadFixture(maximusFactoryInstanceFixture)
+  const lastSigner = x.signers[x.signers.length - 1]
+  const currentDay = await x.hex.currentDay()
+  const stake = await x.hex.stakeLists(x.base, 0)
+  const endDay = stake.stakedDays + stake.lockedDay
+  const daysToEnd = endDay - currentDay.toNumber()
+  await moveForwardDays(daysToEnd, lastSigner, x)
+  const GasReimberser = await hre.ethers.getContractFactory('GasReimberser')
+  const gasReimberser = await GasReimberser.deploy(x.base)
+  return {
+    ...x,
+    gasReimberser,
   }
 }
 
@@ -106,10 +128,9 @@ export const stakeBagAndWait = async () => {
   const x = await loadFixture(deployFixture)
   const days = 30
   const signer = x.signers[x.signers.length - 1]
-  const stakedAmount = x.oneMillion / 10n
-  await x.isolatedStakeManager.stakeStart(stakedAmount, days)
-  await x.isolatedStakeManager.stakeStart(stakedAmount, days + 1)
-  await x.isolatedStakeManager.stakeStart(stakedAmount, days + 100)
+  await x.isolatedStakeManager.stakeStart(x.stakedAmount, days)
+  await x.isolatedStakeManager.stakeStart(x.stakedAmount, days + 1)
+  await x.isolatedStakeManager.stakeStart(x.stakedAmount, days + 100)
   const nsid = x.nextStakeId
   const stakeIds = [nsid, nsid + 1n, nsid + 2n, nsid + 3n]
   await moveForwardDays(days + 1, signer, x)
@@ -118,7 +139,6 @@ export const stakeBagAndWait = async () => {
     ...x,
     days,
     stakedDays: [days, days + 1, days + 100],
-    stakedAmount,
     nextStakeId: stakeIdBN.toBigInt() + 1n,
     stakeIds,
   }
