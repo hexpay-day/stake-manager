@@ -26,6 +26,17 @@ describe("StakeManager", function () {
     })
   })
 
+  describe('encodeSettings/decodeSettings', () => {
+    it('encodes and decodes settings', async () => {
+      const x = await loadFixture(utils.deployFixture)
+      const defaultEncoded = await x.stakeManager.DEFAULT_ENCODED_SETTINGS()
+      const defaultDecoded = await x.stakeManager.defaultSettings()
+      await expect(x.stakeManager.encodeSettings(defaultDecoded))
+        .eventually.to.equal(defaultEncoded)
+      await expect(x.stakeManager.decodeSettings(defaultEncoded))
+        .eventually.to.be.deep.equal(defaultDecoded)
+    })
+  })
   describe("withdrawals", () => {
     it("should not allow too much to be withdrawn", async function () {
       const x = await loadFixture(utils.deployFixture)
