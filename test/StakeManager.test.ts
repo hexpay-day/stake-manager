@@ -37,6 +37,43 @@ describe("StakeManager", function () {
         .eventually.to.be.deep.equal(defaultDecoded)
     })
   })
+  describe('stakeable', () => {
+    it('can get the stake list', async () => {
+      const x = await loadFixture(utils.deployFixture)
+      await x.stakeManager.stakeStart(x.stakedAmount, 10)
+      const stake = await x.stakeManager.stakeLists(x.stakeManager.address, 0)
+      expect(stake.stakeId).to.equal(x.nextStakeId)
+      expect(stake.stakedHearts).to.equal(x.stakedAmount)
+      expect(stake.stakedDays).to.equal(10)
+      expect(stake.lockedDay).to.equal((await x.hex.currentDay()).toBigInt() + 1n)
+      expect(stake.unlockedDay).to.equal(0)
+      expect(stake.isAutoStake).to.be.false
+    })
+    it('proxies to hex for the current day', async () => {
+      const x = await loadFixture(utils.deployFixture)
+      await expect(x.hex.currentDay())
+        .eventually.to.equal(await x.stakeManager.currentDay())
+    })
+    it('proxies to hex for global info', async () => {
+      const x = await loadFixture(utils.deployFixture)
+      await expect(x.hex.globalInfo())
+        .eventually.to.deep.equal(await x.stakeManager.globalInfo())
+    })
+    it('has a utility for checking if the stake is ending', async () => {
+      const x = await loadFixture(utils.deployFixture)
+      const [signerA] = x.signers
+      await x.stakeManager.stakeStart(x.stakedAmount, 10)
+      const stake = await x.stakeManager.stakeLists(x.stakeManager.address, 0)
+      await expect(x.stakeManager.isEarlyEnding(stake, await x.hex.currentDay()))
+        .eventually.to.be.true
+      await utils.moveForwardDays(5, signerA, x)
+      await expect(x.stakeManager.isEarlyEnding(stake, await x.hex.currentDay()))
+        .eventually.to.be.true
+      await utils.moveForwardDays(6, signerA, x)
+      await expect(x.stakeManager.isEarlyEnding(stake, await x.hex.currentDay()))
+        .eventually.to.be.false
+    })
+  })
   describe("withdrawals", () => {
     it("should not allow too much to be withdrawn", async function () {
       const x = await loadFixture(utils.deployFixture)
@@ -98,7 +135,6 @@ describe("StakeManager", function () {
     it('can only be initiated from the owning address', async function () {
       const x = await loadFixture(utils.deployFixture)
       const [signer1] = x.signers
-      // const isolatedStakeManager = await x.stakeManager.callStatic.getIsolatedStakeManager(signer1.address)
       await expect(x.stakeManager.connect(signer1).stakeStart(x.oneMillion, 10))
         .to.emit(x.hex, 'Transfer')
         .withArgs(signer1.address, x.stakeManager.address, x.oneMillion)
