@@ -56,7 +56,10 @@ contract MaximusStakeManagerFactory {
   function _stakeManagerKey(address origination, uint256 index) internal pure returns(bytes32) {
     return keccak256(abi.encode(origination, index));
   }
-  function _createStakeManager(address origination, uint256 index) internal returns(address payable stakeManagerAddress) {
+  function _createStakeManager(
+    address origination,
+    uint256 index
+  ) internal returns(address payable stakeManagerAddress) {
     bytes32 key = _stakeManagerKey(origination, index);
     stakeManagerAddress = stakeManager[key];
     if (stakeManagerAddress != address(0)) {

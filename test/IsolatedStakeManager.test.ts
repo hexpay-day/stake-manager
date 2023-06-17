@@ -38,9 +38,11 @@ describe('IsolatedStakeManager.sol', () => {
       await expect(x.isolatedStakeManagerFactory.isolatedStakeManagers(signerB.address))
         .eventually.to.equal(hre.ethers.constants.AddressZero)
       // this method is being run by signerA
-      await expect(x.isolatedStakeManagerFactory.upsertManager(signerB.address))
+      await expect(x.isolatedStakeManagerFactory.createIsolatedManager(signerB.address))
         .to.emit(x.isolatedStakeManagerFactory, 'CreateIsolatedStakeManager')
         .withArgs(signerB.address, anyValue)
+      await expect(x.isolatedStakeManagerFactory.createIsolatedManager(signerB.address))
+        .not.to.be.rejected
     })
   })
   describe('authorization', () => {

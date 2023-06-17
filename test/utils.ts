@@ -67,7 +67,7 @@ export const deployFixture = async () => {
   const IsolatedStakeManagerFactory = await hre.ethers.getContractFactory('IsolatedStakeManagerFactory')
   const isolatedStakeManagerFactory = await IsolatedStakeManagerFactory.deploy()
   await isolatedStakeManagerFactory.deployed()
-  await isolatedStakeManagerFactory.upsertManager(signer.address)
+  await isolatedStakeManagerFactory.createIsolatedManager(signer.address)
   const isolatedStakeManagerAddress = await isolatedStakeManagerFactory.isolatedStakeManagers(signer.address)
   const isolatedStakeManager = await hre.ethers.getContractAt('IsolatedStakeManager', isolatedStakeManagerAddress)
   const tx = await hex.connect(signer).approve(isolatedStakeManager.address, oneMillion)
