@@ -14,6 +14,17 @@ describe("StakeManager", function () {
       )
     })
   })
+  describe('UnderlyingStakeable', () => {
+    it('should count its stakes', async () => {
+      const x = await loadFixture(utils.deployFixture)
+      const [signer1] = x.signers
+      await expect(x.stakeManager.stakeCount())
+        .eventually.to.equal(0)
+      await x.stakeManager.connect(signer1).stakeStart(x.stakedAmount, 10)
+      await expect(x.stakeManager.stakeCount())
+        .eventually.to.equal(1)
+    })
+  })
 
   describe("withdrawals", () => {
     it("should not allow too much to be withdrawn", async function () {
@@ -59,6 +70,17 @@ describe("StakeManager", function () {
       await expect(x.stakeManager.connect(signer1).depositToken(x.oneMillion))
         .to.emit(x.hex, 'Transfer')
         .withArgs(signer1.address, x.stakeManager.address, x.oneMillion)
+      await expect(x.stakeManager.tokensAttributed())
+        .eventually.to.equal(x.oneMillion)
+    })
+    it('can deposit tokens and not attribute them to self', async () => {
+      const x = await loadFixture(utils.deployFixture)
+      const [signer1] = x.signers
+      await expect(x.stakeManager.connect(signer1).depositTokenUnattributed(x.oneMillion))
+        .to.emit(x.hex, 'Transfer')
+        .withArgs(signer1.address, x.stakeManager.address, x.oneMillion)
+      await expect(x.stakeManager.tokensAttributed())
+        .eventually.to.equal(0)
     })
   })
   describe('stake starts', () => {

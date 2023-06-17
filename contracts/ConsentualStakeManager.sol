@@ -347,18 +347,6 @@ contract ConsentualStakeManager is SingletonHedronManager {
     _addToWithdrawable(to, amount);
   }
   /**
-   * transfer a given number of tokens to the contract to be used by the contract's methods
-   * @param amount the number of tokens to transfer to the contract
-   * @notice this is the dangerous version of the deposit token method
-   * if you are using this method, you should be using it with the purpose
-   * of multicalling and disallowing failures (aka revert if any fail)
-   * if you do not, you are at risk of losing your funds to the next transaction
-   * @dev only the sender can be considered to be consenting to this action
-   */
-  function depositTokenDangerous(uint256 amount) external payable {
-    _depositTokenFrom(msg.sender, amount);
-  }
-  /**
    * collect unattributed tokens and send to recipient of choice
    * @param transferOut transfers tokens to the provided address
    * @param to the address to receive or have tokens attributed to
