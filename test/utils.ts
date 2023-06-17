@@ -52,7 +52,6 @@ export const deployFixture = async () => {
   await impersonateAccount(pulsexSacrificeAddress)
   const pulsexSacrificeSigner = await hre.ethers.getSigner(pulsexSacrificeAddress)
   const hex = await hre.ethers.getContractAt('contracts/IHEX.sol:IHEX', hexAddress, pulsexSacrificeSigner) as IHEX
-  // hre.tracer.printNext = true
   const decimals = await hex.decimals()
   const oneMillion = hre.ethers.utils.parseUnits('1000000', decimals).toBigInt()
   await Promise.all(signers.map(async (signer) => {
@@ -73,6 +72,9 @@ export const deployFixture = async () => {
   const isolatedStakeManager = await hre.ethers.getContractAt('IsolatedStakeManager', isolatedStakeManagerAddress)
   const tx = await hex.connect(signer).approve(isolatedStakeManager.address, oneMillion)
   await tx.wait()
+  const MaximusStakeManagerFactory = await hre.ethers.getContractFactory('MaximusStakeManagerFactory')
+  const maximusStakeManagerFactory = await MaximusStakeManagerFactory.deploy()
+  await maximusStakeManagerFactory.deployed()
   return {
     nextStakeId: stakeIdBN.toBigInt() + 1n,
     hex,
@@ -85,6 +87,18 @@ export const deployFixture = async () => {
     isolatedStakeManagerFactory,
     isolatedStakeManager,
     capable,
+    MaximusStakeManagerFactory,
+    maximusStakeManagerFactory,
+  }
+}
+
+export const maximusFactoryInstanceFixture = async () => {
+  const x = await loadFixture(deployFixture)
+  const [signerA] = x.signers
+  const maximusStakeManager = await x.maximusStakeManagerFactory.createStakeManager(signerA.address, 0)
+  return {
+    ...x,
+    maximusStakeManager,
   }
 }
 

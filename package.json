@@ -3,7 +3,8 @@
   "name": "hardhat-project",
   "scripts": {
     "build": "solhint 'contracts/**/*.sol' && hardhat compile",
-    "test": "hardhat coverage",
+    "test": "hardhat test",
+    "coverage": "hardhat coverage",
     "foundry:test": "forge test --fork-url 'https://rpc.pulsechain.com' -vvv"
   },
   "devDependencies": {

@@ -6,8 +6,8 @@ import "./Multicall.sol";
 import "./UnderlyingStakeable.sol";
 
 contract MaximusStakeManagerFactory {
-  event CreateMaximusStakeManager(address owner, address instance);
-  mapping(address => address) public stakeEnder;
+  event CreateMaximusStakeManager(address origination, uint256 index, address instance);
+  mapping(bytes32 => address) public stakeManager;
   /**
    * end a stake on a provided perpetual contract
    * @param index the index of the salt to use (usually 0)
@@ -47,14 +47,20 @@ contract MaximusStakeManagerFactory {
   function createStakeManager(address origination, uint256 index) external returns(address) {
     return _createStakeManager(origination, index);
   }
-  function _createStakeManager(address origination, uint256 index) internal returns(address stakeEnderAddress) {
-    stakeEnderAddress = stakeEnder[origination];
-    if (stakeEnderAddress != address(0)) {
-      return stakeEnderAddress;
+  function stakeManagerKey(address origination, uint256 index) external pure returns(bytes32) {
+    return _stakeManagerKey(origination, index);
+  }
+  function _stakeManagerKey(address origination, uint256 index) internal pure returns(bytes32) {
+    return keccak256(abi.encode(origination, index));
+  }
+  function _createStakeManager(address origination, uint256 index) internal returns(address stakeManagerAddress) {
+    bytes32 key = _stakeManagerKey(origination, index);
+    stakeManagerAddress = stakeManager[key];
+    if (stakeManagerAddress != address(0)) {
+      return stakeManagerAddress;
     }
-    bytes32 salt = keccak256(abi.encode(origination, index));
-    stakeEnderAddress = address(new MaximusStakeManager{salt: salt}(origination));
-    stakeEnder[origination] = stakeEnderAddress;
-    emit CreateMaximusStakeManager(origination, stakeEnderAddress);
+    stakeManagerAddress = address(new MaximusStakeManager{salt: key}(origination));
+    stakeManager[key] = stakeManagerAddress;
+    emit CreateMaximusStakeManager(origination, index, stakeManagerAddress);
   }
 }
