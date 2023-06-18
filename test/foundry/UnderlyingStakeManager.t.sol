@@ -3,7 +3,7 @@ pragma solidity ^0.8.13;
 
 import "forge-std/Test.sol";
 import "contracts/UnderlyingStakeManager.sol";
-import "contracts/ConsentualStakeManager.sol";
+import "contracts/SingletonStakeManager.sol";
 import "contracts/StakeManager.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
@@ -99,7 +99,7 @@ contract TestStakeManager is Test {
   }
 }
 
-contract TestConsentualStakeManager is TestStakeManager {
+contract TestSingletonStakeManager is TestStakeManager {
   function testPercentMagnitudeLimit() public {
     assertEq(stkMngr.percentMagnitudeLimit(), type(uint64).max);
   }

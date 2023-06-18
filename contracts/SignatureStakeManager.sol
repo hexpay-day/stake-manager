@@ -3,12 +3,12 @@ pragma solidity ^0.8.17;
 
 import "@openzeppelin/contracts/utils/cryptography/EIP712.sol";
 import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
-import "./ConsentualStakeManager.sol";
+import "./SingletonStakeManager.sol";
 
-contract SignatureStakeManager is ConsentualStakeManager, EIP712 {
+contract SignatureStakeManager is SingletonStakeManager, EIP712 {
   constructor()
-    ConsentualStakeManager()
-    EIP712("ConsentualStakeManager", "0.0.0")
+    SingletonStakeManager()
+    EIP712("SingletonStakeManager", "0.0.0")
   {}
   /**
    * @notice nonce has been consumed

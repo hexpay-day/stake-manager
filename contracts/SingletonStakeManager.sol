@@ -4,7 +4,7 @@ pragma solidity ^0.8.17;
 import "./SingletonHedronManager.sol";
 import "./IHedron.sol";
 
-contract ConsentualStakeManager is SingletonHedronManager {
+contract SingletonStakeManager is SingletonHedronManager {
   /**
    * @notice this error is thrown when the stake in question
    * is not owned by the expected address

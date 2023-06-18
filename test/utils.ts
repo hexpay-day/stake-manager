@@ -37,14 +37,16 @@ Chai.Assertion.addMethod('printGasUsage', function (this: any) {
 
 export const hexAddress = hre.ethers.utils.getAddress('0x2b591e99afe9f32eaa6214f7b7629768c40eeb39')
 
+export const hedronAddress = hre.ethers.utils.getAddress('0x3819f64f282bf135d62168C1e513280dAF905e06')
+
 export const pulsexSacrificeAddress = hre.ethers.utils.getAddress('0x075e72a5edf65f0a5f44699c7654c1a76941ddc8')
 
 export const deployFixture = async () => {
   const Capable = await hre.ethers.getContractFactory('Capable')
   const capable = await Capable.deploy()
   const StakeManager = await hre.ethers.getContractFactory('StakeManager')
-  const ConsentualStakeManager = await hre.ethers.getContractFactory('ConsentualStakeManager')
-  const stakeManager = await ConsentualStakeManager.deploy()
+  const SingletonStakeManager = await hre.ethers.getContractFactory('SingletonStakeManager')
+  const stakeManager = await SingletonStakeManager.deploy()
   await stakeManager.deployed()
   const _signers = await hre.ethers.getSigners()
   const signers = _signers.slice(0, 20)
@@ -52,6 +54,7 @@ export const deployFixture = async () => {
   await impersonateAccount(pulsexSacrificeAddress)
   const pulsexSacrificeSigner = await hre.ethers.getSigner(pulsexSacrificeAddress)
   const hex = await hre.ethers.getContractAt('contracts/IHEX.sol:IHEX', hexAddress, pulsexSacrificeSigner) as IHEX
+  const hedron = await hre.ethers.getContractAt('IHedron', hedronAddress)
   const decimals = await hex.decimals()
   const oneMillion = hre.ethers.utils.parseUnits('1000000', decimals).toBigInt()
   await Promise.all(signers.map(async (signer) => {
@@ -86,13 +89,14 @@ export const deployFixture = async () => {
     signers,
     stakeManager,
     StakeManager,
-    ConsentualStakeManager,
+    SingletonStakeManager,
     isolatedStakeManagerFactory,
     isolatedStakeManager,
     capable,
     MaximusStakeManagerFactory,
     maximusStakeManagerFactory,
     base,
+    hedron,
   }
 }
 
@@ -133,6 +137,26 @@ export const stakeBagAndWait = async () => {
   await x.isolatedStakeManager.stakeStart(x.stakedAmount, days + 100)
   const nsid = x.nextStakeId
   const stakeIds = [nsid, nsid + 1n, nsid + 2n, nsid + 3n]
+  await moveForwardDays(days + 1, signer, x)
+  const [, , , , , , stakeIdBN] = await x.hex.globalInfo()
+  return {
+    ...x,
+    days,
+    stakedDays: [days, days + 1, days + 100],
+    nextStakeId: stakeIdBN.toBigInt() + 1n,
+    stakeIds,
+  }
+}
+
+export const stakeSingletonBagAndWait = async () => {
+  const x = await loadFixture(deployFixture)
+  const days = 30
+  const signer = x.signers[x.signers.length - 1]
+  await x.stakeManager.stakeStart(x.stakedAmount, days)
+  await x.stakeManager.stakeStart(x.stakedAmount, days + 1)
+  await x.stakeManager.stakeStart(x.stakedAmount, days + 100)
+  const nsid = x.nextStakeId
+  const stakeIds = [nsid, nsid + 1n, nsid + 2n]
   await moveForwardDays(days + 1, signer, x)
   const [, , , , , , stakeIdBN] = await x.hex.globalInfo()
   return {

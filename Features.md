@@ -5,7 +5,7 @@ This document outlines the features available in these contracts and how they mi
 ### Contract Entry Points
 
 - Isolated Stake Manager
-- Consentual Stake Manager
+- Singleton Stake Manager
 - Grouped Stake Manager
 
 ### [IsolatedStakeManager.sol](./contracts/IsolatedStakeManager.sol)
@@ -46,7 +46,7 @@ This contract generates intermediary, owned contracts to collect fees distribute
 * Separate authorization levels for ending stakes, flushing tokens, withdrawing
 * Permissioned multicall available for multiple flush and withdrawal steps
 
-### [ConsentualStakeManager](./contracts/ConsentualStakeManager.sol)
+### [SingletonStakeManager](./contracts/SingletonStakeManager.sol)
 
 This contract is a singleton that holds all stakes in a single contract for gas efficiency and chaining purposes.
 
@@ -62,11 +62,11 @@ This contract is a singleton that holds all stakes in a single contract for gas 
 * Preference for silent failures to reduce failure cases (gas loss)
 * Removal of stake index requirement (internally tracked)
 * Settings to require final hedron mint during stake end
-* Anyone can mint hedron rewards to be custodied by ConsentualStakeManager
+* Anyone can mint hedron rewards to be custodied by SingletonStakeManager
 * Holds hedron rewards until owner collects them
 * Low cost hedron mint authorization to allow for future skipping / upgrades to exclude from process
 
-### [Settings](./contracts/ConsentualStakeManager.sol)
+### [Settings](./contracts/SingletonStakeManager.sol)
 
 The settings struct holds all relevant settings for determining what tokens should go where when a stake is done as well as what the end stake call should do at the end of a stake.
 
@@ -89,7 +89,7 @@ The properties of the settings object are as follows:
 \** 0 = do not restart, 1-254 = countdown mechanism, 255 = always restart
 
 
-### [#computeMagnitude](./contracts/ConsentualStakeManager.sol)
+### [#computeMagnitude](./contracts/SingletonStakeManager.sol)
 
 Compute magnitude is probably the most confusing method in the repo. Once broken down, it is fairly simple, but has a fair number of options which can make it confusing. Below is a breakdown of the options and features.
 
