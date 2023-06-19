@@ -439,13 +439,23 @@ contract SingletonStakeManager is SingletonHedronManager {
           newStakeAmount, newStakeDays
         );
         // settings will be maintained for the new stake
+        // note, because 0 is used, one often needs to use x-1
+        // for the number of times you want to copy
+        // but because permissions are maintained, it may end up
+        // being easier to think about it as x-2
         uint256 copyIterations = uint8(settings >> 8);
         if (copyIterations > 0) {
           if (copyIterations < 255) {
             --copyIterations;
-            settings |= copyIterations;
+            uint256 s = settings >> 16 << 16;
+            s |= (uint256(copyIterations) << 8);
+            s |= uint8(settings);
+            settings = s;
           }
           _logSettingsUpdate(nextStakeId, settings);
+        } else {
+          // keep the authorization settings
+          _logSettingsUpdate(nextStakeId, uint256(uint8(settings)));
         }
       }
     }

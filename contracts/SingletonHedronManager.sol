@@ -39,7 +39,9 @@ contract SingletonHedronManager is EncodableSettings, UnderlyingStakeManager {
         to = currentOwner;
         hedronTokens += _mintLegacyNative(stakeId);
       }
-      ++i;
+      unchecked {
+        ++i;
+      }
     } while (i < len);
     if (hedronTokens > 0) {
       _attributeLegacyHedron(to, hedronTokens);

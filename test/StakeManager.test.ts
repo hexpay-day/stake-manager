@@ -4,6 +4,7 @@ import * as hre from "hardhat"
 import _ from 'lodash'
 import * as withArgs from '@nomicfoundation/hardhat-chai-matchers/withArgs'
 import * as utils from './utils'
+import { EncodableSettings, StakeManager } from "../artifacts/types"
 
 describe("StakeManager", function () {
   describe("deployment", function () {
@@ -277,6 +278,70 @@ describe("StakeManager", function () {
         .withArgs(x.stakeManager.address, hre.ethers.constants.AddressZero, withArgs.anyUint)
         // .printGasUsage()
       await expect(x.hex.stakeCount(x.stakeManager.address)).eventually.to.equal(6)
+    })
+  })
+  describe('stakeEndByConsentForMany', () => {
+    it('custodies funds if told to do nothing with them afterward', async () => {
+      const x = await loadFixture(utils.deployFixture)
+      const [signer1, signer2, signer3, signer4] = x.signers
+      const days = 3
+      await expect(x.stakeManager.stakeStartFromBalanceFor(signer1.address, x.stakedAmount, days, 0))
+        .to.emit(x.hex, 'Transfer')
+        .withArgs(signer1.address, x.stakeManager.address, x.stakedAmount)
+        .to.emit(x.hex, 'Transfer')
+        .withArgs(x.stakeManager.address, hre.ethers.constants.AddressZero, x.stakedAmount)
+      await utils.moveForwardDays(4, signer4, x)
+      const settings = await x.stakeManager.defaultSettings()
+      const updatedSettings = {
+        ...settings,
+        newStakeMethod: 0,
+      }
+      await x.stakeManager.updateSettings(x.nextStakeId, updatedSettings)
+      await expect(x.stakeManager.withdrawableBalanceOf(signer1.address))
+        .eventually.to.be.equal(0)
+      await expect(x.stakeManager.connect(signer2).stakeEndByConsentForMany([x.nextStakeId]))
+        .to.emit(x.hex, 'Transfer')
+        .withArgs(hre.ethers.constants.AddressZero, x.stakeManager.address, withArgs.anyUint)
+      await expect(x.stakeManager.withdrawableBalanceOf(signer1.address))
+        .eventually.to.be.greaterThan(0)
+    })
+    it('counts down end stakes if < 255', async () => {
+      const x = await loadFixture(utils.deployFixture)
+      const [signer1, signer2, signer3, signer4] = x.signers
+      const days = 3
+      await expect(x.stakeManager.stakeStartFromBalanceFor(signer1.address, x.stakedAmount, days, 0))
+        .to.emit(x.hex, 'Transfer')
+        .withArgs(signer1.address, x.stakeManager.address, x.stakedAmount)
+        .to.emit(x.hex, 'Transfer')
+        .withArgs(x.stakeManager.address, hre.ethers.constants.AddressZero, x.stakedAmount)
+      const settings = await x.stakeManager.defaultSettings()
+      let updatedSettings: EncodableSettings.SettingsStruct = {
+        ...settings,
+        copyIterations: 1,
+      }
+      await x.stakeManager.updateSettings(x.nextStakeId, updatedSettings)
+      await utils.moveForwardDays(4, signer4, x)
+      let lastStakeId = x.nextStakeId
+      let nextStakeId = await utils.nextStakeId(x)
+      await expect(x.stakeManager.connect(signer2).stakeEndByConsentForMany([lastStakeId]))
+        .to.emit(x.hex, 'StakeStart')
+      await expect(x.stakeManager.withdrawableBalanceOf(signer1.address))
+        .eventually.to.be.equal(0)
+      await utils.moveForwardDays(4, signer4, x)
+      lastStakeId = nextStakeId
+      nextStakeId = await utils.nextStakeId(x)
+      await expect(x.stakeManager.connect(signer2).stakeEndByConsentForMany([lastStakeId]))
+        .to.emit(x.hex, 'StakeStart')
+      await expect(x.stakeManager.withdrawableBalanceOf(signer1.address))
+        .eventually.to.be.equal(0)
+      await utils.moveForwardDays(4, signer4, x)
+      await expect(x.stakeManager.connect(signer2).stakeEndByConsentForMany([nextStakeId]))
+        .to.emit(x.hex, 'StakeEnd')
+        .withArgs(withArgs.anyValue, withArgs.anyValue, x.stakeManager.address, nextStakeId)
+        .to.emit(x.hex, 'Transfer')
+        .withArgs(hre.ethers.constants.AddressZero, x.stakeManager.address, withArgs.anyUint)
+      await expect(x.stakeManager.withdrawableBalanceOf(signer1.address))
+        .eventually.to.be.greaterThan(0)
     })
   })
 })

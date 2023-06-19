@@ -100,6 +100,11 @@ export const deployFixture = async () => {
   }
 }
 
+export const nextStakeId = async (x: Awaited<ReturnType<typeof deployFixture>>) => {
+  const [, , , , , , stakeIdBN] = await x.hex.globalInfo()
+  return stakeIdBN.toBigInt() + 1n
+}
+
 export const maximusFactoryInstanceFixture = async () => {
   const x = await loadFixture(deployFixture)
   const [signerA] = x.signers

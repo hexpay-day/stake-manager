@@ -72,7 +72,9 @@ contract HSIStakeManager is AuthorizationManager {
         to = currentOwner;
         hedronTokens += IHedron(hedron).mintInstanced(params[i].hsiIndex, hsiAddress);
       }
-      ++i;
+      unchecked {
+        ++i;
+      }
     } while (i < len);
     if (hedronTokens > 0) {
       IERC20(hedron).transfer(to, hedronTokens);
@@ -104,7 +106,9 @@ contract HSIStakeManager is AuthorizationManager {
         hedronTokens += IHedron(hedron).mintInstanced(index, hsiAddress);
         targetTokens += IHedron(hedron).hexStakeEnd(index, hsiAddress);
       }
-      ++i;
+      unchecked {
+        ++i;
+      }
     } while (i < len);
     _payout(to, hedronTokens, targetTokens);
   }

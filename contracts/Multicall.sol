@@ -87,7 +87,9 @@ contract Multicall {
           }
         }
       }
-      ++i;
+      unchecked {
+        ++i;
+      }
     } while (i < len);
   }
 }
