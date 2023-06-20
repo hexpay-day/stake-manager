@@ -45,6 +45,9 @@ contract EncodableSettings {
     idToSettings[stakeId] = settings;
     emit UpdatedSettings(stakeId, settings);
   }
+  function idToDecodedSettings(uint256 stakeId) external view returns (Settings memory) {
+    return _decodeSettings(idToSettings[stakeId]);
+  }
   /**
    * read a single property from encoded settings
    * @notice most useful for other contracts to pull out one property without
