@@ -46,7 +46,7 @@ export const deployFixture = async () => {
   const capable = await Capable.deploy()
   const StakeManager = await hre.ethers.getContractFactory('StakeManager')
   const SingletonStakeManager = await hre.ethers.getContractFactory('SingletonStakeManager')
-  const stakeManager = await SingletonStakeManager.deploy()
+  const stakeManager = await StakeManager.deploy()
   await stakeManager.deployed()
   const _signers = await hre.ethers.getSigners()
   const signers = _signers.slice(0, 20)

@@ -37,6 +37,7 @@
     "yargs": "^17.7.2"
   },
   "dependencies": {
+    "ethers-eip712": "^0.2.0",
     "solhint": "^3.4.1"
   }
 }
