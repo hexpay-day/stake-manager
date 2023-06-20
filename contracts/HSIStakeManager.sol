@@ -4,6 +4,7 @@ pragma solidity ^0.8.17;
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "./IHedron.sol";
+import "./IHEXStakeInstanceManager.sol";
 import "./Multicall.sol";
 import "./AuthorizationManager.sol";
 
@@ -18,12 +19,13 @@ contract HSIStakeManager is AuthorizationManager {
    * @param tokenId the token id to move to this contract
    * @dev requires approval to transfer hsi to this contract
    */
-  function depositHsi(uint256 tokenId) external {
-    address token = IHedron(hedron).hsim();
-    address owner = _deposit721(token, tokenId);
-    address hsiAddress = IHedron(hedron).hexStakeDetokenize(tokenId);
+  function depositHsi(uint256 tokenId, uint256 settings) external {
+    address hsim = IHedron(hedron).hsim();
+    address owner = _deposit721(hsim, tokenId);
+    address hsiAddress = IHEXStakeInstanceManager(hsim).hexStakeDetokenize(tokenId);
     // erc721 is burned - no owner - only hsi address remains
     hsiToOwner[hsiAddress] = owner;
+    _setAuthorization(keccak256(abi.encode(msg.sender, hsiAddress)), settings);
   }
   function isAuthorized(address runner, address hsiAddress, uint256 index) external view returns(bool) {
     return _isAuthorized(keccak256(abi.encode(runner, hsiAddress)), index);
@@ -93,6 +95,7 @@ contract HSIStakeManager is AuthorizationManager {
     uint256 index;
     address currentOwner;
     address to = hsiToOwner[hsiAddress];
+    address hsim = IHedron(hedron).hsim();
     do {
       hsiAddress = params[i].hsiAddress;
       if (_isAuthorized(keccak256(abi.encode(msg.sender, hsiAddress)), 1)) {
@@ -103,8 +106,10 @@ contract HSIStakeManager is AuthorizationManager {
           targetTokens = 0;
         }
         index = params[i].hsiIndex;
-        hedronTokens += IHedron(hedron).mintInstanced(index, hsiAddress);
-        targetTokens += IHedron(hedron).hexStakeEnd(index, hsiAddress);
+        unchecked {
+          hedronTokens += IHedron(hedron).mintInstanced(index, hsiAddress);
+          targetTokens += IHEXStakeInstanceManager(hsim).hexStakeEnd(index, hsiAddress);
+        }
       }
       unchecked {
         ++i;
