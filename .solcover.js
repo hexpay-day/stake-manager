@@ -1,3 +1,6 @@
 module.exports = {
-  skipFiles: ['reference']
+  skipFiles: [
+    'reference',
+    'SignatureStakeManager.sol',
+  ]
 };
