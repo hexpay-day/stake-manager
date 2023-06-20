@@ -6,18 +6,18 @@ pragma solidity ^0.8.17;
  * in other words, calls that operate on the senders funds or settings
  */
 contract Multicall {
-  error BlockHash();
-  error Deadline();
+  error BlockHash(bytes32 expected, bytes32 actual);
+  error Deadline(uint256 deadline, uint256 currentTime);
   event TxFailed(uint256 indexed index, bytes result);
   modifier checkPreviousBlockhash(bytes32 previousBlockhash) {
     if (blockhash(block.number - 1) != previousBlockhash) {
-      revert BlockHash();
+      revert BlockHash(previousBlockhash, blockhash(block.number - 1));
     }
     _;
   }
   modifier checkDeadline(uint256 deadline) {
     if (block.timestamp > deadline) {
-      revert Deadline();
+      revert Deadline(deadline, block.timestamp);
     }
     _;
   }
