@@ -6,6 +6,7 @@ import * as hre from 'hardhat'
 import _ from "lodash"
 import * as ethers from 'ethers'
 import * as Chai from "chai"
+import { HSIStakeManager } from "../artifacts/types"
 
 Chai.Assertion.addMethod('printGasUsage', function (this: any) {
   let subject = this._obj
@@ -55,6 +56,9 @@ export const deployFixture = async () => {
   const pulsexSacrificeSigner = await hre.ethers.getSigner(pulsexSacrificeAddress)
   const hex = await hre.ethers.getContractAt('contracts/IHEX.sol:IHEX', hexAddress, pulsexSacrificeSigner) as IHEX
   const hedron = await hre.ethers.getContractAt('IHedron', hedronAddress)
+  const hsim = await hre.ethers.getContractAt('IHEXStakeInstanceManager', await hedron.hsim())
+  const HSIStakeManager = await hre.ethers.getContractFactory('HSIStakeManager')
+  const hsiStakeManager = await HSIStakeManager.deploy()
   const decimals = await hex.decimals()
   const oneMillion = hre.ethers.utils.parseUnits('1000000', decimals).toBigInt()
   await Promise.all(signers.map(async (signer) => {
@@ -62,6 +66,7 @@ export const deployFixture = async () => {
       // allow infinite flow
       hex.connect(signer)
         .approve(stakeManager.address, hre.ethers.constants.MaxUint256),
+      hex.connect(signer).approve(hsim.address, hre.ethers.constants.MaxUint256),
       hex.transfer(signer.address, oneMillion),
     ])
   }))
@@ -97,6 +102,8 @@ export const deployFixture = async () => {
     maximusStakeManagerFactory,
     base,
     hedron,
+    hsim,
+    hsiStakeManager,
   }
 }
 
@@ -119,12 +126,11 @@ export const maximusFactoryInstanceFixture = async () => {
 
 export const endOfBaseFixture = async () => {
   const x = await loadFixture(maximusFactoryInstanceFixture)
-  const lastSigner = x.signers[x.signers.length - 1]
   const currentDay = await x.hex.currentDay()
   const stake = await x.hex.stakeLists(x.base, 0)
   const endDay = stake.stakedDays + stake.lockedDay
   const daysToEnd = endDay - currentDay.toNumber()
-  await moveForwardDays(daysToEnd, lastSigner, x)
+  await moveForwardDays(daysToEnd, x)
   const GasReimberser = await hre.ethers.getContractFactory('GasReimberser')
   const gasReimberser = await GasReimberser.deploy(x.base)
   return {
@@ -136,13 +142,12 @@ export const endOfBaseFixture = async () => {
 export const stakeBagAndWait = async () => {
   const x = await loadFixture(deployFixture)
   const days = 30
-  const signer = x.signers[x.signers.length - 1]
   await x.isolatedStakeManager.stakeStart(x.stakedAmount, days)
   await x.isolatedStakeManager.stakeStart(x.stakedAmount, days + 1)
   await x.isolatedStakeManager.stakeStart(x.stakedAmount, days + 100)
   const nsid = x.nextStakeId
   const stakeIds = [nsid, nsid + 1n, nsid + 2n, nsid + 3n]
-  await moveForwardDays(days + 1, signer, x)
+  await moveForwardDays(days + 1, x)
   const [, , , , , , stakeIdBN] = await x.hex.globalInfo()
   return {
     ...x,
@@ -156,13 +161,12 @@ export const stakeBagAndWait = async () => {
 export const stakeSingletonBagAndWait = async () => {
   const x = await loadFixture(deployFixture)
   const days = 30
-  const signer = x.signers[x.signers.length - 1]
   await x.stakeManager.stakeStart(x.stakedAmount, days)
   await x.stakeManager.stakeStart(x.stakedAmount, days + 1)
   await x.stakeManager.stakeStart(x.stakedAmount, days + 100)
   const nsid = x.nextStakeId
   const stakeIds = [nsid, nsid + 1n, nsid + 2n]
-  await moveForwardDays(days + 1, signer, x)
+  await moveForwardDays(days + 1, x)
   const [, , , , , , stakeIdBN] = await x.hex.globalInfo()
   return {
     ...x,
@@ -173,15 +177,56 @@ export const stakeSingletonBagAndWait = async () => {
   }
 }
 
+export const deployAndProcureHSIFixture = async () => {
+  const x = await loadFixture(deployFixture)
+  const [signerA] = x.signers
+  const nxtStkId = await nextStakeId(x)
+
+  await x.hsim.hexStakeStart(x.stakedAmount, 29)
+  await x.hsim.hexStakeStart(x.stakedAmount, 59)
+  await x.hsim.hexStakeStart(x.stakedAmount, 89)
+  const hsiStakeIds = [
+    nxtStkId,
+    nxtStkId + 1n,
+    nxtStkId + 2n,
+  ]
+  const hsiAddresses = await Promise.all(hsiStakeIds.map((_stakeId, index) => (
+    x.hsim.hsiLists(signerA.address, index)
+  )))
+  const tokenizeOrder = hsiAddresses.slice(0).reverse()
+  const stakeParams: HSIStakeManager.HSIParamsStruct[] = []
+  for (let i = 0; i < tokenizeOrder.length; i++) {
+    const addr = tokenizeOrder[i]
+    stakeParams.push({
+      hsiIndex: i,
+      hsiAddress: addr,
+    })
+    const count = await x.hsim.hsiCount(signerA.address)
+    await x.hsim.hexStakeTokenize(count.toNumber() - 1, addr)
+  }
+  const tokenIds = await Promise.all(tokenizeOrder.map((_addr, index) => (
+    x.hsim.tokenOfOwnerByIndex(signerA.address, index)
+  )))
+  await x.hsim.setApprovalForAll(x.hsiStakeManager.address, true)
+  return {
+    ...x,
+    hsiStakeIds,
+    hsiAddresses,
+    hsiTokenIds: tokenIds,
+    hsiStakeParams: stakeParams.reverse(),
+  }
+}
+
 export const moveForwardDays = async (
   limit: number,
-  signer: SignerWithAddress,
   x: Awaited<ReturnType<typeof deployFixture>>,
 ) => {
   let i = 0;
+  // last signer is utilized as a standin for "the public"
+  const lastSigner = x.signers[x.signers.length - 1]
   do {
     await time.setNextBlockTimestamp(days(1) + await time.latest())
-    await x.hex.connect(signer).stakeStart(hre.ethers.utils.parseUnits('1', 8), 1)
+    await x.hex.connect(lastSigner).stakeStart(hre.ethers.utils.parseUnits('1', 8), 1)
     i += 1
   } while(i < limit)
 }

@@ -14,7 +14,7 @@
 //       const network = await hre.ethers.provider.getNetwork()
 //       const nextStakeId = await utils.nextStakeId(x)
 //       await x.stakeManager.stakeStart(x.stakedAmount, 30)
-//       await utils.moveForwardDays(31, x.signers[x.signers.length - 1], x)
+//       await utils.moveForwardDays(31, x)
 //       const settings = await x.stakeManager.defaultSettings()
 //       const updatedSettings = {
 //         ...settings,

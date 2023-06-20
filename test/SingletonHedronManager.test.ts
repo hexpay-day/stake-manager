@@ -22,7 +22,7 @@ describe('SingletonHedronManager.sol', () => {
       )))
       const [signerA] = x.signers
       await x.stakeManager.connect(signerA).multicall(data, false)
-      await utils.moveForwardDays(2, x.signers[x.signers.length - 1], x)
+      await utils.moveForwardDays(2, x)
       await expect(x.stakeManager.mintRewards(x.stakeIds))
         .to.emit(x.hedron, 'Transfer')
         .withArgs(hre.ethers.constants.AddressZero, x.stakeManager.address, anyUint)
@@ -44,7 +44,7 @@ describe('SingletonHedronManager.sol', () => {
       )))
       const [signerA] = x.signers
       await x.stakeManager.connect(signerA).multicall(data, false)
-      await utils.moveForwardDays(2, x.signers[x.signers.length - 1], x)
+      await utils.moveForwardDays(2, x)
       await x.stakeManager.mintRewards(x.stakeIds)
       await expect(x.hedron.balanceOf(signerA.address))
         .eventually.to.equal(0)
@@ -58,7 +58,7 @@ describe('SingletonHedronManager.sol', () => {
         .withArgs(x.stakeManager.address, signerA.address, anyUint)
       await expect(x.hedron.balanceOf(signerA.address))
         .eventually.to.be.greaterThan(100)
-      await utils.moveForwardDays(2, x.signers[x.signers.length - 1], x)
+      await utils.moveForwardDays(2, x)
       await x.stakeManager.mintRewards(x.stakeIds)
       await expect(x.stakeManager.withdrawOutstandingHedron(signerA.address, hre.ethers.constants.MaxInt256))
         .to.emit(x.hedron, 'Transfer')
@@ -92,7 +92,7 @@ describe('SingletonHedronManager.sol', () => {
         ])
       )))
       await x.stakeManager.connect(signerB).multicall(signerBUpdateSettings, false)
-      await utils.moveForwardDays(2, x.signers[x.signers.length - 1], x)
+      await utils.moveForwardDays(2, x)
       await x.stakeManager.mintRewards(stakeIds)
 
       await expect(x.stakeManager.outstandingHedronTokens(signerA.address))

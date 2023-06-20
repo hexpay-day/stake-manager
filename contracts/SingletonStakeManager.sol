@@ -420,7 +420,7 @@ contract SingletonStakeManager is SingletonHedronManager {
       }
     }
     uint256 newStakeMethod = settings << 144 >> 248;
-    if (newStakeMethod > 0) {
+    if (delta > 0 && newStakeMethod > 0) {
       uint256 newStakeAmount = _computeMagnitude(
         newStakeMethod, settings << 152 >> 192, delta,
         stake

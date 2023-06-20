@@ -4,7 +4,6 @@ import * as hre from "hardhat"
 import * as utils from './utils'
 import _ from 'lodash'
 import { anyUint, anyValue } from "@nomicfoundation/hardhat-chai-matchers/withArgs"
-import { TypedDataUtils } from "ethers-eip712"
 
 describe('Multicall.sol', () => {
   describe('multicallWithDeadline', () => {
