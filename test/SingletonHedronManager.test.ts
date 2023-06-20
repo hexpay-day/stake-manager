@@ -29,5 +29,86 @@ describe('SingletonHedronManager.sol', () => {
       await expect(x.hedron.balanceOf(x.stakeManager.address))
         .eventually.to.equal(await x.stakeManager.outstandingHedronTokens(signerA.address))
     })
+    it('can withdraw rewards at a later time', async () => {
+      const x = await loadFixture(utils.stakeSingletonBagAndWait)
+      const settings = await x.stakeManager.defaultSettings()
+      const nuSettings = {
+        ...settings,
+        consentAbilities: parseInt('1101', 2),
+      }
+      const data = await Promise.all(x.stakeIds.map(async (stakeId) => (
+        x.stakeManager.interface.encodeFunctionData('updateSettings', [
+          stakeId,
+          nuSettings,
+        ])
+      )))
+      const [signerA] = x.signers
+      await x.stakeManager.connect(signerA).multicall(data, false)
+      await utils.moveForwardDays(2, x.signers[x.signers.length - 1], x)
+      await x.stakeManager.mintRewards(x.stakeIds)
+      await expect(x.hedron.balanceOf(signerA.address))
+        .eventually.to.equal(0)
+      await expect(x.stakeManager.withdrawOutstandingHedron(signerA.address, 100))
+        .to.emit(x.hedron, 'Transfer')
+        .withArgs(x.stakeManager.address, signerA.address, 100)
+      await expect(x.hedron.balanceOf(signerA.address))
+        .eventually.to.be.equal(100)
+      await expect(x.stakeManager.withdrawOutstandingHedron(signerA.address, 0))
+        .to.emit(x.hedron, 'Transfer')
+        .withArgs(x.stakeManager.address, signerA.address, anyUint)
+      await expect(x.hedron.balanceOf(signerA.address))
+        .eventually.to.be.greaterThan(100)
+      await utils.moveForwardDays(2, x.signers[x.signers.length - 1], x)
+      await x.stakeManager.mintRewards(x.stakeIds)
+      await expect(x.stakeManager.withdrawOutstandingHedron(signerA.address, hre.ethers.constants.MaxInt256))
+        .to.emit(x.hedron, 'Transfer')
+        .withArgs(x.stakeManager.address, signerA.address, anyUint)
+      await expect(x.stakeManager.outstandingHedronTokens(signerA.address))
+        .eventually.to.equal(0)
+    })
+    it('can mint for multiple addresses at the same time', async () => {
+
+      const x = await loadFixture(utils.stakeSingletonBagAndWait)
+      const settings = await x.stakeManager.defaultSettings()
+      const nuSettings = {
+        ...settings,
+        consentAbilities: parseInt('1101', 2),
+      }
+      const [signerA, signerB] = x.signers
+      const nextStakeId = await utils.nextStakeId(x)
+      await x.stakeManager.connect(signerB).stakeStart(x.stakedAmount, 30)
+      const stakeIds = x.stakeIds.concat(nextStakeId)
+      const signerAUpdateSettings = await Promise.all(x.stakeIds.map(async (stakeId) => (
+        x.stakeManager.interface.encodeFunctionData('updateSettings', [
+          stakeId,
+          nuSettings,
+        ])
+      )))
+      await x.stakeManager.connect(signerA).multicall(signerAUpdateSettings, false)
+      const signerBUpdateSettings = await Promise.all([nextStakeId].map(async (stakeId) => (
+        x.stakeManager.interface.encodeFunctionData('updateSettings', [
+          stakeId,
+          nuSettings,
+        ])
+      )))
+      await x.stakeManager.connect(signerB).multicall(signerBUpdateSettings, false)
+      await utils.moveForwardDays(2, x.signers[x.signers.length - 1], x)
+      await x.stakeManager.mintRewards(stakeIds)
+
+      await expect(x.stakeManager.outstandingHedronTokens(signerA.address))
+        .eventually.to.be.greaterThan(0)
+      await expect(x.stakeManager.outstandingHedronTokens(signerB.address))
+        .eventually.to.be.greaterThan(0)
+      await expect(x.stakeManager.connect(signerA).withdrawOutstandingHedron(signerA.address, hre.ethers.constants.MaxInt256))
+        .to.emit(x.hedron, 'Transfer')
+        .withArgs(x.stakeManager.address, signerA.address, anyUint)
+      await expect(x.stakeManager.connect(signerB).withdrawOutstandingHedron(signerB.address, hre.ethers.constants.MaxInt256))
+        .to.emit(x.hedron, 'Transfer')
+        .withArgs(x.stakeManager.address, signerB.address, anyUint)
+      await expect(x.stakeManager.outstandingHedronTokens(signerA.address))
+        .eventually.to.be.equal(0)
+      await expect(x.stakeManager.outstandingHedronTokens(signerB.address))
+        .eventually.to.be.equal(0)
+    })
   })
 })
