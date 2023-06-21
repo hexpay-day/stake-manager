@@ -50,6 +50,7 @@ Economically, success would be, at a minimum, reducing the cost of ending a stak
 Here are some graphs and data relevant to the issue.
 * https://dune.com/queries/2633637/4373958
 * https://dune.com/queries/2633639
+* https://dune.com/hexpay_day/end-stake-costs
 
 Note: it appears that someone did do shared end stakes at some point (5 total transactions over the course of 3 years). It seems that they stopped for some reason. Perhaps they did not understand what they were doing or shut down for other reasons and did not realize the value of what they had.
 
@@ -76,3 +77,13 @@ Technical Resources:
 _Ok, but there must be limits to this solution._
 
 There are. One prominant limitation is that gas costs won't make a difference if the base gas fee is still too high to fit within a single transaction. At the current limit of 1 ether transaction fee limit, the base fee must be less than 85gwei. This is a reasonable expectation within, say, a month timeframe for now and will be more relevant to more people if the price of native currencies increases, but both of those points could change in the future.
+
+_What does success look like?_
+
+For this product / library to be successful, it only needs to serve legitimate end stakes and reduce the cost of ending stakes when compared to ending those stakes alone. It would be amazing if all new stakes were to be created through this system, however, anyone who is able to use this to increase their shares and reduce their stake cost is a win in my book. A measurement of success could be to compare transactions ended through this system vs txs as they would have ended through other systems.
+
+There are multiple rational, but also detrimental behaviors that occur without a library like this.
+1. simply wait until a stake has ended to start a new stake with your newly aquired tokens
+1. wait multiple days to end a stake since hex has 14 days before penalty is accrued from late ends during periods of high base fee
+
+Sitting in liquid hex does provide benefits, certainly. However, some people prefer sitting in tshares to not have to think about their position and this library helps reduce the psychological cost of requiring one to add liquid hex after ending stakes.
