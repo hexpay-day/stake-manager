@@ -4,12 +4,18 @@ pragma solidity ^0.8.17;
 import "./SingletonHedronManager.sol";
 import "./IHedron.sol";
 
+import "hardhat/console.sol";
+
 contract SingletonStakeManager is SingletonHedronManager {
   /**
    * @notice this error is thrown when the stake in question
    * is not owned by the expected address
    */
   error StakeNotOwned(address provided, address expected);
+  /**
+   * @notice error is thrown when there is not enough funding to do the required operation
+   */
+  error NotEnoughFunding(uint256 provided, uint256 expected);
   /**
    * @notice this var is re-defined here to keep the computeMagnitude method pure
    * at the cost of one extra byteword during deployment
@@ -155,17 +161,16 @@ contract SingletonStakeManager is SingletonHedronManager {
   function stakeEndByConsent(
     uint256 stakeId
   ) external payable returns(uint256 delta) {
-    return _stakeEndByConsent(stakeId, false);
+    return _stakeEndByConsent(stakeId);
   }
   /**
    * end a stake with the consent of the underlying staker's settings
    * @param stakeId the stake id to end
-   * @param skipEarlyCheck used when early end stake check happens external to this method
    * @return delta the amount of hex at the end of the stake (consumed by _directFunds)
    * @notice hedron minting happens as last step before end stake
    */
   function _stakeEndByConsent(
-    uint256 stakeId, bool skipEarlyCheck
+    uint256 stakeId
   ) internal returns(uint256 delta) {
     uint256 idx = stakeIdToIndex[stakeId];
     IStakeable.StakeStore memory stake = _getStake(address(this), idx);
@@ -175,7 +180,7 @@ contract SingletonStakeManager is SingletonHedronManager {
     uint256 settings = idToSettings[stakeId];
     uint256 consentAbilities = uint8(settings);
     uint256 today = _currentDay();
-    if (!skipEarlyCheck && ((stake.lockedDay + stake.stakedDays) < today) && !_isCapable(consentAbilities, 1)) {
+    if (((stake.lockedDay + stake.stakedDays) > today) && !_isCapable(consentAbilities, 1)) {
       return 0;
     }
     if (!_isCapable(consentAbilities, 0)) {
@@ -216,7 +221,7 @@ contract SingletonStakeManager is SingletonHedronManager {
     uint256 len = stakeIds.length;
     do {
       stakeId = stakeIds[i];
-      _stakeEndByConsent(stakeId, false);
+      _stakeEndByConsent(stakeId);
       unchecked {
         ++i;
       }
@@ -319,10 +324,7 @@ contract SingletonStakeManager is SingletonHedronManager {
    * @param max the limit that the value can be
    */
   function _clamp(uint256 amount, uint256 max) internal pure returns(uint256) {
-    if (amount == 0) {
-      return max;
-    }
-    return amount > max ? max : amount;
+    return amount == 0 || amount > max ? max : amount;
   }
   /**
    * transfer a given number of tokens to the contract to be used by the contract's methods

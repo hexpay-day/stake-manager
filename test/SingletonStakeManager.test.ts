@@ -4,7 +4,7 @@ import * as hre from "hardhat"
 import _ from 'lodash'
 import * as withArgs from '@nomicfoundation/hardhat-chai-matchers/withArgs'
 import * as utils from './utils'
-import { EncodableSettings, StakeManager } from "../artifacts/types"
+import { EncodableSettings, IStakeable, StakeManager } from "../artifacts/types"
 
 describe("StakeManager", function () {
   describe("deployment", function () {
@@ -342,24 +342,330 @@ describe("StakeManager", function () {
       await expect(x.stakeManager.withdrawableBalanceOf(signer1.address))
         .eventually.to.be.greaterThan(0)
     })
+    it('cannot update settings unless signer is staker', async () => {
+      const x = await loadFixture(utils.deployFixture)
+      const nextStakeId = await utils.nextStakeId(x)
+      const days = 10
+      const [signer1, signer2] = x.signers
+      await x.stakeManager.stakeStartFromBalanceFor(signer1.address, x.stakedAmount, days, 0)
+      await utils.moveForwardDays(11, x)
+      const settings = await x.stakeManager.idToDecodedSettings(nextStakeId)
+      const oneHundredHex = hre.ethers.utils.parseUnits('100', 8)
+      const updatedSettings: EncodableSettings.SettingsStruct = {
+        ...settings,
+        tipMethod: 2,
+        tipMagnitude: oneHundredHex, // 100 hex
+      }
+      await expect(x.stakeManager.connect(signer2).updateSettings(nextStakeId, updatedSettings))
+        .revertedWithCustomError(x.stakeManager, 'StakeNotOwned')
+        .withArgs(signer2.address, signer1.address)
+    })
+    it('allows staker to leave a tip', async () => {
+      const x = await loadFixture(utils.deployFixture)
+      const nextStakeId = await utils.nextStakeId(x)
+      const days = 10
+      const [signer1, signer2] = x.signers
+      await x.stakeManager.stakeStartFromBalanceFor(signer1.address, x.stakedAmount, days, 0)
+      await utils.moveForwardDays(11, x)
+      const settings = await x.stakeManager.idToDecodedSettings(nextStakeId)
+      const oneHundredHex = hre.ethers.utils.parseUnits('100', 8)
+      const updatedSettings: EncodableSettings.SettingsStruct = {
+        ...settings,
+        tipMethod: 2,
+        tipMagnitude: oneHundredHex, // 100 hex
+      }
+      await expect(x.stakeManager.updateSettings(nextStakeId, updatedSettings))
+        .to.emit(x.stakeManager, 'UpdatedSettings')
+        .withArgs(nextStakeId, await x.stakeManager.encodeSettings(updatedSettings))
+      // this is an underestimation since yield is also a factor in this case
+      const anticipatedTip = await x.stakeManager.connect(signer2).computeEnderTip(nextStakeId, oneHundredHex)
+      await expect(x.stakeManager.connect(signer2).multicall([
+        x.stakeManager.interface.encodeFunctionData('stakeEndByConsent', [nextStakeId]),
+        x.stakeManager.interface.encodeFunctionData('collectUnattributed', [
+          true,
+          signer2.address,
+          0,
+        ]),
+      ], false))
+        .to.emit(x.hex, 'Transfer')
+        .withArgs(hre.ethers.constants.AddressZero, x.stakeManager.address, withArgs.anyUint)
+        .to.emit(x.hex, 'Transfer')
+        .withArgs(x.stakeManager.address, signer2.address, oneHundredHex)
+        // restart the stake
+        .to.emit(x.hex, 'Transfer')
+        .withArgs(x.stakeManager.address, hre.ethers.constants.AddressZero, withArgs.anyUint)
+      await expect(x.hex.balanceOf(signer2.address))
+        .eventually.greaterThan(anticipatedTip.toNumber())
+    })
+    it('can leave the tip in the withdrawable mapping', async () => {
+      const x = await loadFixture(utils.deployFixture)
+      const nextStakeId = await utils.nextStakeId(x)
+      const days = 10
+      const [signer1, signer2] = x.signers
+      await x.stakeManager.stakeStartFromBalanceFor(signer1.address, x.stakedAmount, days, 0)
+      await utils.moveForwardDays(11, x)
+      const settings = await x.stakeManager.idToDecodedSettings(nextStakeId)
+      const oneHundredHex = hre.ethers.utils.parseUnits('100', 8)
+      const updatedSettings: EncodableSettings.SettingsStruct = {
+        ...settings,
+        tipMethod: 2,
+        tipMagnitude: oneHundredHex, // 100 hex
+      }
+      await expect(x.stakeManager.updateSettings(nextStakeId, updatedSettings))
+        .to.emit(x.stakeManager, 'UpdatedSettings')
+        .withArgs(nextStakeId, await x.stakeManager.encodeSettings(updatedSettings))
+      await expect(x.stakeManager.withdrawableBalanceOf(signer2.address))
+        .eventually.to.equal(0)
+      await x.stakeManager.connect(signer2).multicall([
+        x.stakeManager.interface.encodeFunctionData('stakeEndByConsent', [nextStakeId]),
+        x.stakeManager.interface.encodeFunctionData('collectUnattributed', [
+          false,
+          signer2.address,
+          0,
+        ]),
+      ], false)
+      await expect(x.stakeManager.withdrawableBalanceOf(signer2.address))
+        .eventually.to.be.greaterThan(0)
+      await expect(x.stakeManager.connect(signer2).withdrawTokenTo(signer2.address, oneHundredHex))
+        .to.emit(x.hex, 'Transfer')
+        .withArgs(x.stakeManager.address, signer2.address, oneHundredHex)
+    })
+    it('leaves unattributed tokens until they are utilized', async () => {
+      const x = await loadFixture(utils.deployFixture)
+      const nextStakeId = await utils.nextStakeId(x)
+      const days = 10
+      const [signer1, signer2] = x.signers
+      await x.stakeManager.stakeStartFromBalanceFor(signer1.address, x.stakedAmount, days, 0)
+      await utils.moveForwardDays(11, x)
+      const settings = await x.stakeManager.idToDecodedSettings(nextStakeId)
+      const oneHundredHex = hre.ethers.utils.parseUnits('100', 8).toBigInt()
+      const updatedSettings: EncodableSettings.SettingsStruct = {
+        ...settings,
+        tipMethod: 2,
+        tipMagnitude: oneHundredHex, // 100 hex
+      }
+      await expect(x.stakeManager.updateSettings(nextStakeId, updatedSettings))
+        .to.emit(x.stakeManager, 'UpdatedSettings')
+        .withArgs(nextStakeId, await x.stakeManager.encodeSettings(updatedSettings))
+      await expect(x.stakeManager.withdrawableBalanceOf(signer2.address))
+        .eventually.to.equal(0)
+      await x.stakeManager.connect(signer2).stakeEndByConsent(nextStakeId)
+      await expect(x.stakeManager.getUnattributed())
+        .eventually.to.equal(oneHundredHex)
+      await expect(x.stakeManager.clamp(oneHundredHex + 1n, oneHundredHex))
+        .eventually.to.equal(oneHundredHex)
+      await expect(x.stakeManager.stakeStartFromUnattributedFor(signer2.address, oneHundredHex + 1n, 30, 0))
+        .to.emit(x.hex, 'Transfer')
+        .withArgs(x.stakeManager.address, hre.ethers.constants.AddressZero, oneHundredHex)
+      await expect(x.stakeManager.getUnattributed())
+        .eventually.to.equal(0)
+    })
+    it('can also start a stake with withdrawable mapping', async () => {
+      const x = await loadFixture(utils.deployFixture)
+      const nextStakeId = await utils.nextStakeId(x)
+      const days = 10
+      const [signer1, signer2] = x.signers
+      const oneHundredHex = hre.ethers.utils.parseUnits('100', 8).toBigInt()
+      await expect(x.stakeManager.depositTokenTo(signer1.address, oneHundredHex))
+        .to.emit(x.hex, 'Transfer')
+        .withArgs(signer1.address, x.stakeManager.address, oneHundredHex)
+      await expect(x.stakeManager.depositTokenTo(signer1.address, oneHundredHex))
+        .to.emit(x.hex, 'Transfer')
+        .withArgs(signer1.address, x.stakeManager.address, oneHundredHex)
+      await expect(x.stakeManager.withdrawableBalanceOf(signer1.address))
+        .eventually.to.equal(oneHundredHex * 2n)
+      await expect(x.stakeManager.withdrawableBalanceOf(signer2.address))
+        .eventually.to.equal(0)
+      await expect(x.stakeManager.stakeStartFromWithdrawableFor(signer2.address, oneHundredHex * 2n, days, 0))
+        .to.emit(x.hex, 'StakeStart')
+        .to.emit(x.hex, 'Transfer')
+        .withArgs(x.stakeManager.address, hre.ethers.constants.AddressZero, oneHundredHex * 2n)
+      await expect(x.stakeManager.stakeIdToOwner(nextStakeId))
+        .eventually.to.equal(signer2.address)
+    })
     it('allows for automatic withdrawal', async () => {
       const x = await loadFixture(utils.deployFixture)
       const nextStakeId = await utils.nextStakeId(x)
       const days = 10
-      const [signer1] = x.signers
+      const [signer1, signer2] = x.signers
       await x.stakeManager.stakeStartFromBalanceFor(signer1.address, x.stakedAmount, days, 0)
       await utils.moveForwardDays(11, x)
       const settings = await x.stakeManager.idToDecodedSettings(nextStakeId)
       const updatedSettings: EncodableSettings.SettingsStruct = {
         ...settings,
         withdrawableMethod: 1,
+        withdrawableMagnitude: 0, // unused
       }
       await expect(x.stakeManager.updateSettings(nextStakeId, updatedSettings))
         .to.emit(x.stakeManager, 'UpdatedSettings')
         .withArgs(nextStakeId, await x.stakeManager.encodeSettings(updatedSettings))
-      await expect(x.stakeManager.stakeEndByConsent(nextStakeId))
+      await expect(x.stakeManager.connect(signer2).stakeEndByConsent(nextStakeId))
         .to.emit(x.hex, 'Transfer')
         .withArgs(x.stakeManager.address, signer1.address, withArgs.anyUint)
+    })
+    it('allows settings to be passed at the same time', async () => {
+      const x = await loadFixture(utils.deployFixture)
+      const nextStakeId = await utils.nextStakeId(x)
+      const days = 10
+      const [signer1] = x.signers
+      const settings = await x.stakeManager.defaultSettings()
+      const updatedSettings: EncodableSettings.SettingsStruct = {
+        ...settings,
+        consentAbilities: parseInt('1101', 2),
+      }
+      const encodedSettings = await x.stakeManager.encodeSettings(updatedSettings)
+      await expect(x.stakeManager.stakeStartFromBalanceFor(signer1.address, x.stakedAmount, days, encodedSettings))
+        .to.emit(x.hex, 'Transfer')
+        .withArgs(x.stakeManager.address, hre.ethers.constants.AddressZero, x.stakedAmount)
+        .to.emit(x.hex, 'StakeStart')
+        .withArgs(withArgs.anyUint, x.stakeManager.address, nextStakeId)
+      await utils.moveForwardDays(11, x)
+      await expect(x.stakeManager.stakeEndByConsent(nextStakeId))
+        .to.emit(x.hex, 'StakeStart')
+        .to.emit(x.hex, 'StakeEnd')
+    })
+    it('can disallow end stakes by anyone', async () => {
+      const x = await loadFixture(utils.deployFixture)
+      const nextStakeId = await utils.nextStakeId(x)
+      const days = 10
+      const [signer1, signer2] = x.signers
+      const settings = await x.stakeManager.defaultSettings()
+      let updatedSettings: EncodableSettings.SettingsStruct = {
+        ...settings,
+        consentAbilities: parseInt('1100', 2),
+      }
+      const encodedSettings = await x.stakeManager.encodeSettings(updatedSettings)
+      await expect(x.stakeManager.stakeStartFromBalanceFor(signer1.address, x.stakedAmount, days, encodedSettings))
+        .to.emit(x.hex, 'Transfer')
+        .withArgs(x.stakeManager.address, hre.ethers.constants.AddressZero, x.stakedAmount)
+        .to.emit(x.hex, 'StakeStart')
+        .withArgs(withArgs.anyUint, x.stakeManager.address, nextStakeId)
+      await utils.moveForwardDays(11, x)
+      await expect(x.stakeManager.connect(signer2).stakeEndByConsent(nextStakeId))
+        .not.to.emit(x.hex, 'StakeEnd')
+      updatedSettings = {
+        ...updatedSettings,
+        consentAbilities: parseInt('1101', 2),
+      }
+      await expect(x.stakeManager.multicall([
+        x.stakeManager.interface.encodeFunctionData('updateSettings', [
+          nextStakeId,
+          updatedSettings,
+        ]),
+        x.stakeManager.interface.encodeFunctionData('stakeEndByConsent', [nextStakeId]),
+      ], false))
+        .to.emit(x.hex, 'StakeEnd')
+        .withArgs(withArgs.anyUint, withArgs.anyUint, x.stakeManager.address, nextStakeId)
+    })
+    it('cannot end early by default', async () => {
+      const x = await loadFixture(utils.deployFixture)
+      const nextStakeId = await utils.nextStakeId(x)
+      const days = 10
+      const [signer1, signer2] = x.signers
+      await x.stakeManager.stakeStartFromBalanceFor(signer1.address, x.stakedAmount, days, 0)
+      await utils.moveForwardDays(10, x)
+      await expect(x.stakeManager.stakeEndByConsent(nextStakeId))
+        .not.to.emit(x.hex, 'StakeEnd')
+      const settings = await x.stakeManager.idToDecodedSettings(nextStakeId)
+      const updatedSettings: EncodableSettings.SettingsStruct = {
+        ...settings,
+        consentAbilities: parseInt('1111', 2), // 2nd to last index in binary flags
+      }
+      await expect(x.stakeManager.updateSettings(nextStakeId, updatedSettings))
+        .to.emit(x.stakeManager, 'UpdatedSettings')
+        .withArgs(nextStakeId, await x.stakeManager.encodeSettings(updatedSettings))
+      await expect(x.stakeManager.connect(signer2).stakeEndByConsent(nextStakeId))
+        .to.emit(x.hex, 'Transfer')
+        .withArgs(hre.ethers.constants.AddressZero, x.stakeManager.address, withArgs.anyUint)
+    })
+    it('null ends result in no failure', async () => {
+      const x = await loadFixture(utils.deployFixture)
+      const nextStakeId = await utils.nextStakeId(x)
+      const days = 10
+      const [signer1, signer2] = x.signers
+      await x.stakeManager.stakeStartFromBalanceFor(signer1.address, x.stakedAmount, days, 0)
+      await utils.moveForwardDays(11, x)
+      await expect(x.stakeManager.connect(signer2).stakeEndByConsent(nextStakeId))
+        .to.emit(x.hex, 'Transfer')
+        .withArgs(hre.ethers.constants.AddressZero, x.stakeManager.address, withArgs.anyUint)
+      await expect(x.stakeManager.connect(signer2).stakeEndByConsent(nextStakeId))
+        .not.to.reverted
+        .not.to.emit(x.hex, 'Transfer')
+    })
+  })
+  describe('computeMagnitude', async () => {
+    const oneHundredHex = hre.ethers.utils.parseUnits('100', 8).toBigInt()
+    const stake: IStakeable.StakeStoreStruct = {
+      stakeId: 0,
+      stakedDays: 10,
+      lockedDay: 1000,
+      stakedHearts: oneHundredHex,
+      stakeShares: 1_000n**2n, // 1 m-share
+      unlockedDay: 0,
+      isAutoStake: false,
+    }
+    it('0: always returns zero', async () => {
+      const x = await loadFixture(utils.deployFixture)
+      await expect(x.stakeManager.computeMagnitude(0, 100, 100, stake))
+        .eventually.to.equal(0)
+    })
+    it('1: always returns arg 2', async () => {
+      const x = await loadFixture(utils.deployFixture)
+      await expect(x.stakeManager.computeMagnitude(1, 1001, 1002, stake))
+        .eventually.to.equal(1002)
+    })
+    it('2: always returns arg 1', async () => {
+      const x = await loadFixture(utils.deployFixture)
+      await expect(x.stakeManager.computeMagnitude(2, 1001, 1002, stake))
+        .eventually.to.equal(1001)
+    })
+    it('3: always returns a % of input', async () => {
+      const x = await loadFixture(utils.deployFixture)
+      // do not sub 1 from the x input - needed to ensure rounding correctly
+      await expect(x.stakeManager.computeMagnitude(3, hre.ethers.constants.Two.pow(64).div(2), 1002, stake))
+        .eventually.to.equal(501)
+    })
+    it('4: returns a percent of originating principle', async () => {
+      const x = await loadFixture(utils.deployFixture)
+      const tenPercentOnPrinciple = oneHundredHex*11n/10n
+      await expect(x.stakeManager.computeMagnitude(4, hre.ethers.constants.Two.pow(64).div(20), tenPercentOnPrinciple, stake))
+        .eventually.to.equal((oneHundredHex / 20n) - 1n) // -1 for rounding w/ bigints
+    })
+    it('5: returns a percent of yield', async () => {
+      const x = await loadFixture(utils.deployFixture)
+      const tenPercentOnPrinciple = oneHundredHex*11n/10n
+      await expect(x.stakeManager.computeMagnitude(5, hre.ethers.constants.Two.pow(64).div(20), tenPercentOnPrinciple, stake))
+        .eventually.to.equal(((tenPercentOnPrinciple - oneHundredHex) / 20n) - 1n) // -1 for rounding w/ bigints})
+    })
+    it('6: returns the staked days property', async () => {
+      const x = await loadFixture(utils.deployFixture)
+      await expect(x.stakeManager.computeMagnitude(6, 0, 0, stake))
+        .eventually.to.equal(10)
+    })
+    it('7: returns a computed day based on a tight ladder', async () => {
+      const x = await loadFixture(utils.deployFixture)
+      let currentDay!: number
+      let stk!: IStakeable.StakeStoreStruct
+      currentDay = (await x.hex.currentDay()).toNumber()
+      stk = {
+        ...stake,
+        lockedDay: currentDay - 10,
+      }
+      await expect(x.stakeManager.computeMagnitude(7, 0, currentDay, stk))
+        .eventually.to.equal(stk.stakedDays)
+      // missed end by more than 1 round
+      currentDay = (await x.hex.currentDay()).toNumber()
+      stk = {
+        ...stake,
+        lockedDay: currentDay - 26,
+      }
+      // t-26 => 1 full round = t-26 + stakedDays + 1 = t-26 + 10 + 1
+      // therefore, last (missed) ladder iterations:
+      // t-26,t-15,t-4
+      // so we are 4 days into the ladder, so we should stake for
+      // 6 more days to get us back on track
+      await expect(x.stakeManager.computeMagnitude(7, 0, currentDay, stk))
+        .eventually.to.equal(6)
     })
   })
 })

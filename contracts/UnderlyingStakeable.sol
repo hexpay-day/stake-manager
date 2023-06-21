@@ -8,10 +8,6 @@ import "./Multicall.sol";
 contract UnderlyingStakeable is Multicall {
   address public constant target = 0x2b591e99afE9f32eAA6214f7B7629768c40Eeb39;
   address public constant hedron = 0x3819f64f282bf135d62168C1e513280dAF905e06;
-  /**
-   * @notice error is thrown when there is not enough funding to do the required operation
-   */
-  error NotEnoughFunding(uint256 provided, uint256 expected);
   error NotAllowed();
   function stakeCount() external view returns(uint256) {
     return _stakeCount();
