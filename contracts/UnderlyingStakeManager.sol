@@ -115,4 +115,21 @@ contract UnderlyingStakeManager is Stakeable, Capable {
     uint256 amount = _stakeEnd(stakeIndex, stakeId);
     _withdrawTokenTo(staker, amount);
   }
+  /**
+   * end your own stake which is custodied by the stake manager. skips tip computing
+   * @param stakeId the stake id from the underlying contract to end stake
+   * @notice this is not payable to match the underlying contract
+   * @notice this moves funds back to the sender to make behavior match underlying token
+   * @notice this method only checks that the sender owns the stake it does not care
+   * if it is managed in a created contract and externally endable by this contract (1)
+   * or requires that the staker send start and end methods (0)
+   */
+  function stakeEndById(uint256 stakeId) external {
+    address staker = msg.sender;
+    if (stakeIdToOwner[stakeId] != staker) {
+      revert StakeNotEndable(stakeId, staker);
+    }
+    uint256 amount = _stakeEnd(stakeIdToIndex[stakeId], stakeId);
+    _withdrawTokenTo(staker, amount);
+  }
 }
