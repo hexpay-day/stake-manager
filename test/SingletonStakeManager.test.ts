@@ -158,6 +158,19 @@ describe("StakeManager", function () {
         .withArgs(withArgs.anyValue, x.stakeManager.address, x.nextStakeId + 1n)
     })
   })
+  describe('same day stakeEnd', () => {
+    it('ends a stake and returns tokens', async () => {
+      const x = await loadFixture(utils.deployFixture)
+      await expect(x.stakeManager.stakeStart(x.stakedAmount, 10))
+        .to.emit(x.hex, 'StakeStart')
+      // end stake in same day
+      const stakeIndex = await x.stakeManager.stakeIdToIndex(x.nextStakeId)
+      await expect(x.stakeManager.stakeEnd(stakeIndex, x.nextStakeId))
+        .to.emit(x.hex, 'StakeEnd')
+        .to.emit(x.hex, 'Transfer')
+        .withArgs(x.stakeManager.address, x.signers[0].address, x.stakedAmount)
+    })
+  })
   describe('stakeEnd', () => {
     it('ends a stake', async () => {
       const x = await loadFixture(utils.deployFixture)
