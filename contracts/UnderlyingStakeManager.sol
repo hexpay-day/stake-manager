@@ -72,7 +72,7 @@ contract UnderlyingStakeManager is Stakeable, Capable {
     address custodian = target;
     // end the stake - attributed to contract or through the managed stake
     Stakeable(custodian).stakeEnd(stakeIndex, uint40(stakeId));
-    delete stakeIdToIndex[stakeId];
+    stakeIdToIndex[stakeId] = 0;
     if (_stakeCount() > stakeIndex) {
       stakeIdToIndex[_getStake(address(this), stakeIndex).stakeId] = stakeIndex;
     }
@@ -81,7 +81,7 @@ contract UnderlyingStakeManager is Stakeable, Capable {
     unchecked {
       delta = _getBalance() - balanceBefore;
     }
-    delete stakeIdToOwner[stakeId];
+    stakeIdToOwner[stakeId] = address(0);
   }
   /**
    * starts a stake from the provided amount
