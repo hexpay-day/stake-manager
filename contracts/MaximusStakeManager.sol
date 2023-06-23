@@ -57,11 +57,15 @@ contract MaximusStakeManager is Ownable2Step, AuthorizationManager {
   }
   /**
    * end a stake on a known perpetual pool
-   * @param target the perpetual to end a stake on
+   * @param pool the pool to end a stake on
    * @param stakeId the stake id to end
    */
-  function stakeEnd(address target, uint256 stakeId) external senderIsAuthorized(0) isPerpetual(target) {
-    IPublicEndStakeable(target).endStakeHEX(0, uint40(stakeId));
+  function stakeEnd(address pool, uint256 stakeId) external senderIsAuthorized(0) isPerpetual(target) {
+    IPublicEndStakeable endable = IPublicEndStakeable(pool);
+    // STAKE_END_DAY is locked + staked days - 1 so > is correct in this case
+    if (IHEX(target).currentDay() > endable.STAKE_END_DAY() && endable.STAKE_IS_ACTIVE()) {
+      endable.endStakeHEX(0, uint40(stakeId));
+    }
   }
   /**
    * flush native token into this contract
