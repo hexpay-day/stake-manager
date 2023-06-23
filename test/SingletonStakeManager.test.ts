@@ -203,6 +203,23 @@ describe("StakeManager", function () {
         .withArgs(withArgs.anyValue, x.stakeManager.address, x.nextStakeId + 2n + 11n)
     })
   })
+  describe('stakeEndById', () => {
+    it('fails if no stake id found', async () => {
+      const x = await loadFixture(utils.deployFixture)
+      await x.stakeManager.stakeStart(x.stakedAmount, 3)
+      await utils.moveForwardDays(4, x)
+      await expect(x.stakeManager.stakeEndById(x.nextStakeId + 1n))
+        .to.revertedWithCustomError(x.stakeManager, 'StakeNotEndable')
+    })
+    it('ends a stake without an index', async () => {
+      const x = await loadFixture(utils.deployFixture)
+      await x.stakeManager.stakeStart(x.stakedAmount, 3)
+      await utils.moveForwardDays(4, x)
+      await expect(x.stakeManager.stakeEndById(x.nextStakeId))
+        .to.emit(x.hex, 'StakeEnd')
+        .withArgs(withArgs.anyUint, withArgs.anyUint, x.stakeManager.address, x.nextStakeId)
+    })
+  })
   describe('stakeEndByConsent', () => {
     it('can start stakes and end them - all managed by a single contract', async function () {
       this.timeout(100_000_000)
