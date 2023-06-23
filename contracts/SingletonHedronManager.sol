@@ -26,18 +26,20 @@ contract SingletonHedronManager is EncodableSettings, UnderlyingStakeManager {
     uint256 i;
     uint256 hedronTokens;
     address currentOwner;
-    address to = stakeIdToOwner[stakeIds[0]];
+    address to = address(uint160(stakeIdInfo[stakeIds[0]]));
     uint256 stakeId;
+    uint256 stakeInfo;
     do {
       stakeId = stakeIds[i];
       if (_isCapable(uint8(idToSettings[stakeId]), 2)) {
-        currentOwner = stakeIdToOwner[stakeId];
+        stakeInfo = stakeIdInfo[stakeId];
+        currentOwner = address(uint160(stakeInfo));
         if (currentOwner != to) {
           _attributeLegacyHedron(to, hedronTokens);
           hedronTokens = 0;
         }
         to = currentOwner;
-        hedronTokens += _mintLegacyNative(stakeId);
+        hedronTokens += _mintLegacyNative(stakeInfo >> 160, stakeId);
       }
       unchecked {
         ++i;
@@ -52,8 +54,8 @@ contract SingletonHedronManager is EncodableSettings, UnderlyingStakeManager {
       outstandingHedronTokens[to] += amount;
     }
   }
-  function _mintLegacyNative(uint256 stakeId) internal returns(uint256 amount) {
-    return IHedron(hedron).mintNative(stakeIdToIndex[stakeId], uint40(stakeId));
+  function _mintLegacyNative(uint256 index, uint256 stakeId) internal returns(uint256 amount) {
+    return IHedron(hedron).mintNative(index, uint40(stakeId));
   }
   /**
    * send all or some subset of funds to a given address

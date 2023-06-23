@@ -107,7 +107,10 @@ contract SingletonStakeManager is SingletonHedronManager {
     );
   }
   function _stakeById(uint256 stakeId) internal view returns(IStakeable.StakeStore memory) {
-    return _getStake(address(this), stakeIdToIndex[stakeId]);
+    return _stakeByIndex(stakeIdInfo[stakeId] >> 160);
+  }
+  function _stakeByIndex(uint256 stakeIndex) internal view returns(IStakeable.StakeStore memory) {
+    return _getStake(address(this), stakeIndex);
   }
   /**
    * adds a balance to the provided staker of the magnitude given in amount
@@ -150,8 +153,8 @@ contract SingletonStakeManager is SingletonHedronManager {
     _logSettingsUpdate(stakeId, _encodeSettings(settings));
   }
   function _verifyStakeOwnership(address owner, uint256 stakeId) internal view {
-    if (stakeIdToOwner[stakeId] != owner) {
-      revert StakeNotOwned(owner, stakeIdToOwner[stakeId]);
+    if (address(uint160(stakeIdInfo[stakeId])) != owner) {
+      revert StakeNotOwned(owner, address(uint160(stakeIdInfo[stakeId])));
     }
   }
   /**
@@ -172,7 +175,8 @@ contract SingletonStakeManager is SingletonHedronManager {
   function _stakeEndByConsent(
     uint256 stakeId
   ) internal returns(uint256 delta) {
-    uint256 idx = stakeIdToIndex[stakeId];
+    uint256 stakeInfo = stakeIdInfo[stakeId];
+    uint256 idx = stakeInfo >> 160;
     IStakeable.StakeStore memory stake = _getStake(address(this), idx);
     if (idx == 0 && stakeId != stake.stakeId) {
       return 0;
@@ -186,10 +190,10 @@ contract SingletonStakeManager is SingletonHedronManager {
     if (!_isCapable(consentAbilities, 0)) {
       return 0;
     }
-    address staker = stakeIdToOwner[stakeId];
+    address staker = address(uint160(stakeInfo));
     // consent has been confirmed
     if (_isCapable(consentAbilities, 3)) {
-      _attributeLegacyHedron(staker, _mintLegacyNative(stakeId));
+      _attributeLegacyHedron(staker, _mintLegacyNative(idx, stakeId));
     }
     delta = _stakeEnd(
       idx, stakeId

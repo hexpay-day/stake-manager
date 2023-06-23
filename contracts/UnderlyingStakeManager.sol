@@ -14,8 +14,23 @@ contract UnderlyingStakeManager is Stakeable, Capable {
   /**
    * @notice the owner of a stake indexed by the stake id
    */
-  mapping(uint256 => address) public stakeIdToOwner;
-  mapping(uint256 => uint256) public stakeIdToIndex;
+  mapping(uint256 => uint256) public stakeIdInfo;
+  /**
+   * get the owner of the stake id - the account that has rights over
+   * the stake's settings and ability to end it outright
+   * @param stakeId the stake id in question
+   */
+  function stakeIdToOwner(uint256 stakeId) external view returns(address) {
+    return address(uint160(stakeIdInfo[stakeId]));
+  }
+  /**
+   * the index of the stake id - useful when indexes are moving around
+   * and could be moved by other people
+   * @param stakeId the stake id to target
+   */
+  function stakeIdToIndex(uint256 stakeId) external view returns(uint256) {
+    return stakeIdInfo[stakeId] >> 160;
+  }
   /**
    * creates the internal stake ender contract
    */
@@ -54,9 +69,7 @@ contract UnderlyingStakeManager is Stakeable, Capable {
     Stakeable(target).stakeStart(amount, newStakedDays);
     // get the stake id
     stakeId = Stakeable(target).stakeLists(address(this), index).stakeId;
-    stakeIdToIndex[stakeId] = index;
-    // attribute stake to the staker
-    stakeIdToOwner[stakeId] = staker;
+    stakeIdInfo[stakeId] = (index << 160) | uint160(staker);
   }
   /**
    * ends a stake for someone else
@@ -72,16 +85,18 @@ contract UnderlyingStakeManager is Stakeable, Capable {
     address custodian = target;
     // end the stake - attributed to contract or through the managed stake
     Stakeable(custodian).stakeEnd(stakeIndex, uint40(stakeId));
-    stakeIdToIndex[stakeId] = 0;
     if (_stakeCount() > stakeIndex) {
-      stakeIdToIndex[_getStake(address(this), stakeIndex).stakeId] = stakeIndex;
+      uint256 shiftingStakeId = _getStake(address(this), stakeIndex).stakeId;
+      uint256 stakeInfo = stakeIdInfo[shiftingStakeId];
+      uint256 updatedStakeInfo = (stakeIndex << 160) | uint160(stakeInfo);
+      stakeIdInfo[shiftingStakeId] = updatedStakeInfo;
     }
     // because the delta is only available in the logs
     // we need to calculate the delta to use it
     unchecked {
       delta = _getBalance() - balanceBefore;
     }
-    stakeIdToOwner[stakeId] = address(0);
+    stakeIdInfo[stakeId] = 0;
   }
   /**
    * starts a stake from the provided amount
@@ -108,7 +123,7 @@ contract UnderlyingStakeManager is Stakeable, Capable {
    * or requires that the staker send start and end methods (0)
    */
   function stakeEnd(uint256 stakeIndex, uint40 stakeId) external override {
-    if (stakeIdToOwner[stakeId] != msg.sender) {
+    if (address(uint160(stakeIdInfo[stakeId])) != msg.sender) {
       revert StakeNotEndable(stakeId, msg.sender);
     }
     uint256 amount = _stakeEnd(stakeIndex, stakeId);
@@ -124,10 +139,11 @@ contract UnderlyingStakeManager is Stakeable, Capable {
    * or requires that the staker send start and end methods (0)
    */
   function stakeEndById(uint256 stakeId) external {
-    if (stakeIdToOwner[stakeId] != msg.sender) {
+    uint256 stakeInfo = stakeIdInfo[stakeId];
+    if (address(uint160(stakeInfo)) != msg.sender) {
       revert StakeNotEndable(stakeId, msg.sender);
     }
-    uint256 amount = _stakeEnd(stakeIdToIndex[stakeId], stakeId);
+    uint256 amount = _stakeEnd(stakeInfo >> 160, stakeId);
     _withdrawTokenTo(msg.sender, amount);
   }
 }
