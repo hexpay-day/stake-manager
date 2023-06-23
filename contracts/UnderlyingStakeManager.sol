@@ -108,12 +108,11 @@ contract UnderlyingStakeManager is Stakeable, Capable {
    * or requires that the staker send start and end methods (0)
    */
   function stakeEnd(uint256 stakeIndex, uint40 stakeId) external override {
-    address staker = msg.sender;
-    if (stakeIdToOwner[stakeId] != staker) {
-      revert StakeNotEndable(stakeId, staker);
+    if (stakeIdToOwner[stakeId] != msg.sender) {
+      revert StakeNotEndable(stakeId, msg.sender);
     }
     uint256 amount = _stakeEnd(stakeIndex, stakeId);
-    _withdrawTokenTo(staker, amount);
+    _withdrawTokenTo(msg.sender, amount);
   }
   /**
    * end your own stake which is custodied by the stake manager. skips tip computing
@@ -125,11 +124,10 @@ contract UnderlyingStakeManager is Stakeable, Capable {
    * or requires that the staker send start and end methods (0)
    */
   function stakeEndById(uint256 stakeId) external {
-    address staker = msg.sender;
-    if (stakeIdToOwner[stakeId] != staker) {
-      revert StakeNotEndable(stakeId, staker);
+    if (stakeIdToOwner[stakeId] != msg.sender) {
+      revert StakeNotEndable(stakeId, msg.sender);
     }
     uint256 amount = _stakeEnd(stakeIdToIndex[stakeId], stakeId);
-    _withdrawTokenTo(staker, amount);
+    _withdrawTokenTo(msg.sender, amount);
   }
 }
