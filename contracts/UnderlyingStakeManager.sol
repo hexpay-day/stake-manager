@@ -82,14 +82,12 @@ contract UnderlyingStakeManager is Stakeable, Capable {
     // calculate the balance before
     // cannot use tokens attributed here because of tipping
     uint256 balanceBefore = _getBalance();
-    address custodian = target;
     // end the stake - attributed to contract or through the managed stake
-    Stakeable(custodian).stakeEnd(stakeIndex, uint40(stakeId));
+    Stakeable(target).stakeEnd(stakeIndex, uint40(stakeId));
     if (_stakeCount() > stakeIndex) {
       uint256 shiftingStakeId = _getStake(address(this), stakeIndex).stakeId;
       uint256 stakeInfo = stakeIdInfo[shiftingStakeId];
-      uint256 updatedStakeInfo = (stakeIndex << 160) | uint160(stakeInfo);
-      stakeIdInfo[shiftingStakeId] = updatedStakeInfo;
+      stakeIdInfo[shiftingStakeId] = (stakeIndex << 160) | uint160(stakeInfo);
     }
     // because the delta is only available in the logs
     // we need to calculate the delta to use it
@@ -138,12 +136,12 @@ contract UnderlyingStakeManager is Stakeable, Capable {
    * if it is managed in a created contract and externally endable by this contract (1)
    * or requires that the staker send start and end methods (0)
    */
-  function stakeEndById(uint256 stakeId) external {
+  function stakeEndById(uint256 stakeId) external returns(uint256 amount) {
     uint256 stakeInfo = stakeIdInfo[stakeId];
     if (address(uint160(stakeInfo)) != msg.sender) {
       revert StakeNotEndable(stakeId, msg.sender);
     }
-    uint256 amount = _stakeEnd(stakeInfo >> 160, stakeId);
+    amount = _stakeEnd(stakeInfo >> 160, stakeId);
     _withdrawTokenTo(msg.sender, amount);
   }
 }

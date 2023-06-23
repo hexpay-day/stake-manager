@@ -4,8 +4,6 @@ pragma solidity ^0.8.17;
 import "./SingletonHedronManager.sol";
 import "./IHedron.sol";
 
-import "hardhat/console.sol";
-
 contract SingletonStakeManager is SingletonHedronManager {
   /**
    * @notice this error is thrown when the stake in question
@@ -76,7 +74,6 @@ contract SingletonStakeManager is SingletonHedronManager {
           }
         }
       }
-      return amount;
     }
   }
   /**
