@@ -11,33 +11,33 @@ contract MaximusStakeManagerFactory {
   /**
    * end a stake on a provided perpetual contract
    * @param index the index of the salt to use (usually 0)
-   * @param target the maximus perpetual contract to target
+   * @param perpetual the maximus perpetual contract to target
    * @param stakeId the stake id to pass to the maximus perpetual to end
    */
-  function stakeEnd(uint256 index, address target, uint256 stakeId) external {
-    _stakeEnd(msg.sender, index, target, stakeId);
+  function stakeEnd(uint256 index, address perpetual, uint256 stakeId) external {
+    _stakeEnd(msg.sender, index, perpetual, stakeId);
   }
   /**
    * end the public stake on a provided perpetual contract
    * @param origination the address to provide the fee to
    * @param index the index of the salt to use (usually 0)
-   * @param target the maximus perpetual contract to target
+   * @param perpetual the maximus perpetual contract to target
    * @param stakeId the stake id to pass to the maximus perpetual to end
    * @notice the fee to address is used in leu of the sender
    * this allows calls from public multicall contracts to be utilized
    */
-  function stakeEndAs(address origination, uint256 index, address target, uint256 stakeId) external {
-    _stakeEnd(origination, index, target, stakeId);
+  function stakeEndAs(address origination, uint256 index, address perpetual, uint256 stakeId) external {
+    _stakeEnd(origination, index, perpetual, stakeId);
   }
   /**
    * calls the stakeEnd method on the underlying stake manager
    * @param origination the address to provide the fee to
    * @param index the index of the salt to use (usually 0)
-   * @param target the maximus perpetual contract to target
+   * @param perpetual the maximus perpetual contract to target
    * @param stakeId the stake id to pass to the maximus perpetual to end
    */
-  function _stakeEnd(address origination, uint256 index, address target, uint256 stakeId) internal {
-    MaximusStakeManager(_createStakeManager(origination, index)).stakeEnd(target, stakeId);
+  function _stakeEnd(address origination, uint256 index, address perpetual, uint256 stakeId) internal {
+    MaximusStakeManager(_createStakeManager(origination, index)).stakeEnd(perpetual, stakeId);
   }
   /**
    * upsert a contract with a given address and index as the salt

@@ -43,7 +43,7 @@ contract AuthorizationManager is UnderlyingStakeable, Capable {
     _setAuthorization(bytes32(uint256(uint160(account))), settings);
   }
   modifier senderIsAuthorized(uint256 index) {
-    if (_isCapable(authorization[bytes32(uint256(uint160(msg.sender)))], index)) {
+    if (_isAddressAuthorized(msg.sender, index)) {
       _;
     }
   }

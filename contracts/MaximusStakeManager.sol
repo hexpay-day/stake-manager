@@ -42,15 +42,15 @@ contract MaximusStakeManager is Ownable2Step, AuthorizationManager {
   }
   /**
    * set the authorization levels of an address
-   * @param target the address to check authorization for
+   * @param perpetual the address to check authorization for
    * @param settings the encoded settings to set
    */
-  function setAuthorization(address target, uint256 settings) external onlyOwner {
-    _setAddressAuthorization(target, settings);
+  function setAuthorization(address perpetual, uint256 settings) external onlyOwner {
+    _setAddressAuthorization(perpetual, settings);
   }
   /** check if the target address is a known perpetual */
-  modifier isPerpetual(address target) {
-    if (!perpetualWhitelist[target]) {
+  modifier isPerpetual(address perpetaul) {
+    if (!perpetualWhitelist[perpetaul]) {
       revert NotAllowed();
     }
     _;
@@ -60,7 +60,7 @@ contract MaximusStakeManager is Ownable2Step, AuthorizationManager {
    * @param pool the pool to end a stake on
    * @param stakeId the stake id to end
    */
-  function stakeEnd(address pool, uint256 stakeId) external senderIsAuthorized(0) isPerpetual(target) {
+  function stakeEnd(address pool, uint256 stakeId) external senderIsAuthorized(0) isPerpetual(pool) {
     IPublicEndStakeable endable = IPublicEndStakeable(pool);
     // STAKE_END_DAY is locked + staked days - 1 so > is correct in this case
     if (IHEX(target).currentDay() > endable.STAKE_END_DAY() && endable.STAKE_IS_ACTIVE()) {
@@ -69,18 +69,18 @@ contract MaximusStakeManager is Ownable2Step, AuthorizationManager {
   }
   /**
    * flush native token into this contract
-   * @param target the perpetual pool to call flush on
+   * @param perpetual the perpetual pool to call flush on
    */
-  function flushNative(address target) external senderIsAuthorized(1) {
-    IGasReimberser(target).flush();
+  function flushNative(address perpetual) external senderIsAuthorized(1) {
+    IGasReimberser(perpetual).flush();
   }
   /**
    * flush erc20 tokens into this contract
-   * @param target the perpetual pool to call flush on
+   * @param perpetual the perpetual pool to call flush on
    * @param token the token address to flush into this contract
    */
-  function flushErc20(address target, address token) external senderIsAuthorized(1) {
-    IGasReimberser(target).flush_erc20(token);
+  function flushErc20(address perpetual, address token) external senderIsAuthorized(1) {
+    IGasReimberser(perpetual).flush_erc20(token);
   }
   /**
    * withdraw native tokens to a provided address
