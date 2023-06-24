@@ -1,10 +1,12 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.17;
 
+import "@openzeppelin/contracts/utils/Address.sol";
 import "./SingletonHedronManager.sol";
 import "./IHedron.sol";
 
 contract SingletonStakeManager is SingletonHedronManager {
+  using Address for address payable;
   /**
    * @notice this error is thrown when the stake in question
    * is not owned by the expected address
@@ -19,6 +21,7 @@ contract SingletonStakeManager is SingletonHedronManager {
    * at the cost of one extra byteword during deployment
    */
   uint256 public constant percentMagnitudeLimit = type(uint64).max;
+  uint256 public constant TIP_METHOD_MAX = 10;
   /**
    * @notice an invariant that tracks how much underlying token is owned by a particular address
    */
@@ -28,6 +31,9 @@ contract SingletonStakeManager is SingletonHedronManager {
    * @dev this value provides a useful "before" value whenever tokens are moving
    */
   uint256 public tokensAttributed;
+  uint256 public nativeAttributed;
+  mapping(address => uint256) public nativeBalanceOf;
+  mapping(uint256 => uint256) public ethTipByStakeId;
   /**
    * compute a useful value from 2 inputs
    * @param method the method to use to compute a result
@@ -114,7 +120,7 @@ contract SingletonStakeManager is SingletonHedronManager {
    * @param staker the staker to add a withdrawable balance to
    * @param amount the amount to add to the staker's withdrawable balance as well as the attributed tokens
    */
-  function _addToWithdrawable(address staker, uint256 amount) internal {
+  function _addToTokenWithdrawable(address staker, uint256 amount) internal {
     unchecked {
       withdrawableBalanceOf[staker] = withdrawableBalanceOf[staker] + amount;
       tokensAttributed = tokensAttributed + amount;
@@ -298,6 +304,69 @@ contract SingletonStakeManager is SingletonHedronManager {
     );
     _logSettings(stakeId, settings);
   }
+  receive() external payable {
+    depositNative();
+  }
+  function depositNative() public payable {
+    _addToNativeWithdrawable(msg.sender, msg.value);
+  }
+  function depositNativeToStake(address recipient, uint256 stakeId) external payable {
+    _addToNativeWithdrawable(recipient, msg.value);
+    _addNativeTipToStake(recipient, stakeId, msg.value);
+  }
+  function depositNativeTo(address recipient) external payable {
+    _addToNativeWithdrawable(recipient, msg.value);
+  }
+  function _addToNativeWithdrawable(address recipient, uint256 amount) internal {
+    unchecked {
+      nativeBalanceOf[recipient] += amount;
+      nativeAttributed += amount;
+    }
+  }
+  function withdrawNativeTo(address payable to, uint256 amount) external payable {
+    _withdrawNativeTo(to, _deductNativeFrom(msg.sender, amount));
+  }
+  function _deductNativeFrom(address from, uint256 amount) internal returns(uint256 clamped) {
+    clamped = _clamp(amount, nativeBalanceOf[from]);
+    if (clamped > 0) {
+      unchecked {
+        nativeBalanceOf[from] -= clamped;
+        nativeAttributed -= clamped;
+      }
+    }
+  }
+  function _withdrawNativeTo(address payable to, uint256 amount) internal {
+    if (amount > 0) {
+      to.sendValue(amount);
+    }
+  }
+  function addNativeTipToStake(uint256 stakeId, uint256 amount) external {
+    _addNativeTipToStake(msg.sender, stakeId, amount);
+  }
+  function _addNativeTipToStake(address account, uint256 stakeId, uint256 amount) internal {
+    uint256 clamped = _clamp(amount, nativeBalanceOf[account]);
+    // tips only rachet up for simplicity sake
+    unchecked {
+      nativeBalanceOf[account] -= clamped;
+      ethTipByStakeId[stakeId] += clamped;
+    }
+  }
+  function _getNativeUnattributed() internal view returns(uint256) {
+    return address(this).balance - nativeAttributed;
+  }
+  function collectUnattributedNative(
+    bool transferOut, address payable recipient,
+    uint256 amount
+  ) external payable {
+    uint256 withdrawable = _clamp(amount, _getNativeUnattributed());
+    if (withdrawable > 0) {
+      if (transferOut) {
+        _withdrawNativeTo(recipient, withdrawable);
+      } else {
+        _addToNativeWithdrawable(recipient, withdrawable);
+      }
+    }
+  }
   /**
    * gets unattributed tokens floating in the contract
    */
@@ -336,7 +405,7 @@ contract SingletonStakeManager is SingletonHedronManager {
   function depositToken(uint256 amount) external payable {
     // transfer token to contract
     _depositTokenFrom(msg.sender, amount);
-    _addToWithdrawable(msg.sender, amount);
+    _addToTokenWithdrawable(msg.sender, amount);
   }
   /**
    * deposit an amount of tokens to the contract and attribute
@@ -346,7 +415,7 @@ contract SingletonStakeManager is SingletonHedronManager {
    */
   function depositTokenTo(address to, uint256 amount) external payable {
     _depositTokenFrom(msg.sender, amount);
-    _addToWithdrawable(to, amount);
+    _addToTokenWithdrawable(to, amount);
   }
   /**
    * collect unattributed tokens and send to recipient of choice
@@ -365,7 +434,7 @@ contract SingletonStakeManager is SingletonHedronManager {
       if (transferOut) {
         _withdrawTokenTo(to, withdrawable);
       } else {
-        _addToWithdrawable(to, withdrawable);
+        _addToTokenWithdrawable(to, withdrawable);
       }
     }
   }
@@ -395,8 +464,15 @@ contract SingletonStakeManager is SingletonHedronManager {
   ) internal {
     uint256 tipMethod = settings >> 248;
     if (tipMethod > 0) {
+      uint256 hexTipMethod = tipMethod % TIP_METHOD_MAX;
+      if (tipMethod / TIP_METHOD_MAX > 0) {
+        unchecked {
+          nativeAttributed -= ethTipByStakeId[stakeId];
+          ethTipByStakeId[stakeId] = 0;
+        }
+      }
       uint256 tip = _computeMagnitude(
-        tipMethod, settings << 8 >> 192, delta,
+        hexTipMethod, settings << 8 >> 192, delta,
         stake
       );
       // because we do not set a var for you to collect unattributed tokens
@@ -455,15 +531,23 @@ contract SingletonStakeManager is SingletonHedronManager {
             s |= uint8(settings);
             settings = s;
           }
+          if (tipMethod >= TIP_METHOD_MAX) {
+            // included a native tip
+            // we must now remove the tip since it has been consumed by this end stake
+            uint256 targetTipMethod = (settings >> 248) % TIP_METHOD_MAX;
+            // override with only a hex tip in place
+            settings = (settings << 8 >> 8) | (targetTipMethod << 248);
+          }
           _logSettingsUpdate(nextStakeId, settings);
         } else {
           // keep the authorization settings
+          // nulls out all other settings
           _logSettingsUpdate(nextStakeId, uint256(uint8(settings)));
         }
       }
     }
     if (delta > 0) {
-      _addToWithdrawable(staker, delta);
+      _addToTokenWithdrawable(staker, delta);
     }
     // this data should still be available in logs
     idToSettings[stakeId] = 0;

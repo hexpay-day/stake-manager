@@ -29,7 +29,7 @@ contract Multicall {
   function multicall(
     bytes[] calldata data,
     bool allowFailures
-  ) external payable {
+  ) external {
     _multicall(data, allowFailures);
   }
   /**
@@ -44,7 +44,6 @@ contract Multicall {
     bool allowFailures
   )
     external
-    payable
     checkDeadline(deadline)
   {
     _multicall(data, allowFailures);
@@ -61,7 +60,6 @@ contract Multicall {
     bool allowFailures
   )
     external
-    payable
     checkPreviousBlockhash(previousBlockhash)
   {
     _multicall(data, allowFailures);
