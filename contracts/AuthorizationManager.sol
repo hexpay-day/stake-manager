@@ -50,20 +50,20 @@ contract AuthorizationManager is UnderlyingStakeable, Capable {
   /**
    * check if an address is authorized to perform an action
    * this index will be different for each implementation
-   * @param target the address to verify is authorized to do an action
+   * @param account the address to verify is authorized to do an action
    * @param index the index of the bit to check
    * @dev the index is an index of the bits as in binary (1/0)
    */
-  function isAddressAuthorized(address target, uint256 index) view external returns(bool) {
-    return _isAddressAuthorized(target, index);
+  function isAddressAuthorized(address account, uint256 index) view external returns(bool) {
+    return _isAddressAuthorized(account, index);
   }
   /**
    * check if the provided address is authorized to perform an action
-   * @param target the address to check authorization against
+   * @param account the address to check authorization against
    * @param index the index of the setting boolean to check
    */
-  function _isAddressAuthorized(address target, uint256 index) view internal returns(bool) {
-    return _isAuthorized(bytes32(uint256(uint160(target))), index);
+  function _isAddressAuthorized(address account, uint256 index) view internal returns(bool) {
+    return _isAuthorized(bytes32(uint256(uint160(account))), index);
   }
   /**
    * check the index of the setting for the provided key
@@ -74,7 +74,7 @@ contract AuthorizationManager is UnderlyingStakeable, Capable {
   function _isAuthorized(bytes32 key, uint256 index) view internal returns(bool) {
     return _isCapable(authorization[key], index);
   }
-  function _getAddressSetting(address target) view internal returns(uint256) {
-    return authorization[bytes32(uint256(uint160(target)))];
+  function _getAddressSetting(address account) view internal returns(uint256) {
+    return authorization[bytes32(uint256(uint160(account)))];
   }
 }
