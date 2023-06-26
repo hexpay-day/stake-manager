@@ -401,7 +401,7 @@ describe("StakeManager", function () {
       const oneHundredHex = hre.ethers.utils.parseUnits('100', 8)
       const updatedSettings: EncodableSettings.SettingsStruct = {
         ...settings,
-        tipMethod: 2,
+        tipMethod: 1,
         tipMagnitude: oneHundredHex, // 100 hex
       }
       await expect(x.stakeManager.updateSettings(nextStakeId, updatedSettings))
@@ -438,7 +438,7 @@ describe("StakeManager", function () {
       const oneHundredHex = hre.ethers.utils.parseUnits('100', 8)
       const updatedSettings: EncodableSettings.SettingsStruct = {
         ...settings,
-        tipMethod: 2,
+        tipMethod: 1,
         tipMagnitude: oneHundredHex, // 100 hex
       }
       await expect(x.stakeManager.updateSettings(nextStakeId, updatedSettings))
@@ -674,7 +674,7 @@ describe("StakeManager", function () {
       const oneHundredHex = hre.ethers.utils.parseUnits('100', 8).toBigInt()
       const updatedSettings: EncodableSettings.SettingsStruct = {
         ...settings,
-        tipMethod: 2,
+        tipMethod: 1,
         tipMagnitude: oneHundredHex, // 100 hex
       }
       await expect(x.stakeManager.updateSettings(nextStakeId, updatedSettings))
@@ -726,8 +726,8 @@ describe("StakeManager", function () {
       const settings = await x.stakeManager.idToDecodedSettings(nextStakeId)
       const updatedSettings: EncodableSettings.SettingsStruct = {
         ...settings,
-        withdrawableMethod: 1,
-        withdrawableMagnitude: 0, // unused
+        withdrawableMethod: 4,
+        withdrawableMagnitude: (1n << 32n) | 1n,
       }
       await expect(x.stakeManager.updateSettings(nextStakeId, updatedSettings))
         .to.emit(x.stakeManager, 'UpdatedSettings')
@@ -842,40 +842,17 @@ describe("StakeManager", function () {
       await expect(x.stakeManager.computeMagnitude(0, 100, 100, stake))
         .eventually.to.equal(0)
     })
-    it('1: always returns arg 2', async () => {
+    it('1: always returns arg 1', async () => {
       const x = await loadFixture(utils.deployFixture)
       await expect(x.stakeManager.computeMagnitude(1, 1001, 1002, stake))
-        .eventually.to.equal(1002)
-    })
-    it('2: always returns arg 1', async () => {
-      const x = await loadFixture(utils.deployFixture)
-      await expect(x.stakeManager.computeMagnitude(2, 1001, 1002, stake))
         .eventually.to.equal(1001)
     })
-    it('3: always returns a % of input', async () => {
+    it('2: returns the staked days property', async () => {
       const x = await loadFixture(utils.deployFixture)
-      // do not sub 1 from the x input - needed to ensure rounding correctly
-      await expect(x.stakeManager.computeMagnitude(3, hre.ethers.constants.Two.pow(64).div(2), 1002, stake))
-        .eventually.to.equal(501)
-    })
-    it('4: returns a percent of originating principle', async () => {
-      const x = await loadFixture(utils.deployFixture)
-      const tenPercentOnPrinciple = oneHundredHex*11n/10n
-      await expect(x.stakeManager.computeMagnitude(4, hre.ethers.constants.Two.pow(64).div(20), tenPercentOnPrinciple, stake))
-        .eventually.to.equal((oneHundredHex / 20n) - 1n) // -1 for rounding w/ bigints
-    })
-    it('5: returns a percent of yield', async () => {
-      const x = await loadFixture(utils.deployFixture)
-      const tenPercentOnPrinciple = oneHundredHex*11n/10n
-      await expect(x.stakeManager.computeMagnitude(5, hre.ethers.constants.Two.pow(64).div(20), tenPercentOnPrinciple, stake))
-        .eventually.to.equal(((tenPercentOnPrinciple - oneHundredHex) / 20n) - 1n) // -1 for rounding w/ bigints})
-    })
-    it('6: returns the staked days property', async () => {
-      const x = await loadFixture(utils.deployFixture)
-      await expect(x.stakeManager.computeMagnitude(6, 0, 0, stake))
+      await expect(x.stakeManager.computeMagnitude(2, 0, 0, stake))
         .eventually.to.equal(10)
     })
-    it('7: returns a computed day based on a tight ladder', async () => {
+    it('3: returns a computed day based on a tight ladder', async () => {
       const x = await loadFixture(utils.deployFixture)
       let currentDay!: number
       let stk!: IStakeable.StakeStoreStruct
@@ -884,7 +861,7 @@ describe("StakeManager", function () {
         ...stake,
         lockedDay: currentDay - 10,
       }
-      await expect(x.stakeManager.computeMagnitude(7, 0, currentDay, stk))
+      await expect(x.stakeManager.computeMagnitude(3, 0, currentDay, stk))
         .eventually.to.equal(stk.stakedDays)
       // missed end by more than 1 round
       currentDay = (await x.hex.currentDay()).toNumber()
@@ -897,8 +874,26 @@ describe("StakeManager", function () {
       // t-26,t-15,t-4
       // so we are 4 days into the ladder, so we should stake for
       // 6 more days to get us back on track
-      await expect(x.stakeManager.computeMagnitude(7, 0, currentDay, stk))
+      await expect(x.stakeManager.computeMagnitude(3, 0, currentDay, stk))
         .eventually.to.equal(6)
+    })
+    const tenPercentAsUint = (1_000n << 32n) | 10_000n
+    const tenPercentOnPrinciple = oneHundredHex*11n/10n
+    it('4: always returns a % of input', async () => {
+      const x = await loadFixture(utils.deployFixture)
+      // do not sub 1 from the x input - needed to ensure rounding correctly
+      await expect(x.stakeManager.computeMagnitude(4, tenPercentAsUint, 10_000_000, stake))
+        .eventually.to.equal(1_000_000)
+    })
+    it('5: returns a percent of originating principle', async () => {
+      const x = await loadFixture(utils.deployFixture)
+      await expect(x.stakeManager.computeMagnitude(5, tenPercentAsUint, tenPercentOnPrinciple, stake))
+        .eventually.to.equal(oneHundredHex / 10n)
+    })
+    it('6: returns a percent of yield', async () => {
+      const x = await loadFixture(utils.deployFixture)
+      await expect(x.stakeManager.computeMagnitude(6, tenPercentAsUint, tenPercentOnPrinciple, stake))
+        .eventually.to.equal((tenPercentOnPrinciple - oneHundredHex) / 10n)
     })
   })
 })

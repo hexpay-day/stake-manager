@@ -22,10 +22,10 @@ This contract, or, more specifically it's factory, generates a contract based on
 * Can be ended by external, [multicall](https://github.com/mds1/multicall) contract
 * Has permissioned multicall to do multiple actions at same time
 
-### [HSIStakeManager.sol](./contracts/HSIStakeManager.sol)
+### [ExistingStakeManager.sol](./contracts/ExistingStakeManager.sol)
 
-This contract holds methods for managing hsi stakes.
-* Anyone can deposit hsi's, that do not have hedron lent against them, must be paid off.
+This contract holds methods for ending hsi and maximus stakes.
+* Anyone can deposit hsi's, that do not have hedron lent against them, and they must be paid off.
 * HSI is detokenized and cannot come out so it is usually worth only depositing last minute / in remaining days before.
 * Ability to call multiple end stakes available.
 * Public multicall not available yet.
@@ -35,16 +35,13 @@ This contract holds methods for managing hsi stakes.
 * Mint hedron tokens as final step before ending stake
 * Multiple end stakes owned by multiple addresses are possible to end at the same time.
 * Transfers are reduced when end stake owners are grouped.
-
-### [MaximusStakeManager.sol](./contracts/MaximusStakeManager.sol)
-
-This contract generates intermediary, owned contracts to collect fees distributed by for maximus perpetuals ([base](https://etherscan.io/address/0xe9f84d418B008888A992Ff8c6D22389C2C3504e0), [trio](https://etherscan.io/address/0xF55cD1e399e1cc3D95303048897a680be3313308), [lucky](https://etherscan.io/address/0x6B0956258fF7bd7645aa35369B55B61b8e6d6140), [deci](https://etherscan.io/address/0x6b32022693210cD2Cfc466b9Ac0085DE8fC34eA6), and [maxi](https://etherscan.io/address/0x0d86EB9f43C57f6FF3BC9E23D8F9d82503f0e84b)).
-
-* Generates an intermediary contract for collecting fees from perpetuals with ease using previously provided (though not released) interface.
+* Uses a whitelist to check maximus addresses: [base](https://etherscan.io/address/0xe9f84d418B008888A992Ff8c6D22389C2C3504e0), [trio](https://etherscan.io/address/0xF55cD1e399e1cc3D95303048897a680be3313308), [lucky](https://etherscan.io/address/0x6B0956258fF7bd7645aa35369B55B61b8e6d6140), [deci](https://etherscan.io/address/0x6b32022693210cD2Cfc466b9Ac0085DE8fC34eA6), and [maxi](https://etherscan.io/address/0x0d86EB9f43C57f6FF3BC9E23D8F9d82503f0e84b)
+* Generates an intermediary contract for collecting fees from perpetuals with ease using previously provided (though not released and therefore codified) interface.
 * Only allows for current perpetuals to be ended - otherwise security vulnerability is opened up
 * Create intermediary contract for any address
 * Separate authorization levels for ending stakes, flushing tokens, withdrawing
 * Permissioned multicall available for multiple flush and withdrawal steps
+* End stakes available from external multicall for reach maximization
 
 ### [SingletonStakeManager](./contracts/SingletonStakeManager.sol)
 

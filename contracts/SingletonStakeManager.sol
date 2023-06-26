@@ -60,24 +60,16 @@ contract SingletonStakeManager is SingletonHedronManager {
     // we can use unchecked here because all minuses (-)
     // are checked before they are run
     unchecked {
-      if (method < 4) {
-        if (method < 2) {
-          // 0 remains 0
-          if (method == 1) amount = y; // 1
-        } else {
-          if (method == 2) amount = x; // 2
-          else amount = (x * y) / type(uint64).max; // 3 - % of total
-        }
-      } else if (method < 8) {
-        if (method < 6) {
-          if (method == 4) amount = (x * stake.stakedHearts) / type(uint64).max; // 4 - % of origination
-          else amount = x * (y - stake.stakedHearts) / type(uint64).max; // 5 - % of yield
-        } else {
-          // day methods - y = currentDay
-          uint256 stakedDays = stake.stakedDays;
-          if (method == 6) amount = stakedDays; // 6 - repeat number of days
-          else {
-            // 7 - start an equally spaced ladder, even if end stake happens late
+      if (method > 0) {
+        if (method < 4) {
+          if (method < 3) {
+            if (method == 1) amount = x; // 1
+            else {
+              amount = stake.stakedDays; // 2 - repeat number of days
+            }
+          } else {
+            uint256 stakedDays = stake.stakedDays;
+            // 3 - start an equally spaced ladder, even if end stake happens late
             uint256 lockedDay = stake.lockedDay;
             uint256 daysAfterLock = y - lockedDay;
             if (daysAfterLock == stakedDays) amount = stakedDays; // ended on first available day (most cases)
@@ -90,6 +82,18 @@ contract SingletonStakeManager is SingletonHedronManager {
               amount = stakedDays - (y - lockedDay);
             }
           }
+        } else {
+          // y = y: 4 - (default: total)
+          if (method == 5) {
+            // principle only
+            y = stake.stakedHearts;
+          } else if (method == 6) {
+            // yield only
+            y = y - stake.stakedHearts;
+          }
+          uint256 denominator = uint32(x);
+          uint256 numerator = uint32(x >> 32);
+          amount = (numerator * y) / denominator;
         }
       }
     }

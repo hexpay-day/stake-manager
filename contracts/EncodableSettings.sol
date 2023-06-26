@@ -35,7 +35,7 @@ contract EncodableSettings {
    */
   event UpdatedSettings(uint256 indexed stakeId, uint256 settings);
   uint256 public constant DEFAULT_ENCODED_SETTINGS
-    = uint256(0x000000000000000000000000000000000000010000000000000000060000ff01);
+    = uint256(0x000000000000000000000000000000000000040000000100000001020000ff01);
   function _setDefaultSettings(uint256 stakeId) internal {
     _logSettingsUpdate(stakeId, DEFAULT_ENCODED_SETTINGS);
   }
@@ -44,7 +44,10 @@ contract EncodableSettings {
     uint256 settings
   ) internal {
     // preserve the 251st index
-    _logSettingsUpdate(stakeId, (settings >> 8 << 8) | (settings << 252 >> 252) | (uint8(idToSettings[stakeId]) >> 4 << 4));
+    _logSettingsUpdate(
+      stakeId,
+      (settings >> 8 << 8) | (settings << 252 >> 252) | (uint8(idToSettings[stakeId]) >> 4 << 4)
+    );
   }
   /**
    * update the settings for a stake id
@@ -139,16 +142,17 @@ contract EncodableSettings {
        * by default, assume that all tokens minted from an end stake
        * should go directly into a new stake
        */
-      uint8(1), uint64(0), // new stake amount
+      uint8(4), uint64((1 << 32) | 1), // new stake amount
       /*
        * by default, assume that by using this contract, users want efficiency gains
        * so by default, restarting their stakes are the most efficient means of managing tokens
        */
-      uint8(6), uint16(0),
+      uint8(2), uint16(0),
       255, // restart forever
       /*
-       * 0x01 -> 0001
+       * 0x01 -> 00001
        * by index:
+       * 4: no native token included in tip (0)
        * 3: do not allow end hedron mint (0)
        * 2: do not allow continuous hedron mint (0)
        * 1: do not allow early end (0)
