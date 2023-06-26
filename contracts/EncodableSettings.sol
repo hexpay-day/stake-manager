@@ -17,7 +17,14 @@ contract EncodableSettings {
     uint8 newStakeDaysMethod;
     uint16 newStakeDaysMagnitude;
     uint8 copyIterations; // 0 for do not restart, 1-254 as countdown, 255 as restart indefinitely
-    uint8 consentAbilities; // 0/1 end, 00/10 early end, 100 mint hedron, 1000 mint hedron during end stake
+    /**
+     * 00001(0): stake end
+     * 00010(1): early stake end
+     * 00100(2): mint hedron (any time)
+     * 01000(3): mint hedron during end stake
+     * 10000(4): has eth tip
+     */
+    uint8 consentAbilities;
   }
   mapping(uint256 => uint256) public idToSettings;
   /**
@@ -42,8 +49,10 @@ contract EncodableSettings {
     uint256 stakeId,
     uint256 settings
   ) internal {
-    idToSettings[stakeId] = settings;
-    emit UpdatedSettings(stakeId, settings);
+    // preserve the 251st index
+    uint256 updatedSettings = (settings >> 8 << 8) | (settings << 252 >> 252) | (uint8(idToSettings[stakeId]) >> 4 << 4);
+    idToSettings[stakeId] = updatedSettings;
+    emit UpdatedSettings(stakeId, updatedSettings);
   }
   function idToDecodedSettings(uint256 stakeId) external view returns (Settings memory) {
     return _decodeSettings(idToSettings[stakeId]);

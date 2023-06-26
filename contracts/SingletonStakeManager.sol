@@ -3,7 +3,6 @@ pragma solidity ^0.8.17;
 
 import "@openzeppelin/contracts/utils/Address.sol";
 import "./SingletonHedronManager.sol";
-import "./IHedron.sol";
 
 contract SingletonStakeManager is SingletonHedronManager {
   using Address for address payable;
@@ -21,7 +20,6 @@ contract SingletonStakeManager is SingletonHedronManager {
    * at the cost of one extra byteword during deployment
    */
   uint256 public constant percentMagnitudeLimit = type(uint64).max;
-  uint256 public constant TIP_METHOD_MAX = 10;
   /**
    * @notice an invariant that tracks how much underlying token is owned by a particular address
    */
@@ -33,7 +31,14 @@ contract SingletonStakeManager is SingletonHedronManager {
   uint256 public tokensAttributed;
   uint256 public nativeAttributed;
   mapping(address => uint256) public nativeBalanceOf;
-  mapping(uint256 => uint256) public ethTipByStakeId;
+  mapping(uint256 => uint256) public stakeIdToNativeTip;
+  mapping(uint256 => address) public stakeIdNativeTipToOwner;
+  event Tip(
+    uint256 indexed stakeId,
+    address indexed staker,
+    address indexed token,
+    uint256 amount
+  );
   /**
    * compute a useful value from 2 inputs
    * @param method the method to use to compute a result
@@ -305,14 +310,14 @@ contract SingletonStakeManager is SingletonHedronManager {
     _logSettings(stakeId, settings);
   }
   receive() external payable {
-    depositNative();
+    _addToNativeWithdrawable(msg.sender, msg.value);
   }
   function depositNative() public payable {
     _addToNativeWithdrawable(msg.sender, msg.value);
   }
-  function depositNativeToStake(address recipient, uint256 stakeId) external payable {
+  function depositNativeToStake(address recipient, uint256 stakeId, uint256 amount) external payable {
     _addToNativeWithdrawable(recipient, msg.value);
-    _addNativeTipToStake(recipient, stakeId, msg.value);
+    _addNativeTipToStake(recipient, stakeId, amount);
   }
   function depositNativeTo(address recipient) external payable {
     _addToNativeWithdrawable(recipient, msg.value);
@@ -344,17 +349,60 @@ contract SingletonStakeManager is SingletonHedronManager {
     _addNativeTipToStake(msg.sender, stakeId, amount);
   }
   function _addNativeTipToStake(address account, uint256 stakeId, uint256 amount) internal {
+    uint256 nativeBalance = nativeBalanceOf[account];
     uint256 clamped = _clamp(amount, nativeBalanceOf[account]);
+    if (_stakeCount() > 0) {
+      uint256 existingStakeId = _getStake(address(this), stakeIdInfo[stakeId] >> 160).stakeId;
+      // cannot add a tip to a stake that has already ended
+      if (existingStakeId != stakeId) {
+        revert NotAllowed();
+      }
+    }
+    // set the native tip flag to 1
+    // 0b00000001 | 0b00010000 => 0b00010001
+    // 0b00010001 | 0b00010000 => 0b00010001
+    uint256 currentSettings = idToSettings[stakeId];
+    uint256 updatedSettings = currentSettings | (1 << 4);
+    if (updatedSettings != currentSettings) {
+      idToSettings[stakeId] = updatedSettings;
+      emit UpdatedSettings(stakeId, updatedSettings);
+    }
+    // mark this only under the condition that a tip is being added
+    // so that in the case of the staker ending
+    // own stake through a lower level method
+    // they can still get their eth back
+    stakeIdNativeTipToOwner[stakeId] = account;
     // tips only rachet up for simplicity sake
     unchecked {
-      nativeBalanceOf[account] -= clamped;
-      ethTipByStakeId[stakeId] += clamped;
+      nativeBalanceOf[account] = nativeBalance - clamped;
+      stakeIdToNativeTip[stakeId] += clamped;
     }
+  }
+  function removeNativeTipFromStake(uint256 stakeId) external {
+    _removeNativeTipFromStake(stakeId);
+  }
+  function _removeNativeTipFromStake(uint256 stakeId) internal {
+    if (_stakeCount() > 0) {
+      uint256 existingStakeId = _getStake(address(this), stakeIdInfo[stakeId] >> 160).stakeId;
+      // cannot pull back tip if the stake id is still active
+      if (existingStakeId == stakeId) {
+        return;
+      }
+    }
+    address staker = stakeIdNativeTipToOwner[stakeId];
+    stakeIdNativeTipToOwner[stakeId] = address(0);
+    unchecked {
+      nativeBalanceOf[staker] += stakeIdToNativeTip[stakeId];
+    }
+    stakeIdToNativeTip[stakeId] = 0;
   }
   function _getNativeUnattributed() internal view returns(uint256) {
     return address(this).balance - nativeAttributed;
   }
-  function collectUnattributedNative(
+  function getNativeUnattributed() external view returns(uint256) {
+    return _getNativeUnattributed();
+  }
+  function collectNativeUnattributed(
     bool transferOut, address payable recipient,
     uint256 amount
   ) external payable {
@@ -370,7 +418,7 @@ contract SingletonStakeManager is SingletonHedronManager {
   /**
    * gets unattributed tokens floating in the contract
    */
-  function _getUnattributed() view internal returns(uint256) {
+  function _getUnattributed() internal view returns(uint256) {
     return _getBalance() - tokensAttributed;
   }
   /**
@@ -462,17 +510,20 @@ contract SingletonStakeManager is SingletonHedronManager {
     uint256 settings,
     IStakeable.StakeStore memory stake
   ) internal {
+    bool nativeTip = _isCapable(settings, 4);
+    if (nativeTip) {
+      uint256 tip = stakeIdToNativeTip[stakeId];
+      unchecked {
+        nativeAttributed -= tip;
+      }
+      emit Tip(stakeId, staker, address(0), tip);
+      stakeIdToNativeTip[stakeId] = 0;
+      stakeIdNativeTipToOwner[stakeId] = address(0);
+    }
     uint256 tipMethod = settings >> 248;
     if (tipMethod > 0) {
-      uint256 hexTipMethod = tipMethod % TIP_METHOD_MAX;
-      if (tipMethod / TIP_METHOD_MAX > 0) {
-        unchecked {
-          nativeAttributed -= ethTipByStakeId[stakeId];
-          ethTipByStakeId[stakeId] = 0;
-        }
-      }
       uint256 tip = _computeMagnitude(
-        hexTipMethod, settings << 8 >> 192, delta,
+        tipMethod, settings << 8 >> 192, delta,
         stake
       );
       // because we do not set a var for you to collect unattributed tokens
@@ -481,6 +532,7 @@ contract SingletonStakeManager is SingletonHedronManager {
       unchecked {
         delta = delta - tip;
       }
+      emit Tip(stakeId, staker, target, tip);
     }
     uint256 withdrawableMethod = settings << 72 >> 248;
     if (withdrawableMethod > 0) {
@@ -531,12 +583,10 @@ contract SingletonStakeManager is SingletonHedronManager {
             s |= uint8(settings);
             settings = s;
           }
-          if (tipMethod >= TIP_METHOD_MAX) {
-            // included a native tip
-            // we must now remove the tip since it has been consumed by this end stake
-            uint256 targetTipMethod = (settings >> 248) % TIP_METHOD_MAX;
-            // override with only a hex tip in place
-            settings = (settings << 8 >> 8) | (targetTipMethod << 248);
+          if (nativeTip) {
+            // remove consent abilities, only leave the last 4 (0-3)
+            // which removes the native tip flag
+            settings = (settings >> 8 << 8) | (settings << 252 >> 252);
           }
           _logSettingsUpdate(nextStakeId, settings);
         } else {

@@ -13,6 +13,7 @@ contract UnderlyingStakeManager is Stakeable, Capable {
   error StakeNotEndable(uint256 provided, address staker);
   /**
    * @notice the owner of a stake indexed by the stake id
+   * index + 160(owner)
    */
   mapping(uint256 => uint256) public stakeIdInfo;
   /**
