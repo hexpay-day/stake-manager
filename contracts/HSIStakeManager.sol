@@ -25,10 +25,27 @@ contract HSIStakeManager is AuthorizationManager {
     address hsiAddress = IHEXStakeInstanceManager(hsim).hexStakeDetokenize(tokenId);
     // erc721 is burned - no owner - only hsi address remains
     hsiToOwner[hsiAddress] = owner;
-    _setAuthorization(keccak256(abi.encode(msg.sender, hsiAddress)), settings);
+    _setAuthorization(_authorizationKey(msg.sender, hsiAddress), settings);
   }
+  /**
+   * check if the provided address is authorized to perform an action
+   * @param runner the address that will call the contract method
+   * @param hsiAddress the hsi address in question
+   * @param index the index of the settings to check for a "1"
+   */
   function isAuthorized(address runner, address hsiAddress, uint256 index) external view returns(bool) {
-    return _isAuthorized(keccak256(abi.encode(runner, hsiAddress)), index);
+    return _isAuthorized(_authorizationKey(runner, hsiAddress), index);
+  }
+  /**
+   * produce the key that will be used to check the "authorization" mapping
+   * @param runner the address that will call the contract method
+   * @param hsiAddress the hsi address in question
+   */
+  function authorizationKey(address runner, address hsiAddress) external pure returns (bytes32) {
+    return _authorizationKey(runner, hsiAddress);
+  }
+  function _authorizationKey(address runner, address hsiAddress) internal pure returns (bytes32) {
+    return keccak256(abi.encode(runner, hsiAddress));
   }
   /**
    * provide authorization to addresses, as the owner of the hsi
@@ -40,7 +57,7 @@ contract HSIStakeManager is AuthorizationManager {
     if (hsiToOwner[hsiAddress] != msg.sender) {
       revert NotAllowed();
     }
-    _setAuthorization(keccak256(abi.encode(runner, hsiAddress)), setting);
+    _setAuthorization(_authorizationKey(runner, hsiAddress), setting);
   }
   function _deposit721(address token, uint256 tokenId) internal returns(address owner) {
     owner = IERC721(token).ownerOf(tokenId);
@@ -65,7 +82,7 @@ contract HSIStakeManager is AuthorizationManager {
     address to = hsiToOwner[hsiAddress];
     do {
       hsiAddress = params[i].hsiAddress;
-      if (_isAuthorized(keccak256(abi.encode(msg.sender, hsiAddress)), 0)) {
+      if (_isAuthorized(_authorizationKey(msg.sender, hsiAddress), 0)) {
         currentOwner = hsiToOwner[hsiAddress];
         if (currentOwner != to) {
           IERC20(hedron).transfer(to, hedronTokens);
@@ -98,7 +115,7 @@ contract HSIStakeManager is AuthorizationManager {
     address hsim = IHedron(hedron).hsim();
     do {
       hsiAddress = params[i].hsiAddress;
-      if (_isAuthorized(keccak256(abi.encode(msg.sender, hsiAddress)), 1)) {
+      if (_isAuthorized(_authorizationKey(msg.sender, hsiAddress), 1)) {
         currentOwner = hsiToOwner[hsiAddress];
         if (currentOwner != to) {
           _payout(to, hedronTokens, targetTokens);

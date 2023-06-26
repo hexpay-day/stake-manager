@@ -6,4 +6,5 @@ interface IPublicEndStakeable {
   function STAKE_IS_ACTIVE() external returns(bool);
   function mintHedron(uint256 stakeIndex, uint40 stakeIdParam) external;
   function endStakeHEX(uint256 stakeIndex, uint40 stakeIdParam) external;
+  function getCurrentPeriod() external view returns (uint256);
 }

@@ -2,7 +2,8 @@
   "license": "UNLICENSED",
   "name": "hardhat-project",
   "scripts": {
-    "build": "solhint 'contracts/**/*.sol' && hardhat compile",
+    "build": "yarn run lint && hardhat compile",
+    "lint": "solhint 'contracts/**/*.sol'",
     "test": "hardhat test",
     "coverage": "hardhat coverage",
     "foundry:test": "forge test --fork-url 'https://rpc.pulsechain.com' -vvv"

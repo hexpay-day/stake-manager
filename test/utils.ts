@@ -80,9 +80,9 @@ export const deployFixture = async () => {
   const isolatedStakeManager = await hre.ethers.getContractAt('IsolatedStakeManager', isolatedStakeManagerAddress)
   const tx = await hex.connect(signer).approve(isolatedStakeManager.address, oneMillion)
   await tx.wait()
-  const MaximusStakeManagerFactory = await hre.ethers.getContractFactory('MaximusStakeManagerFactory')
-  const maximusStakeManagerFactory = await MaximusStakeManagerFactory.deploy()
-  await maximusStakeManagerFactory.deployed()
+  const MaximusStakeManager = await hre.ethers.getContractFactory('MaximusStakeManager')
+  const maximusStakeManager = await MaximusStakeManager.deploy()
+  await maximusStakeManager.deployed()
   const base = '0xe9f84d418B008888A992Ff8c6D22389C2C3504e0'
   const stakedAmount = oneMillion / 10n
   return {
@@ -98,8 +98,8 @@ export const deployFixture = async () => {
     isolatedStakeManagerFactory,
     isolatedStakeManager,
     capable,
-    MaximusStakeManagerFactory,
-    maximusStakeManagerFactory,
+    MaximusStakeManager,
+    maximusStakeManager,
     base,
     hedron,
     hsim,
@@ -112,25 +112,13 @@ export const nextStakeId = async (x: Awaited<ReturnType<typeof deployFixture>>) 
   return stakeIdBN.toBigInt() + 1n
 }
 
-export const maximusFactoryInstanceFixture = async () => {
-  const x = await loadFixture(deployFixture)
-  const [signerA] = x.signers
-  await x.maximusStakeManagerFactory.createStakeManager(signerA.address, 0)
-  const stakeManagerAddress = await x.maximusStakeManagerFactory.stakeManagerByInput(signerA.address, 0)
-  const maximusStakeManager = await hre.ethers.getContractAt('MaximusStakeManager', stakeManagerAddress)
-  return {
-    ...x,
-    maximusStakeManager,
-  }
-}
-
 export const endOfBaseFixture = async () => {
-  const x = await loadFixture(maximusFactoryInstanceFixture)
+  const x = await loadFixture(deployFixture)
   const currentDay = await x.hex.currentDay()
   const stake = await x.hex.stakeLists(x.base, 0)
   const endDay = stake.stakedDays + stake.lockedDay
   const daysToEnd = endDay - currentDay.toNumber()
-  await moveForwardDays(daysToEnd, x)
+  await moveForwardDays(daysToEnd, x, 14)
   const GasReimberser = await hre.ethers.getContractFactory('GasReimberser')
   const gasReimberser = await GasReimberser.deploy(x.base)
   return {
@@ -220,15 +208,23 @@ export const deployAndProcureHSIFixture = async () => {
 export const moveForwardDays = async (
   limit: number,
   x: Awaited<ReturnType<typeof deployFixture>>,
+  step = 1,
 ) => {
-  let i = 0;
+  const _currentDay = await x.hex.currentDay()
+  const currentDay = _currentDay.toNumber()
+  const endDay = currentDay + limit
+  let movedToDay = currentDay
   // last signer is utilized as a standin for "the public"
   const lastSigner = x.signers[x.signers.length - 1]
+  let numDaysToMove = step
   do {
-    await time.setNextBlockTimestamp(days(1) + await time.latest())
+    if (movedToDay + numDaysToMove > endDay) {
+      numDaysToMove = 1
+    }
+    await time.setNextBlockTimestamp(days(numDaysToMove) + await time.latest())
     await x.hex.connect(lastSigner).stakeStart(hre.ethers.utils.parseUnits('1', 8), 1)
-    i += 1
-  } while(i < limit)
+    movedToDay += numDaysToMove
+  } while(movedToDay < endDay)
 }
 
 export const addressToBytes32 = (signer: SignerWithAddress) => toBytes32(signer.address)
