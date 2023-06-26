@@ -4,10 +4,10 @@ pragma solidity ^0.8.17;
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/utils/Address.sol";
 import "./IPublicEndStakeable.sol";
-import "./HSIStakeManager.sol";
+import "./UnderlyingStakeable.sol";
 import { IGasReimberser } from './GasReimberser.sol';
 
-contract MaximusStakeManager is HSIStakeManager {
+contract MaximusStakeManager is UnderlyingStakeable {
   using Address for address payable;
   mapping(address => bool) public perpetualWhitelist;
   /**
@@ -30,7 +30,7 @@ contract MaximusStakeManager is HSIStakeManager {
 
   // allow this contract to receive tokens on behalf of enders
   receive() external payable {}
-  constructor() HSIStakeManager() {
+  constructor() {
     // unfortunately, this is the appropriate place to have this code
     perpetualWhitelist[0x0d86EB9f43C57f6FF3BC9E23D8F9d82503f0e84b] = true; // maxi
     perpetualWhitelist[0x6b32022693210cD2Cfc466b9Ac0085DE8fC34eA6] = true; // deci

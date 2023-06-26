@@ -42,11 +42,6 @@ contract AuthorizationManager is UnderlyingStakeable, Capable {
   function _setAddressAuthorization(address account, uint256 settings) internal {
     _setAuthorization(bytes32(uint256(uint160(account))), settings);
   }
-  modifier senderIsAuthorized(uint256 index) {
-    if (_isAddressAuthorized(msg.sender, index)) {
-      _;
-    }
-  }
   /**
    * check if an address is authorized to perform an action
    * this index will be different for each implementation

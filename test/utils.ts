@@ -57,8 +57,9 @@ export const deployFixture = async () => {
   const hex = await hre.ethers.getContractAt('contracts/IHEX.sol:IHEX', hexAddress, pulsexSacrificeSigner) as IHEX
   const hedron = await hre.ethers.getContractAt('IHedron', hedronAddress)
   const hsim = await hre.ethers.getContractAt('IHEXStakeInstanceManager', await hedron.hsim())
-  const HSIStakeManager = await hre.ethers.getContractFactory('HSIStakeManager')
-  const hsiStakeManager = await HSIStakeManager.deploy()
+  const ExistingStakeManager = await hre.ethers.getContractFactory('ExistingStakeManager')
+  const hsiStakeManager = await ExistingStakeManager.deploy()
+  const maximusStakeManager = hsiStakeManager
   const decimals = await hex.decimals()
   const oneMillion = hre.ethers.utils.parseUnits('1000000', decimals).toBigInt()
   await Promise.all(signers.map(async (signer) => {
@@ -80,9 +81,6 @@ export const deployFixture = async () => {
   const isolatedStakeManager = await hre.ethers.getContractAt('IsolatedStakeManager', isolatedStakeManagerAddress)
   const tx = await hex.connect(signer).approve(isolatedStakeManager.address, oneMillion)
   await tx.wait()
-  const MaximusStakeManager = await hre.ethers.getContractFactory('MaximusStakeManager')
-  const maximusStakeManager = await MaximusStakeManager.deploy()
-  await maximusStakeManager.deployed()
   const base = '0xe9f84d418B008888A992Ff8c6D22389C2C3504e0'
   const stakedAmount = oneMillion / 10n
   return {
@@ -98,7 +96,6 @@ export const deployFixture = async () => {
     isolatedStakeManagerFactory,
     isolatedStakeManager,
     capable,
-    MaximusStakeManager,
     maximusStakeManager,
     base,
     hedron,
@@ -121,9 +118,11 @@ export const endOfBaseFixture = async () => {
   await moveForwardDays(daysToEnd, x, 14)
   const GasReimberser = await hre.ethers.getContractFactory('GasReimberser')
   const gasReimberser = await GasReimberser.deploy(x.base)
+  const publicEndStakeable = await hre.ethers.getContractAt('IPublicEndStakeable', x.base)
   return {
     ...x,
     gasReimberser,
+    publicEndStakeable,
   }
 }
 

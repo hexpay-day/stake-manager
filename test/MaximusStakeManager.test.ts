@@ -15,6 +15,13 @@ describe('MaximusStakeManager.sol', () => {
         .to.emit(x.hex, 'StakeEnd')
         .withArgs(anyUint, anyUint, x.base, stake.stakeId)
     })
+    it('can only end perpetuals', async () => {
+      const x = await loadFixture(utils.endOfBaseFixture)
+      const [, signerB, signerC] = x.signers
+      const stake = await x.hex.stakeLists(x.base, 0)
+      await expect(x.maximusStakeManager.stakeEnd(signerB.address, signerC.address, stake.stakeId))
+        .to.revertedWithCustomError(x.maximusStakeManager, 'NotAllowed')
+    })
     it('can end the perpetual\'s stake and name any address as the rewards recipient', async () => {
       const x = await loadFixture(utils.endOfBaseFixture)
       const [, signerB] = x.signers
@@ -32,21 +39,30 @@ describe('MaximusStakeManager.sol', () => {
     })
     it('can collect rewards', async () => {
       const x = await loadFixture(utils.endOfBaseFixture)
-      const [signerA, , signerC] = x.signers
+      const [signerA, signerB, signerC] = x.signers
       const stake = await x.hex.stakeLists(x.base, 0)
       await x.maximusStakeManager.stakeEnd(signerA.address, x.base, stake.stakeId)
+      const currentPeriod = await x.publicEndStakeable.getCurrentPeriod()
       const oneEther = hre.ethers.utils.parseEther('1')
       await signerC.sendTransaction({
         value: oneEther,
         to: x.gasReimberser.address,
       })
       await x.hex.connect(signerC).transfer(x.gasReimberser.address, x.stakedAmount)
-      await expect(x.maximusStakeManager.flush(x.gasReimberser.address, x.base, 2, [hre.ethers.constants.AddressZero]))
+      await expect(x.maximusStakeManager.flush(x.gasReimberser.address, x.base, currentPeriod.toNumber() + 1, [x.hex.address]))
+        .not.to.emit(x.maximusStakeManager, 'CollectReward')
+        .not.to.reverted
+      await expect(x.maximusStakeManager.flush(x.gasReimberser.address, x.base, currentPeriod.toNumber(), [hre.ethers.constants.AddressZero]))
         .changeEtherBalances(
           [x.gasReimberser, x.maximusStakeManager, signerA],
           [oneEther.toBigInt() * -1n, oneEther, 0],
         )
-      await expect(x.maximusStakeManager.flush(x.gasReimberser.address, x.base, 2, [x.hex.address]))
+      await expect(x.maximusStakeManager.connect(signerB).flush(x.gasReimberser.address, x.base, currentPeriod, [x.hex.address]))
+        .to.revertedWithCustomError(x.maximusStakeManager, 'NotAllowed')
+      const key = await x.maximusStakeManager.rewardKey(x.base, currentPeriod)
+      await expect(x.maximusStakeManager.rewardsTo(key))
+        .eventually.to.equal(signerA.address)
+      await expect(x.maximusStakeManager.flush(x.gasReimberser.address, x.base, currentPeriod.toNumber(), [x.hex.address]))
         .changeTokenBalances(x.hex,
           [x.gasReimberser, x.maximusStakeManager, signerA],
           [x.stakedAmount * -1n, x.stakedAmount, 0],
@@ -55,7 +71,7 @@ describe('MaximusStakeManager.sol', () => {
       const bal = balanceNative?.toBigInt() || 0n
       const balanceToken = await x.hex.balanceOf(x.maximusStakeManager.address)
       const balToken = balanceToken.toBigInt()
-      await expect(x.maximusStakeManager.withdraw(x.base, 2, signerA.address, [hre.ethers.constants.AddressZero, x.hex.address], [0, 0]))
+      await expect(x.maximusStakeManager.withdraw(x.base, currentPeriod.toNumber(), signerA.address, [hre.ethers.constants.AddressZero, x.hex.address], [0, 0]))
         .changeEtherBalances(
           [x.maximusStakeManager, signerA],
           [bal * -1n, bal],
