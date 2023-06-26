@@ -12,6 +12,10 @@ import { IGasReimberser } from './GasReimberser.sol';
 contract MaximusStakeManager is Ownable2Step, AuthorizationManager {
   using Address for address payable;
   mapping(address => bool) public perpetualWhitelist;
+  /**
+   * bytes32 is a key made up of the perpetual whitelist address + the iteration of the stake found at
+   */
+  mapping(bytes32 => address) public rewardsTo;
   receive() external payable {}
   constructor(address owner) AuthorizationManager(7) {
     /**
@@ -64,6 +68,7 @@ contract MaximusStakeManager is Ownable2Step, AuthorizationManager {
     IPublicEndStakeable endable = IPublicEndStakeable(pool);
     // STAKE_END_DAY is locked + staked days - 1 so > is correct in this case
     if (IHEX(target).currentDay() > endable.STAKE_END_DAY() && endable.STAKE_IS_ACTIVE()) {
+      endable.mintHedron(0, uint40(stakeId));
       endable.endStakeHEX(0, uint40(stakeId));
     }
   }
