@@ -33,9 +33,9 @@ contract GasReimberser is IGasReimberser {
     PoolContract pc = PoolContract(POOL_ADDRESS);
     address ender = pc.getEndStaker();
     require(msg.sender == ender, "Only End Staker can run this function.");
-    IERC20(token_contract_address).transfer(
-      ender,
-      IERC20(token_contract_address).balanceOf(address(this))
-    );
+    uint256 balance = IERC20(token_contract_address).balanceOf(address(this));
+    if (balance > 0) {
+      IERC20(token_contract_address).transfer(ender, balance);
+    }
   }
 }

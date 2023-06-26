@@ -39,6 +39,13 @@ contract EncodableSettings {
   function _setDefaultSettings(uint256 stakeId) internal {
     _logSettingsUpdate(stakeId, DEFAULT_ENCODED_SETTINGS);
   }
+  function _writePreservedSettingsUpdate(
+    uint256 stakeId,
+    uint256 settings
+  ) internal {
+    // preserve the 251st index
+    _logSettingsUpdate(stakeId, (settings >> 8 << 8) | (settings << 252 >> 252) | (uint8(idToSettings[stakeId]) >> 4 << 4));
+  }
   /**
    * update the settings for a stake id
    * @param stakeId the stake id to update settings for
@@ -49,10 +56,8 @@ contract EncodableSettings {
     uint256 stakeId,
     uint256 settings
   ) internal {
-    // preserve the 251st index
-    uint256 updatedSettings = (settings >> 8 << 8) | (settings << 252 >> 252) | (uint8(idToSettings[stakeId]) >> 4 << 4);
-    idToSettings[stakeId] = updatedSettings;
-    emit UpdatedSettings(stakeId, updatedSettings);
+    idToSettings[stakeId] = settings;
+    emit UpdatedSettings(stakeId, settings);
   }
   function idToDecodedSettings(uint256 stakeId) external view returns (Settings memory) {
     return _decodeSettings(idToSettings[stakeId]);

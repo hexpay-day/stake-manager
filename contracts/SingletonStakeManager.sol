@@ -33,6 +33,13 @@ contract SingletonStakeManager is SingletonHedronManager {
   mapping(address => uint256) public nativeBalanceOf;
   mapping(uint256 => uint256) public stakeIdToNativeTip;
   mapping(uint256 => address) public stakeIdNativeTipToOwner;
+  /**
+   * tip an address a defined amount and token
+   * @param stakeId the stake id being targeted
+   * @param staker the staker
+   * @param token the token being accounted
+   * @param amount the amount of the token
+   */
   event Tip(
     uint256 indexed stakeId,
     address indexed staker,
@@ -158,7 +165,7 @@ contract SingletonStakeManager is SingletonHedronManager {
    */
   function updateSettings(uint256 stakeId, Settings calldata settings) external payable {
     _verifyStakeOwnership(msg.sender, stakeId);
-    _logSettingsUpdate(stakeId, _encodeSettings(settings));
+    _writePreservedSettingsUpdate(stakeId, _encodeSettings(settings));
   }
   function _verifyStakeOwnership(address owner, uint256 stakeId) internal view {
     if (address(uint160(stakeIdInfo[stakeId])) != owner) {
@@ -268,7 +275,7 @@ contract SingletonStakeManager is SingletonHedronManager {
     if (settings == 0) {
       _setDefaultSettings(stakeId);
     } else {
-      _logSettingsUpdate(stakeId, settings);
+      _writePreservedSettingsUpdate(stakeId, settings);
     }
   }
   /**
@@ -364,8 +371,7 @@ contract SingletonStakeManager is SingletonHedronManager {
     uint256 currentSettings = idToSettings[stakeId];
     uint256 updatedSettings = currentSettings | (1 << 4);
     if (updatedSettings != currentSettings) {
-      idToSettings[stakeId] = updatedSettings;
-      emit UpdatedSettings(stakeId, updatedSettings);
+      _logSettingsUpdate(stakeId, updatedSettings);
     }
     // mark this only under the condition that a tip is being added
     // so that in the case of the staker ending
@@ -514,7 +520,7 @@ contract SingletonStakeManager is SingletonHedronManager {
     if (nativeTip) {
       uint256 tip = stakeIdToNativeTip[stakeId];
       unchecked {
-        nativeAttributed -= tip;
+        nativeAttributed = nativeAttributed - tip;
       }
       emit Tip(stakeId, staker, address(0), tip);
       stakeIdToNativeTip[stakeId] = 0;
@@ -592,7 +598,7 @@ contract SingletonStakeManager is SingletonHedronManager {
         } else {
           // keep the authorization settings
           // nulls out all other settings
-          _logSettingsUpdate(nextStakeId, uint256(uint8(settings)));
+          _logSettingsUpdate(nextStakeId, uint256(uint8(settings)) << 252 >> 252);
         }
       }
     }
