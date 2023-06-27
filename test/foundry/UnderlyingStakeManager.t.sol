@@ -121,13 +121,13 @@ contract TestSingletonStakeManager is TestStakeManager {
     _depositToken(vm.addr(1), startingBalance);
     // bob cannot take alice's deposits
     vm.expectRevert(abi.encodeWithSelector(
-      UnderlyingStakeable.NotEnoughFunding.selector,
+      SingletonStakeManager.NotEnoughFunding.selector,
       0, 1
     ));
     _withdrawToken(vm.addr(2), vm.addr(1), 1);
     // alice cannot take more than deposited
     vm.expectRevert(abi.encodeWithSelector(
-      UnderlyingStakeable.NotEnoughFunding.selector,
+      SingletonStakeManager.NotEnoughFunding.selector,
       startingBalance, startingBalance + 1
     ));
     _withdrawToken(vm.addr(1), vm.addr(1), startingBalance + 1);
@@ -135,7 +135,7 @@ contract TestSingletonStakeManager is TestStakeManager {
     assertEq(IERC20(hx).balanceOf(vm.addr(1)), startingBalance / 2);
     // alice still cannot take more than deposited
     vm.expectRevert(abi.encodeWithSelector(
-      UnderlyingStakeable.NotEnoughFunding.selector,
+      SingletonStakeManager.NotEnoughFunding.selector,
       startingBalance / 2, startingBalance
     ));
     _withdrawToken(vm.addr(1), vm.addr(1), startingBalance);
