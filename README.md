@@ -69,10 +69,10 @@ Unless they have an upgradable contract, which I have not seen used, yes, projec
 There may also be gains that can be made by using the access list parameter in transactions (~1/21%), however, the async nature of transaction mining makes this route a bit risky, since all of the gas is paid up front. This means that even if the transaction were to fail the full storage would have already been accessed, causing huge costs with zero gain. There is a way to include this optimization, however, it has to do more with deciding _when_ to use it since it essentially requires that the storage slots be used, otherwise, the gas is wasted. I believe this is best utilized at the front end / interface level when one can guarantee, short of the private key being used elsewhere, that the stake will be ended with that transaction.
 
 Technical Resources:
-* article from hardhat dev on updates https://hackmd.io/@fvictorio/gas-costs-after-berlin
-* high level mechanical walk through of eip2929 and 2930 https://www.youtube.com/watch?v=qQpvkxKso2E
-* eip 2929: https://eips.ethereum.org/EIPS/eip-2929
-* eip 2930: https://eips.ethereum.org/EIPS/eip-2930
+* [article from hardhat dev](https://hackmd.io/@fvictorio/gas-costs-after-berlin) on updates
+* [high level mechanical walk through](https://www.youtube.com/watch?v=qQpvkxKso2E) of eip2929 and 2930
+* [eip 2929](https://eips.ethereum.org/EIPS/eip-2929)
+* [eip 2930](https://eips.ethereum.org/EIPS/eip-2930)
 
 _Ok, but there must be limits to this solution._
 
