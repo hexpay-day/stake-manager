@@ -9,6 +9,9 @@
     "coverage": "hardhat coverage",
     "foundry:test": "forge test --fork-url 'https://rpc.pulsechain.com' -vvv"
   },
+  "files": [
+    "artifacts"
+  ],
   "devDependencies": {
     "@nomicfoundation/hardhat-chai-matchers": "^1.0.0",
     "@nomicfoundation/hardhat-network-helpers": "^1.0.0",
