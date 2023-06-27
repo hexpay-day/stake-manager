@@ -512,6 +512,7 @@ contract SingletonStakeManager is SingletonHedronManager, Magnitude {
         unchecked {
           delta = delta - newStakeAmount; // checks for underflow
         }
+        newStakeMethod = newStakeDays > 5555 ? 5555 : newStakeMethod;
         uint256 nextStakeId = _stakeStartFor(
           staker,
           newStakeAmount, newStakeDays
