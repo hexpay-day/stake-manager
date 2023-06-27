@@ -6,7 +6,7 @@ This document outlines the features available in these contracts and how they mi
 
 - Isolated Stake Manager
 - Singleton Stake Manager
-- Grouped Stake Manager
+- Existing Stake Manager
 
 ### [IsolatedStakeManager.sol](./contracts/IsolatedStakeManager.sol)
 
@@ -63,7 +63,7 @@ This contract is a singleton that holds all stakes in a single contract for gas 
 * Holds hedron rewards until owner collects them
 * Low cost hedron mint authorization to allow for future skipping / upgrades to exclude from process
 
-### [Settings](./contracts/SingletonStakeManager.sol)
+### [Settings](./contracts/EncodableSettings.sol)
 
 The settings struct holds all relevant settings for determining what tokens should go where when a stake is done as well as what the end stake call should do at the end of a stake.
 
@@ -86,7 +86,7 @@ The properties of the settings object are as follows:
 \** 0 = do not restart, 1-254 = countdown mechanism, 255 = always restart
 
 
-### [#computeMagnitude](./contracts/SingletonStakeManager.sol)
+### [#computeMagnitude](./contracts/Magnitude.sol)
 
 Compute magnitude is probably the most confusing method in the repo. Once broken down, it is fairly simple, but has a fair number of options which can make it confusing. Below is a breakdown of the options and features.
 
@@ -114,7 +114,7 @@ Each of these manipulations uses method 0-6 in the compute magnitude methods as 
 * `0` - returns zero
 * `1` - returns the `x` value, i.e. the magnitude held in the the settings
 * `2` - ** returns the `stakedDays` property, repeating the number of days, even if stake end occurs late
-* `3` - ** returns a number of days to keep stake on a schedule, even if the end stake happens x days later than t-0 `today - lockedDay - 1 > stakedDays` then the staked days is repeated, otherwise correct for the number of delayed days.
+* `3` - ** returns a number of days to keep stake on a schedule, even if the end stake happens x days later than `t-0`: `today - lockedDay - 1 > stakedDays` then the staked days is repeated, otherwise correct for the number of delayed days.
 * `4` - * returns a percentage of `y`, with `x`, the value on the settings struct as it's ratio as defined by (2^32)-1
 * `5` - returns a percentage of the principle - using the `stakedHearts` property of the stake as the `y` value
 * `6` - returns a percentage of the yield, i.e. `hexAmount - stakedHearts` to be used as `y`
