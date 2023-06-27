@@ -1,8 +1,9 @@
 {
   "license": "UNLICENSED",
-  "name": "hardhat-project",
+  "name": "@hexpayday/stake-manager",
   "scripts": {
-    "build": "yarn run lint && hardhat compile",
+    "build": "yarn run lint && hardhat compile && yarn run copy-artifacts",
+    "copy-artifacts": "rm -rf ./client/src/artifacts && cp -r artifacts ./client/src/artifacts",
     "lint": "solhint 'contracts/**/*.sol'",
     "test": "hardhat test",
     "coverage": "hardhat coverage",
@@ -40,5 +41,6 @@
     "ethers-eip712": "^0.2.0",
     "hardhat-tracer": "^2.4.0",
     "solhint": "^3.4.1"
-  }
+  },
+  "version": "1.0.0"
 }
