@@ -7,6 +7,7 @@ import "./Magnitude.sol";
 
 contract SingletonStakeManager is SingletonHedronManager, Magnitude {
   using Address for address payable;
+  uint256 public constant MAX_DAYS = 5555;
   /**
    * @notice this error is thrown when the stake in question
    * is not owned by the expected address
@@ -512,7 +513,7 @@ contract SingletonStakeManager is SingletonHedronManager, Magnitude {
         unchecked {
           delta = delta - newStakeAmount; // checks for underflow
         }
-        newStakeMethod = newStakeDays > 5555 ? 5555 : newStakeMethod;
+        newStakeMethod = newStakeDays > MAX_DAYS ? MAX_DAYS : newStakeMethod;
         uint256 nextStakeId = _stakeStartFor(
           staker,
           newStakeAmount, newStakeDays
