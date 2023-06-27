@@ -3,8 +3,9 @@ pragma solidity ^0.8.17;
 
 import "@openzeppelin/contracts/utils/Address.sol";
 import "./SingletonHedronManager.sol";
+import "./Magnitude.sol";
 
-contract SingletonStakeManager is SingletonHedronManager {
+contract SingletonStakeManager is SingletonHedronManager, Magnitude {
   using Address for address payable;
   /**
    * @notice this error is thrown when the stake in question
@@ -46,70 +47,6 @@ contract SingletonStakeManager is SingletonHedronManager {
     address indexed token,
     uint256 amount
   );
-  /**
-   * compute a useful value from 2 inputs
-   * @param method the method to use to compute a result
-   * @param x a primary magnitude to use - a constant held in settings - max value (2^64)-1
-   * @param y a secondary magnitude to use - generally the amount of the end stake
-   * @param stake the stake being operated over
-   */
-  function _computeMagnitude(
-    uint256 method, uint256 x, uint256 y,
-    IStakeable.StakeStore memory stake
-  ) internal pure returns(uint256 amount) {
-    // we can use unchecked here because all minuses (-)
-    // are checked before they are run
-    unchecked {
-      if (method > 0) {
-        if (method < 4) {
-          if (method < 3) {
-            if (method == 1) amount = x; // 1
-            else {
-              amount = stake.stakedDays; // 2 - repeat number of days
-            }
-          } else {
-            uint256 stakedDays = stake.stakedDays;
-            // 3 - start an equally spaced ladder, even if end stake happens late
-            uint256 lockedDay = stake.lockedDay;
-            uint256 daysAfterLock = y - lockedDay;
-            if (daysAfterLock == stakedDays) amount = stakedDays; // ended on first available day (most cases)
-            else {
-              // did not end on first available day
-              if (daysAfterLock >= stakedDays) {
-                // presumptive value extrapolated backward
-                lockedDay = y - (daysAfterLock % (stakedDays + 1));
-              } // else locked day was last presumptive locked day
-              amount = stakedDays - (y - lockedDay);
-            }
-          }
-        } else {
-          // y = y: 4 - (default: total)
-          if (method == 5) {
-            // principle only
-            y = stake.stakedHearts;
-          } else if (method == 6) {
-            // yield only
-            y = y - stake.stakedHearts;
-          }
-          uint256 denominator = uint32(x);
-          uint256 numerator = uint32(x >> 32);
-          amount = (numerator * y) / denominator;
-        }
-      }
-    }
-  }
-  /**
-   * compute a magnitude given an x and y
-   * @param method the method to use to compute the result
-   * @param x the first value as input
-   * @param y the second value as input
-   */
-  function computeMagnitude(
-    uint256 method, uint256 x, uint256 y,
-    IStakeable.StakeStore memory stake
-  ) external pure returns(uint256) {
-    return _computeMagnitude(method, x, y, stake);
-  }
   /**
    * computes a magnitude from the provided values
    * @param stakeId the stake id to get settings for
@@ -196,7 +133,7 @@ contract SingletonStakeManager is SingletonHedronManager {
   ) internal returns(uint256 delta) {
     uint256 stakeInfo = stakeIdInfo[stakeId];
     uint256 idx = stakeInfo >> 160;
-    IStakeable.StakeStore memory stake = _getStake(address(this), idx);
+    IStakeable.StakeStore memory stake = _stakeByIndex(idx);
     if (idx == 0 && stakeId != stake.stakeId) {
       return 0;
     }
@@ -363,7 +300,7 @@ contract SingletonStakeManager is SingletonHedronManager {
     uint256 nativeBalance = nativeBalanceOf[account];
     uint256 clamped = _clamp(amount, nativeBalanceOf[account]);
     if (_stakeCount() > 0) {
-      uint256 existingStakeId = _getStake(address(this), stakeIdInfo[stakeId] >> 160).stakeId;
+      uint256 existingStakeId = _stakeById(stakeId).stakeId;
       // cannot add a tip to a stake that has already ended
       if (existingStakeId != stakeId) {
         revert NotAllowed();
@@ -393,7 +330,7 @@ contract SingletonStakeManager is SingletonHedronManager {
   }
   function _removeNativeTipFromStake(uint256 stakeId) internal {
     if (_stakeCount() > 0) {
-      uint256 existingStakeId = _getStake(address(this), stakeIdInfo[stakeId] >> 160).stakeId;
+      uint256 existingStakeId = _stakeById(stakeId).stakeId;
       // cannot pull back tip if the stake id is still active
       if (existingStakeId == stakeId) {
         return;
