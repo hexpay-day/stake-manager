@@ -116,10 +116,10 @@ Each of these manipulations uses method 0-6 in the compute magnitude methods as 
 * `2` - ** returns the `stakedDays` property, repeating the number of days, even if stake end occurs late
 * `3` - ** returns a number of days to keep stake on a schedule, even if the end stake happens x days later than `t-0`: `today - lockedDay - 1 > stakedDays` then the staked days is repeated, otherwise correct for the number of delayed days.
 * `4` - * returns a percentage of `y`, with `x`, the value on the settings struct as it's ratio as defined by (2^32)-1
-* `5` - returns a percentage of the principle - using the `stakedHearts` property of the stake as the `y` value
-* `6` - returns a percentage of the yield, i.e. `hexAmount - stakedHearts` to be used as `y`
+* `5` - * returns a percentage of the principle - using the `stakedHearts` property of the stake as the `y` value
+* `6` - * returns a percentage of the yield, i.e. `hexAmount - stakedHearts` to be used as `y`
 
-\* ```((settings.magnitude >> 32) * remaining_amount) / uint32(settings.magnitude)```<br>
+\* ```((settings.magnitude >> 32) * input) / uint32(settings.magnitude)```<br>
 \** mostly useful for new stake days magnitude only<br>
 
 Note: if the configuration is malformed for settings passed into the `computeMagnitude` method, it can cause unwanted results. For instance, because the `currentDay` is passed as the `y` value during stake days computing, it does not make sense to return the `y` value, as occurs in method `1` because that could result in the stake days being > `5555`.
