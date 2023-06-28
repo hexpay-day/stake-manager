@@ -36,6 +36,7 @@ contract SingletonStakeManager is SingletonHedronManager, Magnitude {
   mapping(uint256 => uint256) public stakeIdToNativeTip;
   mapping(uint256 => address) public stakeIdNativeTipToOwner;
   event UpdateNativeTip(uint256 indexed stakeId, uint256 indexed settings, uint256 indexed amount);
+  event DepositNative(address indexed account, uint256 indexed amount);
   /**
    * tip an address a defined amount and token
    * @param stakeId the stake id being targeted
@@ -260,35 +261,48 @@ contract SingletonStakeManager is SingletonHedronManager, Magnitude {
     _logSettings(stakeId, settings);
   }
   receive() external payable {
-    _addToNativeWithdrawable(msg.sender, msg.value);
+    _depositNative(msg.sender, msg.value);
   }
-  function depositNative() public payable {
-    _addToNativeWithdrawable(msg.sender, msg.value);
+  function depositNative() public payable returns(uint256) {
+    return _depositNative(msg.sender, msg.value);
   }
   function nativeTipSettings(uint256 numerator, uint256 denominator) external pure returns (uint256) {
     return 1 << 128 | uint256(uint64(numerator)) << 64 | uint256(uint64(denominator));
   }
-  function depositNativeForStake(uint256 stakeId, uint256 amount, uint256 settings) external payable {
-    _addToNativeWithdrawable(msg.sender, msg.value);
+  function depositNativeTip(
+    uint256 stakeId,
+    uint256 amount,
+    uint256 settings
+  ) external payable returns(uint256) {
+    _depositNative(msg.sender, msg.value);
     // do now allow for overriding of tip settings, only increase in gas token
-    _addNativeTipToStake(msg.sender, stakeId, amount, settings);
+    return _addNativeTipToStake(msg.sender, stakeId, amount, settings);
   }
-  function depositNativeToStake(address recipient, uint256 stakeId, uint256 amount) external payable {
-    _addToNativeWithdrawable(recipient, msg.value);
+  function depositNativeTipTo(
+    address recipient,
+    uint256 stakeId,
+    uint256 amount
+  ) external payable returns(uint256) {
+    _depositNative(recipient, msg.value);
     // do now allow for overriding of tip settings, only increase in gas token
-    _addNativeTipToStake(recipient, stakeId, amount, stakeIdToNativeTip[stakeId] >> 120);
+    return _addNativeTipToStake(recipient, stakeId, amount, stakeIdToNativeTip[stakeId] >> 120);
   }
-  function depositNativeTo(address recipient) external payable {
-    _addToNativeWithdrawable(recipient, msg.value);
+  function depositNativeTo(address recipient) external payable returns(uint256) {
+    return _depositNative(recipient, msg.value);
   }
-  function _addToNativeWithdrawable(address recipient, uint256 amount) internal {
+  function _depositNative(address recipient, uint256 amount) internal returns(uint256 total) {
     unchecked {
-      nativeBalanceOf[recipient] += amount;
+      total = nativeBalanceOf[recipient] + amount;
+      nativeBalanceOf[recipient] = total;
       nativeAttributed += amount;
     }
+    emit DepositNative(recipient, amount);
   }
-  function withdrawNativeTo(address payable to, uint256 amount) external payable {
-    _withdrawNativeTo(to, _deductNativeFrom(msg.sender, amount));
+  function withdrawNative(uint256 amount) external payable returns(uint256) {
+    return _withdrawNativeTo(payable(msg.sender), _deductNativeFrom(msg.sender, amount));
+  }
+  function withdrawNativeTo(address payable to, uint256 amount) external payable returns(uint256) {
+    return _withdrawNativeTo(to, _deductNativeFrom(msg.sender, amount));
   }
   function _deductNativeFrom(address from, uint256 amount) internal returns(uint256 clamped) {
     clamped = _clamp(amount, nativeBalanceOf[from]);
@@ -299,15 +313,47 @@ contract SingletonStakeManager is SingletonHedronManager, Magnitude {
       }
     }
   }
-  function _withdrawNativeTo(address payable to, uint256 amount) internal {
+  function removeNativeTipFromStake(
+    uint256 stakeId,
+    uint256 amount,
+    uint256 settings
+  ) external payable returns(uint256 nextBalance) {
+    address stakeOwner = stakeIdNativeTipToOwner[stakeId];
+    if (stakeOwner != msg.sender) {
+      revert NotAllowed();
+    }
+    uint256 tip = uint120(stakeIdToNativeTip[stakeId]);
+    uint256 clamped = _clamp(amount, tip);
+    if (clamped == 0) {
+      return 0;
+    }
+    tip = tip - clamped;
+    emit UpdateNativeTip(stakeId, settings, tip);
+    if (tip == 0) {
+      settings = 0;
+    }
+    uint256 updatedSettings = (settings << 120) | tip;
+    stakeIdToNativeTip[stakeId] = updatedSettings;
+    unchecked {
+      nextBalance = nativeBalanceOf[stakeOwner] + clamped;
+      nativeBalanceOf[stakeOwner] = nextBalance;
+    }
+    if (updatedSettings == 0) {
+      stakeIdNativeTipToOwner[stakeId] = address(0);
+      // stakeIdToNativeTip is already 0
+    }
+    return nextBalance;
+  }
+  function _withdrawNativeTo(address payable to, uint256 amount) internal returns(uint256) {
     if (amount > 0) {
       to.sendValue(amount);
     }
+    return amount;
   }
-  function addNativeTipToStake(uint256 stakeId, uint256 amount, uint256 settings) external {
-    _addNativeTipToStake(msg.sender, stakeId, amount, settings);
+  function addNativeTipToStake(uint256 stakeId, uint256 amount, uint256 settings) external returns(uint256) {
+    return _addNativeTipToStake(msg.sender, stakeId, amount, settings);
   }
-  function _addNativeTipToStake(address account, uint256 stakeId, uint256 amount, uint256 settings) internal {
+  function _addNativeTipToStake(address account, uint256 stakeId, uint256 amount, uint256 settings) internal returns(uint256) {
     uint256 nativeBalance = nativeBalanceOf[account];
     uint256 clamped = _clamp(amount, nativeBalanceOf[account]);
     if (_stakeCount() > 0) {
@@ -331,34 +377,36 @@ contract SingletonStakeManager is SingletonHedronManager, Magnitude {
     // they can still get their eth back
     stakeIdNativeTipToOwner[stakeId] = account;
     // tips only rachet up for simplicity sake
+    uint256 contribution = uint120(stakeIdToNativeTip[stakeId]) + clamped;
     unchecked {
       nativeBalanceOf[account] = nativeBalance - clamped;
-      uint256 contributed = uint120(stakeIdToNativeTip[stakeId]);
       // settings must be provided with each addition
       // this result provides 15*basefee/2, up to 0.01 ether as a contrived example
-      // 0b01000000000000000e000000000000000200000000000000002386f26fc10000
-      stakeIdToNativeTip[stakeId] = settings << 120 | (contributed + clamped);
+      // 0b01000000000000000f000000000000000200000000000000002386f26fc10000
     }
-    emit UpdateNativeTip(stakeId, settings, clamped);
+    uint256 encodedSettings = settings << 120 | contribution;
+    stakeIdToNativeTip[stakeId] = encodedSettings;
+    emit UpdateNativeTip(stakeId, settings, contribution);
+    return encodedSettings;
   }
-  function removeNativeTipFromStake(uint256 stakeId) external {
-    _removeNativeTipFromStake(stakeId);
-  }
-  function _removeNativeTipFromStake(uint256 stakeId) internal {
-    if (_stakeCount() > 0) {
-      uint256 existingStakeId = _stakeById(stakeId).stakeId;
-      // cannot pull back tip if the stake id is still active
-      if (existingStakeId == stakeId) {
-        return;
-      }
-    }
-    address staker = stakeIdNativeTipToOwner[stakeId];
-    stakeIdNativeTipToOwner[stakeId] = address(0);
-    unchecked {
-      nativeBalanceOf[staker] += stakeIdToNativeTip[stakeId];
-    }
-    stakeIdToNativeTip[stakeId] = 0;
-  }
+  // function removeNativeTipFromStake(uint256 stakeId) external {
+  //   _removeNativeTipFromStake(stakeId);
+  // }
+  // function _removeNativeTipFromStake(uint256 stakeId) internal {
+  //   if (_stakeCount() > 0) {
+  //     uint256 existingStakeId = _stakeById(stakeId).stakeId;
+  //     // cannot pull back tip if the stake id is still active
+  //     if (existingStakeId == stakeId) {
+  //       return;
+  //     }
+  //   }
+  //   address staker = stakeIdNativeTipToOwner[stakeId];
+  //   stakeIdNativeTipToOwner[stakeId] = address(0);
+  //   unchecked {
+  //     nativeBalanceOf[staker] += stakeIdToNativeTip[stakeId];
+  //   }
+  //   stakeIdToNativeTip[stakeId] = 0;
+  // }
   function _getNativeUnattributed() internal view returns(uint256) {
     return address(this).balance - nativeAttributed;
   }
@@ -374,7 +422,7 @@ contract SingletonStakeManager is SingletonHedronManager, Magnitude {
       if (transferOut) {
         _withdrawNativeTo(recipient, withdrawable);
       } else {
-        _addToNativeWithdrawable(recipient, withdrawable);
+        _depositNative(recipient, withdrawable);
       }
     }
   }
@@ -485,8 +533,10 @@ contract SingletonStakeManager is SingletonHedronManager, Magnitude {
         uint256 numerator = uint64(tip >> 184);
         tip = (numerator * block.basefee) / denominator;
         tip = tip > amount ? amount : tip;
-        unchecked {
-          nativeBalanceOf[staker] = nativeBalanceOf[staker] + (amount - tip);
+        if (amount - tip > 0) {
+          unchecked {
+            nativeBalanceOf[staker] = nativeBalanceOf[staker] + (amount - tip);
+          }
         }
       }
       unchecked {

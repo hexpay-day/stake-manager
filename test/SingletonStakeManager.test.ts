@@ -469,7 +469,7 @@ describe("StakeManager", function () {
       await utils.moveForwardDays(days + 1, x)
       const oneEther = hre.ethers.utils.parseEther('1').toBigInt()
       const tipAmount = oneEther / 100n
-      await expect(x.stakeManager.depositNativeToStake(signer1.address, nextStakeId, tipAmount, {
+      await expect(x.stakeManager.depositNativeTipTo(signer1.address, nextStakeId, tipAmount, {
         value: oneEther,
       }))
         .to.changeEtherBalances(
@@ -504,7 +504,7 @@ describe("StakeManager", function () {
       const oneEther = hre.ethers.utils.parseEther('1').toBigInt()
       const tipAmount = oneEther / 100n
       const encodedSettings = await x.stakeManager.nativeTipSettings(360, 7)
-      await expect(x.stakeManager.depositNativeForStake(nextStakeId, tipAmount, encodedSettings, {
+      await expect(x.stakeManager.depositNativeTip(nextStakeId, tipAmount, encodedSettings, {
         value: oneEther,
       }))
         .to.changeEtherBalances(
@@ -543,7 +543,7 @@ describe("StakeManager", function () {
       await utils.moveForwardDays(days + 1, x)
       const oneEther = hre.ethers.utils.parseEther('1').toBigInt()
       const tipAmount = oneEther / 100n
-      await expect(x.stakeManager.depositNativeToStake(signer1.address, nextStakeId, tipAmount, {
+      await expect(x.stakeManager.depositNativeTipTo(signer1.address, nextStakeId, tipAmount, {
         value: oneEther,
       }))
         .to.changeEtherBalances(
@@ -593,27 +593,22 @@ describe("StakeManager", function () {
       await utils.moveForwardDays(days + 1, x)
       const oneEther = hre.ethers.utils.parseEther('1').toBigInt()
       const tipAmount = oneEther / 100n
-      await expect(x.stakeManager.depositNativeToStake(signer1.address, nextStakeId, tipAmount, {
+      await expect(x.stakeManager.depositNativeTipTo(signer1.address, nextStakeId, tipAmount, {
         value: oneEther,
       }))
         .to.changeEtherBalances(
           [signer1, x.stakeManager],
           [oneEther * -1n, oneEther],
         )
-      await x.stakeManager.removeNativeTipFromStake(nextStakeId)
+      await x.stakeManager.removeNativeTipFromStake(nextStakeId, 0, 0)
       await expect(x.stakeManager.nativeBalanceOf(signer1.address))
-        .eventually.to.equal(oneEther - tipAmount, 'clawing back tips is not currently allowed')
+        .eventually.to.equal(oneEther, 'clawing back tips is not currently allowed')
       await expect(x.stakeManager.stakeEndById(nextStakeId))
         .to.emit(x.hex, 'StakeEnd')
         .to.changeEtherBalances(
           [x.stakeManager, signer1],
           [0, 0],
         )
-      await expect(x.stakeManager.nativeBalanceOf(signer1.address))
-        .eventually.to.equal(oneEther - tipAmount)
-      await x.stakeManager.removeNativeTipFromStake(nextStakeId)
-      await expect(x.stakeManager.nativeBalanceOf(signer1.address))
-        .eventually.to.equal(oneEther)
     })
     it('if own stake is ended, cannot add to tip', async () => {
       const x = await loadFixture(utils.deployFixture)
@@ -625,7 +620,7 @@ describe("StakeManager", function () {
       await utils.moveForwardDays(days + 1, x)
       const oneEther = hre.ethers.utils.parseEther('1').toBigInt()
       const tipAmount = oneEther / 100n
-      await expect(x.stakeManager.depositNativeToStake(signer1.address, nextStakeId, tipAmount, {
+      await expect(x.stakeManager.depositNativeTipTo(signer1.address, nextStakeId, tipAmount, {
         value: oneEther,
       }))
         .to.changeEtherBalances(
@@ -640,7 +635,7 @@ describe("StakeManager", function () {
         )
       await expect(x.stakeManager.nativeBalanceOf(signer1.address))
         .eventually.to.equal(oneEther - tipAmount)
-      await x.stakeManager.removeNativeTipFromStake(nextStakeId)
+      await x.stakeManager.removeNativeTipFromStake(nextStakeId, 0, 0)
       await expect(x.stakeManager.nativeBalanceOf(signer1.address))
         .eventually.to.equal(oneEther)
       await expect(x.stakeManager.addNativeTipToStake(nextStakeId, tipAmount, 0))
@@ -670,7 +665,7 @@ describe("StakeManager", function () {
         [signer2, x.stakeManager],
         [-1n, 1n],
       )
-      await expect(x.stakeManager.depositNativeToStake(signer1.address, nextStakeId, tipAmount, {
+      await expect(x.stakeManager.depositNativeTipTo(signer1.address, nextStakeId, tipAmount, {
         value: 1n,
       }))
         .to.changeEtherBalances(
@@ -690,7 +685,10 @@ describe("StakeManager", function () {
           [tenthEther, tenthEther * -1n],
         )
       expectedBalance -= tenthEther
-      await x.stakeManager.removeNativeTipFromStake(nextStakeId)
+      await expect(x.stakeManager.addNativeTipToStake(nextStakeId, tenthEther, 0))
+        .to.emit(x.stakeManager, 'UpdateNativeTip')
+        .withArgs(nextStakeId, 0, tenthEther + tipAmount)
+      await x.stakeManager.removeNativeTipFromStake(nextStakeId, 0, 0)
       expectedBalance += tipAmount
       await expect(x.stakeManager.nativeBalanceOf(signer1.address))
         .eventually.to.equal(expectedBalance)
