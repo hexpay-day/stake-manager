@@ -44,6 +44,7 @@ const pulsechain: HardhatNetworkUserConfig = {
     url: 'https://rpc.pulsechain.com',
     blockNumber: conf.args.blockNumber,
   },
+  gasPrice: 'auto',
   chains: {
     369: {
       hardforkHistory: {

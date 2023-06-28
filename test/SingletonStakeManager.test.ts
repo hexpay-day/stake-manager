@@ -1,4 +1,4 @@
-import { loadFixture } from "@nomicfoundation/hardhat-network-helpers"
+import { loadFixture, setNextBlockBaseFeePerGas } from "@nomicfoundation/hardhat-network-helpers"
 import { expect } from "chai"
 import * as hre from "hardhat"
 import _ from 'lodash'
@@ -494,6 +494,46 @@ describe("StakeManager", function () {
       await expect(x.stakeManager.nativeBalanceOf(signer2.address))
         .eventually.to.equal(tipAmount)
     })
+    it('allows for a basefee multiplier to be applied', async () => {
+      const x = await loadFixture(utils.deployFixture)
+      const nextStakeId = await utils.nextStakeId(x)
+      const days = 10
+      const [signer1, signer2] = x.signers
+      await x.stakeManager.stakeStartFromBalanceFor(signer1.address, x.stakedAmount, days, 0)
+      await utils.moveForwardDays(days + 1, x)
+      const oneEther = hre.ethers.utils.parseEther('1').toBigInt()
+      const tipAmount = oneEther / 100n
+      const encodedSettings = await x.stakeManager.nativeTipSettings(360, 7)
+      await expect(x.stakeManager.depositNativeForStake(nextStakeId, tipAmount, encodedSettings, {
+        value: oneEther,
+      }))
+        .to.changeEtherBalances(
+          [signer1, x.stakeManager],
+          [oneEther * -1n, oneEther],
+        )
+      await expect(x.stakeManager.nativeBalanceOf(signer2.address))
+        .eventually.to.equal(0)
+      await expect(x.stakeManager.nativeBalanceOf(signer1.address))
+        .eventually.to.equal(oneEther - tipAmount)
+      await expect(x.stakeManager.stakeIdToNativeTip(nextStakeId))
+        .eventually.to.equal((encodedSettings.toBigInt() << 120n) | tipAmount)
+      await setNextBlockBaseFeePerGas(10n**6n)
+      await expect(x.stakeManager.connect(signer2).multicall([
+        x.stakeManager.interface.encodeFunctionData('stakeEndByConsent', [nextStakeId]),
+        x.stakeManager.interface.encodeFunctionData('collectNativeUnattributed', [
+          false,
+          signer2.address,
+          0,
+        ]),
+      ], false, {
+        maxFeePerGas: 10n**6n,
+      }))
+        .to.emit(x.hex, 'StakeEnd')
+      const latestBlock = await hre.ethers.provider.getBlock('latest')
+      const basefee = latestBlock.baseFeePerGas?.toBigInt() as bigint
+      await expect(x.stakeManager.nativeBalanceOf(signer2.address))
+        .eventually.to.equal(basefee * 360n / 7n)
+    })
     it('unattributed can be withdrawn', async () => {
       const x = await loadFixture(utils.deployFixture)
       const nextStakeId = await utils.nextStakeId(x)
@@ -603,7 +643,7 @@ describe("StakeManager", function () {
       await x.stakeManager.removeNativeTipFromStake(nextStakeId)
       await expect(x.stakeManager.nativeBalanceOf(signer1.address))
         .eventually.to.equal(oneEther)
-      await expect(x.stakeManager.addNativeTipToStake(nextStakeId, tipAmount))
+      await expect(x.stakeManager.addNativeTipToStake(nextStakeId, tipAmount, 0))
         .to.revertedWithCustomError(x.stakeManager, 'NotAllowed')
     })
     it('can withdraw from native balance at any time', async () => {
