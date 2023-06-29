@@ -206,7 +206,8 @@ contract SingletonStakeManager is SingletonHedronManager, Magnitude {
     // tokens are essentially unattributed at this point
     stakeId = _stakeStartFor(
       to,
-      amount, newStakedDays
+      amount,
+      newStakedDays
     );
     _logSettings(stakeId, settings);
   }
@@ -236,8 +237,8 @@ contract SingletonStakeManager is SingletonHedronManager, Magnitude {
   ) external payable returns(uint256 stakeId) {
     stakeId = _stakeStartFor(
       to,
-      // we can only conclude that the sender has authorized this deduction
-      _deductWithdrawable(msg.sender, amount), newStakedDays
+      _deductWithdrawable(msg.sender, amount),
+      newStakedDays
     );
     _logSettings(stakeId, settings);
   }
@@ -256,7 +257,8 @@ contract SingletonStakeManager is SingletonHedronManager, Magnitude {
   ) external payable returns(uint256 stakeId) {
     stakeId = _stakeStartFor(
       to,
-      _clamp(amount, _getUnattributed()), newStakedDays
+      _clamp(amount, _getUnattributed()),
+      newStakedDays
     );
     _logSettings(stakeId, settings);
   }
