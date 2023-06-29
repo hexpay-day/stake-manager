@@ -356,7 +356,7 @@ contract SingletonStakeManager is SingletonHedronManager, Magnitude {
   function addNativeTipToStake(uint256 stakeId, uint256 amount, uint256 settings) external returns(uint256) {
     return _addNativeTipToStake(msg.sender, stakeId, amount, settings);
   }
-  function _addNativeTipToStake(address account, uint256 stakeId, uint256 amount, uint256 settings) internal returns(uint256) {
+  function _addNativeTipToStake(address account, uint256 stakeId, uint256 amount, uint256 settings) internal returns(uint256 encodedSettings) {
     uint256 nativeBalance = nativeBalanceOf[account];
     uint256 clamped = _clamp(amount, nativeBalanceOf[account]);
     if (_stakeCount() > 0) {
@@ -380,36 +380,19 @@ contract SingletonStakeManager is SingletonHedronManager, Magnitude {
     // they can still get their eth back
     stakeIdNativeTipToOwner[stakeId] = account;
     // tips only rachet up for simplicity sake
-    uint256 contribution = uint120(stakeIdToNativeTip[stakeId]) + clamped;
+    uint256 contribution;
     unchecked {
+      contribution = uint120(stakeIdToNativeTip[stakeId]) + clamped;
       nativeBalanceOf[account] = nativeBalance - clamped;
       // settings must be provided with each addition
       // this result provides 15*basefee/2, up to 0.01 ether as a contrived example
       // 0b01000000000000000f000000000000000200000000000000002386f26fc10000
     }
-    uint256 encodedSettings = settings << 120 | contribution;
+    encodedSettings = settings << 120 | contribution;
     stakeIdToNativeTip[stakeId] = encodedSettings;
     emit UpdateNativeTip(stakeId, settings, contribution);
     return encodedSettings;
   }
-  // function removeNativeTipFromStake(uint256 stakeId) external {
-  //   _removeNativeTipFromStake(stakeId);
-  // }
-  // function _removeNativeTipFromStake(uint256 stakeId) internal {
-  //   if (_stakeCount() > 0) {
-  //     uint256 existingStakeId = _stakeById(stakeId).stakeId;
-  //     // cannot pull back tip if the stake id is still active
-  //     if (existingStakeId == stakeId) {
-  //       return;
-  //     }
-  //   }
-  //   address staker = stakeIdNativeTipToOwner[stakeId];
-  //   stakeIdNativeTipToOwner[stakeId] = address(0);
-  //   unchecked {
-  //     nativeBalanceOf[staker] += stakeIdToNativeTip[stakeId];
-  //   }
-  //   stakeIdToNativeTip[stakeId] = 0;
-  // }
   function _getNativeUnattributed() internal view returns(uint256) {
     return address(this).balance - nativeAttributed;
   }
