@@ -679,15 +679,22 @@ describe("StakeManager", function () {
           [x.stakeManager, signer1],
           [0, 0],
         )
-      await expect(x.stakeManager.withdrawNativeTo(signer1.address, tenthEther))
+      await expect(x.stakeManager.withdrawNative(tenthEther / 2n))
         .to.changeEtherBalances(
           [signer1, x.stakeManager],
-          [tenthEther, tenthEther * -1n],
+          [tenthEther / 2n, tenthEther / 2n * -1n],
+        )
+      await expect(x.stakeManager.withdrawNativeTo(signer1.address, tenthEther / 2n))
+        .to.changeEtherBalances(
+          [signer1, x.stakeManager],
+          [tenthEther / 2n, tenthEther / 2n * -1n],
         )
       expectedBalance -= tenthEther
       await expect(x.stakeManager.addNativeTipToStake(nextStakeId, tenthEther, 0))
         .to.emit(x.stakeManager, 'UpdateNativeTip')
         .withArgs(nextStakeId, 0, tenthEther + tipAmount)
+      await expect(x.stakeManager.connect(signer2).removeNativeTipFromStake(nextStakeId, 0, 0))
+        .to.revertedWithCustomError(x.stakeManager, 'NotAllowed')
       await x.stakeManager.removeNativeTipFromStake(nextStakeId, 0, 0)
       expectedBalance += tipAmount
       await expect(x.stakeManager.nativeBalanceOf(signer1.address))

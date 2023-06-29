@@ -324,9 +324,10 @@ contract SingletonStakeManager is SingletonHedronManager, Magnitude {
     }
     uint256 tip = uint120(stakeIdToNativeTip[stakeId]);
     uint256 clamped = _clamp(amount, tip);
-    if (clamped == 0) {
-      return 0;
-    }
+    // no need to check for zero here
+    // if we did not appropriately clean up mappings, then there would be
+    // but because we clean up mappings, we cannot check for zero
+    // because we would never get to that line
     tip = tip - clamped;
     emit UpdateNativeTip(stakeId, settings, tip);
     if (tip == 0) {
