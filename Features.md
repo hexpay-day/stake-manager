@@ -123,3 +123,16 @@ Each of these manipulations uses method 0-6 in the compute magnitude methods as 
 \** mostly useful for new stake days magnitude only<br>
 
 Note: if the configuration is malformed for settings passed into the `computeMagnitude` method, it can cause unwanted results. For instance, because the `currentDay` is passed as the `y` value during stake days computing, it does not make sense to return the `y` value, as occurs in method `1` because that could result in the stake days being > `5555`.
+
+### Auxilliary Features
+
+The ability to create stakes that anyone has control over is an interesting feature that is not available in the current HEX staking model. The ability to create a stake for an address that does not yet exist or simply starting a stake for someone remotely is an exciting new feature that is now available to all hex stakers with these contracts. A simple model for how this could play out could be as follows:
+1. Have the recipient create a wallet and send an address.
+1. Start a stake for that address using the `stakeStartFromBalanceFor` method which will pull HEX from the sending wallet and mark the stake as owned by the designated recipient with settings that will roll the stake over, given some period.
+1. Fund a small amount of eth to incent an end stake or provide appropriate settings to tip using hex.
+
+Under this pattern, they have the stake length as the amount of time to figure out how to end their stake (use DeFi). And if they are unable to figure it out, their stake is still safe and can either be custodied by the contract or rolled into a ladder.
+
+More complex patterns can be achived by launching contracts that utilize the `SingletonStakeManager` contract, such as creating NFT's (cheap) to delineate stake ownership without requiring a new contract be cloned (expensive), dead man switches, or social recovery mechanisms just to name a few.
+
+Another reason why this library makes building on top of HEX much more attractive is that stake indexes no longer have to be tracked. The contract assumes, that there is no need to track an index in an array on top of an id since, generally one only cares about the stake id being ended. If a contract wishes to keep a list, they are still free to do so, but that list will be auxillary to the globally stored stake list in `SingletonStakeManager`.
