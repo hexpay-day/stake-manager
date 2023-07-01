@@ -5,14 +5,35 @@ import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/IERC721Enumerable.sol";
 
 interface IHEXStakeInstanceManager is IERC721, IERC721Enumerable {
-  event HSIDetokenize(
+  event HSIStart(
+    uint256         timestamp,
+    address indexed hsiAddress,
+    address indexed staker
+  );
+
+  event HSIEnd(
+    uint256         timestamp,
+    address indexed hsiAddress,
+    address indexed staker
+  );
+
+  event HSITransfer(
+    uint256         timestamp,
+    address indexed hsiAddress,
+    address indexed oldStaker,
+    address indexed newStaker
+  );
+
+  event HSITokenize(
     uint256         timestamp,
     uint256 indexed hsiTokenId,
     address indexed hsiAddress,
     address indexed staker
   );
-  event HSIEnd(
+
+  event HSIDetokenize(
     uint256         timestamp,
+    uint256 indexed hsiTokenId,
     address indexed hsiAddress,
     address indexed staker
   );

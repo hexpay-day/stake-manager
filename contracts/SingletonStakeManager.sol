@@ -356,7 +356,12 @@ contract SingletonStakeManager is SingletonHedronManager, Magnitude {
   function addNativeTipToStake(uint256 stakeId, uint256 amount, uint256 settings) external returns(uint256) {
     return _addNativeTipToStake(msg.sender, stakeId, amount, settings);
   }
-  function _addNativeTipToStake(address account, uint256 stakeId, uint256 amount, uint256 settings) internal returns(uint256 encodedSettings) {
+  function _addNativeTipToStake(
+    address account,
+    uint256 stakeId,
+    uint256 amount,
+    uint256 settings
+  ) internal returns(uint256 encodedSettings) {
     uint256 nativeBalance = nativeBalanceOf[account];
     uint256 clamped = _clamp(amount, nativeBalanceOf[account]);
     if (_stakeCount() > 0) {
