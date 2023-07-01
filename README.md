@@ -24,7 +24,7 @@ _Why do these contracts exist? Hex works fine._
 
 Does it though? If you look at a trace of a hex end stake on either Ethereum or PulseChain you will find a series of sloads, each costing 2100 gas to perform, for each and every day that the stake was active. This has been a known issue in the Hex community by any dev who has reviewed the contract. It even showed up in the [audit](https://hex.com/docs/HEX-Security-Audit-by-CoinFabrik-DEC2019.pdf) (search "excessive gas") and the maximum days were adjusted to accomodate for this issue. Note, the audit shows gas prices before they were adjusted upward in the berlin hardfork ([eip-2929](https://eips.ethereum.org/EIPS/eip-2929)).
 
-Luckily, there is a path forward. I do not care if you end up using these contracts, I just want hexicans to be able to save their gas money and not waste it because they were unable to coordinate to get out of this predicament. I do think that if everyone uses the same contract to end their stake that there are huge gains in the order of 95% or more savings that can be achieved.
+Luckily, there is a path forward. I do not care if you end up using these contracts, I just want hexicans to be able to save their gas money and not waste it because they were unable to coordinate to get out of this predicament. I do think that if everyone uses the same contract to end their stake that there are huge gains in the order of 95% savings that can be achieved.
 
 _Example of the beginning of a loop of SLOAD opcodes in a hex end stake trace:_
 ```
@@ -45,7 +45,7 @@ _What does success look like?_
 
 In contract terms, success would be the majority of stakes started after these contracts are launched are ended through these contracts.
 
-Economically, success would be, at a minimum, reducing the cost of ending a stake, or even more broadly, managing a stake / principle by a fraction, at least 50%, however, I think 95% is certainly achievable, especially for medium to medium-long stakes. This, value, expressed in terms of dollars could be highly valuable by itself. However, what is better is that this value compounds over time and allows hexicans to have more dollars to spend on other (non gas) things.
+Economically, success would be, at a minimum, reducing the cost of ending a stake, or even more broadly, managing a stake / principle by a fraction, at least 50%, however, I think these savings are achievable, especially for medium to medium-long stakes. This, value, expressed in terms of dollars could be highly valuable by itself. However, what is better is that this value compounds over time and allows hexicans to have more dollars to spend on other (non gas) things.
 
 Here are some graphs and data relevant to the issue.
 * https://dune.com/queries/2633637/4373958
