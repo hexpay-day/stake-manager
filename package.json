@@ -44,5 +44,5 @@
     "hardhat-tracer": "^2.4.0",
     "solhint": "^3.4.1"
   },
-  "version": "1.0.2"
+  "version": "1.0.3"
 }
