@@ -87,3 +87,7 @@ There are multiple rational, but also detrimental behaviors that occur without a
 1. wait multiple days to end a stake since hex has 14 days before penalty is accrued from late ends during periods of high base fee
 
 Sitting in liquid hex does provide benefits, certainly. However, some people prefer sitting in tshares to not have to think about their position and this library helps reduce the psychological cost of requiring one to add liquid hex after ending stakes.
+
+_Doesn't the Good Accounting method fix this?_
+
+No, in fact, it makes it worse, unless you get the cached SLOAD cost. If you look at the underlying code for the good accounting method, you'll find that in order to good account, you have to do all of the calculations that the stake end method does, but the stake end method doesn't even get to take advantage of doing the calculation there and it costs the same as ending a stake. Using a public multicall, however, using a contract like this, you can good account multiple stakes at the same time, therefore saving gas funds and saving any bleeding stakes.
