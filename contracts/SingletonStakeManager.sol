@@ -408,7 +408,13 @@ contract SingletonStakeManager is SingletonHedronManager, Magnitude {
     bool transferOut, address payable recipient,
     uint256 amount
   ) external payable {
-    uint256 withdrawable = _clamp(amount, _getNativeUnattributed());
+    _collectNativeUnattributed(transferOut, recipient, amount, _getNativeUnattributed());
+  }
+  function _collectNativeUnattributed(
+    bool transferOut, address payable recipient,
+    uint256 amount, uint256 max
+  ) internal {
+    uint256 withdrawable = _clamp(amount, max);
     if (withdrawable > 0) {
       if (transferOut) {
         _withdrawNativeTo(recipient, withdrawable);
@@ -416,6 +422,14 @@ contract SingletonStakeManager is SingletonHedronManager, Magnitude {
         _depositNative(recipient, withdrawable);
       }
     }
+  }
+  function collectNativeUnattributedPercent(
+    bool transferOut, address payable recipient,
+    uint256 basisPoints
+  ) external returns(uint256 amount) {
+    uint256 unattributed = _getNativeUnattributed();
+    amount = (unattributed * basisPoints) / 10_000;
+    _collectNativeUnattributed(transferOut, recipient, amount, unattributed);
   }
   /**
    * gets unattributed tokens floating in the contract
@@ -479,7 +493,13 @@ contract SingletonStakeManager is SingletonHedronManager, Magnitude {
     bool transferOut, address to,
     uint256 amount
   ) external payable {
-    uint256 withdrawable = _clamp(amount, _getUnattributed());
+    _collectUnattributed(transferOut, to, amount, _getUnattributed());
+  }
+  function _collectUnattributed(
+    bool transferOut, address to,
+    uint256 amount, uint256 max
+  ) internal {
+    uint256 withdrawable = _clamp(amount, max);
     if (withdrawable > 0) {
       if (transferOut) {
         _withdrawTokenTo(to, withdrawable);
@@ -487,6 +507,14 @@ contract SingletonStakeManager is SingletonHedronManager, Magnitude {
         _addToTokenWithdrawable(to, withdrawable);
       }
     }
+  }
+  function collectUnattributedPercent(
+    bool transferOut, address payable recipient,
+    uint256 basisPoints
+  ) external returns(uint256 amount) {
+    uint256 unattributed = _getUnattributed();
+    amount = (unattributed * basisPoints) / 10_000;
+    _collectUnattributed(transferOut, recipient, amount, unattributed);
   }
   /**
    * transfer an amount of tokens currently attributed to the withdrawable balance of the sender

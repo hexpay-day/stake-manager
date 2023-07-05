@@ -448,6 +448,11 @@ describe("StakeManager", function () {
         .eventually.to.equal(0)
       await x.stakeManager.connect(signer2).multicall([
         x.stakeManager.interface.encodeFunctionData('stakeEndByConsent', [nextStakeId]),
+        x.stakeManager.interface.encodeFunctionData('collectUnattributedPercent', [
+          false,
+          signer2.address,
+          500,
+        ]),
         x.stakeManager.interface.encodeFunctionData('collectUnattributed', [
           false,
           signer2.address,
@@ -520,6 +525,11 @@ describe("StakeManager", function () {
       await setNextBlockBaseFeePerGas(10n**6n)
       await expect(x.stakeManager.connect(signer2).multicall([
         x.stakeManager.interface.encodeFunctionData('stakeEndByConsent', [nextStakeId]),
+        x.stakeManager.interface.encodeFunctionData('collectNativeUnattributedPercent', [
+          false,
+          signer2.address,
+          500,
+        ]),
         x.stakeManager.interface.encodeFunctionData('collectNativeUnattributed', [
           false,
           signer2.address,
