@@ -32,10 +32,6 @@ contract UnderlyingStakeManager is Stakeable, Capable {
   function stakeIdToIndex(uint256 stakeId) external view returns(uint256) {
     return stakeIdInfo[stakeId] >> 160;
   }
-  /**
-   * creates the internal stake ender contract
-   */
-  constructor() {}
   /** deposits tokens from a staker and marks them for that staker */
   function _depositTokenFrom(address staker, uint256 amount) internal {
     IERC20(target).transferFrom(staker, address(this), amount);
@@ -144,5 +140,19 @@ contract UnderlyingStakeManager is Stakeable, Capable {
     }
     amount = _stakeEnd(stakeInfo >> 160, stakeId);
     _withdrawTokenTo(msg.sender, amount);
+  }
+  /**
+   * freeze the progression of a stake to avoid penalties and preserve payout
+   * @param stakerAddr the originating stake address
+   * @param stakeIndex the index of the stake on the address
+   * @param stakeIdParam the stake id to verify the same stake is being targeted
+   */
+  function stakeGoodAccounting(address stakerAddr, uint256 stakeIndex, uint40 stakeIdParam) external override {
+    _stakeGoodAccounting(stakerAddr, stakeIndex, stakeIdParam);
+  }
+  function _stakeGoodAccounting(address stakerAddr, uint256 stakeIndex, uint256 stakeIdParam) internal {
+    // no data is marked during good accounting, only computed and placed into logs
+    // so we cannot return anything useful to the caller of this method
+    IHEX(target).stakeGoodAccounting(stakerAddr, stakeIndex, uint40(stakeIdParam));
   }
 }

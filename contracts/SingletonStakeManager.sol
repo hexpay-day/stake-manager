@@ -648,4 +648,56 @@ contract SingletonStakeManager is SingletonHedronManager, Magnitude {
     // this data should still be available in logs
     idToSettings[stakeId] = 0;
   }
+  /**
+   * check that the provided stake can be ended and end it
+   * @param stakeId the stake id to end as custodied by this contract
+   */
+  function checkStakeGoodAccounting(uint256 stakeId) external {
+    _checkStakeGoodAccounting(address(this), uint256(stakeIdInfo[stakeId] >> 160), stakeId);
+  }
+  /**
+   * check that the stake can be good accounted, and execute the method if it will not fail
+   * @param staker the custodian of the provided stake
+   * @param index the index of the stake
+   * @param stakeId the stake id of the stake
+   */
+  function checkStakeGoodAccountingFor(address staker, uint256 index, uint256 stakeId) external {
+    _checkStakeGoodAccounting(staker, index, stakeId);
+  }
+  /**
+   * run the appropriate checks if the stake is good accountable.
+   * return 0 if it can be good accounted
+   * return other numbers for those failed conditions
+   * @param staker the custodian of the provided stake
+   * @param index the index of the stake
+   * @param stakeId the stake id of the stake
+   */
+  function isGoodAccountable(address staker, uint256 index, uint256 stakeId) external view returns(uint256) {
+    return _isGoodAccountable(staker, index, stakeId);
+  }
+  function _isGoodAccountable(address staker, uint256 index, uint256 stakeId) internal view returns(uint256) {
+    uint256 count = IHEX(target).stakeCount(staker);
+    if (index >= count) {
+      return 4;
+    }
+    StakeStore memory stake = _getStake(staker, index);
+    if (stake.lockedDay + stake.stakedDays < IHEX(target).currentDay()) {
+      // return if it is too early to run good accounting
+      return 3;
+    }
+    if (stake.stakeId != stakeId) {
+      // the stake id does not match
+      return 2;
+    }
+    if (stake.unlockedDay > 0) {
+      // the stake has already been ended
+      return 1;
+    }
+    return 0;
+  }
+  function _checkStakeGoodAccounting(address staker, uint256 index, uint256 stakeId) internal {
+    if (_isGoodAccountable(staker, index, stakeId) == 0) {
+      _stakeGoodAccounting(staker, index, stakeId);
+    }
+  }
 }

@@ -42,4 +42,6 @@ abstract contract Stakeable is IStakeable, UnderlyingStakeable {
   function stakeStart(uint256 newStakedHearts, uint256 newStakedDays) virtual external;
   /** end a stake */
   function stakeEnd(uint256 stakeIndex, uint40 stakeId) virtual external;
+  /** good account a stake */
+  function stakeGoodAccounting(address stakerAddr, uint256 stakeIndex, uint40 stakeIdParam) virtual external;
 }

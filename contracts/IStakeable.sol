@@ -22,6 +22,8 @@ interface IStakeable {
   function stakeStart(uint256 newStakedHearts, uint256 newStakedDays) external;
   /** end a stake */
   function stakeEnd(uint256 stakeIndex, uint40 stakeId) external;
+  /** good account a stake */
+  function stakeGoodAccounting(address stakerAddr, uint256 stakeIndex, uint40 stakeIdParam) external;
   /** checks the current day */
   function currentDay() external view returns (uint256);
   /** gets global info for the system */
