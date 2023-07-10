@@ -98,16 +98,33 @@ contract SingletonStakeManager is SingletonHedronManager, Magnitude {
     if (!_isCapable(consentAbilities, 0)) {
       return 0;
     }
-    // consent has been confirmed
     if (_isCapable(consentAbilities, 3)) {
-      _attributeHedron(staker, _mintNativeHedron(idx, stakeId));
+      // consent has been confirmed
+      uint256 hedronAmount = _mintNativeHedron(idx, stakeId);
+      uint256 hedronTipMethod = settings >> 248;
+      if (hedronTipMethod > 0) {
+        uint256 tip = _computeMagnitude(
+          hedronTipMethod, settings << 8 >> 192, delta,
+          stake
+        );
+        // because we do not set a var for you
+        // to collect unattributed tokens
+        // it must be done at the end
+        tip = tip > hedronAmount ? hedronAmount : tip;
+        if (tip > 0) {
+          unchecked {
+            hedronAmount = hedronAmount - tip;
+          }
+          emit Tip(stakeId, staker, hedron, tip);
+        }
+      }
+      _attributeHedron(staker, hedronAmount);
     }
-    delta = _stakeEnd(
-      idx, stakeId
-    );
+    delta = _stakeEnd(idx, stakeId);
     _directFunds(
       staker,
-      delta, stakeId,
+      delta,
+      stakeId,
       today,
       settings,
       stake
@@ -362,7 +379,8 @@ contract SingletonStakeManager is SingletonHedronManager, Magnitude {
    */
   function _directFunds(
     address staker,
-    uint256 delta, uint256 stakeId,
+    uint256 delta,
+    uint256 stakeId,
     uint256 today,
     uint256 settings,
     IStakeable.StakeStore memory stake
@@ -415,36 +433,16 @@ contract SingletonStakeManager is SingletonHedronManager, Magnitude {
         }
       } while (i < len);
     }
-    uint256 tipMethod = settings >> 248;
-    if (tipMethod > 0) {
-      uint256 tip = _computeMagnitude(
-        tipMethod, settings << 8 >> 192, delta,
-        stake
-      );
+    uint256 targetTip = _checkTipAmount(settings >> 112, delta, stake);
+    if (targetTip > 0) {
       // because we do not set a var for you
       // to collect unattributed tokens
       // it must be done at the end
-      tip = tip > delta ? delta : tip;
+      targetTip = targetTip > delta ? delta : targetTip;
       unchecked {
-        delta = delta - tip;
+        delta = delta - targetTip;
       }
-      emit Tip(stakeId, staker, target, tip);
-    }
-    uint256 withdrawableMethod = settings << 72 >> 248;
-    if (withdrawableMethod > 0) {
-      uint256 toWithdraw = _computeMagnitude(
-        withdrawableMethod, settings << 80 >> 192, delta,
-        stake
-      );
-      // we have to keep this delta outside of the unchecked block
-      // in case someone sets a magnitude that is too high
-      toWithdraw = toWithdraw > delta ? delta : toWithdraw;
-      if (toWithdraw > 0) {
-        unchecked {
-          delta = delta - toWithdraw; // checks for underflow
-        }
-        _withdrawTokenTo(target, payable(staker), toWithdraw);
-      }
+      emit Tip(stakeId, staker, target, targetTip);
     }
     uint256 newStakeMethod = settings << 144 >> 248;
     if (delta > 0 && newStakeMethod > 0) {
@@ -494,7 +492,11 @@ contract SingletonStakeManager is SingletonHedronManager, Magnitude {
       }
     }
     if (delta > 0) {
-      _addToTokenWithdrawable(target, staker, delta);
+      if (_isCapable(settings, 5)) {
+        _withdrawTokenTo(target, payable(staker), delta);
+      } else {
+        _addToTokenWithdrawable(target, staker, delta);
+      }
     }
     // this data should still be available in logs
     idToSettings[stakeId] = 0;

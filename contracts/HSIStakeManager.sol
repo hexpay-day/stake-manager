@@ -93,7 +93,7 @@ contract HSIStakeManager is UnderlyingStakeable, Magnitude, Capable, Bank {
       uint256 setting = settings[hsiAddress];
       if (_isCapable(setting, 0)) {
         uint256 ethLimit = withdrawableBalanceOf[address(0)][currentOwner];
-        uint256 etherTip = _checkTokenTip(setting >> 8, ethLimit, stake);
+        uint256 etherTip = _checkTipAmount(setting >> 8, ethLimit, stake);
         if (etherTip > 0) {
           unchecked {
             withdrawableBalanceOf[address(0)][currentOwner] = ethLimit - etherTip;
@@ -102,7 +102,7 @@ contract HSIStakeManager is UnderlyingStakeable, Magnitude, Capable, Bank {
         }
       }
       if (_isCapable(setting, 1)) {
-        uint256 hedronTip = _checkTokenTip(setting >> 80, hedronTokens, stake);
+        uint256 hedronTip = _checkTipAmount(setting >> 80, hedronTokens, stake);
         if (hedronTip > 0) {
           unchecked {
             hedronTokens -= hedronTip;
@@ -110,7 +110,7 @@ contract HSIStakeManager is UnderlyingStakeable, Magnitude, Capable, Bank {
         }
       }
       if (_isCapable(setting, 2)) {
-        uint256 targetTip = _checkTokenTip(setting >> 152, targetTokens, stake);
+        uint256 targetTip = _checkTipAmount(setting >> 152, targetTokens, stake);
         if (targetTip > 0) {
           unchecked {
             targetTokens -= targetTip;
@@ -131,17 +131,6 @@ contract HSIStakeManager is UnderlyingStakeable, Magnitude, Capable, Bank {
         ++i;
       }
     } while (i < len);
-  }
-  function _checkTokenTip(
-    uint256 setting,
-    uint256 limit,
-    IStakeable.StakeStore memory stake
-  ) internal pure returns(uint256 tip) {
-    uint256 method = setting >> 64;
-    if (method > 0) {
-      tip = _computeMagnitude(method, uint64(setting), limit, stake);
-      tip = tip > limit ? limit : tip;
-    }
   }
   function setSettings(address hsiAddress, uint256 setting) external {
     if (hsiToOwner[hsiAddress] != msg.sender) {

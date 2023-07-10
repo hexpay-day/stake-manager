@@ -4,12 +4,11 @@ pragma solidity ^0.8.17;
 contract EncodableSettings {
   // 1 word;
   struct Settings {
+    uint8 hedronTipMethod;
+    uint64 hedronTipMagnitude;
     // starts with full amount of end stake
     uint8 tipMethod;
     uint64 tipMagnitude;
-    // starts with amount of end stake - tip amount
-    uint8 withdrawableMethod;
-    uint64 withdrawableMagnitude;
     // the rest goes into a new stake if the number of days are set
     uint8 newStakeMethod; // being non zero signals approval
     uint64 newStakeMagnitude;
@@ -18,11 +17,12 @@ contract EncodableSettings {
     uint16 newStakeDaysMagnitude;
     uint8 copyIterations; // 0 for do not restart, 1-254 as countdown, 255 as restart indefinitely
     /**
-     * 00001(0): stake end
-     * 00010(1): early stake end
-     * 00100(2): mint hedron (any time)
-     * 01000(3): mint hedron during end stake
-     * 10000(4): has eth tip
+     * 000001(0): stake end
+     * 000010(1): early stake end
+     * 000100(2): mint hedron (any time)
+     * 001000(3): mint hedron during end stake
+     * 010000(4): has eth tip
+     * 100000(5): should send to staker
      */
     uint8 consentAbilities;
   }
@@ -93,10 +93,10 @@ contract EncodableSettings {
     return _encodeSettings(settings);
   }
   function _encodeSettings(Settings memory settings) internal pure returns(uint256 encoded) {
-    return uint256(settings.tipMethod) << 248
-      | uint256(settings.tipMagnitude) << 184
-      | uint256(settings.withdrawableMethod) << 176
-      | uint256(settings.withdrawableMagnitude) << 112
+    return uint256(settings.hedronTipMethod) << 248
+      | uint256(settings.hedronTipMagnitude) << 184
+      | uint256(settings.tipMethod) << 176
+      | uint256(settings.tipMagnitude) << 112
       | uint256(settings.newStakeMethod) << 104
       | uint256(settings.newStakeMagnitude) << 40
       | uint256(settings.newStakeDaysMethod) << 32
@@ -129,15 +129,15 @@ contract EncodableSettings {
   function _defaultSettings() internal pure returns(Settings memory settings) {
     return Settings(
       /*
+       * by default, there is no hedron tip
+       * assume that stakers will manage their own stakes at bare minimum
+       */
+      uint8(0), uint64(0), // hedron tip
+      /*
        * by default, there is no tip
        * assume that stakers will manage their own stakes at bare minimum
        */
       uint8(0), uint64(0), // tip
-      /*
-       * by default, no tokens are ever sent back to the originating staker
-       * assume that stakers wish to keep tokens in this singleton contract for efficiency purposes
-       */
-      uint8(0), uint64(0), // withdrawable
       /*
        * by default, assume that all tokens minted from an end stake
        * should go directly into a new stake

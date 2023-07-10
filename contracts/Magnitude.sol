@@ -56,6 +56,24 @@ contract Magnitude {
       }
     }
   }
+  function _checkTipAmount(
+    uint256 setting,
+    uint256 limit,
+    IStakeable.StakeStore memory stake
+  ) internal pure returns(uint256 tip) {
+    uint256 method = uint8(setting >> 64);
+    if (method > 0) {
+      tip = _computeMagnitude(method, uint64(setting), limit, stake);
+      tip = tip > limit ? limit : tip;
+    }
+  }
+  function checkTipAmount(
+    uint256 setting,
+    uint256 limit,
+    IStakeable.StakeStore memory stake
+  ) external pure returns(uint256 tip) {
+    return _checkTipAmount(setting, limit, stake);
+  }
   /**
    * compute a magnitude given an x and y
    * @param method the method to use to compute the result

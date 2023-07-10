@@ -772,26 +772,6 @@ describe("StakeManager", function () {
       await expect(x.stakeManager.stakeIdToOwner(nextStakeId))
         .eventually.to.equal(signer2.address)
     })
-    it('allows for automatic withdrawal', async () => {
-      const x = await loadFixture(utils.deployFixture)
-      const nextStakeId = await utils.nextStakeId(x)
-      const days = 10
-      const [signer1, signer2] = x.signers
-      await x.stakeManager.stakeStartFromBalanceFor(signer1.address, x.stakedAmount, days, 0)
-      await utils.moveForwardDays(11, x)
-      const settings = await x.stakeManager.idToDecodedSettings(nextStakeId)
-      const updatedSettings: EncodableSettings.SettingsStruct = {
-        ...settings,
-        withdrawableMethod: 4,
-        withdrawableMagnitude: (1n << 32n) | 1n,
-      }
-      await expect(x.stakeManager.updateSettings(nextStakeId, updatedSettings))
-        .to.emit(x.stakeManager, 'UpdatedSettings')
-        .withArgs(nextStakeId, await x.stakeManager.encodeSettings(updatedSettings))
-      await expect(x.stakeManager.connect(signer2).stakeEndByConsent(nextStakeId))
-        .to.emit(x.hex, 'Transfer')
-        .withArgs(x.stakeManager.address, signer1.address, withArgs.anyUint)
-    })
     it('allows settings to be passed at the same time', async () => {
       const x = await loadFixture(utils.deployFixture)
       const nextStakeId = await utils.nextStakeId(x)
