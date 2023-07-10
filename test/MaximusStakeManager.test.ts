@@ -57,10 +57,7 @@ describe('MaximusStakeManager.sol', () => {
           [x.gasReimberser, x.maximusStakeManager, signerA],
           [oneEther.toBigInt() * -1n, oneEther, 0],
         )
-      await expect(x.maximusStakeManager.connect(signerB).flush(x.gasReimberser.address, x.base, currentPeriod, [x.hex.address]))
-        .to.revertedWithCustomError(x.maximusStakeManager, 'NotAllowed')
-      const key = await x.maximusStakeManager.rewardKey(x.base, currentPeriod)
-      await expect(x.maximusStakeManager.rewardsTo(key))
+      await expect(x.maximusStakeManager.rewardsTo(x.base, currentPeriod.toNumber() + 1))
         .eventually.to.equal(signerA.address)
       await expect(x.maximusStakeManager.flush(x.gasReimberser.address, x.base, currentPeriod.toNumber(), [x.hex.address]))
         .changeTokenBalances(x.hex,
@@ -71,7 +68,18 @@ describe('MaximusStakeManager.sol', () => {
       const bal = balanceNative?.toBigInt() || 0n
       const balanceToken = await x.hex.balanceOf(x.maximusStakeManager.address)
       const balToken = balanceToken.toBigInt()
-      await expect(x.maximusStakeManager.withdraw(x.base, currentPeriod.toNumber(), signerA.address, [hre.ethers.constants.AddressZero, x.hex.address], [0, 0]))
+      await expect(x.maximusStakeManager.multicall([
+        x.hsiStakeManager.interface.encodeFunctionData('withdrawTokenTo', [
+          hre.ethers.constants.AddressZero,
+          signerA.address,
+          0,
+        ]),
+        x.hsiStakeManager.interface.encodeFunctionData('withdrawTokenTo', [
+          x.hex.address,
+          signerA.address,
+          0,
+        ]),
+      ], false))
         .changeEtherBalances(
           [x.maximusStakeManager, signerA],
           [bal * -1n, bal],

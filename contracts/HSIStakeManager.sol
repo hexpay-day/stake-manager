@@ -5,15 +5,20 @@ import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "./IHedron.sol";
 import "./IHEXStakeInstanceManager.sol";
+import "./IHEX.sol";
 import "./Multicall.sol";
 import "./UnderlyingStakeable.sol";
+import "./IStakeable.sol";
+import "./Magnitude.sol";
+import "./Capable.sol";
+import "./Bank.sol";
 
-contract HSIStakeManager is UnderlyingStakeable {
+contract HSIStakeManager is UnderlyingStakeable, Magnitude, Capable, Bank {
   /**
    * a mapping of hsi addresses to the address that deposited the hsi into this contract
    */
   mapping(address => address) public hsiToOwner;
-  constructor() {}
+  mapping(address => uint256) public settings;
   /**
    * transfer stakes by their token ids
    * @param tokenId the token id to move to this contract
@@ -31,6 +36,7 @@ contract HSIStakeManager is UnderlyingStakeable {
     IERC721(token).transferFrom(msg.sender, address(this), tokenId);
   }
   struct HSIParams {
+    bool checkTip;
     uint96 hsiIndex;
     address hsiAddress;
   }
@@ -73,46 +79,74 @@ contract HSIStakeManager is UnderlyingStakeable {
     uint256 targetTokens;
     uint256 hedronTokens;
     uint256 i;
-    address hsiAddress = params[0].hsiAddress;
+    address hsiAddress;
     uint256 index;
     address currentOwner;
-    address to = hsiToOwner[hsiAddress];
     address hsim = IHedron(hedron).hsim();
     do {
       hsiAddress = params[i].hsiAddress;
       currentOwner = hsiToOwner[hsiAddress];
-      if (currentOwner != to) {
-        _payout(to, hedronTokens, targetTokens);
-        hedronTokens = 0;
-        targetTokens = 0;
-      }
       index = params[i].hsiIndex;
-      unchecked {
-        hedronTokens += IHedron(hedron).mintInstanced(index, hsiAddress);
-        targetTokens += IHEXStakeInstanceManager(hsim).hexStakeEnd(index, hsiAddress);
+      IStakeable.StakeStore memory stake = IHEX(target).stakeLists(hsiAddress, 0);
+      uint256 hedronReward = IHedron(hedron).mintInstanced(index, hsiAddress);
+      uint256 targetReward = IHEXStakeInstanceManager(hsim).hexStakeEnd(index, hsiAddress);
+      uint256 setting = settings[hsiAddress];
+      if (_isCapable(setting, 0)) {
+        uint256 ethLimit = withdrawableBalanceOf[address(0)][currentOwner];
+        uint256 etherTip = _checkTokenTip(setting >> 8, ethLimit, stake);
+        if (etherTip > 0) {
+          unchecked {
+            withdrawableBalanceOf[address(0)][currentOwner] = ethLimit - etherTip;
+            attributed[address(0)] -= etherTip;
+          }
+        }
+      }
+      if (_isCapable(setting, 1)) {
+        uint256 hedronTip = _checkTokenTip(setting >> 80, hedronTokens, stake);
+        if (hedronTip > 0) {
+          unchecked {
+            hedronTokens -= hedronTip;
+          }
+        }
+      }
+      if (_isCapable(setting, 2)) {
+        uint256 targetTip = _checkTokenTip(setting >> 152, targetTokens, stake);
+        if (targetTip > 0) {
+          unchecked {
+            targetTokens -= targetTip;
+          }
+        }
+      }
+      if (hedronReward > 0) {
+        unchecked {
+          withdrawableBalanceOf[hedron][currentOwner] += hedronReward;
+        }
+      }
+      if (targetReward > 0) {
+        unchecked {
+          withdrawableBalanceOf[target][currentOwner] += targetReward;
+        }
       }
       unchecked {
         ++i;
       }
     } while (i < len);
-    _payout(to, hedronTokens, targetTokens);
   }
-  /**
-   * transfer tokens to a given address
-   * @param to send tokens to this address
-   * @param hedronTokens the number of hedron tokens to send
-   * @param targetTokens the number of hex tokens to send
-   */
-  function _payout(
-    address to,
-    uint256 hedronTokens,
-    uint256 targetTokens
-  ) internal {
-    if (hedronTokens > 0) {
-      IERC20(hedron).transfer(to, hedronTokens);
+  function _checkTokenTip(
+    uint256 setting,
+    uint256 limit,
+    IStakeable.StakeStore memory stake
+  ) internal pure returns(uint256 tip) {
+    uint256 method = setting >> 64;
+    if (method > 0) {
+      tip = _computeMagnitude(method, uint64(setting), limit, stake);
+      tip = tip > limit ? limit : tip;
     }
-    if (targetTokens > 0) {
-      IERC20(target).transfer(to, targetTokens);
+  }
+  function setSettings(address hsiAddress, uint256 setting) external {
+    if (hsiToOwner[hsiAddress] != msg.sender) {
+      revert NotAllowed();
     }
+    settings[hsiAddress] = uint224(setting);
   }
 }

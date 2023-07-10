@@ -12,4 +12,11 @@ import "./IStakeable.sol";
 interface IUnderlyingStakeable is IStakeable {
   /** get the count of stakes for a staker */
   function stakeCount(address stakerAddr) external view returns (uint256);
+  /**
+   * freeze the progression of a stake to avoid penalties and preserve payout
+   * @param stakerAddr the custoidan of the stake
+   * @param stakeIndex the index of the stake in question
+   * @param stakeIdParam the id of the stake
+   */
+  function stakeGoodAccounting(address stakerAddr, uint256 stakeIndex, uint40 stakeIdParam) external;
 }

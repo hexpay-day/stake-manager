@@ -140,7 +140,7 @@ contract IsolatedStakeManager is Stakeable, Ownable2Step, AuthorizationManager {
     if (!_isCapable(_getAddressSetting(msg.sender), 3)) {
       revert NotAllowed();
     }
-    IERC20(target).transfer(owner(), _getBalance());
+    IERC20(target).transfer(owner(), _getBalance(address(this)));
   }
   /**
    * check the settings of the running address
@@ -169,7 +169,7 @@ contract IsolatedStakeManager is Stakeable, Ownable2Step, AuthorizationManager {
    * @param newStakedDays a number of days to start a stake for
    */
   function _stakeStart(uint256 newStakedDays) internal {
-    uint256 stakedHearts = _getBalance();
+    uint256 stakedHearts = _getBalance(address(this));
     if (stakedHearts > 0) {
       IStakeable(target).stakeStart(stakedHearts, newStakedDays);
     }

@@ -9,13 +9,16 @@ contract UnderlyingStakeable is Multicall {
   address public constant target = 0x2b591e99afE9f32eAA6214f7B7629768c40Eeb39;
   address public constant hedron = 0x3819f64f282bf135d62168C1e513280dAF905e06;
   error NotAllowed();
-  function stakeCount() external view returns(uint256) {
-    return _stakeCount();
+  function stakeCount(address staker) external view returns(uint256) {
+    return _stakeCount(staker);
   }
-  function _stakeCount() internal view returns(uint256) {
-    return IHEX(target).stakeCount(address(this));
+  function _stakeCount(address staker) internal view returns(uint256) {
+    return IHEX(target).stakeCount(staker);
   }
-  function _getBalance() internal view returns(uint256) {
-    return IERC20(target).balanceOf(address(this));
+  function balanceOf(address owner) external view returns(uint256) {
+    return _getBalance(owner);
+  }
+  function _getBalance(address owner) internal view returns(uint256) {
+    return IERC20(target).balanceOf(owner);
   }
 }

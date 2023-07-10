@@ -4,25 +4,17 @@ import * as hre from "hardhat"
 import _ from 'lodash'
 import * as withArgs from '@nomicfoundation/hardhat-chai-matchers/withArgs'
 import * as utils from './utils'
-import { EncodableSettings, IStakeable, StakeManager } from "../artifacts/types"
+import { EncodableSettings, IStakeable } from "../artifacts/types"
 
 describe("StakeManager", function () {
-  describe("deployment", function () {
-    it('should have a percentMagnitudeLimit', async function() {
-      const x = await loadFixture(utils.deployFixture)
-      await expect(x.stakeManager.percentMagnitudeLimit()).eventually.to.equal(
-        hre.ethers.BigNumber.from(2).pow(64).toBigInt() - 1n
-      )
-    })
-  })
   describe('UnderlyingStakeable', () => {
     it('should count its stakes', async () => {
       const x = await loadFixture(utils.deployFixture)
       const [signer1] = x.signers
-      await expect(x.stakeManager.stakeCount())
+      await expect(x.stakeManager.stakeCount(x.stakeManager.address))
         .eventually.to.equal(0)
       await x.stakeManager.connect(signer1).stakeStart(x.stakedAmount, 10)
-      await expect(x.stakeManager.stakeCount())
+      await expect(x.stakeManager.stakeCount(x.stakeManager.address))
         .eventually.to.equal(1)
     })
   })
@@ -78,35 +70,33 @@ describe("StakeManager", function () {
     it("should not allow too much to be withdrawn", async function () {
       const x = await loadFixture(utils.deployFixture)
       const [signer1, signer2, signer3] = x.signers
-      await expect(x.stakeManager.connect(signer1).depositToken(x.oneMillion))
+      await expect(x.stakeManager.connect(signer1).depositToken(x.hex.address, x.oneMillion))
         .to.emit(x.hex, 'Transfer')
         .withArgs(signer1.address, x.stakeManager.address, x.oneMillion)
-      await expect(x.stakeManager.connect(signer2).depositToken(x.oneMillion))
+      await expect(x.stakeManager.connect(signer2).depositToken(x.hex.address, x.oneMillion))
         .to.emit(x.hex, 'Transfer')
         .withArgs(signer2.address, x.stakeManager.address, x.oneMillion)
       await expect(x.hex.balanceOf(x.stakeManager.address))
         .eventually.to.equal(x.oneMillion * 2n)
-      await expect(x.stakeManager.connect(signer3).withdrawTokenTo(signer1.address, 1))
-        .to.be.revertedWithCustomError(x.StakeManager, 'NotEnoughFunding')
-        .withArgs(0, 1)
-      await expect(x.stakeManager.connect(signer2).withdrawTokenTo(signer1.address, 1n + x.oneMillion))
-        .to.be.revertedWithCustomError(x.StakeManager, 'NotEnoughFunding')
-        .withArgs(x.oneMillion, 1n + x.oneMillion)
+      await expect(x.stakeManager.connect(signer3).withdrawTokenTo(x.hex.address, signer1.address, 1))
+        .not.to.reverted
+      await expect(x.stakeManager.connect(signer2).withdrawTokenTo(x.hex.address, signer1.address, 1n + x.oneMillion))
+        .not.to.reverted
     })
     it('should allow the contract to define how much to withdraw', async function () {
       const x = await loadFixture(utils.deployFixture)
       const [signer1, signer2] = x.signers
-      await expect(x.stakeManager.connect(signer1).depositToken(x.oneMillion))
+      await expect(x.stakeManager.connect(signer1).depositToken(x.hex.address, x.oneMillion))
         .to.emit(x.hex, 'Transfer')
         .withArgs(signer1.address, x.stakeManager.address, x.oneMillion)
-      await expect(x.stakeManager.connect(signer2).depositTokenTo(signer1.address, x.oneMillion))
+      await expect(x.stakeManager.connect(signer2).depositTokenTo(x.hex.address, signer1.address, x.oneMillion))
         .to.emit(x.hex, 'Transfer')
         .withArgs(signer2.address, x.stakeManager.address, x.oneMillion)
-      await expect(x.stakeManager.withdrawableBalanceOf(signer1.address))
+      await expect(x.stakeManager.withdrawableBalanceOf(x.hex.address, signer1.address))
         .eventually.to.equal(x.oneMillion * 2n)
-      await expect(x.stakeManager.withdrawableBalanceOf(signer2.address))
+      await expect(x.stakeManager.withdrawableBalanceOf(x.hex.address, signer2.address))
         .eventually.to.equal(0)
-      await expect(x.stakeManager.connect(signer1).withdrawTokenTo(signer1.address, 0))
+      await expect(x.stakeManager.connect(signer1).withdrawTokenTo(x.hex.address, signer1.address, 0))
         .to.emit(x.hex, 'Transfer')
         .withArgs(x.stakeManager.address, signer1.address, x.oneMillion * 2n)
     })
@@ -115,19 +105,19 @@ describe("StakeManager", function () {
     it('can transfer tokens from sender to contract', async function() {
       const x = await loadFixture(utils.deployFixture)
       const [signer1] = x.signers
-      await expect(x.stakeManager.connect(signer1).depositToken(x.oneMillion))
+      await expect(x.stakeManager.connect(signer1).depositToken(x.hex.address, x.oneMillion))
         .to.emit(x.hex, 'Transfer')
         .withArgs(signer1.address, x.stakeManager.address, x.oneMillion)
-      await expect(x.stakeManager.tokensAttributed())
+      await expect(x.stakeManager.attributed(x.hex.address))
         .eventually.to.equal(x.oneMillion)
     })
     it('can deposit tokens and not attribute them to self', async () => {
       const x = await loadFixture(utils.deployFixture)
       const [signer1] = x.signers
-      await expect(x.stakeManager.connect(signer1).depositTokenUnattributed(x.oneMillion))
+      await expect(x.stakeManager.connect(signer1).depositTokenUnattributed(x.hex.address, x.oneMillion))
         .to.emit(x.hex, 'Transfer')
         .withArgs(signer1.address, x.stakeManager.address, x.oneMillion)
-      await expect(x.stakeManager.tokensAttributed())
+      await expect(x.stakeManager.attributed(x.hex.address))
         .eventually.to.equal(0)
     })
   })
@@ -177,7 +167,7 @@ describe("StakeManager", function () {
       await x.stakeManager.stakeStart(x.stakedAmount, 3)
       await utils.moveForwardDays(4, x)
       await expect(x.stakeManager.stakeEnd(0, x.nextStakeId + 1n))
-        .to.revertedWithCustomError(x.stakeManager, 'StakeNotEndable')
+        .to.revertedWithCustomError(x.stakeManager, 'StakeNotOwned')
     })
     it('multiple can be ended and restarted in the same transaction', async () => {
       const x = await loadFixture(utils.deployFixture)
@@ -209,7 +199,7 @@ describe("StakeManager", function () {
       await x.stakeManager.stakeStart(x.stakedAmount, 3)
       await utils.moveForwardDays(4, x)
       await expect(x.stakeManager.stakeEndById(x.nextStakeId + 1n))
-        .to.revertedWithCustomError(x.stakeManager, 'StakeNotEndable')
+        .to.revertedWithCustomError(x.stakeManager, 'StakeNotOwned')
     })
     it('ends a stake without an index', async () => {
       const x = await loadFixture(utils.deployFixture)
@@ -326,12 +316,12 @@ describe("StakeManager", function () {
         newStakeMethod: 0,
       }
       await x.stakeManager.updateSettings(x.nextStakeId, updatedSettings)
-      await expect(x.stakeManager.withdrawableBalanceOf(signer1.address))
+      await expect(x.stakeManager.withdrawableBalanceOf(x.hex.address, signer1.address))
         .eventually.to.be.equal(0)
       await expect(x.stakeManager.connect(signer2).stakeEndByConsentForMany([x.nextStakeId]))
         .to.emit(x.hex, 'Transfer')
         .withArgs(hre.ethers.constants.AddressZero, x.stakeManager.address, withArgs.anyUint)
-      await expect(x.stakeManager.withdrawableBalanceOf(signer1.address))
+      await expect(x.stakeManager.withdrawableBalanceOf(x.hex.address, signer1.address))
         .eventually.to.be.greaterThan(0)
     })
     it('counts down end stakes if < 255', async () => {
@@ -354,14 +344,14 @@ describe("StakeManager", function () {
       let nextStakeId = await utils.nextStakeId(x)
       await expect(x.stakeManager.connect(signer2).stakeEndByConsentForMany([lastStakeId]))
         .to.emit(x.hex, 'StakeStart')
-      await expect(x.stakeManager.withdrawableBalanceOf(signer1.address))
+      await expect(x.stakeManager.withdrawableBalanceOf(x.hex.address, signer1.address))
         .eventually.to.be.equal(0)
       await utils.moveForwardDays(4, x)
       lastStakeId = nextStakeId
       nextStakeId = await utils.nextStakeId(x)
       await expect(x.stakeManager.connect(signer2).stakeEndByConsentForMany([lastStakeId]))
         .to.emit(x.hex, 'StakeStart')
-      await expect(x.stakeManager.withdrawableBalanceOf(signer1.address))
+      await expect(x.stakeManager.withdrawableBalanceOf(x.hex.address, signer1.address))
         .eventually.to.be.equal(0)
       await utils.moveForwardDays(4, x)
       await expect(x.stakeManager.connect(signer2).stakeEndByConsentForMany([nextStakeId]))
@@ -369,7 +359,7 @@ describe("StakeManager", function () {
         .withArgs(withArgs.anyValue, withArgs.anyValue, x.stakeManager.address, nextStakeId)
         .to.emit(x.hex, 'Transfer')
         .withArgs(hre.ethers.constants.AddressZero, x.stakeManager.address, withArgs.anyUint)
-      await expect(x.stakeManager.withdrawableBalanceOf(signer1.address))
+      await expect(x.stakeManager.withdrawableBalanceOf(x.hex.address, signer1.address))
         .eventually.to.be.greaterThan(0)
     })
     it('cannot update settings unless signer is staker', async () => {
@@ -412,6 +402,7 @@ describe("StakeManager", function () {
       await expect(x.stakeManager.connect(signer2).multicall([
         x.stakeManager.interface.encodeFunctionData('stakeEndByConsent', [nextStakeId]),
         x.stakeManager.interface.encodeFunctionData('collectUnattributed', [
+          x.hex.address,
           true,
           signer2.address,
           0,
@@ -444,24 +435,26 @@ describe("StakeManager", function () {
       await expect(x.stakeManager.updateSettings(nextStakeId, updatedSettings))
         .to.emit(x.stakeManager, 'UpdatedSettings')
         .withArgs(nextStakeId, await x.stakeManager.encodeSettings(updatedSettings))
-      await expect(x.stakeManager.withdrawableBalanceOf(signer2.address))
+      await expect(x.stakeManager.withdrawableBalanceOf(x.hex.address, signer2.address))
         .eventually.to.equal(0)
       await x.stakeManager.connect(signer2).multicall([
         x.stakeManager.interface.encodeFunctionData('stakeEndByConsent', [nextStakeId]),
         x.stakeManager.interface.encodeFunctionData('collectUnattributedPercent', [
+          x.hex.address,
           false,
           signer2.address,
           500,
         ]),
         x.stakeManager.interface.encodeFunctionData('collectUnattributed', [
+          x.hex.address,
           false,
           signer2.address,
           0,
         ]),
       ], false)
-      await expect(x.stakeManager.withdrawableBalanceOf(signer2.address))
+      await expect(x.stakeManager.withdrawableBalanceOf(x.hex.address, signer2.address))
         .eventually.to.be.greaterThan(0)
-      await expect(x.stakeManager.connect(signer2).withdrawTokenTo(signer2.address, oneHundredHex))
+      await expect(x.stakeManager.connect(signer2).withdrawTokenTo(x.hex.address, signer2.address, oneHundredHex))
         .to.emit(x.hex, 'Transfer')
         .withArgs(x.stakeManager.address, signer2.address, oneHundredHex)
     })
@@ -474,29 +467,30 @@ describe("StakeManager", function () {
       await utils.moveForwardDays(days + 1, x)
       const oneEther = hre.ethers.utils.parseEther('1').toBigInt()
       const tipAmount = oneEther / 100n
-      await expect(x.stakeManager.depositNativeTipTo(signer1.address, nextStakeId, tipAmount, {
-        value: oneEther,
+      await expect(x.stakeManager.depositTip(hre.ethers.constants.AddressZero, nextStakeId, tipAmount, 0, 0, {
+        value: tipAmount,
       }))
         .to.changeEtherBalances(
           [signer1, x.stakeManager],
-          [oneEther * -1n, oneEther],
+          [tipAmount * -1n, tipAmount],
         )
-      await expect(x.stakeManager.nativeBalanceOf(signer2.address))
+      await expect(x.stakeManager.withdrawableBalanceOf(hre.ethers.constants.AddressZero, signer2.address))
         .eventually.to.equal(0)
-      await expect(x.stakeManager.nativeBalanceOf(signer1.address))
-        .eventually.to.equal(oneEther - tipAmount)
-      await expect(x.stakeManager.stakeIdToNativeTip(nextStakeId))
-        .eventually.to.equal(tipAmount)
+      await expect(x.stakeManager.withdrawableBalanceOf(hre.ethers.constants.AddressZero, signer1.address))
+        .eventually.to.equal(0)
+      await expect(x.stakeManager.stakeIdToTip(nextStakeId, 0))
+        .eventually.to.equal(tipAmount << 128n)
       await expect(x.stakeManager.connect(signer2).multicall([
         x.stakeManager.interface.encodeFunctionData('stakeEndByConsent', [nextStakeId]),
-        x.stakeManager.interface.encodeFunctionData('collectNativeUnattributed', [
+        x.stakeManager.interface.encodeFunctionData('collectUnattributed', [
+          hre.ethers.constants.AddressZero,
           false,
           signer2.address,
           0,
         ]),
       ], false))
         .to.emit(x.hex, 'StakeEnd')
-      await expect(x.stakeManager.nativeBalanceOf(signer2.address))
+      await expect(x.stakeManager.withdrawableBalanceOf(hre.ethers.constants.AddressZero, signer2.address))
         .eventually.to.equal(tipAmount)
     })
     it('allows for a basefee multiplier to be applied', async () => {
@@ -508,29 +502,31 @@ describe("StakeManager", function () {
       await utils.moveForwardDays(days + 1, x)
       const oneEther = hre.ethers.utils.parseEther('1').toBigInt()
       const tipAmount = oneEther / 100n
-      const encodedSettings = await x.stakeManager.nativeTipSettings(360, 7)
-      await expect(x.stakeManager.depositNativeTip(nextStakeId, tipAmount, encodedSettings, {
-        value: oneEther,
+      const encodedSettings = await x.stakeManager.encodeTipSettings(0, tipAmount, 360, 7)
+      await expect(x.stakeManager.depositTip(hre.ethers.constants.AddressZero,nextStakeId, tipAmount, 360, 7, {
+        value: tipAmount,
       }))
         .to.changeEtherBalances(
           [signer1, x.stakeManager],
-          [oneEther * -1n, oneEther],
+          [tipAmount * -1n, tipAmount],
         )
-      await expect(x.stakeManager.nativeBalanceOf(signer2.address))
+      await expect(x.stakeManager.withdrawableBalanceOf(hre.ethers.constants.AddressZero, signer2.address))
         .eventually.to.equal(0)
-      await expect(x.stakeManager.nativeBalanceOf(signer1.address))
-        .eventually.to.equal(oneEther - tipAmount)
-      await expect(x.stakeManager.stakeIdToNativeTip(nextStakeId))
-        .eventually.to.equal((encodedSettings.toBigInt() << 120n) | tipAmount)
+      await expect(x.stakeManager.withdrawableBalanceOf(hre.ethers.constants.AddressZero, signer1.address))
+        .eventually.to.equal(0)
+      await expect(x.stakeManager.stakeIdToTip(nextStakeId, 0))
+        .eventually.to.equal(encodedSettings)
       await setNextBlockBaseFeePerGas(10n**6n)
       await expect(x.stakeManager.connect(signer2).multicall([
         x.stakeManager.interface.encodeFunctionData('stakeEndByConsent', [nextStakeId]),
-        x.stakeManager.interface.encodeFunctionData('collectNativeUnattributedPercent', [
+        x.stakeManager.interface.encodeFunctionData('collectUnattributedPercent', [
+          hre.ethers.constants.AddressZero,
           false,
           signer2.address,
           500,
         ]),
-        x.stakeManager.interface.encodeFunctionData('collectNativeUnattributed', [
+        x.stakeManager.interface.encodeFunctionData('collectUnattributed', [
+          hre.ethers.constants.AddressZero,
           false,
           signer2.address,
           0,
@@ -541,7 +537,7 @@ describe("StakeManager", function () {
         .to.emit(x.hex, 'StakeEnd')
       const latestBlock = await hre.ethers.provider.getBlock('latest')
       const basefee = latestBlock.baseFeePerGas?.toBigInt() as bigint
-      await expect(x.stakeManager.nativeBalanceOf(signer2.address))
+      await expect(x.stakeManager.withdrawableBalanceOf(hre.ethers.constants.AddressZero, signer2.address))
         .eventually.to.equal(basefee * 360n / 7n)
     })
     it('unattributed can be withdrawn', async () => {
@@ -553,22 +549,23 @@ describe("StakeManager", function () {
       await utils.moveForwardDays(days + 1, x)
       const oneEther = hre.ethers.utils.parseEther('1').toBigInt()
       const tipAmount = oneEther / 100n
-      await expect(x.stakeManager.depositNativeTipTo(signer1.address, nextStakeId, tipAmount, {
-        value: oneEther,
+      await expect(x.stakeManager.depositTip(hre.ethers.constants.AddressZero, nextStakeId, tipAmount, 0, 0, {
+        value: tipAmount,
       }))
         .to.changeEtherBalances(
           [signer1, x.stakeManager],
-          [oneEther * -1n, oneEther],
+          [tipAmount * -1n, tipAmount],
         )
-      await expect(x.stakeManager.nativeBalanceOf(signer2.address))
+      await expect(x.stakeManager.withdrawableBalanceOf(hre.ethers.constants.AddressZero, signer2.address))
         .eventually.to.equal(0)
-      await expect(x.stakeManager.nativeBalanceOf(signer1.address))
-        .eventually.to.equal(oneEther - tipAmount)
-      await expect(x.stakeManager.stakeIdToNativeTip(nextStakeId))
-        .eventually.to.equal(tipAmount)
+      await expect(x.stakeManager.withdrawableBalanceOf(hre.ethers.constants.AddressZero, signer1.address))
+        .eventually.to.equal(0)
+      await expect(x.stakeManager.stakeIdToTip(nextStakeId, 0))
+        .eventually.to.equal(tipAmount << 128n)
       await expect(x.stakeManager.connect(signer2).multicall([
         x.stakeManager.interface.encodeFunctionData('stakeEndByConsent', [nextStakeId]),
-        x.stakeManager.interface.encodeFunctionData('collectNativeUnattributed', [
+        x.stakeManager.interface.encodeFunctionData('collectUnattributed', [
+          hre.ethers.constants.AddressZero,
           true,
           signer2.address,
           0,
@@ -579,20 +576,20 @@ describe("StakeManager", function () {
           [x.stakeManager, signer2],
           [tipAmount * -1n, tipAmount],
         )
-      await expect(x.stakeManager.nativeBalanceOf(signer2.address))
+      await expect(x.stakeManager.withdrawableBalanceOf(hre.ethers.constants.AddressZero, signer2.address))
         .eventually.to.equal(0)
     })
     it('tracks unattributed through a global var', async () => {
       const x = await loadFixture(utils.deployFixture)
       const oneEther = hre.ethers.utils.parseEther('1').toBigInt()
-      await expect(x.stakeManager.getNativeUnattributed())
+      await expect(x.stakeManager.getUnattributed(hre.ethers.constants.AddressZero))
         .eventually.to.equal(0)
       await x.signers[0].sendTransaction({
         value: oneEther,
         to: x.stakeManager.address,
       })
-      await expect(x.stakeManager.getNativeUnattributed())
-        .eventually.to.equal(0)
+      await expect(x.stakeManager.getUnattributed(hre.ethers.constants.AddressZero))
+        .eventually.to.equal(oneEther)
     })
     it('if own stake is ended, can claw back tip', async () => {
       const x = await loadFixture(utils.deployFixture)
@@ -603,15 +600,15 @@ describe("StakeManager", function () {
       await utils.moveForwardDays(days + 1, x)
       const oneEther = hre.ethers.utils.parseEther('1').toBigInt()
       const tipAmount = oneEther / 100n
-      await expect(x.stakeManager.depositNativeTipTo(signer1.address, nextStakeId, tipAmount, {
+      await expect(x.stakeManager.depositTip(hre.ethers.constants.AddressZero, nextStakeId, tipAmount, 0, 0, {
         value: oneEther,
       }))
         .to.changeEtherBalances(
           [signer1, x.stakeManager],
           [oneEther * -1n, oneEther],
         )
-      await x.stakeManager.removeNativeTipFromStake(nextStakeId, 0, 0)
-      await expect(x.stakeManager.nativeBalanceOf(signer1.address))
+      await x.stakeManager.removeTipFromStake(nextStakeId, [0])
+      await expect(x.stakeManager.withdrawableBalanceOf(hre.ethers.constants.AddressZero, signer1.address))
         .eventually.to.equal(oneEther, 'clawing back tips is not currently allowed')
       await expect(x.stakeManager.stakeEndById(nextStakeId))
         .to.emit(x.hex, 'StakeEnd')
@@ -630,12 +627,12 @@ describe("StakeManager", function () {
       await utils.moveForwardDays(days + 1, x)
       const oneEther = hre.ethers.utils.parseEther('1').toBigInt()
       const tipAmount = oneEther / 100n
-      await expect(x.stakeManager.depositNativeTipTo(signer1.address, nextStakeId, tipAmount, {
-        value: oneEther,
+      await expect(x.stakeManager.depositTip(hre.ethers.constants.AddressZero, nextStakeId, tipAmount, 0, 0, {
+        value: tipAmount,
       }))
         .to.changeEtherBalances(
           [signer1, x.stakeManager],
-          [oneEther * -1n, oneEther],
+          [tipAmount * -1n, tipAmount],
         )
       await expect(x.stakeManager.stakeEndById(nextStakeId))
         .to.emit(x.hex, 'StakeEnd')
@@ -643,15 +640,15 @@ describe("StakeManager", function () {
           [x.stakeManager, signer1],
           [0, 0],
         )
-      await expect(x.stakeManager.nativeBalanceOf(signer1.address))
-        .eventually.to.equal(oneEther - tipAmount)
-      await x.stakeManager.removeNativeTipFromStake(nextStakeId, 0, 0)
-      await expect(x.stakeManager.nativeBalanceOf(signer1.address))
-        .eventually.to.equal(oneEther)
-      await expect(x.stakeManager.addNativeTipToStake(nextStakeId, tipAmount, 0))
+      await expect(x.stakeManager.withdrawableBalanceOf(hre.ethers.constants.AddressZero, signer1.address))
+        .eventually.to.equal(0)
+      await x.stakeManager.removeTipFromStake(nextStakeId, [0])
+      await expect(x.stakeManager.withdrawableBalanceOf(hre.ethers.constants.AddressZero, signer1.address))
+        .eventually.to.equal(tipAmount)
+      await expect(x.stakeManager.addTipToStake(hre.ethers.constants.AddressZero, nextStakeId, tipAmount, 0, 0))
         .to.revertedWithCustomError(x.stakeManager, 'NotAllowed')
     })
-    it('can withdraw from native balance at any time', async () => {
+    it('can withdraw from balance at any time', async () => {
       const x = await loadFixture(utils.deployFixture)
       const nextStakeId = await utils.nextStakeId(x)
       const days = 10
@@ -661,61 +658,65 @@ describe("StakeManager", function () {
       const oneEther = hre.ethers.utils.parseEther('1').toBigInt()
       const tipAmount = oneEther / 100n
       const tenthEther = oneEther / 10n
-      await expect(x.stakeManager.depositNative({
+      await expect(x.stakeManager.depositToken(hre.ethers.constants.AddressZero, oneEther - 2n, {
         value: oneEther - 2n,
       }))
         .to.changeEtherBalances(
           [signer1, x.stakeManager],
           [(oneEther - 2n) * -1n, (oneEther - 2n)],
         )
-      await expect(x.stakeManager.connect(signer2).depositNativeTo(signer1.address, {
-        value: 1n
+      let expectedBalance = oneEther - 2n // 99999999999999998
+      await expect(x.stakeManager.connect(signer2).depositTokenTo(hre.ethers.constants.AddressZero, signer1.address, 1, {
+        value: 1n,
       }))
       .to.changeEtherBalances(
         [signer2, x.stakeManager],
         [-1n, 1n],
       )
-      await expect(x.stakeManager.depositNativeTipTo(signer1.address, nextStakeId, tipAmount, {
-        value: 1n,
+      expectedBalance += 1n // 99999999999999999
+      await expect(x.stakeManager.depositTip(hre.ethers.constants.AddressZero, nextStakeId, tipAmount, 0, 0, {
+        value: tipAmount - 1n,
       }))
         .to.changeEtherBalances(
           [signer1, x.stakeManager],
-          [-1n, 1n],
+          [-(tipAmount - 1n), tipAmount - 1n],
         )
-      let expectedBalance = oneEther - tipAmount
+      expectedBalance -= 1n // 99999999999999998
+      await expect(x.stakeManager.connect(signer2).removeTipFromStake(nextStakeId, [0]))
+        .to.revertedWithCustomError(x.stakeManager, 'StakeNotOwned')
+        .withArgs(signer2.address, signer1.address)
       await expect(x.stakeManager.stakeEndById(nextStakeId))
         .to.emit(x.hex, 'StakeEnd')
         .to.changeEtherBalances(
           [x.stakeManager, signer1],
           [0, 0],
         )
-      await expect(x.stakeManager.withdrawNative(tenthEther / 2n))
+      await expect(x.stakeManager.withdrawTokenTo(hre.ethers.constants.AddressZero, signer1.address, tenthEther / 2n))
         .to.changeEtherBalances(
           [signer1, x.stakeManager],
           [tenthEther / 2n, tenthEther / 2n * -1n],
         )
-      await expect(x.stakeManager.withdrawNativeTo(signer1.address, tenthEther / 2n))
+      await expect(x.stakeManager.withdrawTokenTo(hre.ethers.constants.AddressZero, signer1.address, tenthEther / 2n))
         .to.changeEtherBalances(
           [signer1, x.stakeManager],
           [tenthEther / 2n, tenthEther / 2n * -1n],
         )
-      expectedBalance -= tenthEther
-      await expect(x.stakeManager.addNativeTipToStake(nextStakeId, tenthEther, 0))
-        .to.emit(x.stakeManager, 'UpdateNativeTip')
-        .withArgs(nextStakeId, 0, tenthEther + tipAmount)
-      await expect(x.stakeManager.connect(signer2).removeNativeTipFromStake(nextStakeId, 0, 0))
-        .to.revertedWithCustomError(x.stakeManager, 'NotAllowed')
-      await x.stakeManager.removeNativeTipFromStake(nextStakeId, 0, 0)
-      expectedBalance += tipAmount
-      await expect(x.stakeManager.nativeBalanceOf(signer1.address))
+      expectedBalance -= tenthEther // 89999999999999998
+      await expect(x.stakeManager.addTipToStake(hre.ethers.constants.AddressZero, nextStakeId, tenthEther, 0, 0))
+        .to.emit(x.stakeManager, 'AddTip')
+        .withArgs(nextStakeId, hre.ethers.constants.AddressZero, 1, tenthEther << 128n)
+      expectedBalance -= tenthEther // 79999999999999998
+      await x.stakeManager.removeTipFromStake(nextStakeId, [0])
+      expectedBalance += tipAmount // 80999999999999998
+      await expect(x.stakeManager.withdrawableBalanceOf(hre.ethers.constants.AddressZero, signer1.address))
         .eventually.to.equal(expectedBalance)
-      await expect(x.stakeManager.withdrawNativeTo(signer1.address, tenthEther))
+      await expect(x.stakeManager.withdrawTokenTo(hre.ethers.constants.AddressZero, signer1.address, tenthEther))
         .to.changeEtherBalances(
           [signer1, x.stakeManager],
           [tenthEther, tenthEther * -1n],
         )
-      expectedBalance -= tenthEther
-      await expect(x.stakeManager.nativeBalanceOf(signer1.address))
+      expectedBalance -= tenthEther // 70999999999999998
+      await expect(x.stakeManager.withdrawableBalanceOf(hre.ethers.constants.AddressZero, signer1.address))
         .eventually.to.equal(expectedBalance)
     })
     it('leaves unattributed tokens until they are utilized', async () => {
@@ -735,17 +736,17 @@ describe("StakeManager", function () {
       await expect(x.stakeManager.updateSettings(nextStakeId, updatedSettings))
         .to.emit(x.stakeManager, 'UpdatedSettings')
         .withArgs(nextStakeId, await x.stakeManager.encodeSettings(updatedSettings))
-      await expect(x.stakeManager.withdrawableBalanceOf(signer2.address))
+      await expect(x.stakeManager.withdrawableBalanceOf(x.hex.address, signer2.address))
         .eventually.to.equal(0)
       await x.stakeManager.connect(signer2).stakeEndByConsent(nextStakeId)
-      await expect(x.stakeManager.getUnattributed())
+      await expect(x.stakeManager.getUnattributed(x.hex.address))
         .eventually.to.equal(oneHundredHex)
       await expect(x.stakeManager.clamp(oneHundredHex + 1n, oneHundredHex))
         .eventually.to.equal(oneHundredHex)
       await expect(x.stakeManager.stakeStartFromUnattributedFor(signer2.address, oneHundredHex + 1n, 30, 0))
         .to.emit(x.hex, 'Transfer')
         .withArgs(x.stakeManager.address, hre.ethers.constants.AddressZero, oneHundredHex)
-      await expect(x.stakeManager.getUnattributed())
+      await expect(x.stakeManager.getUnattributed(x.hex.address))
         .eventually.to.equal(0)
     })
     it('can also start a stake with withdrawable mapping', async () => {
@@ -754,15 +755,15 @@ describe("StakeManager", function () {
       const days = 10
       const [signer1, signer2] = x.signers
       const oneHundredHex = hre.ethers.utils.parseUnits('100', 8).toBigInt()
-      await expect(x.stakeManager.depositTokenTo(signer1.address, oneHundredHex))
+      await expect(x.stakeManager.depositTokenTo(x.hex.address, signer1.address, oneHundredHex))
         .to.emit(x.hex, 'Transfer')
         .withArgs(signer1.address, x.stakeManager.address, oneHundredHex)
-      await expect(x.stakeManager.depositTokenTo(signer1.address, oneHundredHex))
+      await expect(x.stakeManager.depositTokenTo(x.hex.address, signer1.address, oneHundredHex))
         .to.emit(x.hex, 'Transfer')
         .withArgs(signer1.address, x.stakeManager.address, oneHundredHex)
-      await expect(x.stakeManager.withdrawableBalanceOf(signer1.address))
+      await expect(x.stakeManager.withdrawableBalanceOf(x.hex.address, signer1.address))
         .eventually.to.equal(oneHundredHex * 2n)
-      await expect(x.stakeManager.withdrawableBalanceOf(signer2.address))
+      await expect(x.stakeManager.withdrawableBalanceOf(x.hex.address, signer2.address))
         .eventually.to.equal(0)
       await expect(x.stakeManager.stakeStartFromWithdrawableFor(signer2.address, oneHundredHex * 2n, days, 0))
         .to.emit(x.hex, 'StakeStart')

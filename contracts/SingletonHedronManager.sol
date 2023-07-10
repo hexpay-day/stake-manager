@@ -7,10 +7,6 @@ import "./EncodableSettings.sol";
 import "./UnderlyingStakeManager.sol";
 
 contract SingletonHedronManager is EncodableSettings, UnderlyingStakeManager {
-  /**
-   * @notice settings of stakes indexed by the stake id
-   */
-  mapping(address => uint256) public outstandingHedronTokens;
   // mint hedron rewards
   struct HedronParams {
     uint96 hsiIndex;
@@ -26,46 +22,35 @@ contract SingletonHedronManager is EncodableSettings, UnderlyingStakeManager {
     uint256 i;
     uint256 hedronTokens;
     address currentOwner;
-    address to = address(uint160(stakeIdInfo[stakeIds[0]]));
+    address to = _stakeIdToOwner(stakeIds[0]);
     uint256 stakeId;
-    uint256 stakeInfo;
+    uint256 stakeIndex;
     do {
       stakeId = stakeIds[i];
-      if (_isCapable(uint8(idToSettings[stakeId]), 2)) {
-        stakeInfo = stakeIdInfo[stakeId];
-        currentOwner = address(uint160(stakeInfo));
+      if (_isCapable(idToSettings[stakeId], 2)) {
+        (stakeIndex, currentOwner) = _stakeIdToInfo(stakeId);
         if (currentOwner != to) {
-          _attributeLegacyHedron(to, hedronTokens);
+          _attributeHedron(to, hedronTokens);
           hedronTokens = 0;
         }
         to = currentOwner;
-        hedronTokens += _mintLegacyNative(stakeInfo >> 160, stakeId);
+        hedronTokens += _mintNativeHedron(stakeIndex, stakeId);
       }
       unchecked {
         ++i;
       }
     } while (i < len);
     if (hedronTokens > 0) {
-      _attributeLegacyHedron(to, hedronTokens);
+      _attributeHedron(to, hedronTokens);
     }
   }
-  function _attributeLegacyHedron(address to, uint256 amount) internal {
+  function _attributeHedron(address to, uint256 amount) internal {
     unchecked {
-      outstandingHedronTokens[to] += amount;
+      withdrawableBalanceOf[hedron][to] += amount;
+      attributed[hedron] += amount;
     }
   }
-  function _mintLegacyNative(uint256 index, uint256 stakeId) internal returns(uint256 amount) {
+  function _mintNativeHedron(uint256 index, uint256 stakeId) internal returns(uint256 amount) {
     return IHedron(hedron).mintNative(index, uint40(stakeId));
-  }
-  /**
-   * send all or some subset of funds to a given address
-   * @param to destination of funds attributed to sender
-   * @param amount amount of funds to send. 0 defaults to all
-   */
-  function withdrawOutstandingHedron(address to, uint256 amount) external {
-    uint256 max = outstandingHedronTokens[msg.sender];
-    amount = amount == 0 || amount > max ? max : amount;
-    outstandingHedronTokens[msg.sender] = max - amount;
-    IERC20(hedron).transfer(to, amount);
   }
 }

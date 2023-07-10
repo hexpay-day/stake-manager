@@ -54,14 +54,14 @@ contract TestStakeManager is Test {
       numDays = numDays - 1;
     }
   }
-  function _depositToken(address sender, uint256 amount) internal {
+  function _depositTokenFrom(address sender, uint256 amount) internal {
     vm.startPrank(sender);
-    stkMngr.depositToken(amount);
+    stkMngr.depositToken(hx, amount);
     vm.stopPrank();
   }
-  function _withdrawToken(address sender, address receipient, uint256 amount) internal {
+  function _withdrawToken(address sender, address payable receipient, uint256 amount) internal {
     vm.startPrank(sender);
-    stkMngr.withdrawTokenTo(receipient, amount);
+    stkMngr.withdrawTokenTo(hx, receipient, amount);
     vm.stopPrank();
   }
   function _transferTo(address sender, address recipient, uint256 amount) internal {
@@ -100,60 +100,42 @@ contract TestStakeManager is Test {
 }
 
 contract TestSingletonStakeManager is TestStakeManager {
-  function testPercentMagnitudeLimit() public {
-    assertEq(stkMngr.percentMagnitudeLimit(), type(uint64).max);
-  }
   function testDeposits() public {
-    _depositToken(vm.addr(1), startingBalance);
+    _depositTokenFrom(vm.addr(1), startingBalance);
     assertEq(IERC20(hx).balanceOf(vm.addr(1)), 0);
     assertEq(IERC20(hx).balanceOf(address(stkMngr)), startingBalance);
-    assertEq(stkMngr.withdrawableBalanceOf(vm.addr(1)), startingBalance);
-    assertEq(stkMngr.tokensAttributed(), startingBalance);
-    _depositToken(vm.addr(2), startingBalance);
+    assertEq(stkMngr.withdrawableBalanceOf(hx, vm.addr(1)), startingBalance);
+    assertEq(stkMngr.attributed(hx), startingBalance);
+    _depositTokenFrom(vm.addr(2), startingBalance);
     // balances are tracked independently for each sendeer
-    assertEq(stkMngr.withdrawableBalanceOf(vm.addr(1)), startingBalance);
-    assertEq(stkMngr.withdrawableBalanceOf(vm.addr(2)), startingBalance);
+    assertEq(stkMngr.withdrawableBalanceOf(hx, vm.addr(1)), startingBalance);
+    assertEq(stkMngr.withdrawableBalanceOf(hx, vm.addr(2)), startingBalance);
     // a global amount is collected as well
-    assertEq(stkMngr.tokensAttributed(), startingBalance * 2);
+    assertEq(stkMngr.attributed(hx), startingBalance * 2);
   }
   function testWithdrawalLimits() public {
     // alice deposits
-    _depositToken(vm.addr(1), startingBalance);
-    // bob cannot take alice's deposits
-    vm.expectRevert(abi.encodeWithSelector(
-      SingletonStakeManager.NotEnoughFunding.selector,
-      0, 1
-    ));
-    _withdrawToken(vm.addr(2), vm.addr(1), 1);
-    // alice cannot take more than deposited
-    vm.expectRevert(abi.encodeWithSelector(
-      SingletonStakeManager.NotEnoughFunding.selector,
-      startingBalance, startingBalance + 1
-    ));
-    _withdrawToken(vm.addr(1), vm.addr(1), startingBalance + 1);
-    _withdrawToken(vm.addr(1), vm.addr(1), startingBalance / 2);
+    _depositTokenFrom(vm.addr(1), startingBalance);
+    _withdrawToken(vm.addr(2), payable(vm.addr(1)), 1);
+    _withdrawToken(vm.addr(1), payable(vm.addr(1)), startingBalance + 1);
+    _withdrawToken(vm.addr(1), payable(vm.addr(1)), startingBalance / 2);
     assertEq(IERC20(hx).balanceOf(vm.addr(1)), startingBalance / 2);
-    // alice still cannot take more than deposited
-    vm.expectRevert(abi.encodeWithSelector(
-      SingletonStakeManager.NotEnoughFunding.selector,
-      startingBalance / 2, startingBalance
-    ));
-    _withdrawToken(vm.addr(1), vm.addr(1), startingBalance);
+    _withdrawToken(vm.addr(1), payable(vm.addr(1)), startingBalance);
     // using 0 withdraws the remaining balance
     assertEq(IERC20(hx).balanceOf(vm.addr(1)), startingBalance / 2);
-    _withdrawToken(vm.addr(1), vm.addr(1), 0);
+    _withdrawToken(vm.addr(1), payable(vm.addr(1)), 0);
     assertEq(IERC20(hx).balanceOf(vm.addr(1)), startingBalance);
   }
   function testWithdrawTo() public {
-    _depositToken(vm.addr(1), startingBalance);
+    _depositTokenFrom(vm.addr(1), startingBalance);
     // alice can withdraw her tokens
-    _withdrawToken(vm.addr(1), vm.addr(1), startingBalance / 2);
+    _withdrawToken(vm.addr(1), payable(vm.addr(1)), startingBalance / 2);
     assertEq(IERC20(hx).balanceOf(vm.addr(1)), startingBalance / 2);
-    assertEq(stkMngr.withdrawableBalanceOf(vm.addr(1)), startingBalance / 2);
+    assertEq(stkMngr.withdrawableBalanceOf(hx, vm.addr(1)), startingBalance / 2);
     // and can send withdrawable tokens to bob through the contract
     assertEq(IERC20(hx).balanceOf(vm.addr(2)), startingBalance);
-    _withdrawToken(vm.addr(1), vm.addr(2), startingBalance / 2);
-    assertEq(IERC20(hx).balanceOf(vm.addr(2)), startingBalance * 3 / 2);
+    _withdrawToken(vm.addr(1), payable(vm.addr(2)), startingBalance / 2);
+    assertEq(IERC20(hx).balanceOf(payable(vm.addr(2))), startingBalance * 3 / 2);
     _transferTo(vm.addr(2), vm.addr(1), startingBalance / 2);
   }
   function testDirectStakeRestartSingle() public {
