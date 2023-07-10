@@ -17,16 +17,18 @@ contract EncodableSettings {
     uint16 newStakeDaysMagnitude;
     uint8 copyIterations; // 0 for do not restart, 1-254 as countdown, 255 as restart indefinitely
     /**
-     * 000001(0): stake end
-     * 000010(1): early stake end
-     * 000100(2): mint hedron (any time)
-     * 001000(3): mint hedron during end stake
-     * 010000(4): has eth tip
-     * 100000(5): should send to staker
+     * 00000001(0): can stake end
+     * 00000010(1): can early stake end
+     * 00000100(2): can mint hedron (any time)
+     * 00001000(3): can mint hedron during end stake - future should be 0
+     * 00010000(4): should send target (hex) to staker
+     * 00100000(5): should send minted hedron to staker
+     * 01000000(6): has tip from deposits
+     * 10000000(7): unassigned
      */
     uint8 consentAbilities;
   }
-  mapping(uint256 => uint256) public idToSettings;
+  mapping(uint256 => uint256) public stakeIdToSettings;
   /**
    * an event to signal that settings to direct funds
    * at the end of a stake have been updated
@@ -46,7 +48,7 @@ contract EncodableSettings {
     // preserve the 251st index
     _logSettingsUpdate(
       stakeId,
-      (settings >> 8 << 8) | (settings << 252 >> 252) | (uint8(idToSettings[stakeId]) >> 4 << 4)
+      (settings >> 8 << 8) | (settings << 250 >> 250) | (uint8(stakeIdToSettings[stakeId]) >> 6 << 6)
     );
   }
   /**
@@ -59,11 +61,11 @@ contract EncodableSettings {
     uint256 stakeId,
     uint256 settings
   ) internal {
-    idToSettings[stakeId] = settings;
+    stakeIdToSettings[stakeId] = settings;
     emit UpdatedSettings(stakeId, settings);
   }
   function idToDecodedSettings(uint256 stakeId) external view returns (Settings memory) {
-    return _decodeSettings(idToSettings[stakeId]);
+    return _decodeSettings(stakeIdToSettings[stakeId]);
   }
   /**
    * read a single property from encoded settings
@@ -127,6 +129,7 @@ contract EncodableSettings {
     );
   }
   function _defaultSettings() internal pure returns(Settings memory settings) {
+    // 0x00000000000000000000000000000000000000000000040000000100000001020000ff01
     return Settings(
       /*
        * by default, there is no hedron tip
@@ -150,21 +153,24 @@ contract EncodableSettings {
       uint8(2), uint16(0),
       255, // restart forever
       /*
-       * 0x01 -> 00001
-       * by index:
-       * 4: no native token included in tip (0)
+       * by index: 00000001
+       * 7: unassigned
+       * 6: signal to ender that tips exist to be collected (allows contract to avoid an SLOAD) (0)
+       * 5: give dominion over hedron after tip to staker (0)
+       * 4: give dominion over target after tip to staker (0)
        * 3: do not allow end hedron mint (0)
        * 2: do not allow continuous hedron mint (0)
        * 1: do not allow early end (0)
-       * 0: allow end stake in general (1)
+       * 0: allow end stake once days have been served (1)
        *
        * restarting is signalled by using settings above
-       * no "starts" as in pull from external address
+       * no funds are ever pulled from external address
        * is ever allowed except by sender
        *
-       * the reason why the hedron flags are 0 by default is because
+       * the reason why the hedron flags are 0 by default on the contract level is because
        * it may be worthwhile for hedron developers to build on top of this contract
        * and it is poor form to force people in the future to have to cancel out the past
+       * front ends may choose to send a different default (non 0) during stake start
        */
       uint8(1)
     );

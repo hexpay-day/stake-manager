@@ -3,8 +3,9 @@ pragma solidity ^0.8.17;
 
 import "@openzeppelin/contracts/utils/Address.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import "./Capable.sol";
 
-contract Bank {
+contract Bank is Capable {
   using Address for address payable;
 
   mapping(address => uint256) public attributed;
@@ -73,7 +74,8 @@ contract Bank {
    * or in other words, all unattributed tokens
    */
   function collectUnattributed(
-    address token, bool transferOut, address payable to,
+    address token, bool transferOut,
+    address payable to,
     uint256 amount
   ) external payable returns(uint256) {
     return _collectUnattributed(token, transferOut, to, amount, _getUnattributed(token));
@@ -178,5 +180,14 @@ contract Bank {
       IERC20(token).transfer(to, amount);
     }
     return amount;
+  }
+  function _attributeFunds(uint256 settings, uint256 index, address token, address staker, uint256 amount) internal {
+    if (amount > 0) {
+      if (_isCapable(settings, index)) {
+        _withdrawTokenTo(token, payable(staker), amount);
+      } else {
+        _addToTokenWithdrawable(token, staker, amount);
+      }
+    }
   }
 }

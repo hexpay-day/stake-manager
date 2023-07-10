@@ -25,12 +25,13 @@ contract SingletonHedronManager is EncodableSettings, UnderlyingStakeManager {
     address to = _stakeIdToOwner(stakeIds[0]);
     uint256 stakeId;
     uint256 stakeIndex;
+    address hedronAddress = hedron;
     do {
       stakeId = stakeIds[i];
-      if (_isCapable(idToSettings[stakeId], 2)) {
+      if (_isCapable(stakeIdToSettings[stakeId], 2)) {
         (stakeIndex, currentOwner) = _stakeIdToInfo(stakeId);
         if (currentOwner != to) {
-          _attributeHedron(to, hedronTokens);
+          _addToTokenWithdrawable(hedronAddress, to, hedronTokens);
           hedronTokens = 0;
         }
         to = currentOwner;
@@ -41,13 +42,7 @@ contract SingletonHedronManager is EncodableSettings, UnderlyingStakeManager {
       }
     } while (i < len);
     if (hedronTokens > 0) {
-      _attributeHedron(to, hedronTokens);
-    }
-  }
-  function _attributeHedron(address to, uint256 amount) internal {
-    unchecked {
-      withdrawableBalanceOf[hedron][to] += amount;
-      attributed[hedron] += amount;
+      _addToTokenWithdrawable(hedronAddress, to, hedronTokens);
     }
   }
   function _mintNativeHedron(uint256 index, uint256 stakeId) internal returns(uint256 amount) {

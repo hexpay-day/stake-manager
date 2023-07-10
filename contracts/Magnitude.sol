@@ -56,6 +56,12 @@ contract Magnitude {
       }
     }
   }
+  /**
+   * check the tip amount of a stake given a setting and limit
+   * @param setting a method (8) and magnitude (64) pairing
+   * @param limit the amount that the derived value cannot exceed
+   * @param stake the stake in question
+   */
   function _checkTipAmount(
     uint256 setting,
     uint256 limit,

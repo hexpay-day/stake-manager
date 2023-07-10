@@ -4,53 +4,25 @@ pragma solidity ^0.8.17;
 import "@openzeppelin/contracts/utils/Address.sol";
 import "./SingletonHedronManager.sol";
 import "./Magnitude.sol";
+import "./Tipper.sol";
 
-contract SingletonStakeManager is SingletonHedronManager, Magnitude {
-  using Address for address;
+contract SingletonStakeManager is SingletonHedronManager, Tipper, Magnitude {
   using Address for address payable;
   uint256 public constant MAX_DAYS = 5555;
-  /**
-   * @notice a global denoting the number of tokens attributed to addresses
-   * @dev this value provides a useful "before" value whenever tokens are moving
-   */
-  mapping(uint256 => uint256[]) public stakeIdToTip;
-  address[] public indexToToken;
-  mapping(address => uint256) public currencyToIndex;
-  event AddTip(uint256 indexed stakeId, address indexed token, uint256 indexed index, uint256 setting);
-  /**
-   * tip an address a defined amount and token
-   * @param stakeId the stake id being targeted
-   * @param staker the staker
-   * @param token the token being accounted
-   * @param amount the amount of the token
-   */
-  event Tip(
+  uint256 public constant MAX_256 = type(uint256).max;
+  mapping(uint256 => address) internal _tipStakeIdToStaker;
+  event AddTip(
     uint256 indexed stakeId,
-    address indexed staker,
     address indexed token,
-    uint256 amount
+    uint256 indexed index,
+    uint256 setting
   );
-  constructor() {
-    _addCurrencyToTipList(address(0));
-    // this line allows hex to be tipped by factor of basefee
-    _addCurrencyToTipList(target);
-    _addCurrencyToTipList(hedron);
-  }
-  /**
-   * computes a magnitude from the provided values
-   * @param stakeId the stake id to get settings for
-   * @param y the value to supply as a secondary magnitude
-   */
-  function computeEnderTip(
-    uint256 stakeId,
-    uint256 y
-  ) external view returns(uint256) {
-    uint256 settings = idToSettings[stakeId];
-    return _computeMagnitude(
-      settings >> 248, settings << 8 >> 192, y,
-      _stakeById(stakeId)
-    );
-  }
+  event RemoveTip(
+    uint256 indexed stakeId,
+    address indexed token,
+    uint256 indexed index,
+    uint256 setting
+  );
   function _stakeById(uint256 stakeId) internal view returns(IStakeable.StakeStore memory) {
     return _stakeByIndex(stakeIdInfo[stakeId] >> 160);
   }
@@ -70,9 +42,7 @@ contract SingletonStakeManager is SingletonHedronManager, Magnitude {
    * end a stake for someone other than the sender of the transaction
    * @param stakeId the stake id on the underlying contract to end
    */
-  function stakeEndByConsent(
-    uint256 stakeId
-  ) external payable returns(uint256 delta) {
+  function stakeEndByConsent(uint256 stakeId) external payable returns(uint256 delta) {
     return _stakeEndByConsent(stakeId);
   }
   /**
@@ -81,15 +51,13 @@ contract SingletonStakeManager is SingletonHedronManager, Magnitude {
    * @return delta the amount of hex at the end of the stake (consumed by _directFunds)
    * @notice hedron minting happens as last step before end stake
    */
-  function _stakeEndByConsent(
-    uint256 stakeId
-  ) internal returns(uint256 delta) {
+  function _stakeEndByConsent(uint256 stakeId) internal returns(uint256 delta) {
     (uint256 idx, address staker) = _stakeIdToInfo(stakeId);
     IStakeable.StakeStore memory stake = _stakeByIndex(idx);
     if (idx == 0 && stakeId != stake.stakeId) {
       return 0;
     }
-    uint256 settings = idToSettings[stakeId];
+    uint256 settings = stakeIdToSettings[stakeId];
     uint256 consentAbilities = uint8(settings);
     uint256 today = _currentDay();
     if (((stake.lockedDay + stake.stakedDays) > today) && !_isCapable(consentAbilities, 1)) {
@@ -98,27 +66,25 @@ contract SingletonStakeManager is SingletonHedronManager, Magnitude {
     if (!_isCapable(consentAbilities, 0)) {
       return 0;
     }
+    // execute tips after we know that the stake can be ended
+    // but before hedron is added to the withdrawable mapping
+    if (_isCapable(settings, 6)) {
+      _executeTipList(stakeId, staker);
+    }
     if (_isCapable(consentAbilities, 3)) {
       // consent has been confirmed
       uint256 hedronAmount = _mintNativeHedron(idx, stakeId);
-      uint256 hedronTipMethod = settings >> 248;
-      if (hedronTipMethod > 0) {
-        uint256 tip = _computeMagnitude(
-          hedronTipMethod, settings << 8 >> 192, delta,
-          stake
+      uint256 hedronTip = _checkTipAmount(settings >> 184, hedronAmount, stake);
+      if (hedronTip > 0) {
+        hedronAmount = _checkAndExecTip(
+          stakeId,
+          staker,
+          hedron,
+          hedronTip,
+          hedronAmount
         );
-        // because we do not set a var for you
-        // to collect unattributed tokens
-        // it must be done at the end
-        tip = tip > hedronAmount ? hedronAmount : tip;
-        if (tip > 0) {
-          unchecked {
-            hedronAmount = hedronAmount - tip;
-          }
-          emit Tip(stakeId, staker, hedron, tip);
-        }
       }
-      _attributeHedron(staker, hedronAmount);
+      _attributeFunds(settings, 5, hedron, staker, hedronAmount);
     }
     delta = _stakeEnd(idx, stakeId);
     _directFunds(
@@ -144,12 +110,10 @@ contract SingletonStakeManager is SingletonHedronManager, Magnitude {
    * are attempting to end stake the same stakes
    */
   function stakeEndByConsentForMany(uint256[] calldata stakeIds) external payable {
-    uint256 stakeId;
     uint256 i;
     uint256 len = stakeIds.length;
     do {
-      stakeId = stakeIds[i];
-      _stakeEndByConsent(stakeId);
+      _stakeEndByConsent(stakeIds[i]);
       unchecked {
         ++i;
       }
@@ -232,7 +196,7 @@ contract SingletonStakeManager is SingletonHedronManager, Magnitude {
   receive() external payable {}
   fallback() external payable {}
 
-  function depositTip(
+  function depositAndAddTipToStake(
     address token,
     uint256 stakeId,
     uint256 amount,
@@ -240,28 +204,10 @@ contract SingletonStakeManager is SingletonHedronManager, Magnitude {
     uint256 denominator
   ) external payable returns(uint256, uint256) {
     amount = _depositTokenFrom(token, msg.sender, amount);
-    if (amount == 0) {
-      // cannot allow other people to take staker deposits
-      revert NotAllowed();
-    }
-    (, address recipient) = _stakeIdToInfo(stakeId);
+    address recipient = _verifyTipAmountAllowed(stakeId, amount);
     _addToTokenWithdrawable(token, recipient, amount);
     // do now allow for overriding of tip settings, only increase in gas token
     return _addTipToStake(token, recipient, stakeId, amount, numerator, denominator);
-  }
-  function addCurrencyToTipList(address token) external {
-    // token must already exist - helps prevent grief attacks
-    if (!token.isContract()) {
-      revert NotAllowed();
-    }
-    if (IERC20(token).totalSupply() > type(uint88).max) {
-      revert NotAllowed();
-    }
-    _addCurrencyToTipList(token);
-  }
-  function _addCurrencyToTipList(address token) internal {
-    currencyToIndex[token] = indexToToken.length;
-    indexToToken.push(token);
   }
   function removeTipFromStake(
     uint256 stakeId,
@@ -271,29 +217,44 @@ contract SingletonStakeManager is SingletonHedronManager, Magnitude {
     // who sends funds back to staking address
     // only one who is incensed to unwind tips is the staker
     // but realistically, anyone can if they wish
+    address staker;
     if (stakeIdInfo[stakeId] != 0) {
       _verifyStakeOwnership(msg.sender, stakeId);
+      staker = msg.sender;
+    } else {
+      staker = _tipStakeIdToStaker[stakeId];
     }
-    uint256[] storage tips = stakeIdToTip[stakeId];
+    uint256[] storage tips = stakeIdTips[stakeId];
     // this will fail if no tips exist
     uint256 tipsLast = tips.length - 1;
     uint256 len = indexes.length;
     uint256 i;
     do {
-      uint256 tip = tips[indexes[i]];
+      uint256 index = indexes[i];
+      uint256 tip = tips[index];
       if (tipsLast > 0) {
-        tips[indexes[i]] = tips[tipsLast];
+        tips[index] = tips[tipsLast];
       }
       tips.pop();
       // now do something with the tip
       address token = address(indexToToken[tip >> 224]);
-      uint256 limit = uint96(tip >> 128);
-      _addToTokenWithdrawable(token, msg.sender, limit);
+      _addToTokenWithdrawable(
+        token,
+        staker,
+        uint96(tip >> 128)
+      );
+      emit RemoveTip(stakeId, token, index, tip);
       unchecked {
+        // this overflows when tips are empty
         --tipsLast;
         ++i;
       }
     } while (i < len);
+    if (tipsLast == MAX_256) {
+      // remove from settings
+      uint256 setting = stakeIdToSettings[stakeId];
+      _logSettingsUpdate(stakeId, (setting >> 8 << 8) | uint8(setting << 2) >> 2);
+    }
   }
   function addTipToStake(
     address token,
@@ -302,7 +263,16 @@ contract SingletonStakeManager is SingletonHedronManager, Magnitude {
     uint256 numerator,
     uint256 denominator
   ) external returns(uint256, uint256) {
+    _verifyTipAmountAllowed(stakeId, amount);
+    // deduct from sender account
     return _addTipToStake(token, msg.sender, stakeId, amount, numerator, denominator);
+  }
+  function _verifyTipAmountAllowed(uint256 stakeId, uint256 amount) internal view returns(address recipient) {
+    (, recipient) = _stakeIdToInfo(stakeId);
+    if (amount == 0 && msg.sender != recipient) {
+      // cannot allow other people to take staker deposits
+      revert NotAllowed();
+    }
   }
   function _addTipToStake(
     address token,
@@ -316,18 +286,19 @@ contract SingletonStakeManager is SingletonHedronManager, Magnitude {
     if (amount == 0) {
       return (0, 0);
     }
-    if (_stakeCount(address(this)) > 0) {
-      uint256 existingStakeId = _stakeById(stakeId).stakeId;
-      // cannot add a tip to a stake that has already ended
-      if (existingStakeId != stakeId) {
-        revert NotAllowed();
-      }
+    if (_stakeCount(address(this)) == 0) {
+      revert NotAllowed();
     }
+    // cannot add a tip to a stake that has already ended
+    if (_stakeById(stakeId).stakeId != stakeId) {
+      revert NotAllowed();
+    }
+    _tipStakeIdToStaker[stakeId] = _stakeIdToOwner(stakeId);
     // set the tip flag to 1
     // 0b00000001 | 0b00010000 => 0b00010001
     // 0b00010001 | 0b00010000 => 0b00010001
-    uint256 currentSettings = idToSettings[stakeId];
-    uint256 updatedSettings = currentSettings | (1 << 4);
+    uint256 currentSettings = stakeIdToSettings[stakeId];
+    uint256 updatedSettings = currentSettings | (1 << 6);
     if (updatedSettings != currentSettings) {
       _logSettingsUpdate(stakeId, updatedSettings);
     }
@@ -344,29 +315,10 @@ contract SingletonStakeManager is SingletonHedronManager, Magnitude {
       revert NotAllowed();
     }
     uint256 setting = _encodeTipSettings(currencyIndex, amount, numerator, denominator);
-    uint256 index = stakeIdToTip[stakeId].length;
-    stakeIdToTip[stakeId].push(setting);
+    uint256 index = stakeIdTips[stakeId].length;
+    stakeIdTips[stakeId].push(setting);
     emit AddTip(stakeId, token, index, setting);
     return (index, amount);
-  }
-  function encodeTipSettings(
-    uint256 currencyIndex,
-    uint256 amount,
-    uint256 numerator,
-    uint256 denominator
-  ) external pure returns(uint256) {
-    return _encodeTipSettings(currencyIndex, amount, numerator, denominator);
-  }
-  function _encodeTipSettings(
-    uint256 currencyIndex,
-    uint256 amount,
-    uint256 numerator,
-    uint256 denominator
-  ) internal pure returns(uint256) {
-    return (currencyIndex << 224)
-      | (amount << 128)
-      | (uint256(uint64(numerator)) << 64)
-      | uint256(uint64(denominator));
   }
   /**
    * directs available funds to the next step
@@ -385,64 +337,15 @@ contract SingletonStakeManager is SingletonHedronManager, Magnitude {
     uint256 settings,
     IStakeable.StakeStore memory stake
   ) internal {
-    if (_isCapable(settings, 4)) {
-      uint256 i;
-      uint256 len = stakeIdToTip[stakeId].length;
-      do {
-        // the reason we can do this is because
-        // it is unreasonable to try to provide a list of 0,
-        // since nothing would be able to happen downstream
-        uint256 tip = stakeIdToTip[stakeId][len - 1 - i];
-        stakeIdToTip[stakeId].pop();
-        address token = indexToToken[tip >> 224];
-        if (uint128(tip) == 0) {
-          tip = uint88(tip >> 128);
-        } else {
-          uint256 limit = uint88(tip >> 128);
-          // after this point, the tip as written on chain
-          // is not helpful to execution so we overwrite it
-          tip = (uint64(tip >> 64) * block.basefee) / uint64(tip);
-          if (limit > 0) {
-            tip = _clamp(tip, limit);
-            if (limit - tip > 0) {
-              // put back unused tip
-              unchecked {
-                withdrawableBalanceOf[token][staker] += (limit - tip);
-              }
-            }
-          } else {
-            // we have to draw from deposited tokens
-            tip = _clamp(tip, withdrawableBalanceOf[token][staker]);
-            if (tip > 0) {
-              unchecked {
-                withdrawableBalanceOf[token][staker] -= tip;
-              }
-            }
-          }
-        }
-        if (tip > 0) {
-          emit Tip(stakeId, staker, token, tip);
-          // this allows the tip to be free floating
-          // and picked up by the unattributed methods
-          unchecked {
-            attributed[token] -= tip;
-          }
-        }
-        unchecked {
-          ++i;
-        }
-      } while (i < len);
-    }
     uint256 targetTip = _checkTipAmount(settings >> 112, delta, stake);
     if (targetTip > 0) {
-      // because we do not set a var for you
-      // to collect unattributed tokens
-      // it must be done at the end
-      targetTip = targetTip > delta ? delta : targetTip;
-      unchecked {
-        delta = delta - targetTip;
-      }
-      emit Tip(stakeId, staker, target, targetTip);
+      delta = _checkAndExecTip(
+        stakeId,
+        staker,
+        target,
+        targetTip,
+        delta
+      );
     }
     uint256 newStakeMethod = settings << 144 >> 248;
     if (delta > 0 && newStakeMethod > 0) {
@@ -459,11 +362,8 @@ contract SingletonStakeManager is SingletonHedronManager, Magnitude {
         unchecked {
           delta = delta - newStakeAmount; // checks for underflow
         }
-        newStakeMethod = newStakeDays > MAX_DAYS ? MAX_DAYS : newStakeMethod;
-        uint256 nextStakeId = _stakeStartFor(
-          staker,
-          newStakeAmount, newStakeDays
-        );
+        newStakeDays = newStakeDays > MAX_DAYS ? MAX_DAYS : newStakeDays;
+        uint256 nextStakeId = _stakeStartFor(staker, newStakeAmount, newStakeDays);
         // settings will be maintained for the new stake
         // note, because 0 is used, one often needs to use x-1
         // for the number of times you want to copy
@@ -481,7 +381,7 @@ contract SingletonStakeManager is SingletonHedronManager, Magnitude {
           // remove consent abilities, put back the last 4 (0-3)
           // which removes the tip flag
           // also, remove the early end flag
-          settings = (settings >> 8 << 8) | (settings << 252 >> 254 << 2) | 1;
+          settings = (settings >> 8 << 8) | (settings << 250 >> 254 << 2) | 1;
           _logSettingsUpdate(nextStakeId, settings);
         } else {
           // keep the authorization settings
@@ -491,14 +391,9 @@ contract SingletonStakeManager is SingletonHedronManager, Magnitude {
         }
       }
     }
-    if (delta > 0) {
-      if (_isCapable(settings, 5)) {
-        _withdrawTokenTo(target, payable(staker), delta);
-      } else {
-        _addToTokenWithdrawable(target, staker, delta);
-      }
-    }
-    // this data should still be available in logs
-    idToSettings[stakeId] = 0;
+    _attributeFunds(settings, 4, target, staker, delta);
+    // skip logging because it will be zero forever
+    // use stake end event as means of determining zeroing out
+    stakeIdToSettings[stakeId] = 0;
   }
 }

@@ -19,15 +19,18 @@ describe('HSIStakeManager.sol', () => {
   describe('mintRewards', () => {
     it('can mint rewards', async () => {
       const x = await loadFixture(utils.deployAndProcureHSIFixture)
+      const [signer1] = x.signers
       await x.hsiStakeManager.multicall(_.flatMap(x.hsiTokenIds, (tokenId) => ([
         x.hsiStakeManager.interface.encodeFunctionData('depositHsi', [tokenId]),
       ])), false)
       await utils.moveForwardDays(10, x)
+      await expect(x.hsiStakeManager.withdrawableBalanceOf(x.hedron.address, signer1.address))
+        .eventually.to.equal(0)
       await expect(x.hsiStakeManager.mintRewards(x.hsiStakeParams))
         .to.emit(x.hedron, 'Transfer')
         .withArgs(hre.ethers.constants.AddressZero, x.hsiStakeManager.address, anyUint)
-        .to.emit(x.hedron, 'Transfer')
-        .withArgs(x.hsiStakeManager.address, x.signers[0].address, anyUint)
+      await expect(x.hsiStakeManager.withdrawableBalanceOf(x.hedron.address, signer1.address))
+        .eventually.to.be.greaterThan(0)
     })
     it('anyone can mint rewards', async () => {
       const x = await loadFixture(utils.deployAndProcureHSIFixture)
@@ -39,8 +42,6 @@ describe('HSIStakeManager.sol', () => {
       await expect(x.hsiStakeManager.connect(signerB).mintRewards(x.hsiStakeParams))
         .to.emit(x.hedron, 'Transfer')
         .withArgs(hre.ethers.constants.AddressZero, x.hsiStakeManager.address, anyUint)
-        .to.emit(x.hedron, 'Transfer')
-        .withArgs(x.hsiStakeManager.address, x.signers[0].address, anyUint)
     })
     it('end deposited stakes', async () => {
       const x = await loadFixture(utils.deployAndProcureHSIFixture)
