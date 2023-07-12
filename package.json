@@ -44,5 +44,5 @@
   "dependencies": {
     "hardhat-vizor": "^0.0.17"
   },
-  "version": "1.0.5"
+  "version": "1.0.6"
 }
