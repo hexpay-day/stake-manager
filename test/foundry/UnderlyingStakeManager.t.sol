@@ -39,7 +39,7 @@ contract TestStakeManager is Test {
       IERC20(hx).approve(address(stkMngr), type(uint256).max);
       vm.stopPrank();
     }
-    uint256[13] memory globalInfo = IUnderlyingStakeable(hx).globalInfo();
+    uint256[13] memory globalInfo = IHEX(hx).globalInfo();
     // [, , , , , , stakeIdBN]
     nextStakeId = globalInfo[6] + 1;
     assertEq(IERC20(hx).balanceOf(vm.addr(1)), startingBalance);
