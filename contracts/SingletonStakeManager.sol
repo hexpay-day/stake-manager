@@ -110,13 +110,7 @@ contract SingletonStakeManager is Magnitude, SingletonHedronManager {
         // being easier to think about it as x-2
         uint256 copyIterations = uint8(setting >> 8);
         if (copyIterations > 0) {
-          if (copyIterations < 255) {
-            --copyIterations;
-            uint256 s = setting >> 16 << 16;
-            s |= (uint256(copyIterations) << 8);
-            s |= uint8(setting);
-            setting = s;
-          }
+          setting = _decrementCopyIterations(copyIterations, setting);
           // remove consent abilities, put back the last 4 (0-3)
           // which removes the tip flag
           // also, remove the early end flag

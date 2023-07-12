@@ -153,8 +153,10 @@ contract Bank is Capable {
   /** deposits tokens from a staker and marks them for that staker */
   function _depositTokenFrom(address token, address staker, uint256 amount) internal returns(uint256 amnt) {
     if (token != address(0)) {
-      IERC20(token).transferFrom(staker, address(this), amount);
-      amnt = amount;
+      if (amount > 0) {
+        IERC20(token).transferFrom(staker, address(this), amount);
+        amnt = amount;
+      }
     } else {
       // transfer in already occurred
       // make sure that multicall is not payable (it isn't)

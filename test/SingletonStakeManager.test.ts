@@ -31,6 +31,23 @@ describe("StakeManager", function () {
         .eventually.to.be.deep.equal(defaultDecoded)
     })
   })
+  describe('encodeTipSettings/decodeTipSettings', () => {
+    it('fails if 0 is provided as a denominator and numerator is non zero', async () => {
+      const x = await loadFixture(utils.deployFixture)
+      await expect(x.stakeManager.encodeTipSettings(
+        0,
+        x.oneEther,
+        1,
+        1
+      )).not.to.reverted
+      await expect(x.stakeManager.encodeTipSettings(
+        0,
+        x.oneEther,
+        1,
+        0
+      )).to.revertedWithCustomError(x.stakeManager, 'NotAllowed')
+    })
+  })
   describe('stakeable', () => {
     it('can get the stake list', async () => {
       const x = await loadFixture(utils.deployFixture)
@@ -474,7 +491,7 @@ describe("StakeManager", function () {
         .to.emit(x.hex, 'Transfer')
         .withArgs(x.stakeManager.address, signer2.address, oneHundredHex)
     })
-    it('leaves a native tip for the ender', async () => {
+    it('leaves a tip for the ender', async () => {
       const x = await loadFixture(utils.deployFixture)
       const nextStakeId = await utils.nextStakeId(x)
       const days = 10
@@ -650,6 +667,16 @@ describe("StakeManager", function () {
           [signer1, x.stakeManager],
           [tipAmount * -1n, tipAmount],
         )
+      await expect(x.stakeManager.connect(signer2).depositAndAddTipToStake(hre.ethers.constants.AddressZero, nextStakeId, 0, 1, 1))
+        .to.revertedWithCustomError(x.stakeManager, 'NotAllowed')
+      await expect(x.stakeManager.withdrawableBalanceOf(hre.ethers.constants.AddressZero, signer1.address))
+        .eventually.to.equal(0)
+      await expect(x.stakeManager.stakeIdTipSize(nextStakeId))
+        .eventually.to.equal(1)
+      await expect(x.stakeManager.depositAndAddTipToStake(hre.ethers.constants.AddressZero, nextStakeId, 0, 1, 1))
+        .not.to.emit(x.stakeManager, 'AddTip')
+      await expect(x.stakeManager.stakeIdTipSize(nextStakeId))
+        .eventually.to.equal(1)
       await expect(x.stakeManager.stakeEndById(nextStakeId))
         .to.emit(x.hex, 'StakeEnd')
         .to.changeEtherBalances(
@@ -741,6 +768,34 @@ describe("StakeManager", function () {
       expectedBalance -= tenthEther // 80999999999999999
       await expect(x.stakeManager.withdrawableBalanceOf(hre.ethers.constants.AddressZero, signer1.address))
         .eventually.to.equal(expectedBalance)
+    })
+    it('leaves unattributed hedron tokens until they are utilized', async () => {
+      const x = await loadFixture(utils.deployFixture)
+      const nextStakeId = await utils.nextStakeId(x)
+      const days = 10
+      const [signer1, signer2] = x.signers
+      await x.stakeManager.stakeStartFromBalanceFor(signer1.address, x.stakedAmount, days, 0)
+      await utils.moveForwardDays(11, x)
+      const settings = await x.stakeManager.idToDecodedSettings(nextStakeId)
+      const oneHundredHedron = hre.ethers.utils.parseUnits('100', 12).toBigInt()
+      const updatedSettings: EncodableSettings.SettingsStruct = {
+        ...settings,
+        hedronTipMethod: 1,
+        hedronTipMagnitude: oneHundredHedron,
+        consentAbilities: parseInt('00001101', 2),
+      }
+      await expect(x.stakeManager.updateSettings(nextStakeId, updatedSettings))
+        .to.emit(x.stakeManager, 'UpdatedSettings')
+        .withArgs(nextStakeId, await x.stakeManager.encodeSettings(updatedSettings))
+      const encodedStoredSettings = await x.stakeManager.stakeIdToSettings(nextStakeId)
+      const storedSettings = await x.stakeManager.decodeSettings(encodedStoredSettings)
+      expect(storedSettings.hedronTipMagnitude).to.equal(oneHundredHedron)
+      await expect(x.stakeManager.withdrawableBalanceOf(x.hedron.address, signer2.address))
+        .eventually.to.equal(0)
+      await expect(x.stakeManager.connect(signer2).stakeEndByConsent(nextStakeId))
+        .to.emit(x.hex, 'StakeEnd')
+      await expect(x.stakeManager.getUnattributed(x.hedron.address))
+        .eventually.to.be.greaterThan(0)
     })
     it('leaves unattributed tokens until they are utilized', async () => {
       const x = await loadFixture(utils.deployFixture)
@@ -856,17 +911,19 @@ describe("StakeManager", function () {
       const stakeId = await utils.nextStakeId(x)
       await x.stakeManager.stakeStartFromBalanceFor(signer1.address, x.stakedAmount, days, 0)
       const decimals = await x.usdc.decimals()
+      const tipAmount = hre.ethers.utils.parseUnits('100', decimals).toBigInt()
+      const usdcCurrencyIndex = await x.stakeManager.currencyListSize()
       await hre.vizor.impersonate(x.whales.usdc, async (swa) => {
         const amount = hre.ethers.utils.parseUnits('1000', decimals).toBigInt()
         await x.usdc.connect(swa).transfer(signer1.address, amount)
       })
-      const usdcCurrencyIndex = await x.stakeManager.currencyListSize()
+      await x.usdc.approve(x.stakeManager.address, tipAmount) // allow stake manager to pull in tip currency
+      await expect(x.stakeManager.depositAndAddTipToStake(x.usdc.address, stakeId, tipAmount, 0, 0))
+        .to.revertedWithCustomError(x.stakeManager, 'NotAllowed')
       await expect(x.stakeManager.addCurrencyToList(x.usdc.address))
         .to.emit(x.stakeManager, 'AddCurrency')
         .withArgs(x.usdc.address, usdcCurrencyIndex)
-      const tipAmount = hre.ethers.utils.parseUnits('100', decimals).toBigInt()
       const encodedTip = await x.stakeManager.encodeTipSettings(usdcCurrencyIndex, tipAmount, 0, 0)
-      await x.usdc.approve(x.stakeManager.address, tipAmount) // allow stake manager to pull in tip currency
       await expect(x.stakeManager.depositAndAddTipToStake(x.usdc.address, stakeId, tipAmount, 0, 0))
         .to.emit(x.stakeManager, 'AddTip')
         .withArgs(stakeId, x.usdc.address, 0, encodedTip)
@@ -921,7 +978,76 @@ describe("StakeManager", function () {
         .not.to.emit(x.hex, 'Transfer')
     })
   })
-  describe('computeMagnitude', async () => {
+  describe('balanceOf', () => {
+    it('passes a balance of check to target (hex)', async () => {
+      const x = await loadFixture(utils.deployFixture)
+      const [signer1] = x.signers
+      await expect(x.hex.balanceOf(signer1.address))
+        .eventually.to.equal(await x.stakeManager.balanceOf(signer1.address))
+      await expect(x.hex.balanceOf(signer1.address))
+        .eventually.to.be.greaterThan(0)
+    })
+  })
+  describe('stakeGoodAccounting', () => {
+    let x!: Awaited<ReturnType<typeof utils.deployFixture>>
+    beforeEach(async () => {
+      x = await loadFixture(utils.deployFixture)
+      await x.stakeManager.stakeStartFromBalanceFor(x.signers[0].address, x.stakedAmount, 15, 0)
+      await utils.moveForwardDays(16, x)
+    })
+    it('can check if a stake is good accountable', async () => {
+      const nextStakeId = await utils.nextStakeId(x)
+      await x.stakeManager.stakeStartFromBalanceFor(x.signers[0].address, x.stakedAmount, 15, 0) // nextStakeId + 1
+      await expect(x.stakeManager.isGoodAccountable(x.stakeManager.address, 2, nextStakeId))
+        .eventually.to.equal(4)
+      await expect(x.stakeManager.isStakeIdGoodAccountable(nextStakeId))
+        .eventually.to.equal(2)
+      await expect(x.stakeManager.isStakeIdGoodAccountable(x.nextStakeId))
+        .eventually.to.equal(0)
+      await x.stakeManager.checkStakeGoodAccounting(x.nextStakeId)
+      await expect(x.stakeManager.isStakeIdGoodAccountable(x.nextStakeId))
+        .eventually.to.equal(1)
+      await expect(x.stakeManager.stakeEnd(0, x.nextStakeId))
+        .to.emit(x.hex, 'StakeEnd')
+      await expect(x.stakeManager.isStakeIdGoodAccountable(x.nextStakeId))
+        .eventually.to.equal(3)
+    })
+    it('can perform good accounting', async () => {
+      await expect(x.stakeManager.stakeGoodAccounting(
+        x.stakeManager.address,
+        0,
+        x.nextStakeId,
+      ))
+      .to.emit(x.hex, 'StakeGoodAccounting')
+      await expect(x.hex.stakeGoodAccounting(
+        x.stakeManager.address,
+        0,
+        x.nextStakeId,
+      )).to.reverted
+      await expect(x.stakeManager.checkStakeGoodAccountingFor(
+        x.stakeManager.address,
+        0,
+        x.nextStakeId,
+      )).not.to.reverted
+      .not.to.emit(x.hex, 'StakeGoodAccounting')
+    })
+    it('can perform good accounting without index', async () => {
+      await expect(x.stakeManager.checkStakeGoodAccounting(
+        x.nextStakeId,
+      ))
+      .to.emit(x.hex, 'StakeGoodAccounting')
+      await expect(x.hex.stakeGoodAccounting(
+        x.stakeManager.address,
+        0,
+        x.nextStakeId,
+      )).to.reverted
+      await expect(x.stakeManager.checkStakeGoodAccounting(
+        x.nextStakeId,
+      )).not.to.reverted
+      .not.to.emit(x.hex, 'StakeGoodAccounting')
+    })
+  })
+  describe('computeMagnitude', () => {
     const oneHundredHex = hre.ethers.utils.parseUnits('100', 8).toBigInt()
     const stake: IStakeable.StakeStoreStruct = {
       stakeId: 0,

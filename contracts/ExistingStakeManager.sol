@@ -5,6 +5,4 @@ import "./HSIStakeManager.sol";
 import "./MaximusStakeManager.sol";
 
 // in alphabetical order
-contract ExistingStakeManager is HSIStakeManager, MaximusStakeManager {
-  constructor() MaximusStakeManager() {}
-}
+contract ExistingStakeManager is HSIStakeManager, MaximusStakeManager {}

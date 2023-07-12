@@ -52,9 +52,7 @@ export const deployFixture = async () => {
   const _signers = await hre.ethers.getSigners()
   const signers = _signers.slice(0, 20)
   const [signer] = signers
-  await impersonateAccount(pulsexSacrificeAddress)
-  const pulsexSacrificeSigner = await hre.ethers.getSigner(pulsexSacrificeAddress)
-  const hex = await hre.ethers.getContractAt('contracts/IHEX.sol:IHEX', hexAddress, pulsexSacrificeSigner) as IHEX
+  const hex = await hre.ethers.getContractAt('contracts/IHEX.sol:IHEX', hexAddress) as IHEX
   const hedron = await hre.ethers.getContractAt('IHedron', hedronAddress)
   const hsim = await hre.ethers.getContractAt('IHEXStakeInstanceManager', await hedron.hsim())
   const ExistingStakeManager = await hre.ethers.getContractFactory('ExistingStakeManager')
@@ -62,16 +60,18 @@ export const deployFixture = async () => {
   const maximusStakeManager = hsiStakeManager
   const decimals = await hex.decimals()
   const oneMillion = hre.ethers.utils.parseUnits('1000000', decimals).toBigInt()
-  await Promise.all(signers.map(async (signer) => {
-    await Promise.all([
-      // allow infinite flow
-      hex.connect(signer)
-        .approve(stakeManager.address, hre.ethers.constants.MaxUint256),
-      hex.connect(signer).approve(hsim.address, hre.ethers.constants.MaxUint256),
-      hex.transfer(signer.address, oneMillion),
-    ])
-  }))
-  await stopImpersonatingAccount(pulsexSacrificeAddress)
+  await hre.vizor.impersonate(pulsexSacrificeAddress, async (swa) => {
+    const h = hex.connect(swa)
+    await Promise.all(signers.map(async (signer) => {
+      await Promise.all([
+        // allow infinite flow
+        hex.connect(signer)
+          .approve(stakeManager.address, hre.ethers.constants.MaxUint256),
+        hex.connect(signer).approve(hsim.address, hre.ethers.constants.MaxUint256),
+        h.transfer(signer.address, oneMillion),
+      ])
+    }))
+  })
   const [, , , , , , stakeIdBN] = await hex.globalInfo()
   const IsolatedStakeManagerFactory = await hre.ethers.getContractFactory('IsolatedStakeManagerFactory')
   const isolatedStakeManagerFactory = await IsolatedStakeManagerFactory.deploy()
@@ -93,6 +93,7 @@ export const deployFixture = async () => {
     },
     stakedAmount,
     nextStakeId: stakeIdBN.toBigInt() + 1n,
+    oneEther: hre.ethers.utils.parseEther('1').toBigInt(),
     hex,
     decimals,
     oneMillion,

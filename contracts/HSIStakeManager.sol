@@ -28,7 +28,7 @@ contract HSIStakeManager is UnderlyingStakeable, Tipper, Magnitude {
     _logSettingsUpdate(stakeId, DEFAULT_ENCODED_SETTINGS);
   }
   function _defaultSettings() internal override pure returns(Settings memory) {
-    return Settings(0, 0, 0, 0, 0, 0, 0, 0, 0, 5);
+    return _decodeSettings(DEFAULT_ENCODED_SETTINGS);
   }
   function updateSettings(address hsiAddress, Settings calldata settings) external payable {
     _verifyStakeOwnership(msg.sender, uint160(hsiAddress));

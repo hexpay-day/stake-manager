@@ -178,6 +178,12 @@ contract EncodableSettings {
       uint8(1)
     );
   }
+  function _decrementCopyIterations(uint256 copyIterations, uint256 _setting) internal pure returns(uint256 setting) {
+    if (copyIterations < 255) {
+      --copyIterations;
+      setting = _setting >> 16 << 16 | (uint256(copyIterations) << 8) | uint8(_setting);
+    }
+  }
   /**
    * exposes the default settings to external
    */

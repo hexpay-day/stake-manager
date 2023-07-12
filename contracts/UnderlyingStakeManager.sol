@@ -132,18 +132,21 @@ contract UnderlyingStakeManager is Stakeable, StakeInfo, Tipper {
   function isGoodAccountable(address staker, uint256 index, uint256 stakeId) external view returns(uint256) {
     return _isGoodAccountable(staker, index, stakeId);
   }
+  function isStakeIdGoodAccountable(uint256 stakeId) external view returns(uint256) {
+    return _isGoodAccountable(address(this), _stakeIdToIndex(stakeId), stakeId);
+  }
   function _isGoodAccountable(address staker, uint256 index, uint256 stakeId) internal view returns(uint256) {
     uint256 count = IHEX(target).stakeCount(staker);
     if (index >= count) {
       return 4;
     }
     StakeStore memory stake = _getStake(staker, index);
-    if (stake.lockedDay + stake.stakedDays < IHEX(target).currentDay()) {
-      // return if it is too early to run good accounting
-      return 3;
-    }
     if (stake.stakeId != stakeId) {
       // the stake id does not match
+      return 3;
+    }
+    if (_isEarlyEnding(stake.lockedDay, stake.stakedDays, IHEX(target).currentDay())) {
+      // return if it is too early to run good accounting
       return 2;
     }
     if (stake.unlockedDay > 0) {

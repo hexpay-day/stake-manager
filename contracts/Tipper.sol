@@ -35,6 +35,9 @@ contract Tipper is Bank, UnderlyingStakeable, CurrencyList, StakeInfo, Encodable
     uint256 setting
   );
   mapping(uint256 => uint256[]) public stakeIdTips;
+  function stakeIdTipSize(uint256 stakeId) external view returns(uint256) {
+    return stakeIdTips[stakeId].length;
+  }
   /**
    * tip an address a defined amount and token
    * @param stakeId the stake id being targeted
@@ -78,26 +81,13 @@ contract Tipper is Bank, UnderlyingStakeable, CurrencyList, StakeInfo, Encodable
         tip = uint96(tip >> 128);
       } else {
         uint256 limit = uint96(tip >> 128);
-        uint256 numerator = uint64(tip >> 64);
-        uint256 denominator = uint64(tip);
-        if (denominator == 0) {
-          // in this case, numerator is >0 and denominator is 0
-          tip = _clamp(limit, withdrawableBalanceOf[token][staker]);
-          if (tip > 0) {
-            unchecked {
-              withdrawableBalanceOf[token][staker] -= tip;
-            }
-          }
-        } else {
-          // when numerator and denominator = 0
-          tip = (numerator * block.basefee) / denominator;
-          tip = _clamp(tip, limit);
-          uint256 refund = limit - tip;
-          if (refund > 0) {
-            // put back unused tip
-            unchecked {
-              withdrawableBalanceOf[token][staker] += refund;
-            }
+        tip = (uint64(tip >> 64) * block.basefee) / uint64(tip);
+        tip = _clamp(tip, limit);
+        uint256 refund = limit - tip;
+        if (refund > 0) {
+          // put back unused tip
+          unchecked {
+            withdrawableBalanceOf[token][staker] += refund;
           }
         }
       }
@@ -136,7 +126,7 @@ contract Tipper is Bank, UnderlyingStakeable, CurrencyList, StakeInfo, Encodable
     uint256 numerator,
     uint256 denominator
   ) internal pure returns(uint256) {
-    if (numerator > 0 && denominator < 0) {
+    if (numerator > 0 && denominator == 0) {
       revert NotAllowed();
     }
     return (currencyIndex << 224)
