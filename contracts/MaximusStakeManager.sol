@@ -37,13 +37,6 @@ contract MaximusStakeManager is HSIStakeManager {
     perpetualWhitelist[0xF55cD1e399e1cc3D95303048897a680be3313308] = true; // trio
     perpetualWhitelist[0xe9f84d418B008888A992Ff8c6D22389C2C3504e0] = true; // base
   }
-  modifier onlyCurrentPeriod(address perpetual, uint256 period) {
-    // no need to fail - just disallow
-    if (IPublicEndStakeable(perpetual).getCurrentPeriod() != period) {
-      return;
-    }
-    _;
-  }
   /** check if the target address is a known perpetual */
   modifier onlyPerpetual(address perpetual) {
     if (!perpetualWhitelist[perpetual]) {
@@ -88,9 +81,11 @@ contract MaximusStakeManager is HSIStakeManager {
     address[] calldata tokens
   )
     external
-    onlyCurrentPeriod(perpetual, period)
     onlyPerpetual(perpetual)
   {
+    if (IPublicEndStakeable(perpetual).getCurrentPeriod() != period) {
+      return;
+    }
     uint256 len = tokens.length;
     uint256 i;
     do {
