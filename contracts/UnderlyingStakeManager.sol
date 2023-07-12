@@ -1,51 +1,12 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.17;
 
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "./UnderlyingStakeable.sol";
-import "./Stakeable.sol";
-import "./Capable.sol";
 import "./Bank.sol";
+import "./StakeInfo.sol";
+import "./Tipper.sol";
 
-contract UnderlyingStakeManager is Stakeable, Capable, Bank {
-  /**
-   * @notice this error is thrown when the stake in question
-   * is not owned by the expected address
-   */
-  error StakeNotOwned(address provided, address expected);
-  /**
-   * @notice the owner of a stake indexed by the stake id
-   * index + 160(owner)
-   */
-  mapping(uint256 => uint256) public stakeIdInfo;
-  /**
-   * get the owner of the stake id - the account that has rights over
-   * the stake's settings and ability to end it outright
-   * @param stakeId the stake id in question
-   */
-  function stakeIdToOwner(uint256 stakeId) external view returns(address) {
-    return _stakeIdToOwner(stakeId);
-  }
-  function _stakeIdToOwner(uint256 stakeId) internal view returns(address) {
-    return address(uint160(stakeIdInfo[stakeId]));
-  }
-  function _stakeIdToInfo(uint256 stakeId) internal view returns(uint256, address) {
-    uint256 info = stakeIdInfo[stakeId];
-    return (info >> 160, address(uint160(info)));
-  }
-  function _verifyStakeOwnership(address owner, uint256 stakeId) internal view {
-    if (_stakeIdToOwner(stakeId) != owner) {
-      revert StakeNotOwned(owner, _stakeIdToOwner(stakeId));
-    }
-  }
-  /**
-   * the index of the stake id - useful when indexes are moving around
-   * and could be moved by other people
-   * @param stakeId the stake id to target
-   */
-  function stakeIdToIndex(uint256 stakeId) external view returns(uint256) {
-    return stakeIdInfo[stakeId] >> 160;
-  }
+contract UnderlyingStakeManager is Stakeable, StakeInfo, Tipper {
   /**
    * start a stake for the staker given the amount and number of days
    * @param staker the underlying owner of the stake
@@ -54,14 +15,15 @@ contract UnderlyingStakeManager is Stakeable, Capable, Bank {
    */
   function _stakeStartFor(
     address staker,
-    uint256 amount, uint256 newStakedDays
+    uint256 amount,
+    uint256 newStakedDays
   ) internal returns(uint256 stakeId) {
     // get future index of stake
     uint256 index = _stakeCount(address(this));
     Stakeable(target).stakeStart(amount, newStakedDays);
     // get the stake id
     stakeId = Stakeable(target).stakeLists(address(this), index).stakeId;
-    stakeIdInfo[stakeId] = (index << 160) | uint160(staker);
+    stakeIdInfo[stakeId] = _encodeInfo(index, staker);
   }
   /**
    * ends a stake for someone else
@@ -73,18 +35,18 @@ contract UnderlyingStakeManager is Stakeable, Capable, Bank {
   ) internal returns(uint256 delta) {
     // calculate the balance before
     // cannot use tokens attributed here because of tipping
-    uint256 balanceBefore = _getBalance(address(this));
+    uint256 balanceBefore = _balanceOf(address(this));
     // end the stake - attributed to contract or through the managed stake
     Stakeable(target).stakeEnd(stakeIndex, uint40(stakeId));
     if (_stakeCount(address(this)) > stakeIndex) {
       uint256 shiftingStakeId = _getStake(address(this), stakeIndex).stakeId;
       uint256 stakeInfo = stakeIdInfo[shiftingStakeId];
-      stakeIdInfo[shiftingStakeId] = (stakeIndex << 160) | uint160(stakeInfo);
+      stakeIdInfo[shiftingStakeId] = _encodeInfo(stakeIndex, address(uint160(stakeInfo)));
     }
     // because the delta is only available in the logs
     // we need to calculate the delta to use it
     unchecked {
-      delta = _getBalance(address(this)) - balanceBefore;
+      delta = _balanceOf(address(this)) - balanceBefore;
     }
     stakeIdInfo[stakeId] = 0;
   }
@@ -97,10 +59,7 @@ contract UnderlyingStakeManager is Stakeable, Capable, Bank {
   function stakeStart(uint256 amount, uint256 newStakedDays) external override {
     // ensures amount under/from sender is sufficient
     _depositTokenFrom(target, msg.sender, amount);
-    _stakeStartFor(
-      msg.sender,
-      amount, newStakedDays
-    );
+    _stakeStartFor(msg.sender, amount, newStakedDays);
   }
   /**
    * end your own stake which is custodied by the stake manager. skips tip computing
@@ -151,7 +110,7 @@ contract UnderlyingStakeManager is Stakeable, Capable, Bank {
    * @param stakeId the stake id to end as custodied by this contract
    */
   function checkStakeGoodAccounting(uint256 stakeId) external {
-    _checkStakeGoodAccounting(address(this), stakeIdInfo[stakeId] >> 160, stakeId);
+    _checkStakeGoodAccounting(address(this), _stakeIdToIndex(stakeId), stakeId);
   }
   /**
    * check that the stake can be good accounted, and execute the method if it will not fail

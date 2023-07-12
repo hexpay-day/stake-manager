@@ -7,11 +7,6 @@ import "./EncodableSettings.sol";
 import "./UnderlyingStakeManager.sol";
 
 contract SingletonHedronManager is EncodableSettings, UnderlyingStakeManager {
-  // mint hedron rewards
-  struct HedronParams {
-    uint96 hsiIndex;
-    address hsiAddress;
-  }
   /**
    * mint rewards and transfer them to a provided address
    * @param stakeIds list of stake ids to mint

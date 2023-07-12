@@ -16,46 +16,63 @@ contract HSIStakeManager is UnderlyingStakeable, Tipper, Magnitude {
   /**
    * a mapping of hsi addresses to the address that deposited the hsi into this contract
    */
-  mapping(address => address) public hsiToOwner;
-  mapping(address => uint256) public settings;
+  // mapping(address => uint256) public hsiToInfo;
+  event UpdateSettings(address indexed hsi, uint256 indexed settings);
+  uint256 private constant DEFAULT_ENCODED_SETTINGS
+    = 0x0000000000000000000000000000000000000000000000000000000000000005;
+  function defaultEncodedSettings() external override pure returns(uint256) {
+    return DEFAULT_ENCODED_SETTINGS;
+  }
+  // takes the hsi address (as stake id)
+  function _setDefaultSettings(uint256 stakeId) internal override {
+    _logSettingsUpdate(stakeId, DEFAULT_ENCODED_SETTINGS);
+  }
+  function _defaultSettings() internal override pure returns(Settings memory) {
+    return Settings(0, 0, 0, 0, 0, 0, 0, 0, 0, 5);
+  }
+  function updateSettings(address hsiAddress, Settings calldata settings) external payable {
+    _verifyStakeOwnership(msg.sender, uint160(hsiAddress));
+    _writePreservedSettingsUpdate(uint160(hsiAddress), _encodeSettings(settings));
+  }
   /**
    * transfer stakes by their token ids
    * @param tokenId the token id to move to this contract
    * @dev requires approval to transfer hsi to this contract
    */
-  function depositHsi(uint256 tokenId) external {
-    address hsim = IHedron(hedron).hsim();
+  function depositHsi(uint256 tokenId, uint256 encodedSettings) external {
     address owner = _deposit721(hsim, tokenId);
+    uint256 index = IHEXStakeInstanceManager(hsim).hsiCount(address(this));
     address hsiAddress = IHEXStakeInstanceManager(hsim).hexStakeDetokenize(tokenId);
     // erc721 is burned - no owner - only hsi address remains
-    hsiToOwner[hsiAddress] = owner;
-    settings[hsiAddress] = 0x0000000000000000000000000000000000000000000000000000000000000003;
+    stakeIdInfo[uint160(hsiAddress)] = _encodeInfo(index, owner);
+    if (encodedSettings == 0) {
+      _setDefaultSettings(uint160(hsiAddress));
+    } else {
+      _logSettingsUpdate(uint160(hsiAddress), encodedSettings);
+    }
   }
   function _deposit721(address token, uint256 tokenId) internal returns(address owner) {
     owner = IERC721(token).ownerOf(tokenId);
     IERC721(token).transferFrom(msg.sender, address(this), tokenId);
   }
-  struct HSIParams {
-    uint96 hsiIndex;
-    address hsiAddress;
-  }
   /**
    * mint rewards and transfer them the owner of each hsi
-   * @param params variable params for each call
+   * @param hsiAddresses variable params for each call
    * @notice any combination of owners can be passed,
    * however, it is most efficient to order the hsi address by owner
    */
-  function mintRewards(HSIParams[] calldata params) external {
-    uint256 len = params.length;
+  function mintRewards(address[] calldata hsiAddresses) external {
+    uint256 len = hsiAddresses.length;
     uint256 i;
     uint256 hedronTokens;
-    address hsiAddress = params[0].hsiAddress;
+    address hsiAddress = hsiAddresses[0];
     address currentOwner;
-    address to = hsiToOwner[hsiAddress];
+    (, address to) = _stakeIdToInfo(uint160(hsiAddress));
     address hedronAddress = hedron;
+    uint256 index;
     do {
-      hsiAddress = params[i].hsiAddress;
-      currentOwner = hsiToOwner[hsiAddress];
+      hsiAddress = hsiAddresses[i];
+      (index, currentOwner) = _stakeIdToInfo(uint160(hsiAddress));
       if (currentOwner != to) {
         if (hedronTokens > 0) {
           _addToTokenWithdrawable(hedronAddress, to, hedronTokens);
@@ -63,9 +80,8 @@ contract HSIStakeManager is UnderlyingStakeable, Tipper, Magnitude {
         hedronTokens = 0;
       }
       to = currentOwner;
-      uint256 setting = settings[hsiAddress];
-      if (_isCapable(setting, 0)) {
-        hedronTokens += IHedron(hedron).mintInstanced(params[i].hsiIndex, hsiAddress);
+      if (_isCapable(stakeIdToSettings[uint160(hsiAddress)], 0)) {
+        hedronTokens += IHedron(hedron).mintInstanced(index, hsiAddress);
       }
       unchecked {
         ++i;
@@ -77,29 +93,46 @@ contract HSIStakeManager is UnderlyingStakeable, Tipper, Magnitude {
   }
   /**
    * end multiple stakes, and mint final tokens
-   * @param params the hsi index and address to interact with
+   * @param hsiAddresses the hsi index and address to interact with
+   * @notice a fully gas optimized plan was not used for this method
    */
-  function hsiStakeEndMany(HSIParams[] calldata params) external {
-    uint256 len = params.length;
+  function hsiStakeEndMany(address[] calldata hsiAddresses) external {
+    uint256 len = hsiAddresses.length;
     uint256 i;
     address hsiAddress;
     uint256 index;
     address currentOwner;
-    address hsim = IHedron(hedron).hsim();
     do {
-      hsiAddress = params[i].hsiAddress;
-      currentOwner = hsiToOwner[hsiAddress];
-      index = params[i].hsiIndex;
+      hsiAddress = hsiAddresses[i];
+      (index, currentOwner) = _stakeIdToInfo(uint160(hsiAddress));
       IStakeable.StakeStore memory stake = IHEX(target).stakeLists(hsiAddress, 0);
-      uint256 setting = settings[hsiAddress];
-      if (_isCapable(setting, 6)) {
+      if (stake.stakeId == 0) {
+        unchecked {
+          ++i;
+        }
+        continue;
+      }
+      uint256 setting = stakeIdToSettings[uint160(hsiAddress)];
+      if (_isEarlyEnding(stake.lockedDay, stake.stakedDays, _currentDay())) {
+        if (!_isCapable(setting, 1)) {
+          unchecked {
+            ++i;
+          }
+          continue;
+        }
+      }
+      if (_isCapable(setting, 5)) {
         _executeTipList(stake.stakeId, currentOwner);
       }
-      uint256 hedronReward;
-      if (_isCapable(setting, 1)) {
-        hedronReward = IHedron(hedron).mintInstanced(index, hsiAddress);
-        if (_isCapable(setting, 2)) {
-          uint256 hedronTip = _checkTipAmount(setting >> 184, hedronReward, stake);
+      uint256 method;
+      if (_isCapable(setting, 2)) {
+        uint256 hedronReward = IHedron(hedron).mintInstanced(index, hsiAddress);
+        method = setting >> 248;
+        if (method > 0) {
+          uint256 hedronTip = _computeMagnitude(
+            hedronReward, method, setting << 8 >> 192, hedronReward,
+            stake
+          );
           if (hedronTip > 0) {
             hedronReward = _checkAndExecTip(
               stake.stakeId,
@@ -110,10 +143,24 @@ contract HSIStakeManager is UnderlyingStakeable, Tipper, Magnitude {
             );
           }
         }
+        _attributeFunds(setting, 3, hedron, currentOwner, hedronReward);
       }
       uint256 targetReward = IHEXStakeInstanceManager(hsim).hexStakeEnd(index, hsiAddress);
-      if (_isCapable(setting, 3)) {
-        uint256 targetTip = _checkTipAmount(setting >> 152, targetReward, stake);
+      // remove index and settings info
+      stakeIdInfo[uint160(hsiAddress)] = 0;
+      stakeIdToSettings[uint160(hsiAddress)] = 0;
+      // move around the indexes for future stake ends
+      if (IHEXStakeInstanceManager(hsim).hsiCount(address(this)) > index) {
+        address movedHsiAddress = IHEXStakeInstanceManager(hsim).hsiLists(address(this), index);
+        (, address movedOwner) = _stakeIdToInfo(uint160(movedHsiAddress));
+        stakeIdInfo[uint160(movedHsiAddress)] = _encodeInfo(index, movedOwner);
+      }
+      method = setting << 72 >> 248;
+      if (method > 0) {
+        uint256 targetTip = _computeMagnitude(
+          targetReward, method, setting << 80 >> 192, targetReward,
+          stake
+        );
         if (targetTip > 0) {
           targetReward = _checkAndExecTip(
             stake.stakeId,
@@ -125,16 +172,9 @@ contract HSIStakeManager is UnderlyingStakeable, Tipper, Magnitude {
         }
       }
       _attributeFunds(setting, 4, target, currentOwner, targetReward);
-      _attributeFunds(setting, 5, hedron, currentOwner, hedronReward);
       unchecked {
         ++i;
       }
     } while (i < len);
-  }
-  function setSettings(address hsiAddress, uint256 setting) external {
-    if (hsiToOwner[hsiAddress] != msg.sender) {
-      revert NotAllowed();
-    }
-    settings[hsiAddress] = uint224(setting);
   }
 }

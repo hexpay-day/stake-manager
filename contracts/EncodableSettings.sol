@@ -36,9 +36,12 @@ contract EncodableSettings {
    * @param settings the newly updated settings
    */
   event UpdatedSettings(uint256 indexed stakeId, uint256 settings);
-  uint256 public constant DEFAULT_ENCODED_SETTINGS
+  uint256 private constant DEFAULT_ENCODED_SETTINGS
     = uint256(0x000000000000000000000000000000000000040000000100000001020000ff01);
-  function _setDefaultSettings(uint256 stakeId) internal {
+  function defaultEncodedSettings() external virtual pure returns(uint256) {
+    return DEFAULT_ENCODED_SETTINGS;
+  }
+  function _setDefaultSettings(uint256 stakeId) internal virtual {
     _logSettingsUpdate(stakeId, DEFAULT_ENCODED_SETTINGS);
   }
   function _writePreservedSettingsUpdate(
@@ -128,7 +131,7 @@ contract EncodableSettings {
       uint8( encoded)
     );
   }
-  function _defaultSettings() internal pure returns(Settings memory settings) {
+  function _defaultSettings() internal virtual pure returns(Settings memory settings) {
     // 0x00000000000000000000000000000000000000000000040000000100000001020000ff01
     return Settings(
       /*
@@ -178,7 +181,7 @@ contract EncodableSettings {
   /**
    * exposes the default settings to external
    */
-  function defaultSettings() external pure returns(Settings memory) {
+  function defaultSettings() external virtual pure returns(Settings memory) {
     return _defaultSettings();
   }
 }

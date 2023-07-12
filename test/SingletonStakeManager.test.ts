@@ -4,7 +4,8 @@ import * as hre from "hardhat"
 import _ from 'lodash'
 import * as withArgs from '@nomicfoundation/hardhat-chai-matchers/withArgs'
 import * as utils from './utils'
-import { EncodableSettings, IStakeable } from "../artifacts/types"
+import { EncodableSettings } from "../artifacts/types"
+import { IStakeable } from "../artifacts/types/contracts/IHEX"
 
 describe("StakeManager", function () {
   describe('UnderlyingStakeable', () => {
@@ -22,7 +23,7 @@ describe("StakeManager", function () {
   describe('encodeSettings/decodeSettings', () => {
     it('encodes and decodes settings', async () => {
       const x = await loadFixture(utils.deployFixture)
-      const defaultEncoded = await x.stakeManager.DEFAULT_ENCODED_SETTINGS()
+      const defaultEncoded = await x.stakeManager.defaultEncodedSettings()
       const defaultDecoded = await x.stakeManager.defaultSettings()
       await expect(x.stakeManager.encodeSettings(defaultDecoded))
         .eventually.to.equal(defaultEncoded)
@@ -56,13 +57,13 @@ describe("StakeManager", function () {
       const x = await loadFixture(utils.deployFixture)
       await x.stakeManager.stakeStart(x.stakedAmount, 10)
       const stake = await x.stakeManager.stakeLists(x.stakeManager.address, 0)
-      await expect(x.stakeManager.isEarlyEnding(stake, await x.hex.currentDay()))
+      await expect(x.stakeManager.isEarlyEnding(stake.lockedDay, stake.stakedDays, await x.hex.currentDay()))
         .eventually.to.be.true
       await utils.moveForwardDays(5, x)
-      await expect(x.stakeManager.isEarlyEnding(stake, await x.hex.currentDay()))
+      await expect(x.stakeManager.isEarlyEnding(stake.lockedDay, stake.stakedDays, await x.hex.currentDay()))
         .eventually.to.be.true
       await utils.moveForwardDays(6, x)
-      await expect(x.stakeManager.isEarlyEnding(stake, await x.hex.currentDay()))
+      await expect(x.stakeManager.isEarlyEnding(stake.lockedDay, stake.stakedDays, await x.hex.currentDay()))
         .eventually.to.be.false
     })
   })
@@ -280,6 +281,7 @@ describe("StakeManager", function () {
           [signer1, originAddress],
           [0, 0],
         )
+        // .printGasUsage()
       await expect(tx)
         .to.emit(x.hex, 'StakeEnd')
         .withArgs(withArgs.anyUint, withArgs.anyUint, x.stakeManager.address, x.nextStakeId + 5n)
@@ -295,8 +297,23 @@ describe("StakeManager", function () {
       await expect(tx)
         .to.emit(x.hex, 'Transfer')
         .withArgs(x.stakeManager.address, hre.ethers.constants.AddressZero, withArgs.anyUint)
-        // .printGasUsage()
       await expect(x.hex.stakeCount(x.stakeManager.address)).eventually.to.equal(6)
+    })
+  })
+  describe('addCurrencyToList', () => {
+    it('disallows non deployed contracts', async () => {
+      const x = await loadFixture(utils.deployFixture)
+      await expect(x.stakeManager.addCurrencyToList(x.signers[0].address))
+        .to.revertedWithCustomError(x.stakeManager, 'NotAllowed')
+    })
+    it('adds currency hashes to a list', async () => {
+      const x = await loadFixture(utils.deployFixture)
+      const index = await x.stakeManager.currencyListSize()
+      await expect(x.stakeManager.addCurrencyToList(x.usdc.address))
+        .to.emit(x.stakeManager, 'AddCurrency')
+        .withArgs(x.usdc.address, index)
+      await expect(x.stakeManager.addCurrencyToList(x.usdc.address))
+        .not.to.emit(x.stakeManager, 'AddCurrency')
     })
   })
   describe('stakeEndByConsentForMany', () => {
@@ -709,7 +726,6 @@ describe("StakeManager", function () {
         .to.revertedWithCustomError(x.stakeManager, 'NotAllowed')
       await expect(x.stakeManager.withdrawableBalanceOf(hre.ethers.constants.AddressZero, signer1.address))
         .eventually.to.equal(expectedBalance)
-      console.log(expectedBalance)
       const encodedTip = await x.stakeManager.encodeTipSettings(0, tipAmount - 1n, 0, 0)
       await expect(x.stakeManager.removeTipFromStake(nextStakeId, [0]))
         .to.emit(x.stakeManager, 'RemoveTip')
@@ -833,6 +849,42 @@ describe("StakeManager", function () {
         .to.emit(x.hex, 'StakeEnd')
         .withArgs(withArgs.anyUint, withArgs.anyUint, x.stakeManager.address, nextStakeId)
     })
+    it('can tip in any currency', async () => {
+      const x = await loadFixture(utils.deployFixture)
+      const days = 10
+      const [signer1, signer2] = x.signers
+      const stakeId = await utils.nextStakeId(x)
+      await x.stakeManager.stakeStartFromBalanceFor(signer1.address, x.stakedAmount, days, 0)
+      const decimals = await x.usdc.decimals()
+      await hre.vizor.impersonate(x.whales.usdc, async (swa) => {
+        const amount = hre.ethers.utils.parseUnits('1000', decimals).toBigInt()
+        await x.usdc.connect(swa).transfer(signer1.address, amount)
+      })
+      const usdcCurrencyIndex = await x.stakeManager.currencyListSize()
+      await expect(x.stakeManager.addCurrencyToList(x.usdc.address))
+        .to.emit(x.stakeManager, 'AddCurrency')
+        .withArgs(x.usdc.address, usdcCurrencyIndex)
+      const tipAmount = hre.ethers.utils.parseUnits('100', decimals).toBigInt()
+      const encodedTip = await x.stakeManager.encodeTipSettings(usdcCurrencyIndex, tipAmount, 0, 0)
+      await x.usdc.approve(x.stakeManager.address, tipAmount) // allow stake manager to pull in tip currency
+      await expect(x.stakeManager.depositAndAddTipToStake(x.usdc.address, stakeId, tipAmount, 0, 0))
+        .to.emit(x.stakeManager, 'AddTip')
+        .withArgs(stakeId, x.usdc.address, 0, encodedTip)
+      await utils.moveForwardDays(days + 1, x)
+      await expect(x.stakeManager.connect(signer2).stakeEndByConsent(stakeId))
+        .to.emit(x.hex, 'StakeEnd')
+      await expect(x.stakeManager.getUnattributed(x.usdc.address))
+        .eventually.to.equal(tipAmount)
+      await expect(x.stakeManager.connect(signer2).collectUnattributed(x.usdc.address, true, signer2.address, tipAmount / 2n))
+        .to.emit(x.usdc, 'Transfer')
+        .withArgs(x.stakeManager.address, signer2.address, tipAmount / 2n)
+      await expect(x.stakeManager.withdrawableBalanceOf(x.usdc.address, signer2.address))
+        .eventually.to.equal(0)
+      await expect(x.stakeManager.connect(signer2).collectUnattributed(x.usdc.address, false, signer2.address, tipAmount / 2n))
+        .not.to.emit(x.usdc, 'Transfer')
+      await expect(x.stakeManager.withdrawableBalanceOf(x.usdc.address, signer2.address))
+        .eventually.to.be.equal(tipAmount / 2n)
+    })
     it('cannot end early by default', async () => {
       const x = await loadFixture(utils.deployFixture)
       const nextStakeId = await utils.nextStakeId(x)
@@ -882,17 +934,17 @@ describe("StakeManager", function () {
     }
     it('0: always returns zero', async () => {
       const x = await loadFixture(utils.deployFixture)
-      await expect(x.stakeManager.computeMagnitude(0, 100, 100, stake))
+      await expect(x.stakeManager.computeMagnitude(hre.ethers.constants.MaxUint256, 0, 100, 100, stake))
         .eventually.to.equal(0)
     })
     it('1: always returns arg 1', async () => {
       const x = await loadFixture(utils.deployFixture)
-      await expect(x.stakeManager.computeMagnitude(1, 1001, 1002, stake))
+      await expect(x.stakeManager.computeMagnitude(hre.ethers.constants.MaxUint256, 1, 1001, 1002, stake))
         .eventually.to.equal(1001)
     })
     it('2: returns the staked days property', async () => {
       const x = await loadFixture(utils.deployFixture)
-      await expect(x.stakeManager.computeMagnitude(2, 0, 0, stake))
+      await expect(x.stakeManager.computeMagnitude(hre.ethers.constants.MaxUint256, 2, 0, 0, stake))
         .eventually.to.equal(10)
     })
     it('3: returns a computed day based on a tight ladder', async () => {
@@ -904,7 +956,7 @@ describe("StakeManager", function () {
         ...stake,
         lockedDay: currentDay - 10,
       }
-      await expect(x.stakeManager.computeMagnitude(3, 0, currentDay, stk))
+      await expect(x.stakeManager.computeMagnitude(hre.ethers.constants.MaxUint256, 3, 0, currentDay, stk))
         .eventually.to.equal(stk.stakedDays)
       // missed end by more than 1 round
       currentDay = (await x.hex.currentDay()).toNumber()
@@ -917,7 +969,7 @@ describe("StakeManager", function () {
       // t-26,t-15,t-4
       // so we are 4 days into the ladder, so we should stake for
       // 6 more days to get us back on track
-      await expect(x.stakeManager.computeMagnitude(3, 0, currentDay, stk))
+      await expect(x.stakeManager.computeMagnitude(hre.ethers.constants.MaxUint256, 3, 0, currentDay, stk))
         .eventually.to.equal(6)
     })
     const tenPercentAsUint = (1_000n << 32n) | 10_000n
@@ -925,17 +977,17 @@ describe("StakeManager", function () {
     it('4: always returns a % of input', async () => {
       const x = await loadFixture(utils.deployFixture)
       // do not sub 1 from the x input - needed to ensure rounding correctly
-      await expect(x.stakeManager.computeMagnitude(4, tenPercentAsUint, 10_000_000, stake))
+      await expect(x.stakeManager.computeMagnitude(hre.ethers.constants.MaxUint256, 4, tenPercentAsUint, 10_000_000, stake))
         .eventually.to.equal(1_000_000)
     })
     it('5: returns a percent of originating principle', async () => {
       const x = await loadFixture(utils.deployFixture)
-      await expect(x.stakeManager.computeMagnitude(5, tenPercentAsUint, tenPercentOnPrinciple, stake))
+      await expect(x.stakeManager.computeMagnitude(hre.ethers.constants.MaxUint256, 5, tenPercentAsUint, tenPercentOnPrinciple, stake))
         .eventually.to.equal(oneHundredHex / 10n)
     })
     it('6: returns a percent of yield', async () => {
       const x = await loadFixture(utils.deployFixture)
-      await expect(x.stakeManager.computeMagnitude(6, tenPercentAsUint, tenPercentOnPrinciple, stake))
+      await expect(x.stakeManager.computeMagnitude(hre.ethers.constants.MaxUint256, 6, tenPercentAsUint, tenPercentOnPrinciple, stake))
         .eventually.to.equal((tenPercentOnPrinciple - oneHundredHex) / 10n)
     })
   })

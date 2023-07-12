@@ -66,6 +66,11 @@
   dependencies:
     "@jridgewell/trace-mapping" "0.3.9"
 
+"@enzoferey/ethers-error-parser@^0.2.3":
+  version "0.2.3"
+  resolved "https://registry.yarnpkg.com/@enzoferey/ethers-error-parser/-/ethers-error-parser-0.2.3.tgz#f7e6e37bd9cda48f650c264a83c78aeaf8957954"
+  integrity sha512-Xt5DPAwJP/Czvw6bVLuWpk+y3M5z1fKWUy3w8nLV7WLfDxoN+HmtqQ1+vgG4lvmD2Xr/bW2mBvHPyI3bKDkuXA==
+
 "@ethersproject/abi@5.7.0", "@ethersproject/abi@^5.0.0-beta.146", "@ethersproject/abi@^5.0.9", "@ethersproject/abi@^5.1.2", "@ethersproject/abi@^5.7.0":
   version "5.7.0"
   resolved "https://registry.yarnpkg.com/@ethersproject/abi/-/abi-5.7.0.tgz#b3f3e045bbbeed1af3947335c247ad625a44e449"
@@ -621,14 +626,14 @@
     deep-eql "^4.0.1"
     ordinal "^1.0.3"
 
-"@nomicfoundation/hardhat-network-helpers@^1.0.0":
+"@nomicfoundation/hardhat-network-helpers@^1.0.0", "@nomicfoundation/hardhat-network-helpers@^1.0.7":
   version "1.0.8"
   resolved "https://registry.yarnpkg.com/@nomicfoundation/hardhat-network-helpers/-/hardhat-network-helpers-1.0.8.tgz#e4fe1be93e8a65508c46d73c41fa26c7e9f84931"
   integrity sha512-MNqQbzUJZnCMIYvlniC3U+kcavz/PhhQSsY90tbEtUyMj/IQqsLwIRZa4ctjABh3Bz0KCh9OXUZ7Yk/d9hr45Q==
   dependencies:
     ethereumjs-util "^7.1.4"
 
-"@nomicfoundation/hardhat-toolbox@^2.0.2":
+"@nomicfoundation/hardhat-toolbox@^2.0.0", "@nomicfoundation/hardhat-toolbox@^2.0.2":
   version "2.0.2"
   resolved "https://registry.yarnpkg.com/@nomicfoundation/hardhat-toolbox/-/hardhat-toolbox-2.0.2.tgz#ec95f23b53cb4e71a1a7091380fa223aad18f156"
   integrity sha512-vnN1AzxbvpSx9pfdRHbUzTRIXpMLPXnUlkW855VaDk6N1pwRaQ2gNzEmFAABk4lWf11E00PKwFd/q27HuwYrYg==
@@ -699,7 +704,7 @@
     "@nomicfoundation/solidity-analyzer-win32-ia32-msvc" "0.1.1"
     "@nomicfoundation/solidity-analyzer-win32-x64-msvc" "0.1.1"
 
-"@nomiclabs/hardhat-ethers@^2.0.0":
+"@nomiclabs/hardhat-ethers@^2.0.0", "@nomiclabs/hardhat-ethers@^2.2.1":
   version "2.2.3"
   resolved "https://registry.yarnpkg.com/@nomiclabs/hardhat-ethers/-/hardhat-ethers-2.2.3.tgz#b41053e360c31a32c2640c9a45ee981a7e603fe0"
   integrity sha512-YhzPdzb612X591FOe68q+qXVXGG2ANZRvDo0RRUtimev85rCrAlv/TLMEZw5c+kq9AbzocLTVX/h2jVIFPL9Xg==
@@ -2165,7 +2170,7 @@ ethers@^4.0.40:
     uuid "2.0.1"
     xmlhttprequest "1.8.0"
 
-ethers@^5.6.1, ethers@^5.7.1:
+ethers@^5.6.1, ethers@^5.7.1, ethers@^5.7.2:
   version "5.7.2"
   resolved "https://registry.yarnpkg.com/ethers/-/ethers-5.7.2.tgz#3a7deeabbb8c030d4126b24f84e525466145872e"
   integrity sha512-wswUsmWo1aOK8rR7DIKiWSw9DbLWe6x98Jrn8wcTflTVvaXhAMaB5zGAXy0GYQEQp9iO1iSHWVyARQm11zUtyg==
@@ -2709,6 +2714,18 @@ hardhat-tracer@^2.5.0:
     chalk "^4.1.2"
     debug "^4.3.4"
     ethers "^5.6.1"
+
+hardhat-vizor@^0.0.17:
+  version "0.0.17"
+  resolved "https://registry.yarnpkg.com/hardhat-vizor/-/hardhat-vizor-0.0.17.tgz#785c1fea5cbff95f321f6d9918358e5d9f8ea134"
+  integrity sha512-U+YNdVoxLWDRrT7KahsvWI1WErAZrJ5F3BJtoq+j07GIOEcUW1auNRsqjs+TkumPoZSCmLPm8gsgpEdrAgYjWg==
+  dependencies:
+    "@enzoferey/ethers-error-parser" "^0.2.3"
+    "@nomicfoundation/hardhat-network-helpers" "^1.0.7"
+    "@nomicfoundation/hardhat-toolbox" "^2.0.0"
+    "@nomiclabs/hardhat-ethers" "^2.2.1"
+    ethers "^5.7.2"
+    lodash "^4.17.21"
 
 hardhat@^2.16.1:
   version "2.16.1"

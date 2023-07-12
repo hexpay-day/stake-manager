@@ -12,7 +12,7 @@ contract Magnitude {
    * @param stake the stake being operated over
    */
   function _computeMagnitude(
-    uint256 method, uint256 x, uint256 y,
+    uint256 limit, uint256 method, uint256 x, uint256 y,
     IStakeable.StakeStore memory stake
   ) internal pure returns(uint256 amount) {
     // we can use unchecked here because all minuses (-)
@@ -55,30 +55,7 @@ contract Magnitude {
         }
       }
     }
-  }
-  /**
-   * check the tip amount of a stake given a setting and limit
-   * @param setting a method (8) and magnitude (64) pairing
-   * @param limit the amount that the derived value cannot exceed
-   * @param stake the stake in question
-   */
-  function _checkTipAmount(
-    uint256 setting,
-    uint256 limit,
-    IStakeable.StakeStore memory stake
-  ) internal pure returns(uint256 tip) {
-    uint256 method = uint8(setting >> 64);
-    if (method > 0) {
-      tip = _computeMagnitude(method, uint64(setting), limit, stake);
-      tip = tip > limit ? limit : tip;
-    }
-  }
-  function checkTipAmount(
-    uint256 setting,
-    uint256 limit,
-    IStakeable.StakeStore memory stake
-  ) external pure returns(uint256 tip) {
-    return _checkTipAmount(setting, limit, stake);
+    amount = amount > limit ? limit : amount;
   }
   /**
    * compute a magnitude given an x and y
@@ -87,9 +64,9 @@ contract Magnitude {
    * @param y the second value as input
    */
   function computeMagnitude(
-    uint256 method, uint256 x, uint256 y,
+    uint256 limit, uint256 method, uint256 x, uint256 y,
     IStakeable.StakeStore memory stake
   ) external pure returns(uint256) {
-    return _computeMagnitude(method, x, y, stake);
+    return _computeMagnitude(limit, method, x, y, stake);
   }
 }

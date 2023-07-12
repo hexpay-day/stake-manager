@@ -9,18 +9,6 @@ contract Multicall {
   error BlockHash(bytes32 expected, bytes32 actual);
   error Deadline(uint256 deadline, uint256 currentTime);
   event TxFailed(uint256 indexed index, bytes result);
-  modifier checkPreviousBlockhash(bytes32 previousBlockhash) {
-    if (blockhash(block.number - 1) != previousBlockhash) {
-      revert BlockHash(previousBlockhash, blockhash(block.number - 1));
-    }
-    _;
-  }
-  modifier checkDeadline(uint256 deadline) {
-    if (block.timestamp > deadline) {
-      revert Deadline(deadline, block.timestamp);
-    }
-    _;
-  }
   /**
    * call a series of functions on a contract that inherits this method
    * @param data the calls to perform on this contract
@@ -42,10 +30,10 @@ contract Multicall {
     uint256 deadline,
     bytes[] calldata data,
     bool allowFailures
-  )
-    external
-    checkDeadline(deadline)
-  {
+  ) external {
+    if (block.timestamp > deadline) {
+      revert Deadline(deadline, block.timestamp);
+    }
     _multicall(data, allowFailures);
   }
   /**
@@ -58,10 +46,10 @@ contract Multicall {
     bytes32 previousBlockhash,
     bytes[] calldata data,
     bool allowFailures
-  )
-    external
-    checkPreviousBlockhash(previousBlockhash)
-  {
+  ) external {
+    if (blockhash(block.number - 1) != previousBlockhash) {
+      revert BlockHash(previousBlockhash, blockhash(block.number - 1));
+    }
     _multicall(data, allowFailures);
   }
   /**

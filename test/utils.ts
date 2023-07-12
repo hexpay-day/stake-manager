@@ -18,13 +18,13 @@ Chai.Assertion.addMethod('printGasUsage', function (this: any) {
     [tx]:
     [ethers.providers.TransactionResponse],
   ) => {
-    const prev = hre.tracer.gasCost
-    hre.tracer.gasCost = true
+    hre.tracer.enabled = true
+    console.log(tx.hash)
     await hre.run('trace', {
       hash: tx.hash,
       fulltrace: true,
     })
-    hre.tracer.gasCost = prev
+    hre.tracer.enabled = false
   }
   const derivedPromise = Promise.all([
     target,
@@ -83,7 +83,14 @@ export const deployFixture = async () => {
   await tx.wait()
   const base = '0xe9f84d418B008888A992Ff8c6D22389C2C3504e0'
   const stakedAmount = oneMillion / 10n
+  const usdcAddress = '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48'
+  const usdc = await hre.ethers.getContractAt('@openzeppelin/contracts/token/ERC20/ERC20.sol:ERC20', usdcAddress)
   return {
+    usdc,
+    usdcAddress,
+    whales: {
+      usdc: '0x55FE002aefF02F77364de339a1292923A15844B8',
+    },
     stakedAmount,
     nextStakeId: stakeIdBN.toBigInt() + 1n,
     hex,
@@ -181,13 +188,10 @@ export const deployAndProcureHSIFixture = async () => {
     x.hsim.hsiLists(signerA.address, index)
   )))
   const tokenizeOrder = hsiAddresses.slice(0).reverse()
-  const stakeParams: HSIStakeManager.HSIParamsStruct[] = []
+  const stakeParams: string[] = []
   for (let i = 0; i < tokenizeOrder.length; i++) {
     const addr = tokenizeOrder[i]
-    stakeParams.push({
-      hsiIndex: i,
-      hsiAddress: addr,
-    })
+    stakeParams.push(addr)
     const count = await x.hsim.hsiCount(signerA.address)
     await x.hsim.hexStakeTokenize(count.toNumber() - 1, addr)
   }
@@ -198,8 +202,8 @@ export const deployAndProcureHSIFixture = async () => {
   return {
     ...x,
     hsiStakeIds,
-    hsiAddresses,
-    hsiTokenIds: tokenIds,
+    hsiAddresses: hsiAddresses.reverse(),
+    hsiTokenIds: tokenIds.map((tokenId) => tokenId.toBigInt()),
     hsiStakeParams: stakeParams.reverse(),
   }
 }
