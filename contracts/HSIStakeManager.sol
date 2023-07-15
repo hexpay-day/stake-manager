@@ -17,6 +17,7 @@ contract HSIStakeManager is UnderlyingStakeable, Tipper, Magnitude {
    * a mapping of hsi addresses to the address that deposited the hsi into this contract
    */
   // mapping(address => uint256) public hsiToInfo;
+  uint256 constant MAX_40 = type(uint40).max;
   event UpdateSettings(address indexed hsi, uint256 indexed settings);
   uint256 private constant DEFAULT_ENCODED_SETTINGS
     = 0x0000000000000000000000000000000000000000000000000000000000000005;
@@ -39,10 +40,16 @@ contract HSIStakeManager is UnderlyingStakeable, Tipper, Magnitude {
    * @param tokenId the token id to move to this contract
    * @dev requires approval to transfer hsi to this contract
    */
-  function depositHsi(uint256 tokenId, uint256 encodedSettings) external {
+  function depositHsi(uint256 tokenId, uint256 encodedSettings) external returns(address hsiAddress) {
     address owner = _deposit721(hsim, tokenId);
     uint256 index = IHEXStakeInstanceManager(hsim).hsiCount(address(this));
-    address hsiAddress = IHEXStakeInstanceManager(hsim).hexStakeDetokenize(tokenId);
+    hsiAddress = IHEXStakeInstanceManager(hsim).hexStakeDetokenize(tokenId);
+    if (uint160(hsiAddress) < MAX_40) {
+      // we are unable to take on addresses that are within the uint40 range
+      // because that range is already consumed by stakeIds from the hex contract
+      // this is certainly an edge case, but an important one. just in case
+      revert NotAllowed();
+    }
     // erc721 is burned - no owner - only hsi address remains
     stakeIdInfo[uint160(hsiAddress)] = _encodeInfo(index, owner);
     if (encodedSettings == 0) {
@@ -54,6 +61,16 @@ contract HSIStakeManager is UnderlyingStakeable, Tipper, Magnitude {
   function _deposit721(address token, uint256 tokenId) internal returns(address owner) {
     owner = IERC721(token).ownerOf(tokenId);
     IERC721(token).transferFrom(msg.sender, address(this), tokenId);
+  }
+  function withdrawHsi(address hsiAddress) external returns(uint256 tokenId) {
+    (uint256 index, address owner) = _stakeIdToInfo(uint160(hsiAddress));
+    stakeIdInfo[uint160(hsiAddress)] = 0;
+    _logSettingsUpdate(uint160(hsiAddress), 0);
+    tokenId = _withdraw721(index, owner, hsiAddress);
+  }
+  function _withdraw721(uint256 index, address owner, address hsiAddress) internal returns(uint256 tokenId) {
+    tokenId = IHEXStakeInstanceManager(hsim).hexStakeTokenize(index, hsiAddress);
+    IERC721(hsim).transferFrom(address(this), owner, tokenId);
   }
   /**
    * mint rewards and transfer them the owner of each hsi
@@ -76,8 +93,8 @@ contract HSIStakeManager is UnderlyingStakeable, Tipper, Magnitude {
       if (currentOwner != to) {
         if (hedronTokens > 0) {
           _addToTokenWithdrawable(hedronAddress, to, hedronTokens);
+          hedronTokens = 0;
         }
-        hedronTokens = 0;
       }
       to = currentOwner;
       if (_isCapable(stakeIdToSettings[uint160(hsiAddress)], 0)) {

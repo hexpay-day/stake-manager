@@ -1,7 +1,9 @@
-import type { HardhatUserConfig } from "hardhat/config";
+import { task, type HardhatUserConfig, extendEnvironment } from "hardhat/config";
 import type {
   Artifact,
   HardhatNetworkUserConfig,
+  HardhatRuntimeEnvironment,
+  HttpNetworkUserConfig,
   NetworkUserConfig,
 } from "hardhat/types";
 import * as fs from 'fs'
@@ -16,6 +18,22 @@ import 'hardhat-dependency-compiler'
 import * as ethers from "ethers";
 
 import * as conf from './src/config'
+
+import { main as impersonateAndFund } from './tasks/impersonate-and-fund'
+
+// extendEnvironment((hre: HardhatRuntimeEnvironment) => {
+//   const config = hre.network.config as HttpNetworkUserConfig
+//   if (config?.url) {
+//     hre.ethers.provider = new hre.ethers.providers.JsonRpcProvider(config.url)
+//   }
+// })
+
+task('impersonate-and-fund', 'impersonate an address and fund another address with a provided amount of hex')
+  .addOptionalParam('impersonate', 'the address to impersonate', '0x075e72a5edf65f0a5f44699c7654c1a76941ddc8')
+  .addOptionalParam('amount', 'the amount to send to the provided address', '0')
+  .addOptionalParam('decimal', 'the amount in decimal form to send to the provided address', '0')
+  .addOptionalParam('to', 'where to send the funds', '0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266')
+  .setAction(impersonateAndFund)
 
 function getRemappings() {
   return fs
@@ -72,10 +90,14 @@ const hardhatNetworks: Record<string, HardhatNetworkUserConfig> = {
   pulsechainV4,
   pulsechain,
   ethereum,
+  local: ethereum,
 }
 
 const defaultNetwork = {
   timeout: 100_000_000,
+  accounts: {
+    mnemonic: 'test test test test test test test test test test test junk',
+  },
 }
 
 const networks: Record<string, NetworkUserConfig> = {
@@ -94,6 +116,11 @@ const networks: Record<string, NetworkUserConfig> = {
     url: pulsechain.forking?.url,
     ...pulsechain,
   },
+  local: {
+    ...defaultNetwork,
+    url: ethereum.forking?.url,
+    ...ethereum,
+  },
 }
 const settings = {
   optimizer: {
@@ -104,7 +131,8 @@ const settings = {
 
 let hexArtifact = {} as unknown as Artifact;
 try {
-  const hexArtifactBuffer = fs.readFileSync(path.join(__dirname, 'artifacts', 'contracts', 'reference', 'Hex.sol', 'HEX.json'))
+  const hexArtifactPath = path.join(__dirname, 'artifacts', 'contracts', 'reference', 'Hex.sol', 'HEX.json')
+  const hexArtifactBuffer = fs.readFileSync(hexArtifactPath)
   hexArtifact = JSON.parse(hexArtifactBuffer.toString())
 } catch (err) {}
 
