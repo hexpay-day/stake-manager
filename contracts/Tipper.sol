@@ -36,6 +36,9 @@ contract Tipper is Bank, UnderlyingStakeable, CurrencyList, StakeInfo, Encodable
   );
   mapping(uint256 => uint256[]) public stakeIdTips;
   function stakeIdTipSize(uint256 stakeId) external view returns(uint256) {
+    return _stakeIdTipSize(stakeId);
+  }
+  function _stakeIdTipSize(uint256 stakeId) internal view returns(uint256) {
     return stakeIdTips[stakeId].length;
   }
   /**
@@ -140,17 +143,24 @@ contract Tipper is Bank, UnderlyingStakeable, CurrencyList, StakeInfo, Encodable
     uint256 amount,
     uint256 numerator,
     uint256 denominator
-  ) external payable returns(uint256, uint256) {
+  ) external virtual payable returns(uint256, uint256) {
     amount = _depositTokenFrom(token, msg.sender, amount);
     address recipient = _verifyTipAmountAllowed(stakeId, amount);
     _addToTokenWithdrawable(token, recipient, amount);
     // do now allow for overriding of tip settings, only increase in gas token
+    _checkStakeCustodian(address(this), stakeId);
     return _addTipToStake(token, recipient, stakeId, amount, numerator, denominator);
   }
   function removeTipFromStake(
     uint256 stakeId,
     uint256[] calldata indexes
   ) external payable {
+    _removeTipFromStake(stakeId, indexes);
+  }
+  function _removeTipFromStake(
+    uint256 stakeId,
+    uint256[] memory indexes
+  ) internal {
     // if the stake has already ended, we don't care
     // who sends funds back to staking address
     // only one who is incensed to unwind tips is the staker
@@ -200,15 +210,26 @@ contract Tipper is Bank, UnderlyingStakeable, CurrencyList, StakeInfo, Encodable
     uint256 amount,
     uint256 numerator,
     uint256 denominator
-  ) external returns(uint256, uint256) {
+  ) external virtual payable returns(uint256, uint256) {
     _verifyTipAmountAllowed(stakeId, amount);
     // deduct from sender account
+    _checkStakeCustodian(address(this), stakeId);
     return _addTipToStake(token, msg.sender, stakeId, amount, numerator, denominator);
   }
   function _verifyTipAmountAllowed(uint256 stakeId, uint256 amount) internal view returns(address recipient) {
     (, recipient) = _stakeIdToInfo(stakeId);
     if (amount == 0 && msg.sender != recipient) {
       // cannot allow other people to take staker deposits
+      revert NotAllowed();
+    }
+  }
+  function _checkStakeCustodian(address custodian, uint256 stakeId) internal view {
+    if (_stakeCount(custodian) == 0) {
+      revert NotAllowed();
+    }
+    // cannot add a tip to a stake that has already ended
+    // if (_stakeById(stakeId).stakeId != stakeId) {
+    if (_getStake(custodian, _stakeIdToIndex(stakeId)).stakeId != stakeId) {
       revert NotAllowed();
     }
   }
@@ -223,14 +244,6 @@ contract Tipper is Bank, UnderlyingStakeable, CurrencyList, StakeInfo, Encodable
     amount = _clamp(amount, withdrawableBalanceOf[token][account]);
     if (amount == 0) {
       return (0, 0);
-    }
-    if (_stakeCount(address(this)) == 0) {
-      revert NotAllowed();
-    }
-    // cannot add a tip to a stake that has already ended
-    // if (_stakeById(stakeId).stakeId != stakeId) {
-    if (_getStake(address(this), _stakeIdToIndex(stakeId)).stakeId != stakeId) {
-      revert NotAllowed();
     }
     _tipStakeIdToStaker[stakeId] = _stakeIdToOwner(stakeId);
     // set the tip flag to 1

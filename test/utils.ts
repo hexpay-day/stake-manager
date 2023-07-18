@@ -209,9 +209,11 @@ export const deployAndProcureHSIFixture = async () => {
   }
 }
 
+type X = Awaited<ReturnType<typeof deployFixture>>
+
 export const moveForwardDays = async (
   limit: number,
-  x: Awaited<ReturnType<typeof deployFixture>>,
+  x: X,
   step = 1,
 ) => {
   const _currentDay = await x.hex.currentDay()
@@ -238,3 +240,9 @@ export const numberToBytes32 = (num: bigint) => hre.ethers.utils.hexZeroPad(hre.
 export const toBytes32 = (addr: string) => hre.ethers.utils.hexZeroPad(addr.toLowerCase(), 32)
 
 export const deadline = () => Math.floor(_.now() / 1000) + 100
+
+export const leechUsdc = async (amount: bigint, to: string, x: X) => {
+  await hre.vizor.impersonate(x.whales.usdc, async (swa) => {
+    await x.usdc.connect(swa).transfer(to, amount)
+  })
+}

@@ -4,6 +4,7 @@ import * as hre from "hardhat"
 import * as utils from './utils'
 import _ from 'lodash'
 import { anyUint, anyValue } from "@nomicfoundation/hardhat-chai-matchers/withArgs"
+import { EncodableSettings } from "../artifacts/types/contracts/Tipper"
 
 describe('HSIStakeManager.sol', () => {
   describe('depositHsi', () => {
@@ -14,6 +15,46 @@ describe('HSIStakeManager.sol', () => {
       ])), false))
         .to.emit(x.hsim, 'Transfer')
         .to.emit(x.hsim, 'HSIDetokenize')
+    })
+  })
+  describe('withdrawHsi', () => {
+    it('can withdraw an hsi', async () => {
+      const x = await loadFixture(utils.deployAndProcureHSIFixture)
+      await expect(x.hsiStakeManager.multicall(_.flatMap(x.hsiTokenIds, (tokenId) => ([
+        x.hsiStakeManager.interface.encodeFunctionData('depositHsi', [tokenId, 0]),
+      ])), false))
+        .to.emit(x.hsim, 'Transfer')
+        .to.emit(x.hsim, 'HSIDetokenize')
+      await expect(x.hsiStakeManager.connect(x.signers[1]).withdrawHsi(x.hsiAddresses[0]))
+        .to.revertedWithCustomError(x.hsiStakeManager, 'StakeNotOwned')
+        .withArgs(x.signers[1].address, x.signers[0].address)
+      // await expect(x.hsiStakeManager.depositAndAddTipToStake())
+      await expect(x.hsiStakeManager.withdrawHsi(x.hsiAddresses[0]))
+        .to.emit(x.hsim, 'HSITokenize')
+        .withArgs(anyUint, anyUint, x.hsiAddresses[0], x.hsiStakeManager.address)
+    })
+    it('can withdraw tips as well', async () => {
+      const x = await loadFixture(utils.deployAndProcureHSIFixture)
+      await expect(x.hsiStakeManager.multicall(_.flatMap(x.hsiTokenIds, (tokenId) => ([
+        x.hsiStakeManager.interface.encodeFunctionData('depositHsi', [tokenId, 0]),
+      ])), false))
+        .to.emit(x.hsim, 'Transfer')
+        .to.emit(x.hsim, 'HSIDetokenize')
+      const currencyIndex = await x.stakeManager.currencyListSize()
+      const amount = hre.ethers.utils.parseUnits('10', await x.usdc.decimals()).toBigInt()
+      const tipSettings = await x.hsiStakeManager.encodeTipSettings(currencyIndex, amount, 1, 1)
+      const stakeId = await x.hsiStakeManager.hsiAddressToId(x.hsiAddresses[0])
+      await x.hsiStakeManager.addCurrencyToList(x.usdc.address)
+      await utils.leechUsdc(amount, x.signers[0].address, x)
+      await x.usdc.approve(x.hsiStakeManager.address, amount)
+      await expect(x.hsiStakeManager.depositAndAddTipToStake(x.usdc.address, x.hsiAddresses[0], amount, 1, 1))
+        .to.revertedWithCustomError(x.hsiStakeManager, 'StakeNotOwned')
+        .withArgs(hre.ethers.constants.AddressZero, x.hsiStakeManager.address)
+      await x.hsiStakeManager.depositAndAddTipToStake(x.usdc.address, stakeId, amount, 1, 1)
+      const tx = await x.hsiStakeManager.withdrawHsi(x.hsiAddresses[0])
+      await expect(tx)
+        .to.emit(x.hsiStakeManager, 'RemoveTip')
+        .withArgs(stakeId, x.usdc.address, 0, tipSettings)
     })
   })
   describe('mintRewards', () => {
@@ -91,11 +132,14 @@ describe('HSIStakeManager.sol', () => {
       ])), false))
         .to.emit(x.hsim, 'Transfer')
         .to.emit(x.hsim, 'HSIDetokenize')
-      await expect(x.hsiStakeManager.stakeIdToSettings(x.hsiAddresses[0]))
+      const stake = await x.hex.stakeLists(x.hsiAddresses[0], 0)
+      await expect(x.hsiStakeManager.stakeIdToSettings(stake.stakeId))
         .eventually.to.equal(encodedSettings)
-      await expect(x.hsiStakeManager.stakeIdToSettings(x.hsiAddresses[x.hsiAddresses.length - 1]))
+      const lastHsiAddress = x.hsiAddresses[x.hsiAddresses.length - 1]
+      const lastStake = await x.hex.stakeLists(lastHsiAddress, 0)
+      await expect(x.hsiStakeManager.stakeIdToSettings(lastStake.stakeId))
         .eventually.to.equal(await x.hsiStakeManager.defaultEncodedSettings())
-      const lastStakeIdSettings = await x.hsiStakeManager.stakeIdToSettings(x.hsiAddresses[x.hsiAddresses.length - 1])
+      const lastStakeIdSettings = await x.hsiStakeManager.stakeIdToSettings(lastStake.stakeId)
       const defaultSettings = await x.hsiStakeManager.defaultSettings()
       await expect(x.hsiStakeManager.decodeSettings(lastStakeIdSettings))
         .eventually.to.deep.equal(defaultSettings)
@@ -105,13 +149,15 @@ describe('HSIStakeManager.sol', () => {
         tipMethod: 0,
         tipMagnitude: 0,
       }
-      await expect(x.hsiStakeManager.connect(signer2).updateSettings(x.hsiAddresses[0], updatedSettings))
+      await expect(x.hsiStakeManager.connect(signer2).updateSettings(stake.stakeId, updatedSettings))
         .to.revertedWithCustomError(x.hsiStakeManager, 'StakeNotOwned')
         .withArgs(x.signers[1].address, x.signers[0].address)
       const encodedUpdatedSettings = await x.hsiStakeManager.encodeSettings(updatedSettings)
-      await expect(x.hsiStakeManager.updateSettings(x.hsiAddresses[0], updatedSettings))
+      await expect(x.hsiStakeManager.updateSettings(stake.stakeId, updatedSettings))
         .to.emit(x.hsiStakeManager, 'UpdateSettings')
-        .withArgs(x.hsiAddresses[0], encodedUpdatedSettings)
+        .withArgs(stake.stakeId, encodedUpdatedSettings)
+        // this line is required
+        // for some reason, the test fails without it
         .printGasUsage()
 
       await expect(x.hsiStakeManager.connect(signer2).hsiStakeEndMany([x.hsiAddresses[0]]))

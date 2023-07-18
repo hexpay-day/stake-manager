@@ -913,10 +913,7 @@ describe("StakeManager", function () {
       const decimals = await x.usdc.decimals()
       const tipAmount = hre.ethers.utils.parseUnits('100', decimals).toBigInt()
       const usdcCurrencyIndex = await x.stakeManager.currencyListSize()
-      await hre.vizor.impersonate(x.whales.usdc, async (swa) => {
-        const amount = hre.ethers.utils.parseUnits('1000', decimals).toBigInt()
-        await x.usdc.connect(swa).transfer(signer1.address, amount)
-      })
+      await utils.leechUsdc(hre.ethers.utils.parseUnits('1000', decimals).toBigInt(), signer1.address, x)
       await x.usdc.approve(x.stakeManager.address, tipAmount) // allow stake manager to pull in tip currency
       await expect(x.stakeManager.depositAndAddTipToStake(x.usdc.address, stakeId, tipAmount, 0, 0))
         .to.revertedWithCustomError(x.stakeManager, 'NotAllowed')

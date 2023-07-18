@@ -12,13 +12,14 @@ import "./IStakeable.sol";
 import "./Tipper.sol";
 import "./Magnitude.sol";
 
+import "hardhat/console.sol";
+
 contract HSIStakeManager is UnderlyingStakeable, Tipper, Magnitude {
   /**
    * a mapping of hsi addresses to the address that deposited the hsi into this contract
    */
-  // mapping(address => uint256) public hsiToInfo;
-  uint256 constant MAX_40 = type(uint40).max;
   event UpdateSettings(address indexed hsi, uint256 indexed settings);
+  uint256 private _ownedCount;
   uint256 private constant DEFAULT_ENCODED_SETTINGS
     = 0x0000000000000000000000000000000000000000000000000000000000000005;
   function defaultEncodedSettings() external override pure returns(uint256) {
@@ -31,9 +32,12 @@ contract HSIStakeManager is UnderlyingStakeable, Tipper, Magnitude {
   function _defaultSettings() internal override pure returns(Settings memory) {
     return _decodeSettings(DEFAULT_ENCODED_SETTINGS);
   }
-  function updateSettings(address hsiAddress, Settings calldata settings) external payable {
-    _verifyStakeOwnership(msg.sender, uint160(hsiAddress));
-    _writePreservedSettingsUpdate(uint160(hsiAddress), _encodeSettings(settings));
+  function updateSettings(uint256 stakeId, Settings calldata settings) external payable {
+    _verifyStakeOwnership(msg.sender, stakeId);
+    _writePreservedSettingsUpdate(stakeId, _encodeSettings(settings));
+  }
+  function ownedCount() external view returns(uint256) {
+    return _ownedCount;
   }
   /**
    * transfer stakes by their token ids
@@ -44,32 +48,51 @@ contract HSIStakeManager is UnderlyingStakeable, Tipper, Magnitude {
     address owner = _deposit721(hsim, tokenId);
     uint256 index = IHEXStakeInstanceManager(hsim).hsiCount(address(this));
     hsiAddress = IHEXStakeInstanceManager(hsim).hexStakeDetokenize(tokenId);
-    if (uint160(hsiAddress) < MAX_40) {
-      // we are unable to take on addresses that are within the uint40 range
-      // because that range is already consumed by stakeIds from the hex contract
-      // this is certainly an edge case, but an important one. just in case
-      revert NotAllowed();
-    }
+    uint256 stakeId = _hsiAddressToId(hsiAddress);
     // erc721 is burned - no owner - only hsi address remains
-    stakeIdInfo[uint160(hsiAddress)] = _encodeInfo(index, owner);
+    stakeIdInfo[stakeId] = _encodeInfo(index, owner);
     if (encodedSettings == 0) {
-      _setDefaultSettings(uint160(hsiAddress));
+      _setDefaultSettings(stakeId);
     } else {
-      _logSettingsUpdate(uint160(hsiAddress), encodedSettings);
+      _logSettingsUpdate(stakeId, encodedSettings);
     }
   }
   function _deposit721(address token, uint256 tokenId) internal returns(address owner) {
     owner = IERC721(token).ownerOf(tokenId);
     IERC721(token).transferFrom(msg.sender, address(this), tokenId);
+    unchecked {
+      _ownedCount += 1;
+    }
+  }
+  function hsiAddressToId(address hsiAddress) external view returns(uint256) {
+    return _hsiAddressToId(hsiAddress);
+  }
+  function _hsiAddressToId(address hsiAddress) internal view returns(uint256) {
+    return _getStake(hsiAddress, 0).stakeId;
   }
   function withdrawHsi(address hsiAddress) external returns(uint256 tokenId) {
-    (uint256 index, address owner) = _stakeIdToInfo(uint160(hsiAddress));
-    stakeIdInfo[uint160(hsiAddress)] = 0;
-    _logSettingsUpdate(uint160(hsiAddress), 0);
+    uint256 stakeId = _hsiAddressToId(hsiAddress);
+    (uint256 index, address owner) = _stakeIdToInfo(stakeId);
+    if (msg.sender != owner) {
+      revert StakeNotOwned(msg.sender, owner);
+    }
+    uint256 tipCount = _stakeIdTipSize(stakeId);
+    if (tipCount > 0) {
+      uint256[] memory indexes = new uint256[](tipCount);
+      for (uint256 i = 0; i < indexes.length; ++i) {
+        indexes[i] = i;
+      }
+      _removeTipFromStake(stakeId, indexes);
+    }
+    stakeIdInfo[stakeId] = 0;
+    _logSettingsUpdate(stakeId, 0);
     tokenId = _withdraw721(index, owner, hsiAddress);
   }
   function _withdraw721(uint256 index, address owner, address hsiAddress) internal returns(uint256 tokenId) {
     tokenId = IHEXStakeInstanceManager(hsim).hexStakeTokenize(index, hsiAddress);
+    unchecked {
+      _ownedCount -= 1;
+    }
     IERC721(hsim).transferFrom(address(this), owner, tokenId);
   }
   /**
@@ -84,12 +107,14 @@ contract HSIStakeManager is UnderlyingStakeable, Tipper, Magnitude {
     uint256 hedronTokens;
     address hsiAddress = hsiAddresses[0];
     address currentOwner;
-    (, address to) = _stakeIdToInfo(uint160(hsiAddress));
+    uint256 stakeId;
+    (, address to) = _stakeIdToInfo(_hsiAddressToId(hsiAddress));
     address hedronAddress = hedron;
     uint256 index;
     do {
       hsiAddress = hsiAddresses[i];
-      (index, currentOwner) = _stakeIdToInfo(uint160(hsiAddress));
+      stakeId = _hsiAddressToId(hsiAddress);
+      (index, currentOwner) = _stakeIdToInfo(stakeId);
       if (currentOwner != to) {
         if (hedronTokens > 0) {
           _addToTokenWithdrawable(hedronAddress, to, hedronTokens);
@@ -97,7 +122,7 @@ contract HSIStakeManager is UnderlyingStakeable, Tipper, Magnitude {
         }
       }
       to = currentOwner;
-      if (_isCapable(stakeIdToSettings[uint160(hsiAddress)], 0)) {
+      if (_isCapable(stakeIdToSettings[stakeId], 0)) {
         hedronTokens += IHedron(hedron).mintInstanced(index, hsiAddress);
       }
       unchecked {
@@ -117,20 +142,23 @@ contract HSIStakeManager is UnderlyingStakeable, Tipper, Magnitude {
     uint256 len = hsiAddresses.length;
     uint256 i;
     address hsiAddress;
+    uint256 stakeId;
     uint256 index;
     address currentOwner;
+    uint256 today = _currentDay();
     do {
       hsiAddress = hsiAddresses[i];
-      (index, currentOwner) = _stakeIdToInfo(uint160(hsiAddress));
       IStakeable.StakeStore memory stake = IHEX(target).stakeLists(hsiAddress, 0);
-      if (stake.stakeId == 0) {
+      stakeId = stake.stakeId;
+      if (stakeId == 0) {
         unchecked {
           ++i;
         }
         continue;
       }
-      uint256 setting = stakeIdToSettings[uint160(hsiAddress)];
-      if (_isEarlyEnding(stake.lockedDay, stake.stakedDays, _currentDay())) {
+      (index, currentOwner) = _stakeIdToInfo(stakeId);
+      uint256 setting = stakeIdToSettings[stakeId];
+      if (_isEarlyEnding(stake.lockedDay, stake.stakedDays, today)) {
         if (!_isCapable(setting, 1)) {
           unchecked {
             ++i;
@@ -139,7 +167,7 @@ contract HSIStakeManager is UnderlyingStakeable, Tipper, Magnitude {
         }
       }
       if (_isCapable(setting, 5)) {
-        _executeTipList(stake.stakeId, currentOwner);
+        _executeTipList(stakeId, currentOwner);
       }
       uint256 method;
       if (_isCapable(setting, 2)) {
@@ -163,14 +191,18 @@ contract HSIStakeManager is UnderlyingStakeable, Tipper, Magnitude {
         _attributeFunds(setting, 3, hedron, currentOwner, hedronReward);
       }
       uint256 targetReward = IHEXStakeInstanceManager(hsim).hexStakeEnd(index, hsiAddress);
+      unchecked {
+        _ownedCount -= 1;
+      }
       // remove index and settings info
-      stakeIdInfo[uint160(hsiAddress)] = 0;
-      stakeIdToSettings[uint160(hsiAddress)] = 0;
+      stakeIdInfo[stakeId] = 0;
+      stakeIdToSettings[stakeId] = 0;
       // move around the indexes for future stake ends
       if (IHEXStakeInstanceManager(hsim).hsiCount(address(this)) > index) {
         address movedHsiAddress = IHEXStakeInstanceManager(hsim).hsiLists(address(this), index);
-        (, address movedOwner) = _stakeIdToInfo(uint160(movedHsiAddress));
-        stakeIdInfo[uint160(movedHsiAddress)] = _encodeInfo(index, movedOwner);
+        uint256 movedStakeId = _hsiAddressToId(movedHsiAddress);
+        (, address movedOwner) = _stakeIdToInfo(movedStakeId);
+        stakeIdInfo[movedStakeId] = _encodeInfo(index, movedOwner);
       }
       method = setting << 72 >> 248;
       if (method > 0) {
@@ -193,5 +225,35 @@ contract HSIStakeManager is UnderlyingStakeable, Tipper, Magnitude {
         ++i;
       }
     } while (i < len);
+  }
+  function depositAndAddTipToStake(
+    address token,
+    uint256 stakeId,
+    uint256 amount,
+    uint256 numerator,
+    uint256 denominator
+  ) external override payable returns(uint256, uint256) {
+    amount = _depositTokenFrom(token, msg.sender, amount);
+    address recipient = _verifyTipAmountAllowed(stakeId, amount);
+    _addToTokenWithdrawable(token, recipient, amount);
+    // do now allow for overriding of tip settings, only increase in gas token
+    if (_stakeIdToOwner(stakeId) == address(0)) {
+      revert StakeNotOwned(_stakeIdToOwner(stakeId), address(this));
+    }
+    return _addTipToStake(token, recipient, stakeId, amount, numerator, denominator);
+  }
+  function addTipToStake(
+    address token,
+    uint256 stakeId,
+    uint256 amount,
+    uint256 numerator,
+    uint256 denominator
+  ) external override payable returns(uint256, uint256) {
+    _verifyTipAmountAllowed(stakeId, amount);
+    // deduct from sender account
+    if (_stakeIdToOwner(stakeId) == address(0)) {
+      revert StakeNotOwned(_stakeIdToOwner(stakeId), address(this));
+    }
+    return _addTipToStake(token, msg.sender, stakeId, amount, numerator, denominator);
   }
 }
