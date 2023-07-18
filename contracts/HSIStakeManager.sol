@@ -237,9 +237,7 @@ contract HSIStakeManager is UnderlyingStakeable, Tipper, Magnitude {
     address recipient = _verifyTipAmountAllowed(stakeId, amount);
     _addToTokenWithdrawable(token, recipient, amount);
     // do now allow for overriding of tip settings, only increase in gas token
-    if (_stakeIdToOwner(stakeId) == address(0)) {
-      revert StakeNotOwned(_stakeIdToOwner(stakeId), address(this));
-    }
+    _verifyCustodian(stakeId);
     return _addTipToStake(token, recipient, stakeId, amount, numerator, denominator);
   }
   function addTipToStake(
@@ -251,9 +249,7 @@ contract HSIStakeManager is UnderlyingStakeable, Tipper, Magnitude {
   ) external override payable returns(uint256, uint256) {
     _verifyTipAmountAllowed(stakeId, amount);
     // deduct from sender account
-    if (_stakeIdToOwner(stakeId) == address(0)) {
-      revert StakeNotOwned(_stakeIdToOwner(stakeId), address(this));
-    }
+    _verifyCustodian(stakeId);
     return _addTipToStake(token, msg.sender, stakeId, amount, numerator, denominator);
   }
 }

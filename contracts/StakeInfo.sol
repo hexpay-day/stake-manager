@@ -19,6 +19,11 @@ contract StakeInfo {
       revert StakeNotOwned(owner, _stakeIdToOwner(stakeId));
     }
   }
+  function _verifyCustodian(uint256 stakeId) internal view {
+    if (_stakeIdToOwner(stakeId) == address(0)) {
+      revert StakeNotOwned(_stakeIdToOwner(stakeId), address(this));
+    }
+  }
   /**
    * get the owner of the stake id - the account that has rights over
    * the stake's settings and ability to end it outright
