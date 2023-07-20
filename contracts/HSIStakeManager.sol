@@ -12,14 +12,12 @@ import "./IStakeable.sol";
 import "./Tipper.sol";
 import "./Magnitude.sol";
 
-import "hardhat/console.sol";
-
 contract HSIStakeManager is UnderlyingStakeable, Tipper, Magnitude {
   /**
    * a mapping of hsi addresses to the address that deposited the hsi into this contract
    */
   event UpdateSettings(address indexed hsi, uint256 indexed settings);
-  uint256 private _ownedCount;
+  // uint256 private _ownedCount;
   uint256 private constant DEFAULT_ENCODED_SETTINGS
     = 0x0000000000000000000000000000000000000000000000000000000000000005;
   function defaultEncodedSettings() external override pure returns(uint256) {
@@ -32,12 +30,17 @@ contract HSIStakeManager is UnderlyingStakeable, Tipper, Magnitude {
   function _defaultSettings() internal override pure returns(Settings memory) {
     return _decodeSettings(DEFAULT_ENCODED_SETTINGS);
   }
+  /**
+   * update settings for a stake id
+   * @param stakeId the stake id to update
+   * @param settings the settings struct to update
+   * @dev only available to the owner
+   * @notice this method will fail if the stake is not found
+   * do not chain this method with other methods that could fail such as end stakes
+   */
   function updateSettings(uint256 stakeId, Settings calldata settings) external payable {
     _verifyStakeOwnership(msg.sender, stakeId);
     _writePreservedSettingsUpdate(stakeId, _encodeSettings(settings));
-  }
-  function ownedCount() external view returns(uint256) {
-    return _ownedCount;
   }
   /**
    * transfer stakes by their token ids
@@ -60,9 +63,6 @@ contract HSIStakeManager is UnderlyingStakeable, Tipper, Magnitude {
   function _deposit721(address token, uint256 tokenId) internal returns(address owner) {
     owner = IERC721(token).ownerOf(tokenId);
     IERC721(token).transferFrom(msg.sender, address(this), tokenId);
-    unchecked {
-      _ownedCount += 1;
-    }
   }
   function hsiAddressToId(address hsiAddress) external view returns(uint256) {
     return _hsiAddressToId(hsiAddress);
@@ -90,9 +90,6 @@ contract HSIStakeManager is UnderlyingStakeable, Tipper, Magnitude {
   }
   function _withdraw721(uint256 index, address owner, address hsiAddress) internal returns(uint256 tokenId) {
     tokenId = IHEXStakeInstanceManager(hsim).hexStakeTokenize(index, hsiAddress);
-    unchecked {
-      _ownedCount -= 1;
-    }
     IERC721(hsim).transferFrom(address(this), owner, tokenId);
   }
   /**
@@ -136,7 +133,6 @@ contract HSIStakeManager is UnderlyingStakeable, Tipper, Magnitude {
   /**
    * end multiple stakes, and mint final tokens
    * @param hsiAddresses the hsi index and address to interact with
-   * @notice a fully gas optimized plan was not used for this method
    */
   function hsiStakeEndMany(address[] calldata hsiAddresses) external {
     uint256 len = hsiAddresses.length;
@@ -166,8 +162,8 @@ contract HSIStakeManager is UnderlyingStakeable, Tipper, Magnitude {
           continue;
         }
       }
-      if (_isCapable(setting, 5)) {
-        _executeTipList(stakeId, currentOwner);
+      if (_isCapable(setting, 7)) {
+        _executeTipList(stakeId, currentOwner, 0);
       }
       uint256 method;
       if (_isCapable(setting, 2)) {
@@ -191,9 +187,6 @@ contract HSIStakeManager is UnderlyingStakeable, Tipper, Magnitude {
         _attributeFunds(setting, 3, hedron, currentOwner, hedronReward);
       }
       uint256 targetReward = IHEXStakeInstanceManager(hsim).hexStakeEnd(index, hsiAddress);
-      unchecked {
-        _ownedCount -= 1;
-      }
       // remove index and settings info
       stakeIdInfo[stakeId] = 0;
       stakeIdToSettings[stakeId] = 0;
@@ -226,7 +219,11 @@ contract HSIStakeManager is UnderlyingStakeable, Tipper, Magnitude {
       }
     } while (i < len);
   }
+  /**
+   * check that this contract is the custodian of this hsi (nft was depostied and detokenized)
+   * @param stakeId the stake id to check ownership over
+   */
   function _checkStakeCustodian(uint256 stakeId) internal override view {
-    _verifyCustodian(stakeId);
+    _verifyCustodian(stakeIdToTokenId[stakeId]);
   }
 }

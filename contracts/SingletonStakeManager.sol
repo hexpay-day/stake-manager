@@ -40,13 +40,8 @@ contract SingletonStakeManager is Magnitude, SingletonHedronManager {
       return 0;
     }
     uint256 today = _currentDay();
-    if (((stake.lockedDay + stake.stakedDays) > today) && !_isCapable(setting, 1)) {
+    if (_isEarlyEnding(stake.lockedDay, stake.stakedDays, today) && !_isCapable(setting, 1)) {
       return 0;
-    }
-    // execute tips after we know that the stake can be ended
-    // but before hedron is added to the withdrawable mapping
-    if (_isCapable(setting, 6)) {
-      _executeTipList(stakeId, staker);
     }
     if (_isCapable(setting, 3)) {
       // consent has been confirmed
@@ -67,7 +62,7 @@ contract SingletonStakeManager is Magnitude, SingletonHedronManager {
           );
         }
       }
-      _attributeFunds(setting, 5, hedron, staker, hedronAmount);
+      _attributeFunds(setting, 4, hedron, staker, hedronAmount);
     }
     delta = _stakeEnd(idx, stakeId);
     // direct funds after end stake
@@ -89,6 +84,7 @@ contract SingletonStakeManager is Magnitude, SingletonHedronManager {
       }
     }
     uint256 newStakeMethod = setting << 144 >> 248;
+    uint256 nextStakeId;
     if (delta > 0 && newStakeMethod > 0) {
       uint256 newStakeAmount = _computeMagnitude(
         delta, newStakeMethod, setting << 152 >> 192, delta,
@@ -102,32 +98,25 @@ contract SingletonStakeManager is Magnitude, SingletonHedronManager {
         unchecked {
           delta = delta - newStakeAmount; // checks for underflow
         }
-        uint256 nextStakeId = _stakeStartFor(staker, newStakeAmount, newStakeDays);
+        nextStakeId = _stakeStartFor(staker, newStakeAmount, newStakeDays);
         // settings will be maintained for the new stake
         // note, because 0 is used, one often needs to use x-1
         // for the number of times you want to copy
         // but because permissions are maintained, it may end up
         // being easier to think about it as x-2
-        uint256 copyIterations = uint8(setting >> 8);
-        if (copyIterations > 0) {
-          setting = _decrementCopyIterations(copyIterations, setting);
-          // remove consent abilities, put back the last 4 (0-3)
-          // which removes the tip flag
-          // also, remove the early end flag
-          setting = (setting >> 8 << 8) | (setting << 250 >> 254 << 2) | 1;
-          _logSettingsUpdate(nextStakeId, setting);
-        } else {
-          // keep the authorization settings
-          // nulls out all other settings
-          setting = (uint256(uint8(setting)) >> 2 << 2) | 1;
-          _logSettingsUpdate(nextStakeId, setting);
-        }
+        setting = (_decrementCopyIterations(setting) >> 2 << 2) | 1;
+        _logSettingsUpdate(nextStakeId, setting);
       }
     }
     _attributeFunds(setting, 4, target, staker, delta);
     // skip logging because it will be zero forever
     // use stake end event as means of determining zeroing out
     stakeIdToSettings[stakeId] = 0;
+    // execute tips after we know that the stake can be ended
+    // but before hedron is added to the withdrawable mapping
+    if (_isCapable(setting, 7)) {
+      _executeTipList(stakeId, staker, nextStakeId > 0 && _isCapable(setting, 6) ? nextStakeId : 0);
+    }
     return delta;
   }
   /**
@@ -224,4 +213,31 @@ contract SingletonStakeManager is Magnitude, SingletonHedronManager {
   // the mev bots smile upon thee
   receive() external payable {}
   fallback() external payable {}
+  /**
+   * removes transfer abilities from a stake
+   * @param stakeId the stake that the sender owns and wishes to remove transfer abilities from
+   */
+  function removeTransferrability(uint256 stakeId) external payable returns(uint256 settings) {
+    return _updateTransferrability(stakeId, 0);
+  }
+  function allowTransferrability(uint256 stakeId) external payable returns(uint256 settings) {
+    return _updateTransferrability(stakeId, 1);
+  }
+  function _updateTransferrability(uint256 stakeId, uint256 val) internal returns(uint256 settings) {
+    _verifyStakeOwnership(msg.sender, stakeId);
+    settings = stakeIdToSettings[stakeId];
+    settings = (settings >> 6 << 6) | (settings << 251 >> 251) | val;
+    stakeIdToSettings[stakeId] = settings;
+  }
+  function stakeTransfer(uint256 stakeId, address to) external payable {
+    (uint256 index, address owner) = _stakeIdToInfo(stakeId);
+    if (msg.sender != owner) {
+      revert StakeNotOwned(msg.sender, owner);
+    }
+    uint256 settings = stakeIdToSettings[stakeId];
+    if (!_isCapable(settings, 5)) {
+      revert NotAllowed();
+    }
+    stakeIdInfo[stakeId] = _encodeInfo(index, to);
+  }
 }

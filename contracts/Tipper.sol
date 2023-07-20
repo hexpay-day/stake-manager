@@ -34,13 +34,6 @@ contract Tipper is Bank, UnderlyingStakeable, CurrencyList, StakeInfo, Encodable
     uint256 indexed index,
     uint256 setting
   );
-  mapping(uint256 => uint256[]) public stakeIdTips;
-  function stakeIdTipSize(uint256 stakeId) external view returns(uint256) {
-    return _stakeIdTipSize(stakeId);
-  }
-  function _stakeIdTipSize(uint256 stakeId) internal view returns(uint256) {
-    return stakeIdTips[stakeId].length;
-  }
   /**
    * tip an address a defined amount and token
    * @param stakeId the stake id being targeted
@@ -54,6 +47,13 @@ contract Tipper is Bank, UnderlyingStakeable, CurrencyList, StakeInfo, Encodable
     address indexed token,
     uint256 amount
   );
+  mapping(uint256 => uint256[]) public stakeIdTips;
+  function stakeIdTipSize(uint256 stakeId) external view returns(uint256) {
+    return _stakeIdTipSize(stakeId);
+  }
+  function _stakeIdTipSize(uint256 stakeId) internal view returns(uint256) {
+    return stakeIdTips[stakeId].length;
+  }
   function _checkAndExecTip(
     uint256 stakeId,
     address staker,
@@ -71,19 +71,24 @@ contract Tipper is Bank, UnderlyingStakeable, CurrencyList, StakeInfo, Encodable
     emit Tip(stakeId, staker, token, targetTip);
     return delta;
   }
-  function _executeTipList(uint256 stakeId, address staker) internal {
+  function _executeTipList(uint256 stakeId, address staker, uint256 nextStakeId) internal {
     uint256 i;
     uint256 len = stakeIdTips[stakeId].length;
+    uint256 tip;
+    uint256 cachedTip;
     do {
       // tips get executed in reverse order so that the contract
       // can clean itself up (gas refund) as it goes along
-      uint256 tip = stakeIdTips[stakeId][len - 1 - i];
+      tip = stakeIdTips[stakeId][len - 1 - i];
+      cachedTip = tip;
       stakeIdTips[stakeId].pop();
       address token = indexToToken[tip >> 224];
+      uint256 limit;
       if (uint128(tip) == 0) {
         tip = uint96(tip >> 128);
+        limit = tip;
       } else {
-        uint256 limit = uint96(tip >> 128);
+        limit = uint96(tip >> 128);
         tip = (uint64(tip >> 64) * block.basefee) / uint64(tip);
         tip = _clamp(tip, limit);
         uint256 refund = limit - tip;
@@ -100,6 +105,19 @@ contract Tipper is Bank, UnderlyingStakeable, CurrencyList, StakeInfo, Encodable
         // and picked up by lower level, "unattributed" methods
         unchecked {
           attributed[token] -= tip;
+        }
+      }
+      if (nextStakeId > 0) {
+        // this reverses the tips
+        limit = _clamp(limit, withdrawableBalanceOf[token][staker]);
+        if (limit > 0) {
+          cachedTip = ((cachedTip >> 224) << 224) | (limit << 128) | uint128(cachedTip);
+          unchecked {
+            withdrawableBalanceOf[token][staker] -= limit;
+          }
+          uint256 index = stakeIdTips[nextStakeId].length;
+          stakeIdTips[nextStakeId].push(cachedTip);
+          emit AddTip(nextStakeId, token, index, cachedTip);
         }
       }
       unchecked {
@@ -201,7 +219,7 @@ contract Tipper is Bank, UnderlyingStakeable, CurrencyList, StakeInfo, Encodable
     if (tipsLast == MAX_256) {
       // remove from settings
       uint256 setting = stakeIdToSettings[stakeId];
-      _logSettingsUpdate(stakeId, (setting >> 8 << 8) | uint8(setting << 2) >> 2);
+      _logSettingsUpdate(stakeId, (setting >> 8 << 8) | (uint8(setting << 2) >> 2));
     }
   }
   function addTipToStake(
@@ -247,10 +265,10 @@ contract Tipper is Bank, UnderlyingStakeable, CurrencyList, StakeInfo, Encodable
     }
     _tipStakeIdToStaker[stakeId] = _stakeIdToOwner(stakeId);
     // set the tip flag to 1
-    // 0b00000001 | 0b00010000 => 0b00010001
-    // 0b00010001 | 0b00010000 => 0b00010001
+    // 0b00000001 | 0b10000000 => 0b10000001
+    // 0b10000001 | 0b10000000 => 0b10000001
     uint256 currentSettings = stakeIdToSettings[stakeId];
-    uint256 updatedSettings = currentSettings | (1 << 6);
+    uint256 updatedSettings = currentSettings | (1 << 7);
     if (updatedSettings != currentSettings) {
       _logSettingsUpdate(stakeId, updatedSettings);
     }

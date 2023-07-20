@@ -21,10 +21,10 @@ contract EncodableSettings {
      * 00000010(1): can early stake end
      * 00000100(2): can mint hedron (any time)
      * 00001000(3): can mint hedron during end stake - future should be 0
-     * 00010000(4): should send target (hex) to staker
-     * 00100000(5): should send minted hedron to staker
-     * 01000000(6): has tip from deposits
-     * 10000000(7): unassigned
+     * 00010000(4): should send tokens to staker
+     * 00100000(5): stake is transferrable
+     * 01000000(6): copy external tips to next stake
+     * 10000000(7): has external tips
      */
     uint8 consentAbilities;
   }
@@ -44,14 +44,17 @@ contract EncodableSettings {
   function _setDefaultSettings(uint256 stakeId) internal virtual {
     _logSettingsUpdate(stakeId, DEFAULT_ENCODED_SETTINGS);
   }
+  function stakeIdSettings(uint256 stakeId) external view returns(Settings memory) {
+    return _decodeSettings(stakeIdToSettings[stakeId]);
+  }
   function _writePreservedSettingsUpdate(
     uint256 stakeId,
     uint256 settings
   ) internal {
-    // preserve the 251st index
+    // preserve the 7th index which contract controls
     _logSettingsUpdate(
       stakeId,
-      (settings >> 8 << 8) | (settings << 250 >> 250) | (uint8(stakeIdToSettings[stakeId]) >> 6 << 6)
+      (settings >> 8 << 8) | (uint8(stakeIdToSettings[stakeId]) >> 7 << 7) | (uint8(settings) << 1 >> 1)
     );
   }
   /**
@@ -80,13 +83,15 @@ contract EncodableSettings {
    */
   function readEncodedSettings(
     uint256 settings,
-    uint256 fromEnd, uint256 length
+    uint256 fromEnd,
+    uint256 length
   ) external pure returns(uint256) {
     return _readEncodedSettings(settings, fromEnd, length);
   }
   function _readEncodedSettings(
     uint256 settings,
-    uint256 fromEnd, uint256 length
+    uint256 fromEnd,
+    uint256 length
   ) internal pure returns(uint256) {
     return settings << fromEnd >> (256 - length);
   }
@@ -157,8 +162,8 @@ contract EncodableSettings {
       255, // restart forever
       /*
        * by index: 00000001
-       * 7: unassigned
-       * 6: signal to ender that tips exist to be collected (allows contract to avoid an SLOAD) (0)
+       * 7: signal to ender that tips exist to be collected (allows contract to avoid an SLOAD) (0)
+       * 6: should recreate external tips
        * 5: give dominion over hedron after tip to staker (0)
        * 4: give dominion over target after tip to staker (0)
        * 3: do not allow end hedron mint (0)
@@ -178,11 +183,15 @@ contract EncodableSettings {
       uint8(1)
     );
   }
-  function _decrementCopyIterations(uint256 copyIterations, uint256 _setting) internal pure returns(uint256 setting) {
+  function _decrementCopyIterations(uint256 _setting) internal pure returns(uint256) {
+    uint256 copyIterations = uint8(_setting >> 8);
+    if (copyIterations == 0) {
+      return uint8(_setting);
+    }
     if (copyIterations < 255) {
       --copyIterations;
-      setting = _setting >> 16 << 16 | (uint256(copyIterations) << 8) | uint8(_setting);
     }
+    return (_setting >> 16 << 16) | (copyIterations << 8) | uint8(_setting);
   }
   /**
    * exposes the default settings to external

@@ -1,103 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.13;
 
-import "forge-std/Test.sol";
-import "contracts/UnderlyingStakeManager.sol";
-import "contracts/SingletonStakeManager.sol";
-import "contracts/StakeManager.sol";
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
-import "contracts/IUnderlyingStakeable.sol";
-import "contracts/IStakeable.sol";
-import "forge-std/console2.sol";
-
-contract TestStakeManager is Test {
-  StakeManager public stkMngr;
-  address public hx = 0x2b591e99afE9f32eAA6214f7B7629768c40Eeb39;
-  address public pulsexSacrifice = 0x075e72a5eDf65F0A5f44699c7654C1a76941Ddc8;
-  address public pulsexSacrificeMainnet = 0x5280aa3cF5D6246B8a17dFA3D75Db26617B73937;
-  uint256 public decimalShift;
-  uint256 public startingBalance;
-  uint256 public nextStakeId;
-  function setUp() public {
-    stkMngr = new StakeManager();
-    uint256 decimals = 8; //IERC20Metadata(hx).decimals();
-    decimalShift = 10**decimals;
-    startingBalance = 1_000_000 * decimalShift;
-    address impersonate = pulsexSacrifice;
-    uint256 balanceOfWhale = IERC20(hx).balanceOf(impersonate);
-    if (balanceOfWhale == 0) {
-      impersonate = pulsexSacrificeMainnet;
-    }
-    vm.startPrank(impersonate);
-    for (uint256 i = 1; i <= 100; ++i) {
-      IERC20(hx).transfer(vm.addr(i), startingBalance);
-    }
-    vm.stopPrank();
-    for (uint256 i = 1; i <= 100; ++i) {
-      vm.startPrank(vm.addr(i));
-      IERC20(hx).approve(address(stkMngr), type(uint256).max);
-      vm.stopPrank();
-    }
-    uint256[13] memory globalInfo = IHEX(hx).globalInfo();
-    // [, , , , , , stakeIdBN]
-    nextStakeId = globalInfo[6] + 1;
-    assertEq(IERC20(hx).balanceOf(vm.addr(1)), startingBalance);
-    assertEq(IERC20(hx).balanceOf(vm.addr(100)), startingBalance);
-  }
-  function _moveDays(address marcher, uint256 numDays) internal {
-    while (numDays > 0) {
-      skip(24*60*60);
-      vm.startPrank(marcher);
-      IStakeable(hx).stakeStart(1 * decimalShift, 5555);
-      vm.stopPrank();
-      numDays = numDays - 1;
-    }
-  }
-  function _depositTokenFrom(address sender, uint256 amount) internal {
-    vm.startPrank(sender);
-    stkMngr.depositToken(hx, amount);
-    vm.stopPrank();
-  }
-  function _withdrawToken(address sender, address payable receipient, uint256 amount) internal {
-    vm.startPrank(sender);
-    stkMngr.withdrawTokenTo(hx, receipient, amount);
-    vm.stopPrank();
-  }
-  function _transferTo(address sender, address recipient, uint256 amount) internal {
-    vm.startPrank(sender);
-    IERC20(hx).transfer(recipient, amount);
-    vm.stopPrank();
-  }
-  function _stakeStart(address sender, uint256 amount, uint256 stakeDays) internal {
-    vm.startPrank(sender);
-    stkMngr.stakeStart(amount, stakeDays);
-    vm.stopPrank();
-  }
-  function _managedStakeStart(address sender, uint256 amount, uint256 stakeDays) internal {
-    vm.startPrank(sender);
-    stkMngr.stakeStart(amount, stakeDays);
-    vm.stopPrank();
-  }
-  function _stakeEndByConsentForMany(
-    address ender,
-    uint256[] memory list
-  ) internal {
-    vm.startPrank(ender);
-    stkMngr.stakeEndByConsentForMany(list);
-    vm.stopPrank();
-  }
-  function _directStakeStart(address sender, uint256 amount, uint256 daysStaked) internal {
-    vm.startPrank(sender);
-    IStakeable(hx).stakeStart(amount, daysStaked);
-    vm.stopPrank();
-  }
-  function _directStakeEnd(address sender, uint256 index, uint256 stakeId) internal {
-    vm.startPrank(sender);
-    IStakeable(hx).stakeEnd(index, uint40(stakeId));
-    vm.stopPrank();
-  }
-}
+import "./TestStakeManager.t.sol";
 
 contract TestSingletonStakeManager is TestStakeManager {
   function testDeposits() public {
@@ -119,10 +23,11 @@ contract TestSingletonStakeManager is TestStakeManager {
     _withdrawToken(vm.addr(2), payable(vm.addr(1)), 1);
     _withdrawToken(vm.addr(1), payable(vm.addr(1)), startingBalance + 1);
     _withdrawToken(vm.addr(1), payable(vm.addr(1)), startingBalance / 2);
-    assertEq(IERC20(hx).balanceOf(vm.addr(1)), startingBalance / 2);
+    assertEq(IERC20(hx).balanceOf(vm.addr(1)), startingBalance);
     _withdrawToken(vm.addr(1), payable(vm.addr(1)), startingBalance);
     // using 0 withdraws the remaining balance
-    assertEq(IERC20(hx).balanceOf(vm.addr(1)), startingBalance / 2);
+    _depositTokenFrom(vm.addr(1), startingBalance);
+    assertEq(IERC20(hx).balanceOf(vm.addr(1)), 0);
     _withdrawToken(vm.addr(1), payable(vm.addr(1)), 0);
     assertEq(IERC20(hx).balanceOf(vm.addr(1)), startingBalance);
   }
