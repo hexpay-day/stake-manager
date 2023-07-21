@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.17;
 
-import "./SingletonStakeManager.sol";
+import "./TransferrableStakeManager.sol";
 
-contract StakeManager is SingletonStakeManager {}
+contract StakeManager is TransferrableStakeManager {}

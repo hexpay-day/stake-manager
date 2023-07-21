@@ -290,4 +290,8 @@ contract Tipper is Bank, UnderlyingStakeable, CurrencyList, StakeInfo, Encodable
     emit AddTip(stakeId, token, index, setting);
     return (index, amount);
   }
+  // thank you for your contribution to the protocol
+  // the mev bots smile upon thee
+  receive() external payable {}
+  fallback() external payable {}
 }

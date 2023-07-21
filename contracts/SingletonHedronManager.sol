@@ -40,7 +40,13 @@ contract SingletonHedronManager is EncodableSettings, UnderlyingStakeManager {
       _addToTokenWithdrawable(hedronAddress, to, hedronTokens);
     }
   }
+  function _mintHedron(uint256 index, uint256 id) internal virtual returns(uint256) {
+    return _mintNativeHedron(index, id);
+  }
   function _mintNativeHedron(uint256 index, uint256 stakeId) internal returns(uint256 amount) {
     return IHedron(hedron).mintNative(index, uint40(stakeId));
+  }
+  function _mintInstancedHedron(uint256 index, address hsiAddress) internal returns(uint256 amount) {
+    return IHedron(hedron).mintInstanced(index, hsiAddress);
   }
 }

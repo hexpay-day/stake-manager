@@ -3,16 +3,17 @@ pragma solidity ^0.8.17;
 
 import "./Tipper.sol";
 import "./SingletonHedronManager.sol";
+import "./StakeEnder.sol";
 import "./Magnitude.sol";
 
-contract SingletonStakeManager is Magnitude, SingletonHedronManager {
+contract StakeEnder is Magnitude, Tipper, SingletonHedronManager {
   uint256 public constant MAX_DAYS = 5555;
   /**
    * updates settings under a stake id to the provided settings struct
    * @param stakeId the stake id to update
    * @param settings the settings to update the stake id to
    */
-  function updateSettings(uint256 stakeId, Settings calldata settings) external payable {
+  function updateSettings(uint256 stakeId, Settings calldata settings) external virtual payable {
     _verifyStakeOwnership(msg.sender, stakeId);
     _writePreservedSettingsUpdate(stakeId, _encodeSettings(settings));
   }
@@ -23,6 +24,16 @@ contract SingletonStakeManager is Magnitude, SingletonHedronManager {
   function stakeEndByConsent(uint256 stakeId) external payable returns(uint256 delta) {
     return _stakeEndByConsent(stakeId);
   }
+  function _verifyStakeMatchesIndex(uint256 index, uint256 stakeId) internal view virtual returns(
+    IStakeable.StakeStore memory stake
+  ) {
+    stake = _getStake(address(this), index);
+    // ensure that the stake being ended is the one at the index
+    if (stakeId != stake.stakeId) {
+      IStakeable.StakeStore memory s;
+      return s;
+    }
+  }
   /**
    * end a stake with the consent of the underlying staker's settings
    * @param stakeId the stake id to end
@@ -31,8 +42,8 @@ contract SingletonStakeManager is Magnitude, SingletonHedronManager {
    */
   function _stakeEndByConsent(uint256 stakeId) internal returns(uint256 delta) {
     (uint256 idx, address staker) = _stakeIdToInfo(stakeId);
-    IStakeable.StakeStore memory stake = _getStake(address(this), idx);
-    if (idx == 0 && stakeId != stake.stakeId) {
+    IStakeable.StakeStore memory stake = _verifyStakeMatchesIndex(idx, stakeId);
+    if (stake.stakeId == 0) {
       return 0;
     }
     uint256 setting = stakeIdToSettings[stakeId];
@@ -45,7 +56,7 @@ contract SingletonStakeManager is Magnitude, SingletonHedronManager {
     }
     if (_isCapable(setting, 3)) {
       // consent has been confirmed
-      uint256 hedronAmount = _mintNativeHedron(idx, stakeId);
+      uint256 hedronAmount = _mintHedron(idx, stakeId);
       uint256 hedronTipMethod = setting >> 248;
       if (hedronTipMethod > 0) {
         uint256 hedronTip = _computeMagnitude(
@@ -138,106 +149,20 @@ contract SingletonStakeManager is Magnitude, SingletonHedronManager {
     } while(i < len);
   }
   /**
-   * stake a given number of tokens for a given number of days
-   * @param to the address that will own the staker
-   * @param amount the number of tokens to stake
-   * @param newStakedDays the number of days to stake for
-   */
-  function stakeStartFromBalanceFor(
-    address to,
-    uint256 amount,
-    uint256 newStakedDays,
-    uint256 settings
-  ) external payable returns(uint256 stakeId) {
-    _depositTokenFrom(target, msg.sender, amount);
-    // tokens are essentially unattributed at this point
-    stakeId = _stakeStartFor(
-      to,
-      amount,
-      newStakedDays
-    );
-    _logSettings(stakeId, settings);
-  }
-  /**
    * save a newly started stake's settings
    * @param stakeId the id of the newly minted stake
    * @param settings optional settings passed by stake starter
    */
   function _logSettings(uint256 stakeId, uint256 settings) internal {
     if (settings == 0) {
-      _setDefaultSettings(stakeId);
+      _setDefaultSettings({
+        stakeId: stakeId
+      });
     } else {
-      _writePreservedSettingsUpdate(stakeId, settings);
+      _writePreservedSettingsUpdate({
+        stakeId: stakeId,
+        settings: settings
+      });
     }
-  }
-  /**
-   * start a numbeer of stakes for an address from the withdrawable
-   * @param to the account to start a stake for
-   * @param amount the number of tokens to start a stake for
-   * @param newStakedDays the number of days to stake for
-   */
-  function stakeStartFromWithdrawableFor(
-    address to,
-    uint256 amount,
-    uint256 newStakedDays,
-    uint256 settings
-  ) external payable returns(uint256 stakeId) {
-    stakeId = _stakeStartFor(
-      to,
-      _deductWithdrawable(target, msg.sender, amount),
-      newStakedDays
-    );
-    _logSettings(stakeId, settings);
-  }
-  /**
-   * stake a number of tokens for a given number of days, pulling from
-   * the unattributed tokens in this contract
-   * @param to the owner of the stake
-   * @param amount the amount of tokens to stake
-   * @param newStakedDays the number of days to stake
-   */
-  function stakeStartFromUnattributedFor(
-    address to,
-    uint256 amount,
-    uint256 newStakedDays,
-    uint256 settings
-  ) external payable returns(uint256 stakeId) {
-    stakeId = _stakeStartFor(
-      to,
-      _clamp(amount, _getUnattributed(target)),
-      newStakedDays
-    );
-    _logSettings(stakeId, settings);
-  }
-  // thank you for your contribution to the protocol
-  // the mev bots smile upon thee
-  receive() external payable {}
-  fallback() external payable {}
-  /**
-   * removes transfer abilities from a stake
-   * @param stakeId the stake that the sender owns and wishes to remove transfer abilities from
-   */
-  function removeTransferrability(uint256 stakeId) external payable returns(uint256 settings) {
-    return _updateTransferrability(stakeId, 0);
-  }
-  function allowTransferrability(uint256 stakeId) external payable returns(uint256 settings) {
-    return _updateTransferrability(stakeId, 1);
-  }
-  function _updateTransferrability(uint256 stakeId, uint256 val) internal returns(uint256 settings) {
-    _verifyStakeOwnership(msg.sender, stakeId);
-    settings = stakeIdToSettings[stakeId];
-    settings = (settings >> 6 << 6) | (settings << 251 >> 251) | val;
-    stakeIdToSettings[stakeId] = settings;
-  }
-  function stakeTransfer(uint256 stakeId, address to) external payable {
-    (uint256 index, address owner) = _stakeIdToInfo(stakeId);
-    if (msg.sender != owner) {
-      revert StakeNotOwned(msg.sender, owner);
-    }
-    uint256 settings = stakeIdToSettings[stakeId];
-    if (!_isCapable(settings, 5)) {
-      revert NotAllowed();
-    }
-    stakeIdInfo[stakeId] = _encodeInfo(index, to);
   }
 }

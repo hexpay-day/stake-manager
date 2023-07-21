@@ -26,9 +26,6 @@ contract MaximusStakeManager is HSIStakeManager {
     address indexed token,
     uint256 amount
   );
-
-  // allow this contract to receive tokens on behalf of enders
-  receive() external payable {}
   constructor() {
     // unfortunately, this is the appropriate place to have this code
     perpetualWhitelist[0x0d86EB9f43C57f6FF3BC9E23D8F9d82503f0e84b] = true; // maxi
