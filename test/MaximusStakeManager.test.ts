@@ -6,12 +6,12 @@ import _ from 'lodash'
 import { anyUint } from "@nomicfoundation/hardhat-chai-matchers/withArgs"
 
 describe('MaximusStakeManager.sol', () => {
-  describe('stakeEnd', () => {
+  describe('stakeEndAs', () => {
     it('can end the perpetual\'s stake', async () => {
       const x = await loadFixture(utils.endOfBaseFixture)
       const [signerA] = x.signers
       const stake = await x.hex.stakeLists(x.base, 0)
-      await expect(x.maximusStakeManager.stakeEnd(signerA.address, x.base, stake.stakeId))
+      await expect(x.maximusStakeManager.stakeEndAs(signerA.address, x.base, stake.stakeId))
         .to.emit(x.hex, 'StakeEnd')
         .withArgs(anyUint, anyUint, x.base, stake.stakeId)
     })
@@ -19,14 +19,14 @@ describe('MaximusStakeManager.sol', () => {
       const x = await loadFixture(utils.endOfBaseFixture)
       const [, signerB, signerC] = x.signers
       const stake = await x.hex.stakeLists(x.base, 0)
-      await expect(x.maximusStakeManager.stakeEnd(signerB.address, signerC.address, stake.stakeId))
+      await expect(x.maximusStakeManager.stakeEndAs(signerB.address, signerC.address, stake.stakeId))
         .to.revertedWithCustomError(x.maximusStakeManager, 'NotAllowed')
     })
     it('can end the perpetual\'s stake and name any address as the rewards recipient', async () => {
       const x = await loadFixture(utils.endOfBaseFixture)
       const [, signerB] = x.signers
       const stake = await x.hex.stakeLists(x.base, 0)
-      await expect(x.maximusStakeManager.stakeEnd(signerB.address, x.base, stake.stakeId))
+      await expect(x.maximusStakeManager.stakeEndAs(signerB.address, x.base, stake.stakeId))
         .to.emit(x.hex, 'StakeEnd')
         .withArgs(anyUint, anyUint, x.base, stake.stakeId)
     })
@@ -34,14 +34,14 @@ describe('MaximusStakeManager.sol', () => {
       const x = await loadFixture(utils.endOfBaseFixture)
       const [signerA, , signerC] = x.signers
       const stake = await x.hex.stakeLists(x.base, 0)
-      await expect(x.maximusStakeManager.stakeEnd(signerA.address, signerC.address, stake.stakeId))
+      await expect(x.maximusStakeManager.stakeEndAs(signerA.address, signerC.address, stake.stakeId))
         .to.revertedWithCustomError(x.maximusStakeManager, 'NotAllowed')
     })
     it('can collect rewards', async () => {
       const x = await loadFixture(utils.endOfBaseFixture)
       const [signerA, signerB, signerC] = x.signers
       const stake = await x.hex.stakeLists(x.base, 0)
-      await x.maximusStakeManager.stakeEnd(signerA.address, x.base, stake.stakeId)
+      await x.maximusStakeManager.stakeEndAs(signerA.address, x.base, stake.stakeId)
       const currentPeriod = await x.publicEndStakeable.getCurrentPeriod()
       const oneEther = hre.ethers.utils.parseEther('1')
       await signerC.sendTransaction({

@@ -46,7 +46,7 @@ contract MaximusStakeManager is HSIStakeManager {
    * @param perpetual the perpetual to end a stake on
    * @param stakeId the stake id to end
    */
-  function stakeEnd(address rewarded, address perpetual, uint256 stakeId) external onlyPerpetual(perpetual) {
+  function stakeEndAs(address rewarded, address perpetual, uint256 stakeId) external onlyPerpetual(perpetual) {
     IPublicEndStakeable endable = IPublicEndStakeable(perpetual);
     // STAKE_END_DAY is locked + staked days - 1 so > is correct in this case
     if (IHEX(target).currentDay() > endable.STAKE_END_DAY() && endable.STAKE_IS_ACTIVE()) {

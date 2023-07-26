@@ -19,7 +19,6 @@ Chai.Assertion.addMethod('printGasUsage', function (this: any) {
     [ethers.providers.TransactionResponse],
   ) => {
     hre.tracer.enabled = true
-    console.log(tx.hash)
     await hre.run('trace', {
       hash: tx.hash,
       fulltrace: true,
@@ -46,7 +45,6 @@ export const deployFixture = async () => {
   const Capable = await hre.ethers.getContractFactory('Capable')
   const capable = await Capable.deploy()
   const StakeManager = await hre.ethers.getContractFactory('StakeManager')
-  const SingletonStakeManager = await hre.ethers.getContractFactory('SingletonStakeManager')
   const stakeManager = await StakeManager.deploy()
   await stakeManager.deployed()
   const _signers = await hre.ethers.getSigners()
@@ -100,7 +98,6 @@ export const deployFixture = async () => {
     signers,
     stakeManager,
     StakeManager,
-    SingletonStakeManager,
     isolatedStakeManagerFactory,
     isolatedStakeManager,
     capable,
@@ -188,24 +185,26 @@ export const deployAndProcureHSIFixture = async () => {
   const hsiAddresses = await Promise.all(hsiStakeIds.map((_stakeId, index) => (
     x.hsim.hsiLists(signerA.address, index)
   )))
-  const tokenizeOrder = hsiAddresses.slice(0).reverse()
-  const stakeParams: string[] = []
-  for (let i = 0; i < tokenizeOrder.length; i++) {
-    const addr = tokenizeOrder[i]
-    stakeParams.push(addr)
+  const hsiTargetsPartial = hsiAddresses.map((addr, index) => ({
+    hsiAddress: addr,
+    stakeId: hsiStakeIds[index],
+  }))
+  for (let i = 0; i < hsiTargetsPartial.length; i++) {
     const count = await x.hsim.hsiCount(signerA.address)
-    await x.hsim.hexStakeTokenize(count.toNumber() - 1, addr)
+    const target = hsiTargetsPartial[hsiTargetsPartial.length - 1 - i]
+    await x.hsim.hexStakeTokenize(count.toNumber() - 1, target.hsiAddress)
   }
-  const tokenIds = await Promise.all(tokenizeOrder.map((_addr, index) => (
-    x.hsim.tokenOfOwnerByIndex(signerA.address, index)
-  )))
+  const hsiTargets = await Promise.all(hsiTargetsPartial.reverse().map(async (target, index) => {
+    const tokenId = await x.hsim.tokenOfOwnerByIndex(signerA.address, index)
+    return {
+      ...target,
+      tokenId,
+    }
+  }))
   await x.hsim.setApprovalForAll(x.hsiStakeManager.address, true)
   return {
     ...x,
-    hsiStakeIds,
-    hsiAddresses: hsiAddresses.reverse(),
-    hsiTokenIds: tokenIds.map((tokenId) => tokenId.toBigInt()),
-    hsiStakeParams: stakeParams.reverse(),
+    hsiTargets: hsiTargets.reverse(),
   }
 }
 

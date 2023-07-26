@@ -12,7 +12,7 @@ contract SingletonHedronManager is EncodableSettings, UnderlyingStakeManager {
    * @param stakeIds list of stake ids to mint
    * @notice any combination of owners can be passed, however, it is most efficient to order the hsi address by owner
    */
-  function mintRewards(uint64[] calldata stakeIds) external {
+  function mintRewardsFromStakeIds(uint64[] calldata stakeIds) external {
     uint256 len = stakeIds.length;
     uint256 i;
     uint256 hedronTokens;

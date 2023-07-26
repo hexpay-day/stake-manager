@@ -265,13 +265,13 @@ describe("StakeManager", function () {
         .eventually.to.equal(6)
       await utils.moveForwardDays(half1 + 1, x)
       await expect(x.stakeManager.connect(signer4).multicall([
-        x.SingletonStakeManager.interface.encodeFunctionData('stakeEndByConsent', [
+        x.StakeManager.interface.encodeFunctionData('stakeEndByConsent', [
           x.nextStakeId + 4n,
         ]),
-        x.SingletonStakeManager.interface.encodeFunctionData('stakeEndByConsent', [
+        x.StakeManager.interface.encodeFunctionData('stakeEndByConsent', [
           x.nextStakeId + 2n,
         ]),
-        x.SingletonStakeManager.interface.encodeFunctionData('stakeEndByConsent', [
+        x.StakeManager.interface.encodeFunctionData('stakeEndByConsent', [
           x.nextStakeId + 0n,
         ]),
       ], false))

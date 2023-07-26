@@ -16,9 +16,8 @@ contract HSIStakeManager is StakeEnder {
   /**
    * a mapping of hsi addresses to the address that deposited the hsi into this contract
    */
-  event UpdateSettings(address indexed hsi, uint256 indexed settings);
   uint256 private constant DEFAULT_ENCODED_SETTINGS
-    = 0x0000000000000000000000000000000000000000000000000000000000000005;
+    = 0x000000000000000000000000000000000000000000000000000000000000000d;
   function defaultEncodedSettings() external override pure returns(uint256) {
     return DEFAULT_ENCODED_SETTINGS;
   }
@@ -50,7 +49,7 @@ contract HSIStakeManager is StakeEnder {
     address owner = _deposit721(hsim, tokenId);
     uint256 index = IHEXStakeInstanceManager(hsim).hsiCount(address(this));
     hsiAddress = IHEXStakeInstanceManager(hsim).hexStakeDetokenize(tokenId);
-    uint256 stakeId = _hsiAddressToId(hsiAddress);
+    uint256 stakeId = uint256(uint160(hsiAddress));
     // erc721 is burned - no owner - only hsi address remains
     stakeIdInfo[stakeId] = _encodeInfo(index, owner);
     if (encodedSettings == 0) {
@@ -70,11 +69,9 @@ contract HSIStakeManager is StakeEnder {
     return _getStake(hsiAddress, 0).stakeId;
   }
   function withdrawHsi(address hsiAddress) external returns(uint256 tokenId) {
-    uint256 stakeId = _hsiAddressToId(hsiAddress);
+    uint256 stakeId = uint256(uint160(hsiAddress));
+    _verifyStakeOwnership(msg.sender, stakeId);
     (uint256 index, address owner) = _stakeIdToInfo(stakeId);
-    if (msg.sender != owner) {
-      revert StakeNotOwned(msg.sender, owner);
-    }
     uint256 tipCount = _stakeIdTipSize(stakeId);
     if (tipCount > 0) {
       uint256[] memory indexes = new uint256[](tipCount);
@@ -97,19 +94,19 @@ contract HSIStakeManager is StakeEnder {
    * @notice any combination of owners can be passed,
    * however, it is most efficient to order the hsi address by owner
    */
-  function mintRewards(address[] calldata hsiAddresses) external {
+  function mintRewardsFromHSIAddress(address[] calldata hsiAddresses) external {
     uint256 len = hsiAddresses.length;
     uint256 i;
     uint256 hedronTokens;
     address hsiAddress = hsiAddresses[0];
     address currentOwner;
     uint256 stakeId;
-    (, address to) = _stakeIdToInfo(_hsiAddressToId(hsiAddress));
+    (, address to) = _stakeIdToInfo(uint256(uint160(hsiAddress)));
     address hedronAddress = hedron;
     uint256 index;
     do {
       hsiAddress = hsiAddresses[i];
-      stakeId = _hsiAddressToId(hsiAddress);
+      stakeId = uint256(uint160(hsiAddress));
       (index, currentOwner) = _stakeIdToInfo(stakeId);
       if (currentOwner != to) {
         if (hedronTokens > 0) {
@@ -119,7 +116,7 @@ contract HSIStakeManager is StakeEnder {
       }
       to = currentOwner;
       if (_isCapable(stakeIdToSettings[stakeId], 0)) {
-        hedronTokens += IHedron(hedron).mintInstanced(index, hsiAddress);
+        hedronTokens += _mintHedron(index, uint256(uint160(hsiAddress)));
       }
       unchecked {
         ++i;
@@ -159,9 +156,9 @@ contract HSIStakeManager is StakeEnder {
     if (IHEXStakeInstanceManager(hsim).hsiCount(address(this)) > index) {
       address movedHsiAddress = IHEXStakeInstanceManager(hsim)
         .hsiLists(address(this), index);
-      uint256 movedStakeId = _hsiAddressToId(movedHsiAddress);
-      (, address movedOwner) = _stakeIdToInfo(movedStakeId);
-      stakeIdInfo[movedStakeId] = _encodeInfo(index, movedOwner);
+      // uint256 movedStakeId = _hsiAddressToId(movedHsiAddress);
+      (, address movedOwner) = _stakeIdToInfo(uint256(uint160(movedHsiAddress)));
+      stakeIdInfo[uint256(uint160(movedHsiAddress))] = _encodeInfo(index, movedOwner);
     }
     stakeIdInfo[stakeId] = 0;
   }
@@ -175,96 +172,6 @@ contract HSIStakeManager is StakeEnder {
     stakeId = uint160(hsiAddress);
     stakeIdInfo[stakeId] = _encodeInfo(index, staker);
   }
-  // /**
-  //  * end multiple stakes, and mint final tokens
-  //  * @param hsiAddresses the hsi index and address to interact with
-  //  */
-  // function hsiStakeEndMany(address[] calldata hsiAddresses) external {
-  //   uint256 len = hsiAddresses.length;
-  //   uint256 i;
-  //   address hsiAddress;
-  //   uint256 stakeId;
-  //   uint256 index;
-  //   address currentOwner;
-  //   uint256 today = _currentDay();
-  //   do {
-  //     hsiAddress = hsiAddresses[i];
-  //     IStakeable.StakeStore memory stake = IHEX(target).stakeLists(hsiAddress, 0);
-  //     stakeId = stake.stakeId;
-  //     if (stakeId == 0) {
-  //       unchecked {
-  //         ++i;
-  //       }
-  //       continue;
-  //     }
-  //     (index, currentOwner) = _stakeIdToInfo(stakeId);
-  //     uint256 setting = stakeIdToSettings[stakeId];
-  //     if (_isEarlyEnding(stake.lockedDay, stake.stakedDays, today)) {
-  //       if (!_isCapable(setting, 1)) {
-  //         unchecked {
-  //           ++i;
-  //         }
-  //         continue;
-  //       }
-  //     }
-  //     if (_isCapable(setting, 7)) {
-  //       _executeTipList(stakeId, currentOwner, 0);
-  //     }
-  //     uint256 method;
-  //     if (_isCapable(setting, 2)) {
-  //       uint256 hedronReward = _mintInstancedHedron(index, hsiAddress);
-  //       method = setting >> 248;
-  //       if (method > 0) {
-  //         uint256 hedronTip = _computeMagnitude(
-  //           hedronReward, method, setting << 8 >> 192, hedronReward,
-  //           stake
-  //         );
-  //         if (hedronTip > 0) {
-  //           hedronReward = _checkAndExecTip(
-  //             stake.stakeId,
-  //             currentOwner,
-  //             hedron,
-  //             hedronTip,
-  //             hedronReward
-  //           );
-  //         }
-  //       }
-  //       _attributeFunds(setting, 3, hedron, currentOwner, hedronReward);
-  //     }
-  //     uint256 targetReward = IHEXStakeInstanceManager(hsim).hexStakeEnd(index, hsiAddress);
-  //     // move around the indexes for future stake ends
-  //     if (IHEXStakeInstanceManager(hsim).hsiCount(address(this)) > index) {
-  //       address movedHsiAddress = IHEXStakeInstanceManager(hsim).hsiLists(address(this), index);
-  //       uint256 movedStakeId = _hsiAddressToId(movedHsiAddress);
-  //       (, address movedOwner) = _stakeIdToInfo(movedStakeId);
-  //       stakeIdInfo[movedStakeId] = _encodeInfo(index, movedOwner);
-  //     }
-  //     method = setting << 72 >> 248;
-  //     if (method > 0) {
-  //       uint256 targetTip = _computeMagnitude(
-  //         targetReward, method, setting << 80 >> 192, targetReward,
-  //         stake
-  //       );
-  //       if (targetTip > 0) {
-  //         targetReward = _checkAndExecTip(
-  //           stake.stakeId,
-  //           currentOwner,
-  //           target,
-  //           targetTip,
-  //           targetReward
-  //         );
-  //       }
-  //     }
-  //     // remove index and settings info
-  //     stakeIdInfo[stakeId] = 0;
-  //     stakeIdToSettings[stakeId] = 0;
-  //     // attribute funds to originating staker
-  //     _attributeFunds(setting, 4, target, currentOwner, targetReward);
-  //     unchecked {
-  //       ++i;
-  //     }
-  //   } while (i < len);
-  // }
   function _mintHedron(uint256 index, uint256 id) internal override returns(uint256) {
     return _mintInstancedHedron(index, address(uint160(id)));
   }

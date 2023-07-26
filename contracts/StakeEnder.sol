@@ -6,6 +6,8 @@ import "./SingletonHedronManager.sol";
 import "./StakeEnder.sol";
 import "./Magnitude.sol";
 
+import "hardhat/console.sol";
+
 contract StakeEnder is Magnitude, Tipper, SingletonHedronManager {
   uint256 public constant MAX_DAYS = 5555;
   /**
@@ -164,5 +166,65 @@ contract StakeEnder is Magnitude, Tipper, SingletonHedronManager {
         settings: settings
       });
     }
+  }
+  /**
+   * stake a given number of tokens for a given number of days
+   * @param to the address that will own the staker
+   * @param amount the number of tokens to stake
+   * @param newStakedDays the number of days to stake for
+   */
+  function stakeStartFromBalanceFor(
+    address to,
+    uint256 amount,
+    uint256 newStakedDays,
+    uint256 settings
+  ) external payable returns(uint256 stakeId) {
+    _depositTokenFrom(target, msg.sender, amount);
+    // tokens are essentially unattributed at this point
+    stakeId = _stakeStartFor(
+      to,
+      amount,
+      newStakedDays
+    );
+    _logSettings(stakeId, settings);
+  }
+  /**
+   * start a numbeer of stakes for an address from the withdrawable
+   * @param to the account to start a stake for
+   * @param amount the number of tokens to start a stake for
+   * @param newStakedDays the number of days to stake for
+   */
+  function stakeStartFromWithdrawableFor(
+    address to,
+    uint256 amount,
+    uint256 newStakedDays,
+    uint256 settings
+  ) external payable returns(uint256 stakeId) {
+    stakeId = _stakeStartFor(
+      to,
+      _deductWithdrawable(target, msg.sender, amount),
+      newStakedDays
+    );
+    _logSettings(stakeId, settings);
+  }
+  /**
+   * stake a number of tokens for a given number of days, pulling from
+   * the unattributed tokens in this contract
+   * @param to the owner of the stake
+   * @param amount the amount of tokens to stake
+   * @param newStakedDays the number of days to stake
+   */
+  function stakeStartFromUnattributedFor(
+    address to,
+    uint256 amount,
+    uint256 newStakedDays,
+    uint256 settings
+  ) external payable returns(uint256 stakeId) {
+    stakeId = _stakeStartFor(
+      to,
+      _clamp(amount, _getUnattributed(target)),
+      newStakedDays
+    );
+    _logSettings(stakeId, settings);
   }
 }

@@ -21,10 +21,8 @@ contract TransferrableStakeManager is StakeEnder {
     stakeIdToSettings[stakeId] = settings;
   }
   function stakeTransfer(uint256 stakeId, address to) external payable {
-    (uint256 index, address owner) = _stakeIdToInfo(stakeId);
-    if (msg.sender != owner) {
-      revert StakeNotOwned(msg.sender, owner);
-    }
+    _verifyStakeOwnership(msg.sender, stakeId);
+    (uint256 index, ) = _stakeIdToInfo(stakeId);
     uint256 settings = stakeIdToSettings[stakeId];
     if (!_isCapable(settings, 5)) {
       revert NotAllowed();
