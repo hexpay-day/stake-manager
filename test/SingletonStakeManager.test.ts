@@ -328,13 +328,13 @@ describe("StakeManager", function () {
         ...settings,
         newStakeDaysMethod: 0,
         copyIterations: 0,
-        consentAbilities: parseInt('11101', 2),
+        consentAbilities: await x.stakeManager.decodeConsentAbilities(parseInt('11101', 2)),
       }
       const updatedSettings: EncodableSettings.SettingsStruct = {
         ...settings,
         newStakeDaysMethod: 0,
         copyIterations: 0,
-        consentAbilities: parseInt('01101', 2),
+        consentAbilities: await x.stakeManager.decodeConsentAbilities(parseInt('01101', 2)),
       }
       const encodedSettingsWithTransfer = await x.stakeManager.encodeSettings(updatedSettingsWithTransfer)
       const encodedSettings = await x.stakeManager.encodeSettings(updatedSettings)
@@ -350,7 +350,7 @@ describe("StakeManager", function () {
         .withArgs(x.stakeManager.address, signer1.address, withArgs.anyUint)
         .to.emit(x.hedron, 'Transfer')
         .withArgs(x.stakeManager.address, signer1.address, withArgs.anyUint)
-        .printGasUsage()
+        // .printGasUsage()
       const balanceBefore = await x.hex.balanceOf(signer1.address)
       await expect(x.hex.balanceOf(x.stakeManager.address))
         .eventually.to.equal(0)
@@ -477,7 +477,7 @@ describe("StakeManager", function () {
         tipMagnitude: oneHundredHex, // 100 hex
       }
       await expect(x.stakeManager.updateSettings(nextStakeId, updatedSettings))
-        .to.emit(x.stakeManager, 'UpdatedSettings')
+        .to.emit(x.stakeManager, 'UpdateSettings')
         .withArgs(nextStakeId, await x.stakeManager.encodeSettings(updatedSettings))
       // this is an underestimation since yield is also a factor in this case
       await expect(x.stakeManager.connect(signer2).multicall([
@@ -514,7 +514,7 @@ describe("StakeManager", function () {
         tipMagnitude: oneHundredHex, // 100 hex
       }
       await expect(x.stakeManager.updateSettings(nextStakeId, updatedSettings))
-        .to.emit(x.stakeManager, 'UpdatedSettings')
+        .to.emit(x.stakeManager, 'UpdateSettings')
         .withArgs(nextStakeId, await x.stakeManager.encodeSettings(updatedSettings))
       await expect(x.stakeManager.withdrawableBalanceOf(x.hex.address, signer2.address))
         .eventually.to.equal(0)
@@ -830,10 +830,10 @@ describe("StakeManager", function () {
         ...settings,
         hedronTipMethod: 1,
         hedronTipMagnitude: oneHundredHedron,
-        consentAbilities: parseInt('00001101', 2),
+        consentAbilities: await x.stakeManager.decodeConsentAbilities(parseInt('00001101', 2)),
       }
       await expect(x.stakeManager.updateSettings(nextStakeId, updatedSettings))
-        .to.emit(x.stakeManager, 'UpdatedSettings')
+        .to.emit(x.stakeManager, 'UpdateSettings')
         .withArgs(nextStakeId, await x.stakeManager.encodeSettings(updatedSettings))
       const encodedStoredSettings = await x.stakeManager.stakeIdToSettings(nextStakeId)
       const storedSettings = await x.stakeManager.decodeSettings(encodedStoredSettings)
@@ -860,7 +860,7 @@ describe("StakeManager", function () {
         tipMagnitude: oneHundredHex, // 100 hex
       }
       await expect(x.stakeManager.updateSettings(nextStakeId, updatedSettings))
-        .to.emit(x.stakeManager, 'UpdatedSettings')
+        .to.emit(x.stakeManager, 'UpdateSettings')
         .withArgs(nextStakeId, await x.stakeManager.encodeSettings(updatedSettings))
       await expect(x.stakeManager.withdrawableBalanceOf(x.hex.address, signer2.address))
         .eventually.to.equal(0)
@@ -906,7 +906,7 @@ describe("StakeManager", function () {
       const settings = await x.stakeManager.defaultSettings()
       const updatedSettings: EncodableSettings.SettingsStruct = {
         ...settings,
-        consentAbilities: parseInt('1101', 2),
+        consentAbilities: await x.stakeManager.decodeConsentAbilities(parseInt('1101', 2)),
       }
       const encodedSettings = await x.stakeManager.encodeSettings(updatedSettings)
       await expect(x.stakeManager.stakeStartFromBalanceFor(signer1.address, x.stakedAmount, days, encodedSettings))
@@ -927,7 +927,7 @@ describe("StakeManager", function () {
       const settings = await x.stakeManager.defaultSettings()
       let updatedSettings: EncodableSettings.SettingsStruct = {
         ...settings,
-        consentAbilities: parseInt('1100', 2),
+        consentAbilities: await x.stakeManager.decodeConsentAbilities(parseInt('1100', 2)),
       }
       const encodedSettings = await x.stakeManager.encodeSettings(updatedSettings)
       await expect(x.stakeManager.stakeStartFromBalanceFor(signer1.address, x.stakedAmount, days, encodedSettings))
@@ -940,7 +940,7 @@ describe("StakeManager", function () {
         .not.to.emit(x.hex, 'StakeEnd')
       updatedSettings = {
         ...updatedSettings,
-        consentAbilities: parseInt('1101', 2),
+        consentAbilities: await x.stakeManager.decodeConsentAbilities(parseInt('1101', 2)),
       }
       await expect(x.stakeManager.multicall([
         x.stakeManager.interface.encodeFunctionData('updateSettings', [
@@ -999,10 +999,10 @@ describe("StakeManager", function () {
       const settings = await x.stakeManager.idToDecodedSettings(nextStakeId)
       const updatedSettings: EncodableSettings.SettingsStruct = {
         ...settings,
-        consentAbilities: parseInt('1111', 2), // 2nd to last index in binary flags
+        consentAbilities: await x.stakeManager.decodeConsentAbilities(parseInt('1111', 2)), // 2nd to last index in binary flags
       }
       await expect(x.stakeManager.updateSettings(nextStakeId, updatedSettings))
-        .to.emit(x.stakeManager, 'UpdatedSettings')
+        .to.emit(x.stakeManager, 'UpdateSettings')
         .withArgs(nextStakeId, await x.stakeManager.encodeSettings(updatedSettings))
       await expect(x.stakeManager.connect(signer2).stakeEndByConsent(nextStakeId))
         .to.emit(x.hex, 'Transfer')

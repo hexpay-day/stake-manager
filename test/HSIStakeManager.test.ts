@@ -4,13 +4,17 @@ import * as hre from "hardhat"
 import * as utils from './utils'
 import _ from 'lodash'
 import { anyUint, anyValue } from "@nomicfoundation/hardhat-chai-matchers/withArgs"
+import { EncodableSettings } from "../artifacts/types"
 
 describe('HSIStakeManager.sol', () => {
   describe('depositHsi', () => {
     it('can deposit hsis into the contract', async () => {
       const x = await loadFixture(utils.deployAndProcureHSIFixture)
       await expect(x.hsiStakeManager.multicall(_.flatMap(x.hsiTargets, (target) => ([
-        x.hsiStakeManager.interface.encodeFunctionData('depositHsi', [target.tokenId, 0]),
+        x.hsiStakeManager.interface.encodeFunctionData('depositHsi', [
+          target.tokenId,
+          0,
+        ]),
       ])), false))
         .to.emit(x.hsim, 'Transfer')
         .to.emit(x.hsim, 'HSIDetokenize')
@@ -140,7 +144,7 @@ describe('HSIStakeManager.sol', () => {
         hedronTipMagnitude: encoded10Percent,
         tipMethod: 6,
         tipMagnitude: encoded10Percent,
-        consentAbilities: parseInt('001111', 2),
+        consentAbilities: await x.stakeManager.decodeConsentAbilities(parseInt('001111', 2)),
         // unused on hsi
         newStakeDaysMethod: 0,
         newStakeDaysMagnitude: 0,
@@ -171,7 +175,7 @@ describe('HSIStakeManager.sol', () => {
       await expect(x.hsiStakeManager.decodeSettings(lastStakeIdSettings))
         .eventually.to.deep.equal(defaultSettings)
       await utils.moveForwardDays(30, x)
-      const updatedSettings = {
+      const updatedSettings: EncodableSettings.SettingsStruct = {
         ...settings,
         tipMethod: 0,
         tipMagnitude: 0,
@@ -181,7 +185,7 @@ describe('HSIStakeManager.sol', () => {
         .withArgs(signer2.address, signer1.address)
       const encodedUpdatedSettings = await x.hsiStakeManager.encodeSettings(updatedSettings)
       await expect(x.hsiStakeManager.updateSettings(firstStakeTarget.hsiAddress, updatedSettings))
-        .to.emit(x.hsiStakeManager, 'UpdatedSettings')
+        .to.emit(x.hsiStakeManager, 'UpdateSettings')
         .withArgs(firstStakeTarget.hsiAddress, encodedUpdatedSettings)
         // this line is required
         // for some reason, the test fails without it
@@ -200,7 +204,7 @@ describe('HSIStakeManager.sol', () => {
         hedronTipMagnitude: 0,
         tipMethod: 0,
         tipMagnitude: 0,
-        consentAbilities: parseInt('001101', 2),
+        consentAbilities: await x.stakeManager.decodeConsentAbilities(parseInt('001101', 2)),
         // unused on hsi
         newStakeDaysMethod: 2,
         newStakeDaysMagnitude: 0,

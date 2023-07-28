@@ -29,18 +29,6 @@ contract HSIStakeManager is StakeEnder {
     return _decodeSettings(DEFAULT_ENCODED_SETTINGS);
   }
   /**
-   * update settings for a stake id
-   * @param stakeId the stake id to update
-   * @param settings the settings struct to update
-   * @dev only available to the owner
-   * @notice this method will fail if the stake is not found
-   * do not chain this method with other methods that could fail such as end stakes
-   */
-  function updateSettings(uint256 stakeId, Settings calldata settings) external override payable {
-    _verifyStakeOwnership(msg.sender, stakeId);
-    _writePreservedSettingsUpdate(stakeId, _encodeSettings(settings));
-  }
-  /**
    * transfer stakes by their token ids
    * @param tokenId the token id to move to this contract
    * @dev requires approval to transfer hsi to this contract

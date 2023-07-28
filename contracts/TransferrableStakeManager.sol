@@ -4,6 +4,7 @@ pragma solidity ^0.8.17;
 import "./StakeEnder.sol";
 
 contract TransferrableStakeManager is StakeEnder {
+  event TransferStake(uint256 stakeId, address owner);
   /**
    * removes transfer abilities from a stake
    * @param stakeId the stake that the sender owns and wishes to remove transfer abilities from
@@ -17,8 +18,8 @@ contract TransferrableStakeManager is StakeEnder {
   function _updateTransferrability(uint256 stakeId, uint256 val) internal returns(uint256 settings) {
     _verifyStakeOwnership(msg.sender, stakeId);
     settings = stakeIdToSettings[stakeId];
-    settings = (settings >> 6 << 6) | (settings << 251 >> 251) | val;
-    stakeIdToSettings[stakeId] = settings;
+    settings = (settings >> 6 << 6) | (settings << 251 >> 251) | val << 5;
+    _logSettingsUpdate(stakeId, settings);
   }
   function stakeTransfer(uint256 stakeId, address to) external payable {
     _verifyStakeOwnership(msg.sender, stakeId);
@@ -28,5 +29,6 @@ contract TransferrableStakeManager is StakeEnder {
       revert NotAllowed();
     }
     stakeIdInfo[stakeId] = _encodeInfo(index, to);
+    emit TransferStake(stakeId, to);
   }
 }

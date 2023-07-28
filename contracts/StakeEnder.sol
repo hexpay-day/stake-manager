@@ -6,19 +6,8 @@ import "./SingletonHedronManager.sol";
 import "./StakeEnder.sol";
 import "./Magnitude.sol";
 
-import "hardhat/console.sol";
-
 contract StakeEnder is Magnitude, Tipper, SingletonHedronManager {
   uint256 public constant MAX_DAYS = 5555;
-  /**
-   * updates settings under a stake id to the provided settings struct
-   * @param stakeId the stake id to update
-   * @param settings the settings to update the stake id to
-   */
-  function updateSettings(uint256 stakeId, Settings calldata settings) external virtual payable {
-    _verifyStakeOwnership(msg.sender, stakeId);
-    _writePreservedSettingsUpdate(stakeId, _encodeSettings(settings));
-  }
   /**
    * end a stake for someone other than the sender of the transaction
    * @param stakeId the stake id on the underlying contract to end

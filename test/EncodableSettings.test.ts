@@ -1,6 +1,6 @@
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers"
 import { expect } from "chai"
-// import * as hre from "hardhat"
+import * as hre from "hardhat"
 import * as utils from './utils'
 import _ from 'lodash'
 // import { anyUint, anyValue } from "@nomicfoundation/hardhat-chai-matchers/withArgs"
@@ -20,7 +20,6 @@ describe('EncodableSettings.sol', () => {
       const x = await loadFixture(utils.deployFixture)
       let settings
       settings = await x.stakeManager.stakeIdSettings(0);
-      expect(settings.consentAbilities).to.equal(0)
       expect(settings.newStakeMagnitude).to.equal(0)
       expect(settings.newStakeMethod).to.equal(0)
       expect(settings.newStakeDaysMagnitude).to.equal(0)
@@ -46,9 +45,20 @@ describe('EncodableSettings.sol', () => {
       await expect(x.stakeManager.readEncodedSettings(defaultEncodedSettings, 240, 8))
         .eventually.to.equal(defaultSettings.copyIterations)
         .eventually.to.equal(255)
+      const encodedConsentAbilities = await x.stakeManager.encodeConsentAbilities(defaultSettings.consentAbilities)
       await expect(x.stakeManager.readEncodedSettings(defaultEncodedSettings, 248, 8))
-        .eventually.to.equal(defaultSettings.consentAbilities)
+        .eventually.to.equal(encodedConsentAbilities.toNumber())
         .eventually.to.equal(1)
+    })
+  })
+  describe('updateSettingsEncoded', () => {
+    it('can update settings', async () => {
+      const x = await loadFixture(utils.deployFixture)
+      const [signer1] = x.signers
+      await x.stakeManager.stakeStartFromBalanceFor(signer1.address, x.stakedAmount, 1, 0)
+      await expect(x.stakeManager.updateSettingsEncoded(x.nextStakeId, hre.ethers.constants.MaxUint256))
+        .to.emit(x.stakeManager, 'UpdateSettings')
+      await x.stakeManager.stakeIdToSettings(x.nextStakeId)
     })
   })
 })

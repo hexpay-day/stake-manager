@@ -1,7 +1,19 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.17;
 
-contract EncodableSettings {
+import "./StakeInfo.sol";
+
+abstract contract EncodableSettings is StakeInfo {
+  struct ConsentAbilities {
+    bool canStakeEnd;
+    bool canEarlyStakeEnd;
+    bool canMintHedron;
+    bool canMintHedronAtEnd;
+    bool shouldSendTokensToStaker;
+    bool stakeIsTransferrable;
+    bool copyExternalTips;
+    bool hasExternalTips;
+  }
   // 1 word;
   struct Settings {
     uint8 hedronTipMethod;
@@ -26,7 +38,7 @@ contract EncodableSettings {
      * 01000000(6): copy external tips to next stake
      * 10000000(7): has external tips (contract controlled)
      */
-    uint8 consentAbilities;
+    ConsentAbilities consentAbilities;
   }
   mapping(uint256 => uint256) public stakeIdToSettings;
   /**
@@ -35,7 +47,7 @@ contract EncodableSettings {
    * @param stakeId the stake id that was updated
    * @param settings the newly updated settings
    */
-  event UpdatedSettings(uint256 indexed stakeId, uint256 settings);
+  event UpdateSettings(uint256 indexed stakeId, uint256 settings);
   uint256 private constant DEFAULT_ENCODED_SETTINGS
     = uint256(0x000000000000000000000000000000000000040000000100000001020000ff01);
   function defaultEncodedSettings() external virtual pure returns(uint256) {
@@ -46,6 +58,36 @@ contract EncodableSettings {
   }
   function stakeIdSettings(uint256 stakeId) external view returns(Settings memory) {
     return _decodeSettings(stakeIdToSettings[stakeId]);
+  }
+  function decodeConsentAbilities(uint256 abilities) external pure returns(ConsentAbilities memory) {
+    return _decodeConsentAbilities(abilities);
+  }
+  function _decodeConsentAbilities(uint256 abilities) internal pure returns(ConsentAbilities memory) {
+    return ConsentAbilities({
+      hasExternalTips: (abilities >> 7) % 2 == 1,
+      copyExternalTips: (abilities >> 6) % 2 == 1,
+      stakeIsTransferrable: (abilities >> 5) % 2 == 1,
+      shouldSendTokensToStaker: (abilities >> 4) % 2 == 1,
+      canMintHedronAtEnd: (abilities >> 3) % 2 == 1,
+      canMintHedron: (abilities >> 2) % 2 == 1,
+      canEarlyStakeEnd: (abilities >> 1) % 2 == 1,
+      canStakeEnd: abilities % 2 == 1
+    });
+  }
+  /**
+   * updates settings under a stake id to the provided settings struct
+   * @param stakeId the stake id to update
+   * @param settings the settings to update the stake id to
+   */
+  function updateSettings(uint256 stakeId, Settings calldata settings) external virtual payable {
+    _updateEncodedSettings(stakeId, _encodeSettings(settings));
+  }
+  function updateSettingsEncoded(uint256 stakeId, uint256 settings) external virtual payable {
+    _updateEncodedSettings(stakeId, settings);
+  }
+  function _updateEncodedSettings(uint256 stakeId, uint256 settings) internal {
+    _verifyStakeOwnership(msg.sender, stakeId);
+    _writePreservedSettingsUpdate(stakeId, settings);
   }
   function _writePreservedSettingsUpdate(
     uint256 stakeId,
@@ -68,7 +110,7 @@ contract EncodableSettings {
     uint256 settings
   ) internal {
     stakeIdToSettings[stakeId] = settings;
-    emit UpdatedSettings(stakeId, settings);
+    emit UpdateSettings(stakeId, settings);
   }
   function idToDecodedSettings(uint256 stakeId) external view returns (Settings memory) {
     return _decodeSettings(stakeIdToSettings[stakeId]);
@@ -112,7 +154,7 @@ contract EncodableSettings {
       | uint256(settings.newStakeDaysMethod) << 32
       | uint256(settings.newStakeDaysMagnitude) << 16
       | uint256(settings.copyIterations) << 8
-      | uint256(settings.consentAbilities);
+      | uint256(_encodeConsentAbilities(settings.consentAbilities));
   }
   /**
    * decode an encoded setting into it's settings struct
@@ -133,7 +175,22 @@ contract EncodableSettings {
       uint8( encoded >> 32),
       uint16(encoded >> 16),
       uint8( encoded >> 8),
-      uint8( encoded)
+      _decodeConsentAbilities(uint8(encoded))
+    );
+  }
+  function encodeConsentAbilities(ConsentAbilities calldata consentAbilities) external pure returns(uint256) {
+    return _encodeConsentAbilities(consentAbilities);
+  }
+  function _encodeConsentAbilities(ConsentAbilities memory consentAbilities) internal pure returns(uint256) {
+    return (
+      (consentAbilities.hasExternalTips ? 1 : 0) << 7 |
+      (consentAbilities.copyExternalTips ? 1 : 0) << 6 |
+      (consentAbilities.stakeIsTransferrable ? 1 : 0) << 5 |
+      (consentAbilities.shouldSendTokensToStaker ? 1 : 0) << 4 |
+      (consentAbilities.canMintHedronAtEnd ? 1 : 0) << 3 |
+      (consentAbilities.canMintHedron ? 1 : 0) << 2 |
+      (consentAbilities.canEarlyStakeEnd ? 1 : 0) << 1 |
+      (consentAbilities.canStakeEnd ? 1 : 0)
     );
   }
   function _defaultSettings() internal virtual pure returns(Settings memory settings) {
@@ -180,7 +237,17 @@ contract EncodableSettings {
        * and it is poor form to force people in the future to have to cancel out the past
        * front ends may choose to send a different default (non 0) during stake start
        */
-      uint8(1)
+      // uint8(1)
+      ConsentAbilities({
+        canStakeEnd: true,
+        canEarlyStakeEnd: false,
+        canMintHedron: false,
+        canMintHedronAtEnd: false,
+        shouldSendTokensToStaker: false,
+        stakeIsTransferrable: false,
+        copyExternalTips: false,
+        hasExternalTips: false
+      })
     );
   }
   function _decrementCopyIterations(uint256 _setting) internal pure returns(uint256) {

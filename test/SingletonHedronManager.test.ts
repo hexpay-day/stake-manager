@@ -12,7 +12,7 @@ describe('SingletonHedronManager.sol', () => {
       const settings = await x.stakeManager.defaultSettings()
       const nuSettings = {
         ...settings,
-        consentAbilities: parseInt('1101', 2),
+        consentAbilities: await x.stakeManager.decodeConsentAbilities(parseInt('1101', 2)),
       }
       const data = await Promise.all(x.stakeIds.map(async (stakeId) => (
         x.stakeManager.interface.encodeFunctionData('updateSettings', [
@@ -34,7 +34,7 @@ describe('SingletonHedronManager.sol', () => {
       const settings = await x.stakeManager.defaultSettings()
       const nuSettings = {
         ...settings,
-        consentAbilities: parseInt('1101', 2),
+        consentAbilities: await x.stakeManager.decodeConsentAbilities(parseInt('1101', 2)),
       }
       const data = await Promise.all(x.stakeIds.map(async (stakeId) => (
         x.stakeManager.interface.encodeFunctionData('updateSettings', [
@@ -71,7 +71,7 @@ describe('SingletonHedronManager.sol', () => {
       const settings = await x.stakeManager.defaultSettings()
       const nuSettings = {
         ...settings,
-        consentAbilities: parseInt('1101', 2),
+        consentAbilities: await x.stakeManager.decodeConsentAbilities(parseInt('1101', 2)),
       }
       const [signerA, signerB] = x.signers
       const nextStakeId = await utils.nextStakeId(x)
