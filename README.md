@@ -2,7 +2,7 @@
 
 build the contracts
 ```bash
-yarn run buid
+yarn run build
 ```
 
 run tests
