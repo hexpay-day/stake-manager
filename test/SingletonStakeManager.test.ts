@@ -317,6 +317,54 @@ describe("StakeManager", function () {
       await expect(x.hex.stakeCount(x.stakeManager.address)).eventually.to.equal(6)
     })
   })
+  describe('withdrawal at end of stake', () => {
+    it('transfers tokens to staker at end', async () => {
+      const x = await loadFixture(utils.deployFixture)
+      const days = 3
+      const [signer1, signer2] = x.signers
+
+      const settings = await x.stakeManager.defaultSettings()
+      const updatedSettingsWithTransfer: EncodableSettings.SettingsStruct = {
+        ...settings,
+        newStakeDaysMethod: 0,
+        copyIterations: 0,
+        consentAbilities: parseInt('11101', 2),
+      }
+      const updatedSettings: EncodableSettings.SettingsStruct = {
+        ...settings,
+        newStakeDaysMethod: 0,
+        copyIterations: 0,
+        consentAbilities: parseInt('01101', 2),
+      }
+      const encodedSettingsWithTransfer = await x.stakeManager.encodeSettings(updatedSettingsWithTransfer)
+      const encodedSettings = await x.stakeManager.encodeSettings(updatedSettings)
+      await x.stakeManager.stakeStartFromBalanceFor(signer1.address, x.stakedAmount, days, encodedSettingsWithTransfer)
+      await x.stakeManager.stakeStartFromBalanceFor(signer1.address, x.stakedAmount, days, encodedSettings)
+      await utils.moveForwardDays(days + 1, x)
+      await expect(x.stakeManager.connect(signer2).stakeEndByConsentForMany([x.nextStakeId]))
+        .to.emit(x.hex, 'Transfer')
+        .withArgs(hre.ethers.constants.AddressZero, x.stakeManager.address, withArgs.anyUint)
+        .to.emit(x.hedron, 'Transfer')
+        .withArgs(hre.ethers.constants.AddressZero, x.stakeManager.address, withArgs.anyUint)
+        .to.emit(x.hex, 'Transfer')
+        .withArgs(x.stakeManager.address, signer1.address, withArgs.anyUint)
+        .to.emit(x.hedron, 'Transfer')
+        .withArgs(x.stakeManager.address, signer1.address, withArgs.anyUint)
+        .printGasUsage()
+      const balanceBefore = await x.hex.balanceOf(signer1.address)
+      await expect(x.hex.balanceOf(x.stakeManager.address))
+        .eventually.to.equal(0)
+      await expect(x.stakeManager.connect(signer2).stakeEndByConsentForMany([x.nextStakeId + 1n]))
+        .to.emit(x.hex, 'Transfer')
+        .withArgs(hre.ethers.constants.AddressZero, x.stakeManager.address, withArgs.anyUint)
+        .to.emit(x.hedron, 'Transfer')
+        .withArgs(hre.ethers.constants.AddressZero, x.stakeManager.address, withArgs.anyUint)
+      await expect(x.hex.balanceOf(x.stakeManager.address))
+        .eventually.to.be.greaterThan(0)
+      await expect(x.hex.balanceOf(signer1.address))
+        .eventually.to.equal(balanceBefore)
+    })
+  })
   describe('addCurrencyToList', () => {
     it('disallows non deployed contracts', async () => {
       const x = await loadFixture(utils.deployFixture)

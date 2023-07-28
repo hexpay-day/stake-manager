@@ -15,6 +15,23 @@ describe('EncodableSettings.sol', () => {
         .eventually.to.deep.equal(decodedSettings)
     })
   })
+  describe('stakeIdSettings', () => {
+    it('provides decoded settings', async () => {
+      const x = await loadFixture(utils.deployFixture)
+      let settings
+      settings = await x.stakeManager.stakeIdSettings(0);
+      expect(settings.consentAbilities).to.equal(0)
+      expect(settings.newStakeMagnitude).to.equal(0)
+      expect(settings.newStakeMethod).to.equal(0)
+      expect(settings.newStakeDaysMagnitude).to.equal(0)
+      expect(settings.newStakeDaysMethod).to.equal(0)
+      const [signer1] = x.signers
+      await x.stakeManager.stakeStartFromBalanceFor(signer1.address, x.stakedAmount, 1, 0)
+      settings = await x.stakeManager.defaultSettings()
+      await expect(x.stakeManager.stakeIdSettings(x.nextStakeId))
+        .eventually.to.deep.equal(settings)
+    })
+  })
   describe('parsing values', () => {
     it('has a method for that', async () => {
       const x = await loadFixture(utils.deployFixture)

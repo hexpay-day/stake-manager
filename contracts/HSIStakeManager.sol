@@ -168,6 +168,7 @@ contract HSIStakeManager is StakeEnder {
     uint256 newStakeDays
   ) internal override returns(uint256 stakeId) {
     uint256 index = IHEXStakeInstanceManager(hsim).hsiCount(address(this));
+    IERC20(target).approve(hsim, newStakeAmount);
     address hsiAddress = IHEXStakeInstanceManager(hsim).hexStakeStart(newStakeAmount, newStakeDays);
     stakeId = uint160(hsiAddress);
     stakeIdInfo[stakeId] = _encodeInfo(index, staker);

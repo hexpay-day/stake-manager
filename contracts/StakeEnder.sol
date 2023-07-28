@@ -75,7 +75,9 @@ contract StakeEnder is Magnitude, Tipper, SingletonHedronManager {
           );
         }
       }
-      _attributeFunds(setting, 4, hedron, staker, hedronAmount);
+      if (hedronAmount > 0) {
+        _attributeFunds(setting, 4, hedron, staker, hedronAmount);
+      }
     }
     delta = _stakeEnd(idx, stakeId);
     // direct funds after end stake
@@ -121,7 +123,9 @@ contract StakeEnder is Magnitude, Tipper, SingletonHedronManager {
         _logSettingsUpdate(nextStakeId, setting);
       }
     }
-    _attributeFunds(setting, 4, target, staker, delta);
+    if (delta > 0) {
+      _attributeFunds(setting, 4, target, staker, delta);
+    }
     // skip logging because it will be zero forever
     // use stake end event as means of determining zeroing out
     stakeIdToSettings[stakeId] = 0;

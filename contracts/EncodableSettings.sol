@@ -24,7 +24,7 @@ contract EncodableSettings {
      * 00010000(4): should send tokens to staker
      * 00100000(5): stake is transferrable
      * 01000000(6): copy external tips to next stake
-     * 10000000(7): has external tips
+     * 10000000(7): has external tips (contract controlled)
      */
     uint8 consentAbilities;
   }

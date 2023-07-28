@@ -3,7 +3,7 @@ import { expect } from "chai"
 import * as hre from "hardhat"
 import * as utils from './utils'
 import _ from 'lodash'
-import { anyUint } from "@nomicfoundation/hardhat-chai-matchers/withArgs"
+import { anyUint, anyValue } from "@nomicfoundation/hardhat-chai-matchers/withArgs"
 
 describe('HSIStakeManager.sol', () => {
   describe('depositHsi', () => {
@@ -189,6 +189,39 @@ describe('HSIStakeManager.sol', () => {
 
       await expect(x.hsiStakeManager.connect(signer2).hsiStakeEndMany([firstStakeTarget.hsiAddress]))
         .to.emit(x.hex, 'StakeEnd')
+    })
+  })
+  describe('restarting hsis', async () => {
+    it('will restart an hsi with the appropriate inputs', async () => {
+      const x = await loadFixture(utils.deployAndProcureHSIFixture)
+      const [signer1, signer2] = x.signers
+      const settings = {
+        hedronTipMethod: 0,
+        hedronTipMagnitude: 0,
+        tipMethod: 0,
+        tipMagnitude: 0,
+        consentAbilities: parseInt('001101', 2),
+        // unused on hsi
+        newStakeDaysMethod: 2,
+        newStakeDaysMagnitude: 0,
+        newStakeMethod: 4,
+        newStakeMagnitude: 1n << 32n | 1n,
+        copyIterations: 0,
+      }
+      const encodedSettings = await x.stakeManager.encodeSettings(settings)
+      const deposits = _.flatMap(x.hsiTargets, (target) => ([
+        x.hsiStakeManager.interface.encodeFunctionData('depositHsi', [target.tokenId, encodedSettings]),
+      ]))
+      await expect(x.hsiStakeManager.multicall(deposits, false))
+        .to.emit(x.hsim, 'Transfer')
+        .to.emit(x.hsim, 'HSIDetokenize')
+      await utils.moveForwardDays(30, x)
+      const nextStakeId = await utils.nextStakeId(x)
+      await expect(x.hsiStakeManager.connect(signer2).hsiStakeEndMany([x.hsiTargets[0].hsiAddress]))
+        .to.emit(x.hex, 'StakeEnd')
+        .withArgs(anyUint, anyUint, x.hsiTargets[0].hsiAddress, x.hsiTargets[0].stakeId)
+        .to.emit(x.hex, 'StakeStart')
+        .withArgs(anyUint, anyValue, nextStakeId)
     })
   })
 })
