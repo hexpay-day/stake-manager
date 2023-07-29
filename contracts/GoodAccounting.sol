@@ -45,34 +45,41 @@ abstract contract GoodAccounting is Stakeable, StakeInfo, Tipper {
    * @param index the index of the stake
    * @param stakeId the stake id of the stake
    */
-  function isGoodAccountable(address staker, uint256 index, uint256 stakeId) external view returns(uint256) {
+  function isGoodAccountable(address staker, uint256 index, uint256 stakeId) external view returns(GoodAccountingStatus) {
     return _isGoodAccountable(staker, index, stakeId);
   }
-  function isStakeIdGoodAccountable(uint256 stakeId) external view returns(uint256) {
+  function isStakeIdGoodAccountable(uint256 stakeId) external view returns(GoodAccountingStatus) {
     return _isGoodAccountable(address(this), _stakeIdToIndex(stakeId), stakeId);
   }
-  function _isGoodAccountable(address staker, uint256 index, uint256 stakeId) internal view returns(uint256) {
+  enum GoodAccountingStatus {
+    READY,
+    ENDED,
+    EARLY,
+    MISMATCH,
+    MISCOUNT
+  }
+  function _isGoodAccountable(address staker, uint256 index, uint256 stakeId) internal view returns(GoodAccountingStatus) {
     uint256 count = IHEX(target).stakeCount(staker);
     if (index >= count) {
-      return 4;
+      return GoodAccountingStatus.MISCOUNT;
     }
     StakeStore memory stake = _getStake(staker, index);
     if (stake.stakeId != stakeId) {
       // the stake id does not match
-      return 3;
+      return GoodAccountingStatus.MISMATCH;
     }
     if (_isEarlyEnding(stake.lockedDay, stake.stakedDays, IHEX(target).currentDay())) {
       // return if it is too early to run good accounting
-      return 2;
+      return GoodAccountingStatus.EARLY;
     }
     if (stake.unlockedDay > 0) {
       // the stake has already been ended
-      return 1;
+      return GoodAccountingStatus.ENDED;
     }
-    return 0;
+    return GoodAccountingStatus.READY;
   }
   function _checkStakeGoodAccounting(address staker, uint256 index, uint256 stakeId) internal {
-    if (_isGoodAccountable(staker, index, stakeId) == 0) {
+    if (_isGoodAccountable(staker, index, stakeId) == GoodAccountingStatus.READY) {
       _stakeGoodAccounting(staker, index, stakeId);
     }
   }
