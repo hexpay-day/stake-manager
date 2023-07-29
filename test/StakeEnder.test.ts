@@ -317,6 +317,37 @@ describe("StakeManager", function () {
       await expect(x.hex.stakeCount(x.stakeManager.address)).eventually.to.equal(6)
     })
   })
+  describe('stakeRestartById', () => {
+    it('runs a permissioned, gas optimized, restart of a stake', async () => {
+      const x = await loadFixture(utils.deployFixture)
+      const [signer1, signer2] = x.signers
+      const days = 3
+      // gives no consent for non owner to end
+      await x.stakeManager.stakeStart(x.stakedAmount, days)
+      await utils.moveForwardDays(days + 1, x)
+      await expect(x.stakeManager.connect(signer2).stakeRestartById(x.nextStakeId))
+        .to.revertedWithCustomError(x.stakeManager, 'StakeNotOwned')
+        .withArgs(signer2.address, signer1.address)
+      await expect(x.stakeManager.stakeRestartById(x.nextStakeId))
+        .to.emit(x.hex, 'StakeEnd')
+    })
+  })
+  describe('stakeRestartManyById', () => {
+    it('runs a permissioned, gas optimized, restart of a stake', async () => {
+      const x = await loadFixture(utils.deployFixture)
+      const [signer1, signer2] = x.signers
+      const days = 3
+      // gives no consent for non owner to end
+      await x.stakeManager.stakeStart(x.stakedAmount, days)
+      await x.stakeManager.stakeStart(x.stakedAmount, days)
+      await utils.moveForwardDays(days + 1, x)
+      await expect(x.stakeManager.connect(signer2).stakeRestartManyById([x.nextStakeId, x.nextStakeId + 1n]))
+        .to.revertedWithCustomError(x.stakeManager, 'StakeNotOwned')
+        .withArgs(signer2.address, signer1.address)
+      await expect(x.stakeManager.stakeRestartManyById([x.nextStakeId, x.nextStakeId + 1n]))
+        .to.emit(x.hex, 'StakeEnd')
+    })
+  })
   describe('withdrawal at end of stake', () => {
     it('transfers tokens to staker at end', async () => {
       const x = await loadFixture(utils.deployFixture)
