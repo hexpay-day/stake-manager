@@ -74,12 +74,41 @@ contract TestStakeManager is Test {
     stkMngr.stakeStartFromBalanceFor(sender, amount, stakeDays, 0);
     vm.stopPrank();
   }
+  function _managedStakeEndById(address sender, uint256 stakeId) internal {
+    vm.startPrank(sender);
+    stkMngr.stakeEndById(stakeId);
+    vm.stopPrank();
+  }
+  function _managedStakeEndByIdMany(address sender, uint256[] memory stakeIds) internal {
+    vm.startPrank(sender);
+    uint256 len = stakeIds.length;
+    uint256 i;
+    bytes[] memory calls = new bytes[](len);
+    do {
+      calls[i] = abi.encodeWithSelector(stkMngr.stakeEndByConsentForMany.selector, stakeIds[i]);
+      unchecked {
+        ++i;
+      }
+    } while (i < len);
+    stkMngr.multicall(calls, false);
+    vm.stopPrank();
+  }
   function _stakeEndByConsentForMany(
     address ender,
     uint256[] memory list
   ) internal {
     vm.startPrank(ender);
     stkMngr.stakeEndByConsentForMany(list);
+    vm.stopPrank();
+  }
+  function _stakeRestartManyById(address staker, uint256[] memory stakeIds) internal {
+    vm.startPrank(staker);
+    stkMngr.stakeRestartManyById(stakeIds);
+    vm.stopPrank();
+  }
+  function _stakeRestartById(address staker, uint256 stakeId) internal {
+    vm.startPrank(staker);
+    stkMngr.stakeRestartById(stakeId);
     vm.stopPrank();
   }
   function _stakeEndByConsent(

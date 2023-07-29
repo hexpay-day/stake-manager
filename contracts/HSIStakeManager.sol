@@ -117,8 +117,9 @@ contract HSIStakeManager is StakeEnder {
   function hsiStakeEndMany(address[] calldata hsiAddresses) external {
     uint256 len = hsiAddresses.length;
     uint256 i;
+    uint256 count = IHEXStakeInstanceManager(hsim).hsiCount(address(this));
     do {
-      _stakeEndByConsent(uint160(hsiAddresses[i]));
+      (, count) = _stakeEndByConsent(uint160(hsiAddresses[i]), count);
       unchecked {
         ++i;
       }
@@ -136,12 +137,13 @@ contract HSIStakeManager is StakeEnder {
   }
   function _stakeEnd(
     uint256 index,
-    uint256 stakeId
+    uint256 stakeId,
+    uint256 stakeCountAfter
   ) internal override returns(uint256 targetReward) {
     targetReward = IHEXStakeInstanceManager(hsim)
       .hexStakeEnd(index, address(uint160(stakeId)));
     // move around the indexes for future stake ends
-    if (IHEXStakeInstanceManager(hsim).hsiCount(address(this)) > index) {
+    if (stakeCountAfter > index) {
       address movedHsiAddress = IHEXStakeInstanceManager(hsim)
         .hsiLists(address(this), index);
       // uint256 movedStakeId = _hsiAddressToId(movedHsiAddress);
@@ -153,9 +155,9 @@ contract HSIStakeManager is StakeEnder {
   function _stakeStartFor(
     address staker,
     uint256 newStakeAmount,
-    uint256 newStakeDays
+    uint256 newStakeDays,
+    uint256 index
   ) internal override returns(uint256 stakeId) {
-    uint256 index = IHEXStakeInstanceManager(hsim).hsiCount(address(this));
     IERC20(target).approve(hsim, newStakeAmount);
     address hsiAddress = IHEXStakeInstanceManager(hsim).hexStakeStart(newStakeAmount, newStakeDays);
     stakeId = uint160(hsiAddress);

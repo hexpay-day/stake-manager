@@ -237,7 +237,6 @@ abstract contract EncodableSettings is StakeInfo {
        * and it is poor form to force people in the future to have to cancel out the past
        * front ends may choose to send a different default (non 0) during stake start
        */
-      // uint8(1)
       ConsentAbilities({
         canStakeEnd: true,
         canEarlyStakeEnd: false,

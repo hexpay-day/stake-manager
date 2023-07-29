@@ -13,10 +13,10 @@ contract UnderlyingStakeManager is GoodAccounting {
   function _stakeStartFor(
     address staker,
     uint256 amount,
-    uint256 newStakedDays
+    uint256 newStakedDays,
+    uint256 index
   ) internal virtual returns(uint256 stakeId) {
-    // get future index of stake
-    uint256 index = _stakeCount(address(this));
+    // // get future index of stake
     Stakeable(target).stakeStart(amount, newStakedDays);
     // get the stake id
     stakeId = Stakeable(target).stakeLists(address(this), index).stakeId;
@@ -28,14 +28,14 @@ contract UnderlyingStakeManager is GoodAccounting {
    * @param stakeId the stake id on the underlying contract to end
    */
   function _stakeEnd(
-    uint256 stakeIndex, uint256 stakeId
+    uint256 stakeIndex, uint256 stakeId, uint256 stakeCountAfter
   ) internal virtual returns(uint256 delta) {
     // calculate the balance before
     // cannot use tokens attributed here because of tipping
     uint256 balanceBefore = _balanceOf(address(this));
     // end the stake - attributed to contract or through the managed stake
     Stakeable(target).stakeEnd(stakeIndex, uint40(stakeId));
-    if (_stakeCount(address(this)) > stakeIndex) {
+    if (stakeCountAfter > stakeIndex) {
       uint256 shiftingStakeId = _getStake(address(this), stakeIndex).stakeId;
       uint256 stakeInfo = stakeIdInfo[shiftingStakeId];
       stakeIdInfo[shiftingStakeId] = _encodeInfo(stakeIndex, address(uint160(stakeInfo)));
@@ -56,7 +56,7 @@ contract UnderlyingStakeManager is GoodAccounting {
   function stakeStart(uint256 amount, uint256 newStakedDays) external override virtual {
     // ensures amount under/from sender is sufficient
     _depositTokenFrom(target, msg.sender, amount);
-    _stakeStartFor(msg.sender, amount, newStakedDays);
+    _stakeStartFor(msg.sender, amount, newStakedDays, _stakeCount(address(this)));
   }
   /**
    * end your own stake which is custodied by the stake manager. skips tip computing
@@ -70,7 +70,7 @@ contract UnderlyingStakeManager is GoodAccounting {
    */
   function stakeEnd(uint256 stakeIndex, uint40 stakeId) external override virtual {
     _verifyStakeOwnership(msg.sender, stakeId);
-    uint256 amount = _stakeEnd(stakeIndex, stakeId);
+    uint256 amount = _stakeEnd(stakeIndex, stakeId, _stakeCount(address(this)) - 1);
     _withdrawTokenTo(target, payable(msg.sender), amount);
   }
   /**
@@ -85,7 +85,28 @@ contract UnderlyingStakeManager is GoodAccounting {
   function stakeEndById(uint256 stakeId) external virtual returns(uint256 amount) {
     _verifyStakeOwnership(msg.sender, stakeId);
     (uint256 stakeIndex, ) = _stakeIdToInfo(stakeId);
-    amount = _stakeEnd(stakeIndex, stakeId);
+    amount = _stakeEnd(stakeIndex, stakeId, _stakeCount(address(this)) - 1);
     _withdrawTokenTo(target, payable(msg.sender), amount);
+  }
+  function _stakeRestartById(uint256 _stakeId) internal returns(uint256 amount, uint256 stakeId) {
+    _verifyStakeOwnership(msg.sender, _stakeId);
+    (uint256 stakeIndex, address staker) = _stakeIdToInfo(_stakeId);
+    IStakeable.StakeStore memory stake = _getStake(address(this), stakeIndex);
+    uint256 stakeCount = _stakeCount(address(this)) - 1;
+    amount = _stakeEnd(stakeIndex, _stakeId, stakeCount);
+    stakeId = _stakeStartFor(staker, amount, stake.stakedDays, stakeCount);
+  }
+  function stakeRestartById(uint256 _stakeId) external returns(uint256 amount, uint256 stakeId) {
+    return _stakeRestartById(_stakeId);
+  }
+  function stakeRestartManyById(uint256[] calldata stakeIds) external {
+    uint256 i;
+    uint256 len = stakeIds.length;
+    do {
+      _stakeRestartById(stakeIds[i]);
+      unchecked {
+        ++i;
+      }
+    } while (i < len);
   }
 }
