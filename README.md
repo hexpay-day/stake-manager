@@ -42,18 +42,7 @@ _Example of the beginning of a loop of SLOAD opcodes in a hex end stake trace:_
     (continues for each day that this stake was active)
 ```
 
-_What does success look like?_
-
-In contract terms, success would be the majority of stakes started after these contracts are launched are ended through these contracts.
-
-Economically, success would be, at a minimum, reducing the cost of ending a stake, or even more broadly, managing a stake / principle by a fraction, at least 50%, however, I think these savings are achievable, especially for medium to medium-long stakes. This, value, expressed in terms of dollars could be highly valuable by itself. However, what is better is that this value compounds over time and allows hexicans to have more dollars to spend on other (non gas) things.
-
-Here are some graphs and data relevant to the issue.
-* https://dune.com/queries/2633637/4373958
-* https://dune.com/queries/2633639
-* https://dune.com/hexpay_day/end-stake-costs
-
-Note: it appears that someone did do shared end stakes at some point (5 total transactions over the course of 3 years). It seems that they stopped for some reason. Perhaps they did not understand what they were doing or shut down for other reasons and did not realize the value of what they had.
+What is worse is that these cost are project to increase only. The underlying cause is a merkle root that needs to be computed, which is highly compute and io (between node and it's db) intensive.
 
 _Ok, let's assume that this is a good idea. Who will consent to use it?_
 
@@ -81,7 +70,18 @@ There are. One prominant limitation is that gas costs won't make a difference if
 
 _What does success look like?_
 
-For this product / library to be successful, it only needs to serve legitimate end stakes and reduce the cost of ending stakes when compared to ending those stakes alone. It would be amazing if all new stakes were to be created through this system, however, anyone who is able to use this to increase their shares and reduce their stake cost is a win in my book. A measurement of success could be to compare transactions ended through this system vs txs as they would have ended through other systems.
+In contract terms, success would be the majority of stakes started after these contracts are launched are ended through these contracts.
+
+Economically, success would be, at a minimum, reducing the cost of ending a stake, or even more broadly, managing a stake / principle by a fraction, at least 50%, however, I think these savings are achievable, especially for short-medium to medium-long stakes. This, value, expressed in terms of dollars could be highly valuable by itself. However, what is better is that this value compounds over time and allows hexicans to have more dollars to spend on other (non gas) things.
+
+Here are some graphs and data relevant to the issue.
+* https://dune.com/queries/2633637/4373958
+* https://dune.com/queries/2633639
+* https://dune.com/hexpay_day/end-stake-costs
+
+Note: it appears that someone did do shared end stakes at some point (5 total transactions over the course of 3 years). It seems that they stopped for some reason. Perhaps they did not understand what they were doing or shut down for other reasons and did not realize the value of what they had.
+
+For this product / library / idea to be successful, it only needs to serve legitimate end stakes and reduce the cost of ending stakes when compared to ending those stakes alone. It would be amazing if all new stakes were to be created through this system, however, anyone who is able to use this to increase their shares and reduce their stake cost is a win in my book. A measurement of success could be to compare transactions ended through this system vs txs as they would have ended through other systems.
 
 There are multiple rational, but also detrimental behaviors that occur without a library like this.
 1. simply wait until a stake has ended to start a new stake with your newly aquired tokens

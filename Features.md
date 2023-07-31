@@ -28,7 +28,7 @@ This contract holds methods for ending hsi and maximus stakes.
 * Anyone can deposit hsi's, that do not have hedron lent against them (must be paid off).
 * HSI is detokenized and can be withdrawn at any time.
 * Ability to call multiple end stakes available.
-* Public multicall not available yet.
+* End stakes and mint hedron tokens in one transaction using a public multicall.
 * Rewards can be minted for all owned hsi's at the same time. So, no more single tx for each mint.
 * Send reward (hedron) or target (hex) tokens to any address.
 * Send end stake calls from external multicall.
@@ -65,6 +65,8 @@ This contract is a singleton that holds all stakes in a single contract for gas 
 * Anyone can mint hedron rewards to be custodied by SingletonStakeManager
 * Holds hedron rewards until owner collects them
 * Low cost hedron mint authorization to allow for future skipping / upgrades to exclude from process
+* Stake ownership can be transferred to different owners
+* Stake tips can be replicated to new stakes when they are paid out
 
 ### [Settings](./contracts/EncodableSettings.sol)
 
