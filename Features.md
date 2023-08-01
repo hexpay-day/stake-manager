@@ -67,6 +67,7 @@ This contract is a singleton that holds all stakes in a single contract for gas 
 * Low cost hedron mint authorization to allow for future skipping / upgrades to exclude from process
 * Stake ownership can be transferred to different owners
 * Stake tips can be replicated to new stakes when they are paid out
+* Call GoodAccounting method for multiple stakes. Even mix the calls in with other end stakes to save gas money.
 
 ### [Settings](./contracts/EncodableSettings.sol)
 

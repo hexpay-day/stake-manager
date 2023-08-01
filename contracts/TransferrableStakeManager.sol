@@ -12,22 +12,24 @@ contract TransferrableStakeManager is StakeEnder {
   function removeTransferrability(uint256 stakeId) external payable returns(uint256 settings) {
     return _updateTransferrability(stakeId, 0);
   }
-  function allowTransferrability(uint256 stakeId) external payable returns(uint256 settings) {
-    return _updateTransferrability(stakeId, 1);
-  }
   function _updateTransferrability(uint256 stakeId, uint256 val) internal returns(uint256 settings) {
     _verifyStakeOwnership(msg.sender, stakeId);
     settings = stakeIdToSettings[stakeId];
     settings = (settings >> 6 << 6) | (settings << 251 >> 251) | val << 5;
     _logSettingsUpdate(stakeId, settings);
   }
+  function canTransfer(uint256 stakeId) external view returns(bool) {
+    return _canTransfer(stakeId);
+  }
+  function _canTransfer(uint256 stakeId) internal view returns(bool) {
+    return _isCapable(stakeIdToSettings[stakeId], 5);
+  }
   function stakeTransfer(uint256 stakeId, address to) external payable {
     _verifyStakeOwnership(msg.sender, stakeId);
-    (uint256 index, ) = _stakeIdToInfo(stakeId);
-    uint256 settings = stakeIdToSettings[stakeId];
-    if (!_isCapable(settings, 5)) {
+    if (!_canTransfer(stakeId)) {
       revert NotAllowed();
     }
+    (uint256 index, ) = _stakeIdToInfo(stakeId);
     stakeIdInfo[stakeId] = _encodeInfo(index, to);
     emit TransferStake(stakeId, to);
   }
