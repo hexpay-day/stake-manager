@@ -19,15 +19,17 @@ contract SingletonHedronManager is EncodableSettings, UnderlyingStakeManager {
     address currentOwner;
     address to = _stakeIdToOwner(stakeIds[0]);
     uint256 stakeIndex;
+    uint256 stakeId;
     do {
-      (stakeIndex, currentOwner) = _stakeIdToInfo(stakeIds[i]);
-      if (_checkCanMintHedronRewards(currentOwner, stakeIds[i])) {
+      stakeId = stakeIds[i];
+      (stakeIndex, currentOwner) = _stakeIdToInfo(stakeId);
+      if (msg.sender == currentOwner || _isCapable(stakeIdToSettings[stakeId], 2)) {
         if (currentOwner != to) {
           _addToTokenWithdrawable(hedron, to, hedronTokens);
           hedronTokens = 0;
         }
         to = currentOwner;
-        hedronTokens += _mintHedron(stakeIndex, stakeIds[i]);
+        hedronTokens += _mintHedron(stakeIndex, stakeId);
       }
       unchecked {
         ++i;
@@ -36,9 +38,6 @@ contract SingletonHedronManager is EncodableSettings, UnderlyingStakeManager {
     if (hedronTokens > 0) {
       _addToTokenWithdrawable(hedron, to, hedronTokens);
     }
-  }
-  function _checkCanMintHedronRewards(address currentOwner, uint256 id) internal view virtual returns(bool) {
-    return msg.sender == currentOwner || _isCapable(stakeIdToSettings[id], 2);
   }
   function _mintHedron(uint256 index, uint256 id) internal virtual returns(uint256 amount) {
     return _mintNativeHedron(index, id);
