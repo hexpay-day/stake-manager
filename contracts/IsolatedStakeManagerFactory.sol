@@ -18,7 +18,10 @@ contract IsolatedStakeManagerFactory {
     // this scopes up to 2 stake managers to a single address
     // one that can only be ended by the staker one that can be ended by the stake manager
     existing = address(new IsolatedStakeManager{salt: keccak256(abi.encode(staker))}(staker));
-    emit CreateIsolatedStakeManager(staker, existing);
+    emit CreateIsolatedStakeManager({
+      owner: staker,
+      instance: existing
+    });
     isolatedStakeManagers[staker] = existing;
   }
 }

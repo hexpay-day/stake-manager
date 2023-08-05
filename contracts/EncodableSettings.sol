@@ -54,13 +54,20 @@ abstract contract EncodableSettings is StakeInfo {
     return DEFAULT_ENCODED_SETTINGS;
   }
   function _setDefaultSettings(uint256 stakeId) internal virtual {
-    _logSettingsUpdate(stakeId, DEFAULT_ENCODED_SETTINGS);
+    _logSettingsUpdate({
+      stakeId: stakeId,
+      settings: DEFAULT_ENCODED_SETTINGS
+    });
   }
   function stakeIdSettings(uint256 stakeId) external view returns(Settings memory) {
-    return _decodeSettings(stakeIdToSettings[stakeId]);
+    return _decodeSettings({
+      encoded: stakeIdToSettings[stakeId]
+    });
   }
   function decodeConsentAbilities(uint256 abilities) external pure returns(ConsentAbilities memory) {
-    return _decodeConsentAbilities(abilities);
+    return _decodeConsentAbilities({
+      abilities: abilities
+    });
   }
   function _decodeConsentAbilities(uint256 abilities) internal pure returns(ConsentAbilities memory) {
     return ConsentAbilities({
@@ -80,24 +87,36 @@ abstract contract EncodableSettings is StakeInfo {
    * @param settings the settings to update the stake id to
    */
   function updateSettings(uint256 stakeId, Settings calldata settings) external virtual payable {
-    _updateEncodedSettings(stakeId, _encodeSettings(settings));
+    _updateEncodedSettings({
+      stakeId: stakeId,
+      settings: _encodeSettings(settings)
+    });
   }
   function updateSettingsEncoded(uint256 stakeId, uint256 settings) external virtual payable {
-    _updateEncodedSettings(stakeId, settings);
+    _updateEncodedSettings({
+      stakeId: stakeId,
+      settings: settings
+    });
   }
   function _updateEncodedSettings(uint256 stakeId, uint256 settings) internal {
-    _verifyStakeOwnership(msg.sender, stakeId);
-    _writePreservedSettingsUpdate(stakeId, settings);
+    _verifyStakeOwnership({
+      owner: msg.sender,
+      stakeId: stakeId
+    });
+    _writePreservedSettingsUpdate({
+      stakeId: stakeId,
+      settings: settings
+    });
   }
   function _writePreservedSettingsUpdate(
     uint256 stakeId,
     uint256 settings
   ) internal {
     // preserve the 7th index which contract controls
-    _logSettingsUpdate(
-      stakeId,
-      (settings >> 8 << 8) | (uint8(stakeIdToSettings[stakeId]) >> 7 << 7) | (uint8(settings) << 1 >> 1)
-    );
+    _logSettingsUpdate({
+      stakeId: stakeId,
+      settings: (settings >> 8 << 8) | (uint8(stakeIdToSettings[stakeId]) >> 7 << 7) | (uint8(settings) << 1 >> 1)
+    });
   }
   /**
    * update the settings for a stake id
@@ -110,10 +129,15 @@ abstract contract EncodableSettings is StakeInfo {
     uint256 settings
   ) internal {
     stakeIdToSettings[stakeId] = settings;
-    emit UpdateSettings(stakeId, settings);
+    emit UpdateSettings({
+      stakeId: stakeId,
+      settings: settings
+    });
   }
   function idToDecodedSettings(uint256 stakeId) external view returns (Settings memory) {
-    return _decodeSettings(stakeIdToSettings[stakeId]);
+    return _decodeSettings({
+      encoded: stakeIdToSettings[stakeId]
+    });
   }
   /**
    * read a single property from encoded settings
@@ -128,7 +152,11 @@ abstract contract EncodableSettings is StakeInfo {
     uint256 fromEnd,
     uint256 length
   ) external pure returns(uint256) {
-    return _readEncodedSettings(settings, fromEnd, length);
+    return _readEncodedSettings({
+      settings: settings,
+      fromEnd: fromEnd,
+      length: length
+    });
   }
   function _readEncodedSettings(
     uint256 settings,
@@ -142,7 +170,9 @@ abstract contract EncodableSettings is StakeInfo {
    * @param settings the settings struct to be encoded into a number
    */
   function encodeSettings(Settings memory settings) external pure returns(uint256 encoded) {
-    return _encodeSettings(settings);
+    return _encodeSettings({
+      settings: settings
+    });
   }
   function _encodeSettings(Settings memory settings) internal pure returns(uint256 encoded) {
     return uint256(settings.hedronTipMethod) << 248
@@ -162,7 +192,9 @@ abstract contract EncodableSettings is StakeInfo {
    * @return settings the decoded settings struct
    */
   function decodeSettings(uint256 encoded) external pure returns(Settings memory settings) {
-    return _decodeSettings(encoded);
+    return _decodeSettings({
+      encoded: encoded
+    });
   }
   function _decodeSettings(uint256 encoded) internal pure returns(Settings memory settings) {
     return Settings(
@@ -175,11 +207,15 @@ abstract contract EncodableSettings is StakeInfo {
       uint8( encoded >> 32),
       uint16(encoded >> 16),
       uint8( encoded >> 8),
-      _decodeConsentAbilities(uint8(encoded))
+      _decodeConsentAbilities({
+        abilities: uint8(encoded)
+      })
     );
   }
   function encodeConsentAbilities(ConsentAbilities calldata consentAbilities) external pure returns(uint256) {
-    return _encodeConsentAbilities(consentAbilities);
+    return _encodeConsentAbilities({
+      consentAbilities: consentAbilities
+    });
   }
   function _encodeConsentAbilities(ConsentAbilities memory consentAbilities) internal pure returns(uint256) {
     return (
@@ -249,15 +285,15 @@ abstract contract EncodableSettings is StakeInfo {
       })
     );
   }
-  function _decrementCopyIterations(uint256 _setting) internal pure returns(uint256) {
-    uint256 copyIterations = uint8(_setting >> 8);
+  function _decrementCopyIterations(uint256 setting) internal pure returns(uint256) {
+    uint256 copyIterations = uint8(setting >> 8);
     if (copyIterations == 0) {
-      return uint8(_setting);
+      return uint8(setting);
     }
     if (copyIterations < 255) {
       --copyIterations;
     }
-    return (_setting >> 16 << 16) | (copyIterations << 8) | uint8(_setting);
+    return (setting >> 16 << 16) | (copyIterations << 8) | uint8(setting);
   }
   /**
    * exposes the default settings to external

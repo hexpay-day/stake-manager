@@ -14,7 +14,11 @@ abstract contract GoodAccounting is Stakeable, StakeInfo, Tipper {
    * @param stakeIdParam the stake id to verify the same stake is being targeted
    */
   function stakeGoodAccounting(address stakerAddr, uint256 stakeIndex, uint40 stakeIdParam) external {
-    _stakeGoodAccounting(stakerAddr, stakeIndex, stakeIdParam);
+    _stakeGoodAccounting({
+      stakerAddr: stakerAddr,
+      stakeIndex: stakeIndex,
+      stakeIdParam: stakeIdParam
+    });
   }
   function _stakeGoodAccounting(address stakerAddr, uint256 stakeIndex, uint256 stakeIdParam) internal {
     // no data is marked during good accounting, only computed and placed into logs
@@ -26,7 +30,11 @@ abstract contract GoodAccounting is Stakeable, StakeInfo, Tipper {
    * @param stakeId the stake id to end as custodied by this contract
    */
   function checkStakeGoodAccounting(uint256 stakeId) external {
-    _checkStakeGoodAccounting(address(this), _stakeIdToIndex(stakeId), stakeId);
+    _checkStakeGoodAccounting({
+      staker: address(this),
+      index: _stakeIdToIndex(stakeId),
+      stakeId: stakeId
+    });
   }
   /**
    * check that the stake can be good accounted, and execute the method if it will not fail
@@ -35,7 +43,11 @@ abstract contract GoodAccounting is Stakeable, StakeInfo, Tipper {
    * @param stakeId the stake id of the stake
    */
   function checkStakeGoodAccountingFor(address staker, uint256 index, uint256 stakeId) external {
-    _checkStakeGoodAccounting(staker, index, stakeId);
+    _checkStakeGoodAccounting({
+      staker: staker,
+      index: index,
+      stakeId: stakeId
+    });
   }
   /**
    * run the appropriate checks if the stake is good accountable.
@@ -45,11 +57,25 @@ abstract contract GoodAccounting is Stakeable, StakeInfo, Tipper {
    * @param index the index of the stake
    * @param stakeId the stake id of the stake
    */
-  function isGoodAccountable(address staker, uint256 index, uint256 stakeId) external view returns(GoodAccountingStatus) {
-    return _isGoodAccountable(staker, index, stakeId);
+  function isGoodAccountable(
+    address staker,
+    uint256 index,
+    uint256 stakeId
+  ) external view returns(GoodAccountingStatus) {
+    return _isGoodAccountable({
+      staker: staker,
+      index: index,
+      stakeId: stakeId
+    });
   }
   function isStakeIdGoodAccountable(uint256 stakeId) external view returns(GoodAccountingStatus) {
-    return _isGoodAccountable(address(this), _stakeIdToIndex(stakeId), stakeId);
+    return _isGoodAccountable({
+      staker: address(this),
+      index: _stakeIdToIndex({
+        stakeId: stakeId
+      }),
+      stakeId: stakeId
+    });
   }
   enum GoodAccountingStatus {
     READY,
@@ -58,17 +84,28 @@ abstract contract GoodAccounting is Stakeable, StakeInfo, Tipper {
     MISMATCH,
     MISCOUNT
   }
-  function _isGoodAccountable(address staker, uint256 index, uint256 stakeId) internal view returns(GoodAccountingStatus) {
+  function _isGoodAccountable(
+    address staker,
+    uint256 index,
+    uint256 stakeId
+  ) internal view returns(GoodAccountingStatus) {
     uint256 count = IHEX(target).stakeCount(staker);
     if (index >= count) {
       return GoodAccountingStatus.MISCOUNT;
     }
-    StakeStore memory stake = _getStake(staker, index);
+    StakeStore memory stake = _getStake({
+      custodian: staker,
+      index: index
+    });
     if (stake.stakeId != stakeId) {
       // the stake id does not match
       return GoodAccountingStatus.MISMATCH;
     }
-    if (_isEarlyEnding(stake.lockedDay, stake.stakedDays, IHEX(target).currentDay())) {
+    if (_isEarlyEnding({
+      lockedDay: stake.lockedDay,
+      stakedDays: stake.stakedDays,
+      targetDay: IHEX(target).currentDay()
+    })) {
       // return if it is too early to run good accounting
       return GoodAccountingStatus.EARLY;
     }
@@ -79,8 +116,16 @@ abstract contract GoodAccounting is Stakeable, StakeInfo, Tipper {
     return GoodAccountingStatus.READY;
   }
   function _checkStakeGoodAccounting(address staker, uint256 index, uint256 stakeId) internal {
-    if (_isGoodAccountable(staker, index, stakeId) == GoodAccountingStatus.READY) {
-      _stakeGoodAccounting(staker, index, stakeId);
+    if (_isGoodAccountable({
+      staker: staker,
+      index: index,
+      stakeId: stakeId
+    }) == GoodAccountingStatus.READY) {
+      _stakeGoodAccounting({
+        stakerAddr: staker,
+        stakeIndex: index,
+        stakeIdParam: stakeId
+      });
     }
   }
 }

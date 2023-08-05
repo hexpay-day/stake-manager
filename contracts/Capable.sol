@@ -8,7 +8,10 @@ contract Capable {
    * @param index the index to check for a 1
    */
   function isCapable(uint256 setting, uint256 index) external pure returns(bool) {
-    return _isCapable(setting, index);
+    return _isCapable({
+      setting: setting,
+      index: index
+    });
   }
   function _isCapable(uint256 setting, uint256 index) internal pure returns(bool) {
     // in binary checks:

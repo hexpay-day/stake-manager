@@ -13,12 +13,20 @@ contract StakeEnder is Magnitude, Tipper, SingletonHedronManager {
    * @param stakeId the stake id on the underlying contract to end
    */
   function stakeEndByConsent(uint256 stakeId) external payable returns(uint256 delta, uint256 count) {
-    return _stakeEndByConsent(stakeId, (_currentDay() << 128) | _stakeCount(address(this)));
+    return _stakeEndByConsent({
+      stakeId: stakeId,
+      stakeCount: (_currentDay() << 128) | _stakeCount({
+        staker: address(this)
+      })
+    });
   }
   function _verifyStakeMatchesIndex(uint256 index, uint256 stakeId) internal view virtual returns(
     IStakeable.StakeStore memory stake
   ) {
-    stake = _getStake(address(this), index);
+    stake = _getStake({
+      custodian: address(this),
+      index: index
+    });
     // ensure that the stake being ended is the one at the index
     if (stakeId != stake.stakeId) {
       IStakeable.StakeStore memory s;
@@ -30,101 +38,166 @@ contract StakeEnder is Magnitude, Tipper, SingletonHedronManager {
    * @param stakeId the stake id to end
    * @return delta the amount of hex at the end of the stake
    * @notice hedron minting happens as last step before end stake
+   * @dev the stake count is today | stake count because
+   * if there were 2 variables, the contract ended up too large
    */
   function _stakeEndByConsent(uint256 stakeId, uint256 stakeCount) internal returns(uint256 delta, uint256) {
-    (uint256 idx, address staker) = _stakeIdToInfo(stakeId);
-    IStakeable.StakeStore memory stake = _verifyStakeMatchesIndex(idx, stakeId);
+    (uint256 idx, address staker) = _stakeIdToInfo({
+      stakeId: stakeId
+    });
+    IStakeable.StakeStore memory stake = _verifyStakeMatchesIndex({
+      index: idx,
+      stakeId: stakeId
+    });
     if (stake.stakeId == 0) {
       return (0, stakeCount);
     }
     uint256 setting = stakeIdToSettings[stakeId];
-    if (!_isCapable(setting, 0)) {
+    if (!_isCapable({
+      setting: setting,
+      index: 0
+    })) {
       return (0, stakeCount);
     }
-    if (_isEarlyEnding(stake.lockedDay, stake.stakedDays, stakeCount >> 128) && !_isCapable(setting, 1)) {
+    if (_isEarlyEnding({
+      lockedDay: stake.lockedDay,
+      stakedDays: stake.stakedDays,
+      targetDay: stakeCount >> 128
+    }) && !_isCapable({
+      setting: setting,
+      index: 1
+    })) {
       return (0, stakeCount);
     }
-    if (_isCapable(setting, 3)) {
+    if (_isCapable({
+      setting: setting,
+      index: 3
+    })) {
       // consent has been confirmed
       uint256 hedronAmount = _mintHedron(idx, stakeId);
       uint256 hedronTipMethod = setting >> 248;
       if (hedronTipMethod > 0) {
-        uint256 hedronTip = _computeMagnitude(
-          hedronAmount, hedronTipMethod, setting << 8 >> 192, hedronAmount,
-          stake
-        );
+        uint256 hedronTip = _computeMagnitude({
+          limit: hedronAmount,
+          method: hedronTipMethod,
+          x: setting << 8 >> 192,
+          y: hedronAmount,
+          stake: stake
+        });
         if (hedronTip > 0) {
-          hedronAmount = _checkAndExecTip(
-            stakeId,
-            staker,
-            hedron,
-            hedronTip,
-            hedronAmount
-          );
+          hedronAmount = _checkAndExecTip({
+            stakeId: stakeId,
+            staker: staker,
+            token: hedron,
+            amount: hedronTip,
+            delta: hedronAmount
+          });
         }
       }
       if (hedronAmount > 0) {
-        _attributeFunds(setting, 4, hedron, staker, hedronAmount);
+        _attributeFunds({
+          settings: setting,
+          index: 4,
+          token: hedron,
+          staker: staker,
+          amount: hedronAmount
+        });
       }
     }
     --stakeCount;
-    delta = _stakeEnd(idx, stakeId, uint128(stakeCount));
+    delta = _stakeEnd({
+      stakeIndex: idx,
+      stakeId: stakeId,
+      stakeCountAfter: uint128(stakeCount)
+    });
     // direct funds after end stake
     // only place the stake struct exists is in memory in this method
     {
       uint256 tipMethod = setting << 72 >> 248;
       if (tipMethod > 0) {
-        uint256 targetTip = _computeMagnitude(
-          delta, tipMethod, uint64(setting >> 112), delta,
-          stake
-        );
+        uint256 targetTip = _computeMagnitude({
+          limit: delta,
+          method: tipMethod,
+          x: uint64(setting >> 112),
+          y: delta,
+          stake: stake
+        });
         if (targetTip > 0) {
-          delta = _checkAndExecTip(
-            stakeId,
-            staker,
-            target,
-            targetTip,
-            delta
-          );
+          delta = _checkAndExecTip({
+            stakeId: stakeId,
+            staker: staker,
+            token: target,
+            amount: targetTip,
+            delta: delta
+          });
         }
       }
     }
     uint256 newStakeMethod = setting << 144 >> 248;
     uint256 nextStakeId;
     if (delta > 0 && newStakeMethod > 0) {
-      uint256 newStakeAmount = _computeMagnitude(
-        delta, newStakeMethod, setting << 152 >> 192, delta,
-        stake
-      );
-      uint256 newStakeDays = _computeMagnitude(
-        MAX_DAYS, setting << 216 >> 248, setting << 224 >> 240, stakeCount >> 128,
-        stake
-      );
+      uint256 newStakeAmount = _computeMagnitude({
+        limit: delta,
+        method: newStakeMethod,
+        x: setting << 152 >> 192,
+        y: delta,
+        stake: stake
+      });
+      uint256 newStakeDays = _computeMagnitude({
+        limit: MAX_DAYS,
+        method: setting << 216 >> 248,
+        x: setting << 224 >> 240,
+        y: stakeCount >> 128,
+        stake: stake
+      });
       if (newStakeDays > 0) {
         unchecked {
           delta -= newStakeAmount; // checked for underflow
         }
-        nextStakeId = _stakeStartFor(staker, newStakeAmount, newStakeDays, uint128(stakeCount));
+        nextStakeId = _stakeStartFor({
+          owner: staker,
+          amount: newStakeAmount,
+          newStakedDays: newStakeDays,
+          index: uint128(stakeCount)
+        });
         ++stakeCount;
         // settings will be maintained for the new stake
         // note, because 0 is used, one often needs to use x-1
         // for the number of times you want to copy
         // but because permissions are maintained, it may end up
         // being easier to think about it as x-2
-        setting = (_decrementCopyIterations(setting) >> 2 << 2) | 1;
+        setting = (_decrementCopyIterations({
+          setting: setting
+        }) >> 2 << 2) | 1;
         _logSettingsUpdate(nextStakeId, setting);
       }
     }
     if (delta > 0) {
-      _attributeFunds(setting, 4, target, staker, delta);
+      _attributeFunds({
+        settings: setting,
+        index: 4,
+        token: target,
+        staker: staker,
+        amount: delta
+      });
     }
     // skip logging because it will be zero forever
     // use stake end event as means of determining zeroing out
     stakeIdToSettings[stakeId] = 0;
     // execute tips after we know that the stake can be ended
     // but before hedron is added to the withdrawable mapping
-    if (_isCapable(setting, 7)) {
-      _executeTipList(stakeId, staker, nextStakeId > 0 && _isCapable(setting, 6) ? nextStakeId : 0);
+    if (_isCapable({
+      setting: setting,
+      index: 7
+    })) {
+      _executeTipList({
+        stakeId: stakeId,
+        staker: staker,
+        nextStakeId: nextStakeId > 0 && _isCapable({
+          setting: setting,
+          index: 6
+        }) ? nextStakeId : 0
+      });
     }
     return (delta, stakeCount);
   }
@@ -139,9 +212,14 @@ contract StakeEnder is Magnitude, Tipper, SingletonHedronManager {
   function stakeEndByConsentForMany(uint256[] calldata stakeIds) external payable {
     uint256 i;
     uint256 len = stakeIds.length;
-    uint256 count = (_currentDay() << 128) | _stakeCount(address(this));
+    uint256 count = (_currentDay() << 128) | _stakeCount({
+      staker: address(this)
+    });
     do {
-      (, count) = _stakeEndByConsent(stakeIds[i], count);
+      (, count) = _stakeEndByConsent({
+        stakeId: stakeIds[i],
+        stakeCount: count
+      });
       unchecked {
         ++i;
       }
@@ -163,68 +241,5 @@ contract StakeEnder is Magnitude, Tipper, SingletonHedronManager {
         settings: settings
       });
     }
-  }
-  /**
-   * stake a given number of tokens for a given number of days
-   * @param to the address that will own the staker
-   * @param amount the number of tokens to stake
-   * @param newStakedDays the number of days to stake for
-   */
-  function stakeStartFromBalanceFor(
-    address to,
-    uint256 amount,
-    uint256 newStakedDays,
-    uint256 settings
-  ) external payable returns(uint256 stakeId) {
-    _depositTokenFrom(target, msg.sender, amount);
-    // tokens are essentially unattributed at this point
-    stakeId = _stakeStartFor(
-      to,
-      amount,
-      newStakedDays,
-      _stakeCount(address(this))
-    );
-    _logSettings(stakeId, settings);
-  }
-  /**
-   * start a numbeer of stakes for an address from the withdrawable
-   * @param to the account to start a stake for
-   * @param amount the number of tokens to start a stake for
-   * @param newStakedDays the number of days to stake for
-   */
-  function stakeStartFromWithdrawableFor(
-    address to,
-    uint256 amount,
-    uint256 newStakedDays,
-    uint256 settings
-  ) external payable returns(uint256 stakeId) {
-    stakeId = _stakeStartFor(
-      to,
-      _deductWithdrawable(target, msg.sender, amount),
-      newStakedDays,
-      _stakeCount(address(this))
-    );
-    _logSettings(stakeId, settings);
-  }
-  /**
-   * stake a number of tokens for a given number of days, pulling from
-   * the unattributed tokens in this contract
-   * @param to the owner of the stake
-   * @param amount the amount of tokens to stake
-   * @param newStakedDays the number of days to stake
-   */
-  function stakeStartFromUnattributedFor(
-    address to,
-    uint256 amount,
-    uint256 newStakedDays,
-    uint256 settings
-  ) external payable returns(uint256 stakeId) {
-    stakeId = _stakeStartFor(
-      to,
-      _clamp(amount, _getUnattributed(target)),
-      newStakedDays,
-      _stakeCount(address(this))
-    );
-    _logSettings(stakeId, settings);
   }
 }

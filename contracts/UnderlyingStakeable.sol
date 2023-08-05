@@ -17,20 +17,27 @@ contract UnderlyingStakeable is Multicall, Utils {
     return IHEX(target).stakeLists(custodian, index);
   }
   function stakeCount(address staker) external view returns(uint256) {
-    return _stakeCount(staker);
+    return _stakeCount({
+      staker: staker
+    });
   }
   function _stakeCount(address staker) internal view returns(uint256) {
     return IHEX(target).stakeCount(staker);
   }
   function balanceOf(address owner) external view returns(uint256) {
-    return _balanceOf(owner);
+    return _balanceOf({
+      owner: owner
+    });
   }
   function _balanceOf(address owner) internal view returns(uint256) {
     return IERC20(target).balanceOf(owner);
   }
   /** gets the stake store at a particular index for a staker */
   function stakeLists(address staker, uint256 index) view external returns(IStakeable.StakeStore memory) {
-    return _getStake(staker, index);
+    return _getStake({
+      custodian: staker,
+      index: index
+    });
   }
   /** checks the current day */
   function currentDay() external view returns (uint256) {
@@ -49,7 +56,11 @@ contract UnderlyingStakeable is Multicall, Utils {
    * @param targetDay the day to check whether it will be categorized as ending early
    */
   function isEarlyEnding(uint256 lockedDay, uint256 stakedDays, uint256 targetDay) external pure returns(bool) {
-    return _isEarlyEnding(lockedDay, stakedDays, targetDay);
+    return _isEarlyEnding({
+      lockedDay: lockedDay,
+      stakedDays: stakedDays,
+      targetDay: targetDay
+    });
   }
   function _isEarlyEnding(uint256 lockedDay, uint256 stakedDays, uint256 targetDay) internal pure returns(bool) {
     return (lockedDay + stakedDays) > targetDay;

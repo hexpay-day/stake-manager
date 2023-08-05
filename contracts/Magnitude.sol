@@ -67,6 +67,12 @@ contract Magnitude {
     uint256 limit, uint256 method, uint256 x, uint256 y,
     IStakeable.StakeStore memory stake
   ) external pure returns(uint256) {
-    return _computeMagnitude(limit, method, x, y, stake);
+    return _computeMagnitude({
+      limit: limit,
+      method: method,
+      x: x,
+      y: y,
+      stake: stake
+    });
   }
 }

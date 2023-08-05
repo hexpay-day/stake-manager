@@ -7,7 +7,7 @@ import "./AuthorizationManager.sol";
 import "./Stakeable.sol";
 
 contract IsolatedStakeManager is Stakeable, Ownable2Step, AuthorizationManager {
-  constructor(address owner) AuthorizationManager(31) {
+  constructor(address account) AuthorizationManager(31) {
     /*
      * by index:
      * 0: can start stakes
@@ -16,16 +16,22 @@ contract IsolatedStakeManager is Stakeable, Ownable2Step, AuthorizationManager {
      * 3: can transfer balance to owner
      * 4: can transfer from owner
      */
-    _setAddressAuthorization(owner, MAX_AUTHORIZATION);
-    _transferOwnership(owner);
+    _setAddressAuthorization({
+      account: account,
+      settings: MAX_AUTHORIZATION
+    });
+    _transferOwnership(account);
   }
   /**
    * set authorization flags for a provided target
-   * @param target the address to change settings for
+   * @param account the address to change settings for
    * @param setting the encoded setting (binary) to apply to the target address
    */
-  function setAuthorization(address target, uint256 setting) external onlyOwner {
-    _setAddressAuthorization(target, setting);
+  function setAuthorization(address account, uint256 setting) external onlyOwner {
+    _setAddressAuthorization({
+      account: account,
+      settings: setting
+    });
   }
   /**
    * allow addresses to start stakes from tokens already in the contract
@@ -34,7 +40,13 @@ contract IsolatedStakeManager is Stakeable, Ownable2Step, AuthorizationManager {
    * @param setting the settings to provide (only index 0 is relevant)
    */
   function setStartAuthorization(address runner, uint16 stakeDays, uint256 setting) external onlyOwner {
-    _setAuthorization(_startAuthorizationKey(runner, stakeDays), setting);
+    _setAuthorization({
+      key: _startAuthorizationKey({
+        runner: runner,
+        stakeDays: stakeDays
+      }),
+      settings: setting
+    });
   }
   /**
    * gets the start authorization key given a runner and stake days
@@ -42,7 +54,10 @@ contract IsolatedStakeManager is Stakeable, Ownable2Step, AuthorizationManager {
    * @param stakeDays the number of days that can be passed for the address (to constrain griefing)
    */
   function startAuthorizationKey(address runner, uint256 stakeDays) external pure returns(bytes32) {
-    return _startAuthorizationKey(runner, stakeDays);
+    return _startAuthorizationKey({
+      runner: runner,
+      stakeDays: stakeDays
+    });
   }
   /**
    * stake a given amount of tokens for a given number of days
@@ -55,15 +70,24 @@ contract IsolatedStakeManager is Stakeable, Ownable2Step, AuthorizationManager {
    * it is not rational to pass anything but zero for this method
    */
   function stakeStart(uint256 newStakedHearts, uint256 newStakedDays) external override {
-    uint256 setting = _getAddressSetting(msg.sender);
+    uint256 setting = _getAddressSetting({
+      account: msg.sender
+    });
     // blanket start authorization
-    if (!_isCapable(setting, 0)) {
+    if (!_isCapable({
+      setting: setting,
+      index: 0
+    })) {
       revert NotAllowed();
     }
     if (newStakedHearts > 0) {
-      _transferFromOwner(newStakedHearts);
+      _transferFromOwner({
+        amount: newStakedHearts
+      });
     }
-    _stakeStart(newStakedDays);
+    _stakeStart({
+      newStakedDays: newStakedDays
+    });
   }
   /**
    * start a stakes, so long as sender has the authorization to do so from owner
@@ -71,10 +95,15 @@ contract IsolatedStakeManager is Stakeable, Ownable2Step, AuthorizationManager {
    */
   function stakeStartWithAuthorization(uint256 newStakedDays) external {
     // scoped authorization - to keep non-permitted contracts from griefing users
-    if (!_isCapable(authorization[_startAuthorizationKey(msg.sender, newStakedDays)], 0)) {
+    if (!_isCapable({
+      setting: authorization[_startAuthorizationKey(msg.sender, newStakedDays)],
+      index: 0
+    })) {
       revert NotAllowed();
     }
-    _stakeStart(newStakedDays);
+    _stakeStart({
+      newStakedDays: newStakedDays
+    });
   }
   /**
    * transfer a number of hearts from the owner into the contract
@@ -92,11 +121,19 @@ contract IsolatedStakeManager is Stakeable, Ownable2Step, AuthorizationManager {
    * @notice this method fails if the stake at the provided index does not match the stakeId
    */
   function stakeEnd(uint256 stakeIndex, uint40 stakeId) external override {
-    StakeStore memory stake = _getStake(address(this), stakeIndex);
-    if (!_settingsCheck(stake)) {
+    StakeStore memory stake = _getStake({
+      custodian: address(this),
+      index: stakeIndex
+    });
+    if (!_settingsCheck({
+      stake: stake
+    })) {
       revert NotAllowed();
     }
-    _endStake(stakeIndex, stakeId);
+    _endStake({
+      stakeIndex: stakeIndex,
+      stakeId: stakeId
+    });
   }
   /**
    * transfers tokens to the owner of the contract
@@ -117,11 +154,19 @@ contract IsolatedStakeManager is Stakeable, Ownable2Step, AuthorizationManager {
    * to end stakes without risk of losing too much gas money
    */
   function checkAndStakeEnd(uint256 stakeIndex, uint40 stakeId) external {
-    StakeStore memory stake = _getStake(address(this), stakeIndex);
-    if (stake.stakeId != stakeId || !_settingsCheck(stake)) {
+    StakeStore memory stake = _getStake({
+      custodian: address(this),
+      index: stakeIndex
+    });
+    if (stake.stakeId != stakeId || !_settingsCheck({
+      stake: stake
+    })) {
       return;
     }
-    _endStake(stakeIndex, stakeId);
+    _endStake({
+      stakeIndex: stakeIndex,
+      stakeId: stakeId
+    });
   }
   /**
    * ends a stake on the underlying contract
@@ -150,10 +195,16 @@ contract IsolatedStakeManager is Stakeable, Ownable2Step, AuthorizationManager {
     uint256 setting = _getAddressSetting(msg.sender);
     if (_isEarlyEnding(stake.lockedDay, stake.stakedDays, _currentDay())) {
       // can early end stake
-      return _isCapable(setting, 2);
+      return _isCapable({
+        setting: setting,
+        index: 2
+      });
     } else {
       // can end stake
-      return _isCapable(setting, 1);
+      return _isCapable({
+        setting: setting,
+        index: 1
+      });
     }
   }
   /**
@@ -171,7 +222,10 @@ contract IsolatedStakeManager is Stakeable, Ownable2Step, AuthorizationManager {
   function _stakeStart(uint256 newStakedDays) internal {
     uint256 stakedHearts = _balanceOf(address(this));
     if (stakedHearts > 0) {
-      IStakeable(target).stakeStart(stakedHearts, newStakedDays);
+      IStakeable(target).stakeStart({
+        newStakedHearts: stakedHearts,
+        newStakedDays: newStakedDays
+      });
     }
   }
   /**
@@ -179,7 +233,10 @@ contract IsolatedStakeManager is Stakeable, Ownable2Step, AuthorizationManager {
    * @param amount number of hearts to transfer from owner
    */
   function _transferFromOwner(uint256 amount) internal {
-    if (!_isCapable(_getAddressSetting(msg.sender), 4)) {
+    if (!_isCapable({
+      setting: _getAddressSetting(msg.sender),
+      index: 4
+    })) {
       revert NotAllowed();
     }
     IERC20(target).transferFrom(owner(), address(this), amount);

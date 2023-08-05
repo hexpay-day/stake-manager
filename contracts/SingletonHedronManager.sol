@@ -17,30 +17,51 @@ contract SingletonHedronManager is EncodableSettings, UnderlyingStakeManager {
     uint256 i;
     uint256 hedronTokens;
     address currentOwner;
-    address to = _stakeIdToOwner(stakeIds[0]);
     uint256 stakeIndex;
     uint256 stakeId;
+    address to = _stakeIdToOwner({
+      stakeId: stakeIds[0]
+    });
     do {
       stakeId = stakeIds[i];
-      (stakeIndex, currentOwner) = _stakeIdToInfo(stakeId);
-      if (msg.sender == currentOwner || _isCapable(stakeIdToSettings[stakeId], 2)) {
+      (stakeIndex, currentOwner) = _stakeIdToInfo({
+        stakeId: stakeId
+      });
+      if (msg.sender == currentOwner || _isCapable({
+        setting: stakeIdToSettings[stakeId],
+        index: 2
+      })) {
         if (currentOwner != to) {
-          _addToTokenWithdrawable(hedron, to, hedronTokens);
+          _addToTokenWithdrawable({
+            token: hedron,
+            to: to,
+            amount: hedronTokens
+          });
           hedronTokens = 0;
         }
         to = currentOwner;
-        hedronTokens += _mintHedron(stakeIndex, stakeId);
+        hedronTokens += _mintHedron({
+          index: stakeIndex,
+          stakeId: stakeId
+        });
       }
       unchecked {
         ++i;
       }
     } while (i < len);
     if (hedronTokens > 0) {
-      _addToTokenWithdrawable(hedron, to, hedronTokens);
+      _addToTokenWithdrawable({
+        token: hedron,
+        to: to,
+        amount: hedronTokens
+      });
     }
   }
-  function _mintHedron(uint256 index, uint256 id) internal virtual returns(uint256 amount) {
-    return _mintNativeHedron(index, id);
+  function _mintHedron(uint256 index, uint256 stakeId) internal virtual returns(uint256 amount) {
+    return _mintNativeHedron({
+      index: index,
+      stakeId: stakeId
+    });
   }
   function _mintNativeHedron(uint256 index, uint256 stakeId) internal returns(uint256 amount) {
     return IHedron(hedron).mintNative(index, uint40(stakeId));

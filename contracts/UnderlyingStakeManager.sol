@@ -6,21 +6,22 @@ import "./GoodAccounting.sol";
 contract UnderlyingStakeManager is GoodAccounting {
   /**
    * start a stake for the staker given the amount and number of days
-   * @param staker the underlying owner of the stake
+   * @param owner the underlying owner of the stake
    * @param amount the amount to add to the stake
    * @param newStakedDays the number of days that the stake should run
+   * @param index where in the list the stake will be placed.
+   * this is a param because it can be cached for internal loops
    */
   function _stakeStartFor(
-    address staker,
+    address owner,
     uint256 amount,
     uint256 newStakedDays,
     uint256 index
   ) internal virtual returns(uint256 stakeId) {
-    // // get future index of stake
     Stakeable(target).stakeStart(amount, newStakedDays);
     // get the stake id
     stakeId = Stakeable(target).stakeLists(address(this), index).stakeId;
-    stakeIdInfo[stakeId] = _encodeInfo(index, staker);
+    stakeIdInfo[stakeId] = _encodeInfo(index, owner);
   }
   /**
    * ends a stake for someone else

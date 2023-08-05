@@ -87,13 +87,17 @@ contract MaximusStakeManager is HSIStakeManager {
     uint256 i;
     do {
       address token = tokens[i];
-      uint256 bal = _getTokenBalance(token);
+      uint256 bal = _getTokenBalance({
+        token: token
+      });
       if (token == address(0)) {
         IGasReimberser(gasReimberser).flush();
       } else {
         IGasReimberser(gasReimberser).flush_erc20(token);
       }
-      bal = _getTokenBalance(token) - bal;
+      bal = _getTokenBalance({
+        token: token
+      }) - bal;
       address to = rewardsTo[perpetual][period];
       emit CollectReward(perpetual, period, token, bal);
       unchecked {

@@ -23,10 +23,15 @@ contract HSIStakeManager is StakeEnder {
   }
   // takes the hsi address (as stake id)
   function _setDefaultSettings(uint256 stakeId) internal override {
-    _logSettingsUpdate(stakeId, DEFAULT_ENCODED_SETTINGS);
+    _logSettingsUpdate({
+      stakeId: stakeId,
+      settings: DEFAULT_ENCODED_SETTINGS
+    });
   }
   function _defaultSettings() internal override pure returns(Settings memory) {
-    return _decodeSettings(DEFAULT_ENCODED_SETTINGS);
+    return _decodeSettings({
+      encoded: DEFAULT_ENCODED_SETTINGS
+    });
   }
   /**
    * transfer stakes by their token ids
@@ -34,16 +39,27 @@ contract HSIStakeManager is StakeEnder {
    * @dev requires approval to transfer hsi to this contract
    */
   function depositHsi(uint256 tokenId, uint256 encodedSettings) external returns(address hsiAddress) {
-    address owner = _deposit721(hsim, tokenId);
+    address owner = _deposit721({
+      token: hsim,
+      tokenId: tokenId
+    });
     uint256 index = IHEXStakeInstanceManager(hsim).hsiCount(address(this));
     hsiAddress = IHEXStakeInstanceManager(hsim).hexStakeDetokenize(tokenId);
     uint256 stakeId = uint256(uint160(hsiAddress));
     // erc721 is burned - no owner - only hsi address remains
-    stakeIdInfo[stakeId] = _encodeInfo(index, owner);
+    stakeIdInfo[stakeId] = _encodeInfo({
+      index: index,
+      owner: owner
+    });
     if (encodedSettings == 0) {
-      _setDefaultSettings(stakeId);
+      _setDefaultSettings({
+        stakeId: stakeId
+      });
     } else {
-      _logSettingsUpdate(stakeId, encodedSettings);
+      _logSettingsUpdate({
+        stakeId: stakeId,
+        settings: encodedSettings
+      });
     }
   }
   function _deposit721(address token, uint256 tokenId) internal returns(address owner) {
@@ -51,26 +67,48 @@ contract HSIStakeManager is StakeEnder {
     IERC721(token).transferFrom(msg.sender, address(this), tokenId);
   }
   function hsiAddressToId(address hsiAddress) external view returns(uint256) {
-    return _hsiAddressToId(hsiAddress);
+    return _hsiAddressToId({
+      hsiAddress: hsiAddress
+    });
   }
   function _hsiAddressToId(address hsiAddress) internal view returns(uint256) {
-    return _getStake(hsiAddress, 0).stakeId;
+    return _getStake({
+      custodian: hsiAddress,
+      index: 0
+    }).stakeId;
   }
   function withdrawHsi(address hsiAddress) external returns(uint256 tokenId) {
     uint256 stakeId = uint256(uint160(hsiAddress));
-    _verifyStakeOwnership(msg.sender, stakeId);
-    (uint256 index, address owner) = _stakeIdToInfo(stakeId);
-    uint256 tipCount = _stakeIdTipSize(stakeId);
+    _verifyStakeOwnership({
+      owner: msg.sender,
+      stakeId: stakeId
+    });
+    (uint256 index, address owner) = _stakeIdToInfo({
+      stakeId: stakeId
+    });
+    uint256 tipCount = _stakeIdTipSize({
+      stakeId: stakeId
+    });
     if (tipCount > 0) {
       uint256[] memory indexes = new uint256[](tipCount);
       for (uint256 i = 0; i < indexes.length; ++i) {
         indexes[i] = i;
       }
-      _removeTipFromStake(stakeId, indexes);
+      _removeTipFromStake({
+        stakeId: stakeId,
+        indexes: indexes
+      });
     }
     stakeIdInfo[stakeId] = 0;
-    _logSettingsUpdate(stakeId, 0);
-    tokenId = _withdraw721(index, owner, hsiAddress);
+    _logSettingsUpdate({
+      stakeId: stakeId,
+      settings: 0
+    });
+    tokenId = _withdraw721({
+      index: index,
+      owner: owner,
+      hsiAddress: hsiAddress
+    });
   }
   function _withdraw721(uint256 index, address owner, address hsiAddress) internal returns(uint256 tokenId) {
     tokenId = IHEXStakeInstanceManager(hsim).hexStakeTokenize(index, hsiAddress);
@@ -81,7 +119,10 @@ contract HSIStakeManager is StakeEnder {
     uint256 i;
     uint256 count = (_currentDay() << 128) | IHEXStakeInstanceManager(hsim).hsiCount(address(this));
     do {
-      (, count) = _stakeEndByConsent(uint160(hsiAddresses[i]), count);
+      (, count) = _stakeEndByConsent({
+        stakeId: uint160(hsiAddresses[i]),
+        stakeCount: count
+      });
       unchecked {
         ++i;
       }
@@ -93,8 +134,11 @@ contract HSIStakeManager is StakeEnder {
     // we are only testing existance because we do not have
     // the underlying stake index
     address hsiAddress = address(uint160(stakeId));
-    if (_hsiAddressToId(hsiAddress) > 0) {
-      stake = _getStake(hsiAddress, 0);
+    if (_stakeCount({ staker: hsiAddress }) == 1) {
+      stake = _getStake({
+        custodian: hsiAddress,
+        index: 0
+      });
     }
   }
   function _stakeEnd(
@@ -108,9 +152,13 @@ contract HSIStakeManager is StakeEnder {
     if (stakeCountAfter > index) {
       address movedHsiAddress = IHEXStakeInstanceManager(hsim)
         .hsiLists(address(this), index);
-      // uint256 movedStakeId = _hsiAddressToId(movedHsiAddress);
-      (, address movedOwner) = _stakeIdToInfo(uint256(uint160(movedHsiAddress)));
-      stakeIdInfo[uint256(uint160(movedHsiAddress))] = _encodeInfo(index, movedOwner);
+      (, address movedOwner) = _stakeIdToInfo({
+        stakeId: uint256(uint160(movedHsiAddress))
+      });
+      stakeIdInfo[uint256(uint160(movedHsiAddress))] = _encodeInfo({
+        index: index,
+        owner: movedOwner
+      });
     }
     stakeIdInfo[stakeId] = 0;
   }
@@ -123,16 +171,24 @@ contract HSIStakeManager is StakeEnder {
     IERC20(target).approve(hsim, newStakeAmount);
     address hsiAddress = IHEXStakeInstanceManager(hsim).hexStakeStart(newStakeAmount, newStakeDays);
     stakeId = uint160(hsiAddress);
-    stakeIdInfo[stakeId] = _encodeInfo(index, staker);
+    stakeIdInfo[stakeId] = _encodeInfo({
+      index: index,
+      owner: staker
+    });
   }
-  function _mintHedron(uint256 index, uint256 id) internal override returns(uint256) {
-    return _mintInstancedHedron(index, address(uint160(id)));
+  function _mintHedron(uint256 index, uint256 stakeId) internal override returns(uint256) {
+    return _mintInstancedHedron({
+      index: index,
+      hsiAddress: address(uint160(stakeId))
+    });
   }
   /**
    * check that this contract is the custodian of this hsi (nft was depostied and detokenized)
    * @param stakeId the stake id to check ownership over
    */
   function _checkStakeCustodian(uint256 stakeId) internal override view {
-    _verifyCustodian(stakeId);
+    _verifyCustodian({
+      stakeId: stakeId
+    });
   }
 }

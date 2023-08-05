@@ -13,6 +13,8 @@ interface PoolContract {
   function getEndStaker() external view returns(address end_staker_address);
 }
 
+// this contract was modeled after the following tweet:
+// https://twitter.com/TantoNomini/status/1630677746795057152
 contract GasReimberser is IGasReimberser {
   using Address for address payable;
   address public immutable POOL_ADDRESS;

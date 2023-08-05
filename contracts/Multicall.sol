@@ -11,46 +11,61 @@ contract Multicall {
   event TxFailed(uint256 indexed index, bytes result);
   /**
    * call a series of functions on a contract that inherits this method
-   * @param data the calls to perform on this contract
+   * @param calls the calls to perform on this contract
    * @param allowFailures whether to allow failures or to error out
    */
   function multicall(
-    bytes[] calldata data,
+    bytes[] calldata calls,
     bool allowFailures
   ) external {
-    _multicall(data, allowFailures);
+    _multicall({
+      calls: calls,
+      allowFailures: allowFailures
+    });
   }
   /**
    * call multiple methods and pass a deadline, after which the transaction should fail
    * @param deadline the timestamp, in seconds
-   * @param data the calldata to run on the external method
+   * @param calls the calldata to run on the external method
    * @param allowFailures allows failures when true
    */
   function multicallWithDeadline(
     uint256 deadline,
-    bytes[] calldata data,
+    bytes[] calldata calls,
     bool allowFailures
   ) external {
     if (block.timestamp > deadline) {
-      revert Deadline(deadline, block.timestamp);
+      revert Deadline({
+        deadline: deadline,
+        currentTime: block.timestamp
+      });
     }
-    _multicall(data, allowFailures);
+    _multicall({
+      calls: calls,
+      allowFailures: allowFailures
+    });
   }
   /**
    * pass the previous block hash to enable mev uncle bandit protection
    * @param previousBlockhash the previously mined block - useful for mev protected uncle bandit risks
-   * @param data the calldata to run on the external method
+   * @param calls the calldata to run on the external method
    * @param allowFailures allows failures when true
    */
   function multicallWithPreviousBlockHash(
     bytes32 previousBlockhash,
-    bytes[] calldata data,
+    bytes[] calldata calls,
     bool allowFailures
   ) external {
     if (blockhash(block.number - 1) != previousBlockhash) {
-      revert BlockHash(previousBlockhash, blockhash(block.number - 1));
+      revert BlockHash({
+        expected: previousBlockhash,
+        actual: blockhash(block.number - 1)
+      });
     }
-    _multicall(data, allowFailures);
+    _multicall({
+      calls: calls,
+      allowFailures: allowFailures
+    });
   }
   /**
    * call multiple / arbitrary steps allowing each to fail independently or requiring all to succeed
@@ -62,11 +77,16 @@ contract Multicall {
   function _multicall(bytes[] calldata calls, bool allowFailures) internal {
     uint256 len = calls.length;
     uint256 i;
+    bool success;
+    bytes memory result;
     do {
-      (bool success, bytes memory result) = address(this).delegatecall(calls[i]);
+      (success, result) = address(this).delegatecall(calls[i]);
       if (!success) {
         if (allowFailures) {
-          emit TxFailed(i, result);
+          emit TxFailed({
+            index: i,
+            result: result
+          });
         } else {
           assembly {
             revert(add(result, 0x20), mload(result))

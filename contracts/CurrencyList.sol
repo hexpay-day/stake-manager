@@ -22,14 +22,16 @@ contract CurrencyList is Utils {
    * @param token the token to add to the list of tippable tokens
    */
   function addCurrencyToList(address token) external returns(uint256) {
-    // token must already exist - helps prevent grief attacks
+    // token must already exist - helps reduce grief attacks
     if (!token.isContract()) {
       revert NotAllowed();
     }
     if (currencyToIndex[token] > 0 || token == address(0)) {
       return currencyToIndex[token];
     }
-    return _addCurrencyToList(token);
+    return _addCurrencyToList({
+      token: token
+    });
   }
   /**
    * adds a hash to a list and mapping to fit them in smaller sload counts

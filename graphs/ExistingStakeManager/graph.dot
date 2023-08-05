@@ -1,0 +1,1214 @@
+digraph G {
+  graph [ ratio = "auto", page = "100", compound =true, bgcolor = "#2e3e56" ];
+  node [ style = "filled", fillcolor = "#edad56", color = "#edad56", penwidth =3 ];
+  edge [ color = "#fcfcfc", penwidth =2, fontname = "helvetica Neue Ultra Light" ];
+subgraph "clusterExistingStakeManager" {
+  graph [ label = "ExistingStakeManager", color = "#445773", fontcolor = "#f0f0f0", style = "rounded", bgcolor = "#445773" ];
+}
+
+subgraph "clusterStakeManager" {
+  graph [ label = "StakeManager", color = "#445773", fontcolor = "#f0f0f0", style = "rounded", bgcolor = "#445773" ];
+}
+
+subgraph "clusterTransferrableStakeManager" {
+  graph [ label = "TransferrableStakeManager", color = "#445773", fontcolor = "#f0f0f0", style = "rounded", bgcolor = "#445773" ];
+  "TransferrableStakeManager.removeTransferrability" [ label = "removeTransferrability", color = "brown", fillcolor = "#ffbdb9" ];
+  "TransferrableStakeManager._updateTransferrability" [ label = "_updateTransferrability" ];
+  "TransferrableStakeManager.canTransfer" [ label = "canTransfer", color = "#ffbdb9", fillcolor = "#ffbdb9" ];
+  "TransferrableStakeManager._canTransfer" [ label = "_canTransfer" ];
+  "TransferrableStakeManager.stakeTransfer" [ label = "stakeTransfer", color = "brown", fillcolor = "#ffbdb9" ];
+  "TransferrableStakeManager._verifyStakeOwnership" [ label = "_verifyStakeOwnership" ];
+  "TransferrableStakeManager._logSettingsUpdate" [ label = "_logSettingsUpdate" ];
+  "TransferrableStakeManager._isCapable" [ label = "_isCapable" ];
+  "TransferrableStakeManager.NotAllowed" [ label = "NotAllowed" ];
+  "TransferrableStakeManager._stakeIdToInfo" [ label = "_stakeIdToInfo" ];
+  "TransferrableStakeManager._encodeInfo" [ label = "_encodeInfo" ];
+}
+
+subgraph "clusterStakeStarter" {
+  graph [ label = "StakeStarter", color = "#445773", fontcolor = "#f0f0f0", style = "rounded", bgcolor = "#445773" ];
+  "StakeStarter.stakeStartFromBalanceFor" [ label = "stakeStartFromBalanceFor", color = "brown", fillcolor = "#ffbdb9" ];
+  "StakeStarter.stakeStartFromWithdrawableFor" [ label = "stakeStartFromWithdrawableFor", color = "brown", fillcolor = "#ffbdb9" ];
+  "StakeStarter.stakeStartFromUnattributedFor" [ label = "stakeStartFromUnattributedFor", color = "brown", fillcolor = "#ffbdb9" ];
+  "StakeStarter._depositTokenFrom" [ label = "_depositTokenFrom" ];
+  "StakeStarter._stakeStartFor" [ label = "_stakeStartFor" ];
+  "StakeStarter._stakeCount" [ label = "_stakeCount" ];
+  "StakeStarter.address" [ label = "address" ];
+  "StakeStarter._logSettings" [ label = "_logSettings" ];
+  "StakeStarter._deductWithdrawable" [ label = "_deductWithdrawable" ];
+  "StakeStarter._clamp" [ label = "_clamp" ];
+  "StakeStarter._getUnattributed" [ label = "_getUnattributed" ];
+}
+
+subgraph "clusterStakeEnder" {
+  graph [ label = "StakeEnder", color = "#445773", fontcolor = "#f0f0f0", style = "rounded", bgcolor = "#445773" ];
+  "StakeEnder.stakeEndByConsent" [ label = "stakeEndByConsent", color = "brown", fillcolor = "#ffbdb9" ];
+  "StakeEnder._verifyStakeMatchesIndex" [ label = "_verifyStakeMatchesIndex", color = "#f2c383", fillcolor = "#f2c383" ];
+  "StakeEnder._stakeEndByConsent" [ label = "_stakeEndByConsent" ];
+  "StakeEnder.stakeEndByConsentForMany" [ label = "stakeEndByConsentForMany", color = "brown", fillcolor = "#ffbdb9" ];
+  "StakeEnder._logSettings" [ label = "_logSettings", color = "#f2c383", fillcolor = "#f2c383" ];
+  "StakeEnder._currentDay" [ label = "_currentDay" ];
+  "StakeEnder._stakeCount" [ label = "_stakeCount" ];
+  "StakeEnder.address" [ label = "address" ];
+  "StakeEnder._getStake" [ label = "_getStake" ];
+  "StakeEnder._stakeIdToInfo" [ label = "_stakeIdToInfo" ];
+  "StakeEnder._isCapable" [ label = "_isCapable" ];
+  "StakeEnder._isEarlyEnding" [ label = "_isEarlyEnding" ];
+  "StakeEnder._mintHedron" [ label = "_mintHedron" ];
+  "StakeEnder._computeMagnitude" [ label = "_computeMagnitude" ];
+  "StakeEnder._checkAndExecTip" [ label = "_checkAndExecTip" ];
+  "StakeEnder._attributeFunds" [ label = "_attributeFunds" ];
+  "StakeEnder._stakeEnd" [ label = "_stakeEnd" ];
+  "StakeEnder._stakeStartFor" [ label = "_stakeStartFor" ];
+  "StakeEnder._decrementCopyIterations" [ label = "_decrementCopyIterations" ];
+  "StakeEnder._logSettingsUpdate" [ label = "_logSettingsUpdate" ];
+  "StakeEnder._executeTipList" [ label = "_executeTipList" ];
+  "StakeEnder._setDefaultSettings" [ label = "_setDefaultSettings" ];
+  "StakeEnder._writePreservedSettingsUpdate" [ label = "_writePreservedSettingsUpdate" ];
+}
+
+subgraph "clusterTipper" {
+  graph [ label = "Tipper", color = "#445773", fontcolor = "#f0f0f0", style = "rounded", bgcolor = "#445773" ];
+  "Tipper.<Constructor>" [ label = "<Constructor>", color = "#FF9797", fillcolor = "#FF9797" ];
+  "Tipper.stakeIdTipSize" [ label = "stakeIdTipSize", color = "#ffbdb9", fillcolor = "#ffbdb9" ];
+  "Tipper._stakeIdTipSize" [ label = "_stakeIdTipSize" ];
+  "Tipper._checkAndExecTip" [ label = "_checkAndExecTip", color = "#f2c383", fillcolor = "#f2c383" ];
+  "Tipper._executeTipList" [ label = "_executeTipList", color = "#f2c383", fillcolor = "#f2c383" ];
+  "Tipper.encodeTipSettings" [ label = "encodeTipSettings", color = "#ffbdb9", fillcolor = "#ffbdb9" ];
+  "Tipper._encodeTipSettings" [ label = "_encodeTipSettings" ];
+  "Tipper.depositAndAddTipToStake" [ label = "depositAndAddTipToStake", color = "brown", fillcolor = "#ffbdb9" ];
+  "Tipper.removeTipFromStake" [ label = "removeTipFromStake", color = "brown", fillcolor = "#ffbdb9" ];
+  "Tipper._removeTipFromStake" [ label = "_removeTipFromStake" ];
+  "Tipper.addTipToStake" [ label = "addTipToStake", color = "brown", fillcolor = "#ffbdb9" ];
+  "Tipper._verifyTipAmountAllowed" [ label = "_verifyTipAmountAllowed" ];
+  "Tipper._checkStakeCustodian" [ label = "_checkStakeCustodian" ];
+  "Tipper._addTipToStake" [ label = "_addTipToStake" ];
+  "Tipper.<Receive Ether>" [ label = "<Receive Ether>", color = "brown", fillcolor = "#ffbdb9" ];
+  "Tipper.<Fallback>" [ label = "<Fallback>", color = "brown", fillcolor = "#ffbdb9" ];
+  "Tipper._addCurrencyToList" [ label = "_addCurrencyToList" ];
+  "Tipper.address" [ label = "address" ];
+  "Tipper._clamp" [ label = "_clamp" ];
+  "Tipper.NotAllowed" [ label = "NotAllowed" ];
+  "Tipper._depositTokenFrom" [ label = "_depositTokenFrom" ];
+  "Tipper._addToTokenWithdrawable" [ label = "_addToTokenWithdrawable" ];
+  "Tipper._verifyStakeOwnership" [ label = "_verifyStakeOwnership" ];
+  "Tipper._logSettingsUpdate" [ label = "_logSettingsUpdate" ];
+  "Tipper._stakeIdToInfo" [ label = "_stakeIdToInfo" ];
+  "Tipper._stakeCount" [ label = "_stakeCount" ];
+  "Tipper._getStake" [ label = "_getStake" ];
+  "Tipper._stakeIdToIndex" [ label = "_stakeIdToIndex" ];
+  "Tipper._stakeIdToOwner" [ label = "_stakeIdToOwner" ];
+}
+
+subgraph "clusterUnderlyingStakeable" {
+  graph [ label = "UnderlyingStakeable", color = "#445773", fontcolor = "#f0f0f0", style = "rounded", bgcolor = "#445773" ];
+  "UnderlyingStakeable._getStake" [ label = "_getStake" ];
+  "UnderlyingStakeable.stakeCount" [ label = "stakeCount", color = "#ffbdb9", fillcolor = "#ffbdb9" ];
+  "UnderlyingStakeable._stakeCount" [ label = "_stakeCount" ];
+  "UnderlyingStakeable.balanceOf" [ label = "balanceOf", color = "#ffbdb9", fillcolor = "#ffbdb9" ];
+  "UnderlyingStakeable._balanceOf" [ label = "_balanceOf" ];
+  "UnderlyingStakeable.stakeLists" [ label = "stakeLists", color = "#ffbdb9", fillcolor = "#ffbdb9" ];
+  "UnderlyingStakeable.currentDay" [ label = "currentDay", color = "#ffbdb9", fillcolor = "#ffbdb9" ];
+  "UnderlyingStakeable._currentDay" [ label = "_currentDay" ];
+  "UnderlyingStakeable.globalInfo" [ label = "globalInfo", color = "#ffbdb9", fillcolor = "#ffbdb9" ];
+  "UnderlyingStakeable.isEarlyEnding" [ label = "isEarlyEnding", color = "#ffbdb9", fillcolor = "#ffbdb9" ];
+  "UnderlyingStakeable._isEarlyEnding" [ label = "_isEarlyEnding" ];
+}
+
+subgraph "clusterIERC20" {
+  graph [ label = "IERC20  (iface)", color = "#445773", fontcolor = "#f0f0f0", style = "rounded", bgcolor = "#445773" ];
+  "IERC20.totalSupply" [ label = "totalSupply", color = "#ffbdb9", fillcolor = "#ffbdb9" ];
+  "IERC20.balanceOf" [ label = "balanceOf", color = "#ffbdb9", fillcolor = "#ffbdb9" ];
+  "IERC20.transfer" [ label = "transfer", color = "#ffbdb9", fillcolor = "#ffbdb9" ];
+  "IERC20.allowance" [ label = "allowance", color = "#ffbdb9", fillcolor = "#ffbdb9" ];
+  "IERC20.approve" [ label = "approve", color = "#ffbdb9", fillcolor = "#ffbdb9" ];
+  "IERC20.transferFrom" [ label = "transferFrom", color = "#ffbdb9", fillcolor = "#ffbdb9" ];
+}
+
+subgraph "clusterIStakeable" {
+  graph [ label = "IStakeable  (iface)", color = "#445773", fontcolor = "#f0f0f0", style = "rounded", bgcolor = "#445773" ];
+  "IStakeable.stakeStart" [ label = "stakeStart", color = "#ffbdb9", fillcolor = "#ffbdb9" ];
+  "IStakeable.stakeEnd" [ label = "stakeEnd", color = "#ffbdb9", fillcolor = "#ffbdb9" ];
+}
+
+subgraph "clusterIHedron" {
+  graph [ label = "IHedron  (iface)", color = "#445773", fontcolor = "#f0f0f0", style = "rounded", bgcolor = "#445773" ];
+  "IHedron.hsim" [ label = "hsim", color = "#ffbdb9", fillcolor = "#ffbdb9" ];
+  "IHedron.mintInstanced" [ label = "mintInstanced", color = "#ffbdb9", fillcolor = "#ffbdb9" ];
+  "IHedron.mintNative" [ label = "mintNative", color = "#ffbdb9", fillcolor = "#ffbdb9" ];
+}
+
+subgraph "clusterIHEX" {
+  graph [ label = "IHEX  (iface)", color = "#445773", fontcolor = "#f0f0f0", style = "rounded", bgcolor = "#445773" ];
+  "IHEX.stakeLists" [ label = "stakeLists", color = "#ffbdb9", fillcolor = "#ffbdb9" ];
+  "IHEX.currentDay" [ label = "currentDay", color = "#ffbdb9", fillcolor = "#ffbdb9" ];
+  "IHEX.globalInfo" [ label = "globalInfo", color = "#ffbdb9", fillcolor = "#ffbdb9" ];
+}
+
+subgraph "clusterIERC20Metadata" {
+  graph [ label = "IERC20Metadata  (iface)", color = "#445773", fontcolor = "#f0f0f0", style = "rounded", bgcolor = "#445773" ];
+  "IERC20Metadata.name" [ label = "name", color = "#ffbdb9", fillcolor = "#ffbdb9" ];
+  "IERC20Metadata.symbol" [ label = "symbol", color = "#ffbdb9", fillcolor = "#ffbdb9" ];
+  "IERC20Metadata.decimals" [ label = "decimals", color = "#ffbdb9", fillcolor = "#ffbdb9" ];
+}
+
+subgraph "clusterIUnderlyingStakeable" {
+  graph [ label = "IUnderlyingStakeable  (iface)", color = "#445773", fontcolor = "#f0f0f0", style = "rounded", bgcolor = "#445773" ];
+  "IUnderlyingStakeable.stakeCount" [ label = "stakeCount", color = "#ffbdb9", fillcolor = "#ffbdb9" ];
+  "IUnderlyingStakeable.stakeGoodAccounting" [ label = "stakeGoodAccounting", color = "#ffbdb9", fillcolor = "#ffbdb9" ];
+}
+
+subgraph "clusterMulticall" {
+  graph [ label = "Multicall", color = "#445773", fontcolor = "#f0f0f0", style = "rounded", bgcolor = "#445773" ];
+  "Multicall.multicall" [ label = "multicall", color = "#ffbdb9", fillcolor = "#ffbdb9" ];
+  "Multicall.multicallWithDeadline" [ label = "multicallWithDeadline", color = "#ffbdb9", fillcolor = "#ffbdb9" ];
+  "Multicall.multicallWithPreviousBlockHash" [ label = "multicallWithPreviousBlockHash", color = "#ffbdb9", fillcolor = "#ffbdb9" ];
+  "Multicall._multicall" [ label = "_multicall" ];
+  "Multicall.Deadline" [ label = "Deadline" ];
+  "Multicall.blockhash" [ label = "blockhash" ];
+  "Multicall.BlockHash" [ label = "BlockHash" ];
+  "Multicall.address" [ label = "address" ];
+}
+
+subgraph "clusterUtils" {
+  graph [ label = "Utils", color = "#445773", fontcolor = "#f0f0f0", style = "rounded", bgcolor = "#445773" ];
+}
+
+subgraph "clusterBank" {
+  graph [ label = "Bank", color = "#445773", fontcolor = "#f0f0f0", style = "rounded", bgcolor = "#445773" ];
+  "Bank._getUnattributed" [ label = "_getUnattributed", color = "#f2c383", fillcolor = "#f2c383" ];
+  "Bank._getBalance" [ label = "_getBalance" ];
+  "Bank.getUnattributed" [ label = "getUnattributed", color = "#ffbdb9", fillcolor = "#ffbdb9" ];
+  "Bank.clamp" [ label = "clamp", color = "#ffbdb9", fillcolor = "#ffbdb9" ];
+  "Bank._clamp" [ label = "_clamp" ];
+  "Bank.depositToken" [ label = "depositToken", color = "brown", fillcolor = "#ffbdb9" ];
+  "Bank.depositTokenTo" [ label = "depositTokenTo", color = "brown", fillcolor = "#ffbdb9" ];
+  "Bank._depositTokenTo" [ label = "_depositTokenTo" ];
+  "Bank.collectUnattributed" [ label = "collectUnattributed", color = "brown", fillcolor = "#ffbdb9" ];
+  "Bank._collectUnattributed" [ label = "_collectUnattributed" ];
+  "Bank.collectUnattributedPercent" [ label = "collectUnattributedPercent", color = "#ffbdb9", fillcolor = "#ffbdb9" ];
+  "Bank.withdrawTokenTo" [ label = "withdrawTokenTo", color = "brown", fillcolor = "#ffbdb9" ];
+  "Bank._getTokenBalance" [ label = "_getTokenBalance", color = "#f2c383", fillcolor = "#f2c383" ];
+  "Bank._addToTokenWithdrawable" [ label = "_addToTokenWithdrawable" ];
+  "Bank._deductWithdrawable" [ label = "_deductWithdrawable" ];
+  "Bank._depositTokenFrom" [ label = "_depositTokenFrom" ];
+  "Bank.depositTokenUnattributed" [ label = "depositTokenUnattributed", color = "#ffbdb9", fillcolor = "#ffbdb9" ];
+  "Bank._withdrawTokenTo" [ label = "_withdrawTokenTo" ];
+  "Bank._attributeFunds" [ label = "_attributeFunds", color = "#f2c383", fillcolor = "#f2c383" ];
+  "Bank.address" [ label = "address" ];
+  "Bank._isCapable" [ label = "_isCapable" ];
+  "Bank.payable" [ label = "payable" ];
+}
+
+subgraph "clusterAddress" {
+  graph [ label = "Address  (lib)", color = "#445773", fontcolor = "#f0f0f0", style = "rounded", bgcolor = "#445773" ];
+  "Address.isContract" [ label = "isContract" ];
+  "Address.sendValue" [ label = "sendValue", color = "#f2c383", fillcolor = "#f2c383" ];
+  "Address.functionCall" [ label = "functionCall", color = "#f2c383", fillcolor = "#f2c383" ];
+  "Address.functionCallWithValue" [ label = "functionCallWithValue" ];
+  "Address.functionStaticCall" [ label = "functionStaticCall" ];
+  "Address.functionDelegateCall" [ label = "functionDelegateCall" ];
+  "Address.verifyCallResultFromTarget" [ label = "verifyCallResultFromTarget" ];
+  "Address.verifyCallResult" [ label = "verifyCallResult", color = "#f2c383", fillcolor = "#f2c383" ];
+  "Address._revert" [ label = "_revert" ];
+  "Address.address" [ label = "address" ];
+}
+
+subgraph "clusterERC20" {
+  graph [ label = "ERC20", color = "#445773", fontcolor = "#f0f0f0", style = "rounded", bgcolor = "#445773" ];
+  "ERC20.<Constructor>" [ label = "<Constructor>", color = "#FF9797", fillcolor = "#FF9797" ];
+  "ERC20.name" [ label = "name", color = "#FF9797", fillcolor = "#FF9797" ];
+  "ERC20.symbol" [ label = "symbol", color = "#FF9797", fillcolor = "#FF9797" ];
+  "ERC20.decimals" [ label = "decimals", color = "#FF9797", fillcolor = "#FF9797" ];
+  "ERC20.totalSupply" [ label = "totalSupply", color = "#FF9797", fillcolor = "#FF9797" ];
+  "ERC20.balanceOf" [ label = "balanceOf", color = "#FF9797", fillcolor = "#FF9797" ];
+  "ERC20.transfer" [ label = "transfer", color = "#FF9797", fillcolor = "#FF9797" ];
+  "ERC20.allowance" [ label = "allowance" ];
+  "ERC20.approve" [ label = "approve", color = "#FF9797", fillcolor = "#FF9797" ];
+  "ERC20.transferFrom" [ label = "transferFrom", color = "#FF9797", fillcolor = "#FF9797" ];
+  "ERC20.increaseAllowance" [ label = "increaseAllowance", color = "#FF9797", fillcolor = "#FF9797" ];
+  "ERC20.decreaseAllowance" [ label = "decreaseAllowance", color = "#FF9797", fillcolor = "#FF9797" ];
+  "ERC20._transfer" [ label = "_transfer" ];
+  "ERC20._mint" [ label = "_mint", color = "#f2c383", fillcolor = "#f2c383" ];
+  "ERC20._burn" [ label = "_burn", color = "#f2c383", fillcolor = "#f2c383" ];
+  "ERC20._approve" [ label = "_approve" ];
+  "ERC20._spendAllowance" [ label = "_spendAllowance" ];
+  "ERC20._beforeTokenTransfer" [ label = "_beforeTokenTransfer" ];
+  "ERC20._afterTokenTransfer" [ label = "_afterTokenTransfer" ];
+  "ERC20._msgSender" [ label = "_msgSender" ];
+  "ERC20.address" [ label = "address" ];
+  "ERC20.type" [ label = "type" ];
+}
+
+subgraph "clusterContext" {
+  graph [ label = "Context", color = "#445773", fontcolor = "#f0f0f0", style = "rounded", bgcolor = "#445773" ];
+  "Context._msgSender" [ label = "_msgSender", color = "#f2c383", fillcolor = "#f2c383" ];
+  "Context._msgData" [ label = "_msgData", color = "#f2c383", fillcolor = "#f2c383" ];
+}
+
+subgraph "clusterCapable" {
+  graph [ label = "Capable", color = "#445773", fontcolor = "#f0f0f0", style = "rounded", bgcolor = "#445773" ];
+  "Capable.isCapable" [ label = "isCapable", color = "#ffbdb9", fillcolor = "#ffbdb9" ];
+  "Capable._isCapable" [ label = "_isCapable" ];
+}
+
+subgraph "clusterCurrencyList" {
+  graph [ label = "CurrencyList", color = "#445773", fontcolor = "#f0f0f0", style = "rounded", bgcolor = "#445773" ];
+  "CurrencyList.addCurrencyToList" [ label = "addCurrencyToList", color = "#ffbdb9", fillcolor = "#ffbdb9" ];
+  "CurrencyList._addCurrencyToList" [ label = "_addCurrencyToList" ];
+  "CurrencyList.currencyListSize" [ label = "currencyListSize", color = "#ffbdb9", fillcolor = "#ffbdb9" ];
+  "CurrencyList.NotAllowed" [ label = "NotAllowed" ];
+  "CurrencyList.address" [ label = "address" ];
+}
+
+subgraph "clusterStakeInfo" {
+  graph [ label = "StakeInfo", color = "#445773", fontcolor = "#f0f0f0", style = "rounded", bgcolor = "#445773" ];
+  "StakeInfo._verifyStakeOwnership" [ label = "_verifyStakeOwnership", color = "#f2c383", fillcolor = "#f2c383" ];
+  "StakeInfo._verifyCustodian" [ label = "_verifyCustodian", color = "#f2c383", fillcolor = "#f2c383" ];
+  "StakeInfo.stakeIdToOwner" [ label = "stakeIdToOwner", color = "#ffbdb9", fillcolor = "#ffbdb9" ];
+  "StakeInfo._stakeIdToOwner" [ label = "_stakeIdToOwner" ];
+  "StakeInfo._stakeIdToInfo" [ label = "_stakeIdToInfo", color = "#f2c383", fillcolor = "#f2c383" ];
+  "StakeInfo.stakeIdToIndex" [ label = "stakeIdToIndex", color = "#ffbdb9", fillcolor = "#ffbdb9" ];
+  "StakeInfo._stakeIdToIndex" [ label = "_stakeIdToIndex" ];
+  "StakeInfo._encodeInfo" [ label = "_encodeInfo", color = "#f2c383", fillcolor = "#f2c383" ];
+  "StakeInfo.StakeNotOwned" [ label = "StakeNotOwned" ];
+  "StakeInfo.address" [ label = "address" ];
+}
+
+subgraph "clusterStakeable" {
+  graph [ label = "Stakeable", color = "#445773", fontcolor = "#f0f0f0", style = "rounded", bgcolor = "#445773" ];
+  "Stakeable.stakeStart" [ label = "stakeStart", color = "#ffbdb9", fillcolor = "#ffbdb9" ];
+  "Stakeable.stakeEnd" [ label = "stakeEnd", color = "#ffbdb9", fillcolor = "#ffbdb9" ];
+}
+
+subgraph "clusterEncodableSettings" {
+  graph [ label = "EncodableSettings", color = "#445773", fontcolor = "#f0f0f0", style = "rounded", bgcolor = "#445773" ];
+  "EncodableSettings.defaultEncodedSettings" [ label = "defaultEncodedSettings", color = "#ffbdb9", fillcolor = "#ffbdb9" ];
+  "EncodableSettings._setDefaultSettings" [ label = "_setDefaultSettings", color = "#f2c383", fillcolor = "#f2c383" ];
+  "EncodableSettings.stakeIdSettings" [ label = "stakeIdSettings", color = "#ffbdb9", fillcolor = "#ffbdb9" ];
+  "EncodableSettings.decodeConsentAbilities" [ label = "decodeConsentAbilities", color = "#ffbdb9", fillcolor = "#ffbdb9" ];
+  "EncodableSettings._decodeConsentAbilities" [ label = "_decodeConsentAbilities" ];
+  "EncodableSettings.updateSettings" [ label = "updateSettings", color = "brown", fillcolor = "#ffbdb9" ];
+  "EncodableSettings.updateSettingsEncoded" [ label = "updateSettingsEncoded", color = "brown", fillcolor = "#ffbdb9" ];
+  "EncodableSettings._updateEncodedSettings" [ label = "_updateEncodedSettings" ];
+  "EncodableSettings._writePreservedSettingsUpdate" [ label = "_writePreservedSettingsUpdate" ];
+  "EncodableSettings._logSettingsUpdate" [ label = "_logSettingsUpdate" ];
+  "EncodableSettings.idToDecodedSettings" [ label = "idToDecodedSettings", color = "#ffbdb9", fillcolor = "#ffbdb9" ];
+  "EncodableSettings.readEncodedSettings" [ label = "readEncodedSettings", color = "#ffbdb9", fillcolor = "#ffbdb9" ];
+  "EncodableSettings._readEncodedSettings" [ label = "_readEncodedSettings" ];
+  "EncodableSettings.encodeSettings" [ label = "encodeSettings", color = "#ffbdb9", fillcolor = "#ffbdb9" ];
+  "EncodableSettings._encodeSettings" [ label = "_encodeSettings" ];
+  "EncodableSettings.decodeSettings" [ label = "decodeSettings", color = "#ffbdb9", fillcolor = "#ffbdb9" ];
+  "EncodableSettings._decodeSettings" [ label = "_decodeSettings" ];
+  "EncodableSettings.encodeConsentAbilities" [ label = "encodeConsentAbilities", color = "#ffbdb9", fillcolor = "#ffbdb9" ];
+  "EncodableSettings._encodeConsentAbilities" [ label = "_encodeConsentAbilities" ];
+  "EncodableSettings._defaultSettings" [ label = "_defaultSettings" ];
+  "EncodableSettings._decrementCopyIterations" [ label = "_decrementCopyIterations", color = "#f2c383", fillcolor = "#f2c383" ];
+  "EncodableSettings.defaultSettings" [ label = "defaultSettings", color = "#ffbdb9", fillcolor = "#ffbdb9" ];
+}
+
+subgraph "clusterSingletonHedronManager" {
+  graph [ label = "SingletonHedronManager", color = "#445773", fontcolor = "#f0f0f0", style = "rounded", bgcolor = "#445773" ];
+  "SingletonHedronManager.mintHedronRewards" [ label = "mintHedronRewards", color = "#ffbdb9", fillcolor = "#ffbdb9" ];
+  "SingletonHedronManager._mintHedron" [ label = "_mintHedron" ];
+  "SingletonHedronManager._mintNativeHedron" [ label = "_mintNativeHedron" ];
+  "SingletonHedronManager._mintInstancedHedron" [ label = "_mintInstancedHedron", color = "#f2c383", fillcolor = "#f2c383" ];
+}
+
+subgraph "clusterUnderlyingStakeManager" {
+  graph [ label = "UnderlyingStakeManager", color = "#445773", fontcolor = "#f0f0f0", style = "rounded", bgcolor = "#445773" ];
+  "UnderlyingStakeManager._stakeStartFor" [ label = "_stakeStartFor", color = "#f2c383", fillcolor = "#f2c383" ];
+  "UnderlyingStakeManager._stakeEnd" [ label = "_stakeEnd", color = "#f2c383", fillcolor = "#f2c383" ];
+  "UnderlyingStakeManager.stakeStart" [ label = "stakeStart", color = "#ffbdb9", fillcolor = "#ffbdb9" ];
+  "UnderlyingStakeManager.stakeEnd" [ label = "stakeEnd", color = "#ffbdb9", fillcolor = "#ffbdb9" ];
+  "UnderlyingStakeManager.stakeEndById" [ label = "stakeEndById", color = "#ffbdb9", fillcolor = "#ffbdb9" ];
+  "UnderlyingStakeManager._stakeRestartById" [ label = "_stakeRestartById", color = "#f2c383", fillcolor = "#f2c383" ];
+  "UnderlyingStakeManager.stakeRestartById" [ label = "stakeRestartById", color = "#ffbdb9", fillcolor = "#ffbdb9" ];
+  "UnderlyingStakeManager.stakeRestartManyById" [ label = "stakeRestartManyById", color = "#ffbdb9", fillcolor = "#ffbdb9" ];
+  "UnderlyingStakeManager._encodeInfo" [ label = "_encodeInfo" ];
+}
+
+subgraph "clusterGoodAccounting" {
+  graph [ label = "GoodAccounting", color = "#445773", fontcolor = "#f0f0f0", style = "rounded", bgcolor = "#445773" ];
+  "GoodAccounting.stakeGoodAccounting" [ label = "stakeGoodAccounting", color = "#ffbdb9", fillcolor = "#ffbdb9" ];
+  "GoodAccounting._stakeGoodAccounting" [ label = "_stakeGoodAccounting" ];
+  "GoodAccounting.checkStakeGoodAccounting" [ label = "checkStakeGoodAccounting", color = "#ffbdb9", fillcolor = "#ffbdb9" ];
+  "GoodAccounting.checkStakeGoodAccountingFor" [ label = "checkStakeGoodAccountingFor", color = "#ffbdb9", fillcolor = "#ffbdb9" ];
+  "GoodAccounting.isGoodAccountable" [ label = "isGoodAccountable", color = "#ffbdb9", fillcolor = "#ffbdb9" ];
+  "GoodAccounting.isStakeIdGoodAccountable" [ label = "isStakeIdGoodAccountable", color = "#ffbdb9", fillcolor = "#ffbdb9" ];
+  "GoodAccounting._isGoodAccountable" [ label = "_isGoodAccountable" ];
+  "GoodAccounting._checkStakeGoodAccounting" [ label = "_checkStakeGoodAccounting" ];
+}
+
+subgraph "clusterMagnitude" {
+  graph [ label = "Magnitude", color = "#445773", fontcolor = "#f0f0f0", style = "rounded", bgcolor = "#445773" ];
+  "Magnitude._computeMagnitude" [ label = "_computeMagnitude" ];
+  "Magnitude.computeMagnitude" [ label = "computeMagnitude", color = "#ffbdb9", fillcolor = "#ffbdb9" ];
+}
+
+subgraph "clusterHSIStakeManager" {
+  graph [ label = "HSIStakeManager", color = "#445773", fontcolor = "#f0f0f0", style = "rounded", bgcolor = "#445773" ];
+  "HSIStakeManager.defaultEncodedSettings" [ label = "defaultEncodedSettings", color = "#ffbdb9", fillcolor = "#ffbdb9" ];
+  "StakeEnder._setDefaultSettings" [ label = "_setDefaultSettings", color = "#f2c383", fillcolor = "#f2c383" ];
+  "EncodableSettings._defaultSettings" [ label = "_defaultSettings", color = "#f2c383", fillcolor = "#f2c383" ];
+  "HSIStakeManager.depositHsi" [ label = "depositHsi", color = "#ffbdb9", fillcolor = "#ffbdb9" ];
+  "HSIStakeManager._deposit721" [ label = "_deposit721" ];
+  "HSIStakeManager.hsiAddressToId" [ label = "hsiAddressToId", color = "#ffbdb9", fillcolor = "#ffbdb9" ];
+  "HSIStakeManager._hsiAddressToId" [ label = "_hsiAddressToId" ];
+  "HSIStakeManager.withdrawHsi" [ label = "withdrawHsi", color = "#ffbdb9", fillcolor = "#ffbdb9" ];
+  "HSIStakeManager._withdraw721" [ label = "_withdraw721" ];
+  "HSIStakeManager.hsiStakeEndMany" [ label = "hsiStakeEndMany", color = "#ffbdb9", fillcolor = "#ffbdb9" ];
+  "StakeEnder._verifyStakeMatchesIndex" [ label = "_verifyStakeMatchesIndex", color = "#f2c383", fillcolor = "#f2c383" ];
+  "StakeEnder._stakeEnd" [ label = "_stakeEnd", color = "#f2c383", fillcolor = "#f2c383" ];
+  "StakeEnder._stakeStartFor" [ label = "_stakeStartFor", color = "#f2c383", fillcolor = "#f2c383" ];
+  "StakeEnder._mintHedron" [ label = "_mintHedron", color = "#f2c383", fillcolor = "#f2c383" ];
+  "Tipper._checkStakeCustodian" [ label = "_checkStakeCustodian", color = "#f2c383", fillcolor = "#f2c383" ];
+  "HSIStakeManager._mintInstancedHedron" [ label = "_mintInstancedHedron" ];
+}
+
+subgraph "clusterIERC721" {
+  graph [ label = "IERC721  (iface)", color = "#445773", fontcolor = "#f0f0f0", style = "rounded", bgcolor = "#445773" ];
+  "IERC721.balanceOf" [ label = "balanceOf", color = "#ffbdb9", fillcolor = "#ffbdb9" ];
+  "IERC721.ownerOf" [ label = "ownerOf", color = "#ffbdb9", fillcolor = "#ffbdb9" ];
+  "IERC721.safeTransferFrom" [ label = "safeTransferFrom", color = "#ffbdb9", fillcolor = "#ffbdb9" ];
+  "IERC721.transferFrom" [ label = "transferFrom", color = "#ffbdb9", fillcolor = "#ffbdb9" ];
+  "IERC721.approve" [ label = "approve", color = "#ffbdb9", fillcolor = "#ffbdb9" ];
+  "IERC721.setApprovalForAll" [ label = "setApprovalForAll", color = "#ffbdb9", fillcolor = "#ffbdb9" ];
+  "IERC721.getApproved" [ label = "getApproved", color = "#ffbdb9", fillcolor = "#ffbdb9" ];
+  "IERC721.isApprovedForAll" [ label = "isApprovedForAll", color = "#ffbdb9", fillcolor = "#ffbdb9" ];
+}
+
+subgraph "clusterIERC165" {
+  graph [ label = "IERC165  (iface)", color = "#445773", fontcolor = "#f0f0f0", style = "rounded", bgcolor = "#445773" ];
+  "IERC165.supportsInterface" [ label = "supportsInterface", color = "#ffbdb9", fillcolor = "#ffbdb9" ];
+}
+
+subgraph "clusterIHEXStakeInstanceManager" {
+  graph [ label = "IHEXStakeInstanceManager  (iface)", color = "#445773", fontcolor = "#f0f0f0", style = "rounded", bgcolor = "#445773" ];
+  "IHEXStakeInstanceManager.hsiLists" [ label = "hsiLists", color = "#ffbdb9", fillcolor = "#ffbdb9" ];
+  "IHEXStakeInstanceManager.hsiCount" [ label = "hsiCount", color = "#ffbdb9", fillcolor = "#ffbdb9" ];
+  "IHEXStakeInstanceManager.hexStakeDetokenize" [ label = "hexStakeDetokenize", color = "#ffbdb9", fillcolor = "#ffbdb9" ];
+  "IHEXStakeInstanceManager.hexStakeTokenize" [ label = "hexStakeTokenize", color = "#ffbdb9", fillcolor = "#ffbdb9" ];
+  "IHEXStakeInstanceManager.hexStakeEnd" [ label = "hexStakeEnd", color = "#ffbdb9", fillcolor = "#ffbdb9" ];
+  "IHEXStakeInstanceManager.hexStakeStart" [ label = "hexStakeStart", color = "#ffbdb9", fillcolor = "#ffbdb9" ];
+}
+
+subgraph "clusterIERC721Enumerable" {
+  graph [ label = "IERC721Enumerable  (iface)", color = "#445773", fontcolor = "#f0f0f0", style = "rounded", bgcolor = "#445773" ];
+  "IERC721Enumerable.totalSupply" [ label = "totalSupply", color = "#ffbdb9", fillcolor = "#ffbdb9" ];
+  "IERC721Enumerable.tokenOfOwnerByIndex" [ label = "tokenOfOwnerByIndex", color = "#ffbdb9", fillcolor = "#ffbdb9" ];
+  "IERC721Enumerable.tokenByIndex" [ label = "tokenByIndex", color = "#ffbdb9", fillcolor = "#ffbdb9" ];
+}
+
+subgraph "clusterMaximusStakeManager" {
+  graph [ label = "MaximusStakeManager", color = "#445773", fontcolor = "#f0f0f0", style = "rounded", bgcolor = "#445773" ];
+  "Tipper.<Constructor>" [ label = "<Constructor>", color = "#FF9797", fillcolor = "#FF9797" ];
+  "MaximusStakeManager.onlyPerpetual" [ label = "onlyPerpetual", color = "#1bc6a6", shape =doubleoctagon ];
+  "MaximusStakeManager.stakeEndAs" [ label = "stakeEndAs", color = "#ffbdb9", fillcolor = "#ffbdb9" ];
+  "MaximusStakeManager.flush" [ label = "flush", color = "#ffbdb9", fillcolor = "#ffbdb9" ];
+}
+
+subgraph "clusterIPublicEndStakeable" {
+  graph [ label = "IPublicEndStakeable  (iface)", color = "#445773", fontcolor = "#f0f0f0", style = "rounded", bgcolor = "#445773" ];
+  "IPublicEndStakeable.STAKE_END_DAY" [ label = "STAKE_END_DAY", color = "#ffbdb9", fillcolor = "#ffbdb9" ];
+  "IPublicEndStakeable.STAKE_IS_ACTIVE" [ label = "STAKE_IS_ACTIVE", color = "#ffbdb9", fillcolor = "#ffbdb9" ];
+  "IPublicEndStakeable.mintHedron" [ label = "mintHedron", color = "#ffbdb9", fillcolor = "#ffbdb9" ];
+  "IPublicEndStakeable.endStakeHEX" [ label = "endStakeHEX", color = "#ffbdb9", fillcolor = "#ffbdb9" ];
+  "IPublicEndStakeable.getCurrentPeriod" [ label = "getCurrentPeriod", color = "#ffbdb9", fillcolor = "#ffbdb9" ];
+}
+
+subgraph "clusterIGasReimberser" {
+  graph [ label = "IGasReimberser  (iface)", color = "#445773", fontcolor = "#f0f0f0", style = "rounded", bgcolor = "#445773" ];
+  "IGasReimberser.flush" [ label = "flush", color = "#ffbdb9", fillcolor = "#ffbdb9" ];
+  "IGasReimberser.flush_erc20" [ label = "flush_erc20", color = "#ffbdb9", fillcolor = "#ffbdb9" ];
+}
+
+subgraph "clusterPoolContract" {
+  graph [ label = "PoolContract  (iface)", color = "#445773", fontcolor = "#f0f0f0", style = "rounded", bgcolor = "#445773" ];
+  "PoolContract.getEndStaker" [ label = "getEndStaker" ];
+}
+
+subgraph "clusterGasReimberser" {
+  graph [ label = "GasReimberser", color = "#445773", fontcolor = "#f0f0f0", style = "rounded", bgcolor = "#445773" ];
+  "GasReimberser.<Constructor>" [ label = "<Constructor>", color = "#FF9797", fillcolor = "#FF9797" ];
+  "GasReimberser.<Receive Ether>" [ label = "<Receive Ether>", color = "brown", fillcolor = "#ffbdb9" ];
+  "GasReimberser.flush" [ label = "flush", color = "#ffbdb9", fillcolor = "#ffbdb9" ];
+  "GasReimberser.flush_erc20" [ label = "flush_erc20", color = "#ffbdb9", fillcolor = "#ffbdb9" ];
+  "GasReimberser.payable" [ label = "payable" ];
+  "GasReimberser.address" [ label = "address" ];
+}
+
+subgraph "clusterIsolatedStakeManagerFactory" {
+  graph [ label = "IsolatedStakeManagerFactory", color = "#445773", fontcolor = "#f0f0f0", style = "rounded", bgcolor = "#445773" ];
+  "IsolatedStakeManagerFactory.createIsolatedManager" [ label = "createIsolatedManager", color = "#ffbdb9", fillcolor = "#ffbdb9" ];
+  "IsolatedStakeManagerFactory.address" [ label = "address" ];
+}
+
+subgraph "clusterIsolatedStakeManager" {
+  graph [ label = "IsolatedStakeManager", color = "#445773", fontcolor = "#f0f0f0", style = "rounded", bgcolor = "#445773" ];
+  "IsolatedStakeManager.<Constructor>" [ label = "<Constructor>", color = "#FF9797", fillcolor = "#FF9797" ];
+  "IsolatedStakeManager.setAuthorization" [ label = "setAuthorization", color = "#ffbdb9", fillcolor = "#ffbdb9" ];
+  "IsolatedStakeManager.setStartAuthorization" [ label = "setStartAuthorization", color = "#ffbdb9", fillcolor = "#ffbdb9" ];
+  "IsolatedStakeManager.startAuthorizationKey" [ label = "startAuthorizationKey", color = "#ffbdb9", fillcolor = "#ffbdb9" ];
+  "IsolatedStakeManager.stakeStart" [ label = "stakeStart", color = "#ffbdb9", fillcolor = "#ffbdb9" ];
+  "IsolatedStakeManager.stakeStartWithAuthorization" [ label = "stakeStartWithAuthorization", color = "#ffbdb9", fillcolor = "#ffbdb9" ];
+  "IsolatedStakeManager.transferFromOwner" [ label = "transferFromOwner", color = "#ffbdb9", fillcolor = "#ffbdb9" ];
+  "IsolatedStakeManager.stakeEnd" [ label = "stakeEnd", color = "#ffbdb9", fillcolor = "#ffbdb9" ];
+  "IsolatedStakeManager.transferToOwner" [ label = "transferToOwner", color = "brown", fillcolor = "#ffbdb9" ];
+  "IsolatedStakeManager.checkAndStakeEnd" [ label = "checkAndStakeEnd", color = "#ffbdb9", fillcolor = "#ffbdb9" ];
+  "IsolatedStakeManager._endStake" [ label = "_endStake" ];
+  "IsolatedStakeManager._transferToOwner" [ label = "_transferToOwner" ];
+  "IsolatedStakeManager._settingsCheck" [ label = "_settingsCheck" ];
+  "IsolatedStakeManager._startAuthorizationKey" [ label = "_startAuthorizationKey" ];
+  "IsolatedStakeManager._stakeStart" [ label = "_stakeStart" ];
+  "IsolatedStakeManager._transferFromOwner" [ label = "_transferFromOwner" ];
+  "IsolatedStakeManager._setAddressAuthorization" [ label = "_setAddressAuthorization" ];
+  "IsolatedStakeManager._transferOwnership" [ label = "_transferOwnership" ];
+  "IsolatedStakeManager._setAuthorization" [ label = "_setAuthorization" ];
+  "IsolatedStakeManager._getAddressSetting" [ label = "_getAddressSetting" ];
+  "IsolatedStakeManager.NotAllowed" [ label = "NotAllowed" ];
+  "IsolatedStakeManager.owner" [ label = "owner" ];
+}
+
+subgraph "clusterOwnable2Step" {
+  graph [ label = "Ownable2Step", color = "#445773", fontcolor = "#f0f0f0", style = "rounded", bgcolor = "#445773" ];
+  "Ownable2Step.pendingOwner" [ label = "pendingOwner" ];
+  "Ownable2Step.transferOwnership" [ label = "transferOwnership", color = "#FF9797", fillcolor = "#FF9797" ];
+  "Ownable2Step._transferOwnership" [ label = "_transferOwnership", color = "#f2c383", fillcolor = "#f2c383" ];
+  "Ownable2Step.acceptOwnership" [ label = "acceptOwnership", color = "#FF9797", fillcolor = "#FF9797" ];
+  "Ownable2Step.owner" [ label = "owner" ];
+  "Ownable2Step._msgSender" [ label = "_msgSender" ];
+}
+
+subgraph "clusterOwnable" {
+  graph [ label = "Ownable", color = "#445773", fontcolor = "#f0f0f0", style = "rounded", bgcolor = "#445773" ];
+  "Ownable._transferOwnership" [ label = "_transferOwnership", color = "#f2c383", fillcolor = "#f2c383" ];
+  "Ownable.<Constructor>" [ label = "<Constructor>", color = "#FF9797", fillcolor = "#FF9797" ];
+  "Ownable.onlyOwner" [ label = "onlyOwner", color = "#1bc6a6", shape =doubleoctagon ];
+  "Ownable.owner" [ label = "owner" ];
+  "Ownable._checkOwner" [ label = "_checkOwner" ];
+  "Ownable.renounceOwnership" [ label = "renounceOwnership", color = "#FF9797", fillcolor = "#FF9797" ];
+  "Ownable.transferOwnership" [ label = "transferOwnership", color = "#FF9797", fillcolor = "#FF9797" ];
+  "Ownable._msgSender" [ label = "_msgSender" ];
+  "Ownable.address" [ label = "address" ];
+}
+
+subgraph "clusterAuthorizationManager" {
+  graph [ label = "AuthorizationManager", color = "#445773", fontcolor = "#f0f0f0", style = "rounded", bgcolor = "#445773" ];
+  "AuthorizationManager.<Constructor>" [ label = "<Constructor>", color = "#FF9797", fillcolor = "#FF9797" ];
+  "AuthorizationManager._setAuthorization" [ label = "_setAuthorization", color = "#f2c383", fillcolor = "#f2c383" ];
+  "AuthorizationManager._setAddressAuthorization" [ label = "_setAddressAuthorization", color = "#f2c383", fillcolor = "#f2c383" ];
+  "AuthorizationManager.isAddressAuthorized" [ label = "isAddressAuthorized", color = "#ffbdb9", fillcolor = "#ffbdb9" ];
+  "AuthorizationManager._isAddressAuthorized" [ label = "_isAddressAuthorized" ];
+  "AuthorizationManager._isAuthorized" [ label = "_isAuthorized" ];
+  "AuthorizationManager._getAddressSetting" [ label = "_getAddressSetting", color = "#f2c383", fillcolor = "#f2c383" ];
+  "AuthorizationManager.NotAllowed" [ label = "NotAllowed" ];
+}
+
+subgraph "clusterto" {
+  graph [ label = "to", color = "#e8726d", fontcolor = "#f0f0f0", style = "rounded,dashed", bgcolor = "#3b4b63" ];
+  "to.sendValue" [ label = "sendValue" ];
+}
+
+subgraph "clustertarget" {
+  graph [ label = "target", color = "#e8726d", fontcolor = "#f0f0f0", style = "rounded,dashed", bgcolor = "#3b4b63" ];
+  "target.staticcall" [ label = "staticcall" ];
+  "target.delegatecall" [ label = "delegatecall" ];
+}
+
+subgraph "clustertoken" {
+  graph [ label = "token", color = "#e8726d", fontcolor = "#f0f0f0", style = "rounded,dashed", bgcolor = "#3b4b63" ];
+  "token.isContract" [ label = "isContract" ];
+}
+
+subgraph "clusterender" {
+  graph [ label = "ender", color = "#e8726d", fontcolor = "#f0f0f0", style = "rounded,dashed", bgcolor = "#3b4b63" ];
+  "ender.sendValue" [ label = "sendValue" ];
+}
+
+  "TransferrableStakeManager.removeTransferrability";
+  "TransferrableStakeManager._updateTransferrability";
+  "TransferrableStakeManager._verifyStakeOwnership";
+  "TransferrableStakeManager._logSettingsUpdate";
+  "TransferrableStakeManager.canTransfer";
+  "TransferrableStakeManager._canTransfer";
+  "TransferrableStakeManager._isCapable";
+  "TransferrableStakeManager.stakeTransfer";
+  "TransferrableStakeManager.NotAllowed";
+  "TransferrableStakeManager._stakeIdToInfo";
+  "TransferrableStakeManager._encodeInfo";
+  "StakeStarter.stakeStartFromBalanceFor";
+  "StakeStarter._depositTokenFrom";
+  "StakeStarter._stakeStartFor";
+  "StakeStarter._stakeCount";
+  "StakeStarter.address";
+  "StakeStarter._logSettings";
+  "StakeStarter.stakeStartFromWithdrawableFor";
+  "StakeStarter._deductWithdrawable";
+  "StakeStarter.stakeStartFromUnattributedFor";
+  "StakeStarter._clamp";
+  "StakeStarter._getUnattributed";
+  "StakeEnder.stakeEndByConsent";
+  "StakeEnder._stakeEndByConsent";
+  "StakeEnder._currentDay";
+  "StakeEnder._stakeCount";
+  "StakeEnder.address";
+  "StakeEnder._verifyStakeMatchesIndex";
+  "StakeEnder._getStake";
+  "StakeEnder._stakeIdToInfo";
+  "StakeEnder._isCapable";
+  "StakeEnder._isEarlyEnding";
+  "StakeEnder._mintHedron";
+  "StakeEnder._computeMagnitude";
+  "StakeEnder._checkAndExecTip";
+  "StakeEnder._attributeFunds";
+  "StakeEnder._stakeEnd";
+  "StakeEnder._stakeStartFor";
+  "StakeEnder._decrementCopyIterations";
+  "StakeEnder._logSettingsUpdate";
+  "StakeEnder._executeTipList";
+  "StakeEnder.stakeEndByConsentForMany";
+  "StakeEnder._logSettings";
+  "StakeEnder._setDefaultSettings";
+  "StakeEnder._writePreservedSettingsUpdate";
+  "Tipper.<Constructor>";
+  "Tipper._addCurrencyToList";
+  "Tipper.address";
+  "Tipper.stakeIdTipSize";
+  "Tipper._stakeIdTipSize";
+  "Tipper._executeTipList";
+  "Tipper._clamp";
+  "Tipper.encodeTipSettings";
+  "Tipper._encodeTipSettings";
+  "Tipper.NotAllowed";
+  "Tipper.depositAndAddTipToStake";
+  "Tipper._depositTokenFrom";
+  "Tipper._verifyTipAmountAllowed";
+  "Tipper._addToTokenWithdrawable";
+  "Tipper._checkStakeCustodian";
+  "Tipper._addTipToStake";
+  "Tipper.removeTipFromStake";
+  "Tipper._removeTipFromStake";
+  "Tipper._verifyStakeOwnership";
+  "Tipper._logSettingsUpdate";
+  "Tipper.addTipToStake";
+  "Tipper._stakeIdToInfo";
+  "Tipper._stakeCount";
+  "Tipper._getStake";
+  "Tipper._stakeIdToIndex";
+  "Tipper._stakeIdToOwner";
+  "UnderlyingStakeable.stakeCount";
+  "UnderlyingStakeable._stakeCount";
+  "UnderlyingStakeable.balanceOf";
+  "UnderlyingStakeable._balanceOf";
+  "UnderlyingStakeable.stakeLists";
+  "UnderlyingStakeable._getStake";
+  "UnderlyingStakeable.currentDay";
+  "UnderlyingStakeable._currentDay";
+  "UnderlyingStakeable.isEarlyEnding";
+  "UnderlyingStakeable._isEarlyEnding";
+  "Multicall.multicall";
+  "Multicall._multicall";
+  "Multicall.multicallWithDeadline";
+  "Multicall.Deadline";
+  "Multicall.multicallWithPreviousBlockHash";
+  "Multicall.blockhash";
+  "Multicall.BlockHash";
+  "Multicall.address";
+  "Bank._getUnattributed";
+  "Bank._getBalance";
+  "Bank.address";
+  "Bank.getUnattributed";
+  "Bank.clamp";
+  "Bank._clamp";
+  "Bank.depositToken";
+  "Bank._depositTokenTo";
+  "Bank.depositTokenTo";
+  "Bank._depositTokenFrom";
+  "Bank._addToTokenWithdrawable";
+  "Bank.collectUnattributed";
+  "Bank._collectUnattributed";
+  "Bank._withdrawTokenTo";
+  "Bank.collectUnattributedPercent";
+  "Bank.withdrawTokenTo";
+  "Bank._deductWithdrawable";
+  "Bank._getTokenBalance";
+  "Bank.depositTokenUnattributed";
+  "to.sendValue";
+  "Bank._attributeFunds";
+  "Bank._isCapable";
+  "Bank.payable";
+  "Address.sendValue";
+  "Address.address";
+  "Address.functionCall";
+  "Address.functionCallWithValue";
+  "Address.verifyCallResultFromTarget";
+  "Address.functionStaticCall";
+  "target.staticcall";
+  "Address.functionDelegateCall";
+  "target.delegatecall";
+  "Address.isContract";
+  "Address._revert";
+  "Address.verifyCallResult";
+  "ERC20.transfer";
+  "ERC20._msgSender";
+  "ERC20._transfer";
+  "ERC20.approve";
+  "ERC20._approve";
+  "ERC20.transferFrom";
+  "ERC20._spendAllowance";
+  "ERC20.increaseAllowance";
+  "ERC20.allowance";
+  "ERC20.decreaseAllowance";
+  "ERC20.address";
+  "ERC20._beforeTokenTransfer";
+  "ERC20._afterTokenTransfer";
+  "ERC20._mint";
+  "ERC20._burn";
+  "ERC20.type";
+  "Capable.isCapable";
+  "Capable._isCapable";
+  "CurrencyList.addCurrencyToList";
+  "token.isContract";
+  "CurrencyList.NotAllowed";
+  "CurrencyList.address";
+  "CurrencyList._addCurrencyToList";
+  "StakeInfo._verifyStakeOwnership";
+  "StakeInfo._stakeIdToOwner";
+  "StakeInfo.StakeNotOwned";
+  "StakeInfo._verifyCustodian";
+  "StakeInfo.address";
+  "StakeInfo.stakeIdToOwner";
+  "StakeInfo._stakeIdToInfo";
+  "StakeInfo.stakeIdToIndex";
+  "StakeInfo._stakeIdToIndex";
+  "EncodableSettings._setDefaultSettings";
+  "EncodableSettings._logSettingsUpdate";
+  "EncodableSettings.stakeIdSettings";
+  "EncodableSettings._decodeSettings";
+  "EncodableSettings.decodeConsentAbilities";
+  "EncodableSettings._decodeConsentAbilities";
+  "EncodableSettings.updateSettings";
+  "EncodableSettings._updateEncodedSettings";
+  "EncodableSettings._encodeSettings";
+  "EncodableSettings.updateSettingsEncoded";
+  "EncodableSettings._writePreservedSettingsUpdate";
+  "EncodableSettings.idToDecodedSettings";
+  "EncodableSettings.readEncodedSettings";
+  "EncodableSettings._readEncodedSettings";
+  "EncodableSettings.encodeSettings";
+  "EncodableSettings._encodeConsentAbilities";
+  "EncodableSettings.decodeSettings";
+  "EncodableSettings.encodeConsentAbilities";
+  "EncodableSettings.defaultSettings";
+  "EncodableSettings._defaultSettings";
+  "SingletonHedronManager.mintHedronRewards";
+  "SingletonHedronManager._mintHedron";
+  "SingletonHedronManager._mintNativeHedron";
+  "UnderlyingStakeManager._stakeStartFor";
+  "UnderlyingStakeManager._encodeInfo";
+  "UnderlyingStakeManager._stakeEnd";
+  "UnderlyingStakeManager.stakeStart";
+  "UnderlyingStakeManager.stakeEnd";
+  "UnderlyingStakeManager.stakeEndById";
+  "UnderlyingStakeManager._stakeRestartById";
+  "UnderlyingStakeManager.stakeRestartById";
+  "UnderlyingStakeManager.stakeRestartManyById";
+  "GoodAccounting.stakeGoodAccounting";
+  "GoodAccounting._stakeGoodAccounting";
+  "GoodAccounting.checkStakeGoodAccounting";
+  "GoodAccounting._checkStakeGoodAccounting";
+  "GoodAccounting.checkStakeGoodAccountingFor";
+  "GoodAccounting.isGoodAccountable";
+  "GoodAccounting._isGoodAccountable";
+  "GoodAccounting.isStakeIdGoodAccountable";
+  "Magnitude.computeMagnitude";
+  "Magnitude._computeMagnitude";
+  "HSIStakeManager.depositHsi";
+  "HSIStakeManager._deposit721";
+  "HSIStakeManager.hsiAddressToId";
+  "HSIStakeManager._hsiAddressToId";
+  "HSIStakeManager.withdrawHsi";
+  "HSIStakeManager._withdraw721";
+  "HSIStakeManager.hsiStakeEndMany";
+  "HSIStakeManager._mintInstancedHedron";
+  "MaximusStakeManager.onlyPerpetual";
+  "MaximusStakeManager.stakeEndAs";
+  "IPublicEndStakeable.STAKE_END_DAY";
+  "IPublicEndStakeable.STAKE_IS_ACTIVE";
+  "IPublicEndStakeable.mintHedron";
+  "IPublicEndStakeable.endStakeHEX";
+  "IPublicEndStakeable.getCurrentPeriod";
+  "MaximusStakeManager.flush";
+  "GasReimberser.flush";
+  "GasReimberser.payable";
+  "PoolContract.getEndStaker";
+  "GasReimberser.address";
+  "ender.sendValue";
+  "GasReimberser.flush_erc20";
+  "IsolatedStakeManagerFactory.createIsolatedManager";
+  "IsolatedStakeManagerFactory.address";
+  "IsolatedStakeManager.<Constructor>";
+  "IsolatedStakeManager._setAddressAuthorization";
+  "IsolatedStakeManager._transferOwnership";
+  "IsolatedStakeManager.setAuthorization";
+  "IsolatedStakeManager.setStartAuthorization";
+  "IsolatedStakeManager._setAuthorization";
+  "IsolatedStakeManager._startAuthorizationKey";
+  "IsolatedStakeManager.startAuthorizationKey";
+  "IsolatedStakeManager.stakeStart";
+  "IsolatedStakeManager._getAddressSetting";
+  "IsolatedStakeManager.NotAllowed";
+  "IsolatedStakeManager._transferFromOwner";
+  "IsolatedStakeManager._stakeStart";
+  "IsolatedStakeManager.stakeStartWithAuthorization";
+  "IsolatedStakeManager.transferFromOwner";
+  "IsolatedStakeManager.stakeEnd";
+  "IsolatedStakeManager._settingsCheck";
+  "IsolatedStakeManager._endStake";
+  "IsolatedStakeManager.transferToOwner";
+  "IsolatedStakeManager._transferToOwner";
+  "IsolatedStakeManager.checkAndStakeEnd";
+  "IsolatedStakeManager.owner";
+  "Ownable2Step.transferOwnership";
+  "Ownable2Step.owner";
+  "Ownable2Step._transferOwnership";
+  "Ownable._transferOwnership";
+  "Ownable2Step.acceptOwnership";
+  "Ownable2Step._msgSender";
+  "Ownable2Step.pendingOwner";
+  "Ownable.<Constructor>";
+  "Ownable._msgSender";
+  "Ownable.onlyOwner";
+  "Ownable._checkOwner";
+  "Ownable.owner";
+  "Ownable.renounceOwnership";
+  "Ownable.address";
+  "Ownable.transferOwnership";
+  "AuthorizationManager._setAuthorization";
+  "AuthorizationManager.NotAllowed";
+  "AuthorizationManager._setAddressAuthorization";
+  "AuthorizationManager.isAddressAuthorized";
+  "AuthorizationManager._isAddressAuthorized";
+  "AuthorizationManager._isAuthorized";
+  "TransferrableStakeManager.removeTransferrability" -> "TransferrableStakeManager._updateTransferrability" [ color = "#1bc6a6" ];
+  "TransferrableStakeManager._updateTransferrability" -> "TransferrableStakeManager._verifyStakeOwnership" [ color = "#1bc6a6" ];
+  "TransferrableStakeManager._updateTransferrability" -> "TransferrableStakeManager._logSettingsUpdate" [ color = "#1bc6a6" ];
+  "TransferrableStakeManager.canTransfer" -> "TransferrableStakeManager._canTransfer" [ color = "#1bc6a6" ];
+  "TransferrableStakeManager._canTransfer" -> "TransferrableStakeManager._isCapable" [ color = "#1bc6a6" ];
+  "TransferrableStakeManager.stakeTransfer" -> "TransferrableStakeManager._verifyStakeOwnership" [ color = "#1bc6a6" ];
+  "TransferrableStakeManager.stakeTransfer" -> "TransferrableStakeManager._canTransfer" [ color = "#1bc6a6" ];
+  "TransferrableStakeManager.stakeTransfer" -> "TransferrableStakeManager.NotAllowed" [ color = "#1bc6a6" ];
+  "TransferrableStakeManager.stakeTransfer" -> "TransferrableStakeManager._stakeIdToInfo" [ color = "#1bc6a6" ];
+  "TransferrableStakeManager.stakeTransfer" -> "TransferrableStakeManager._encodeInfo" [ color = "#1bc6a6" ];
+  "StakeStarter.stakeStartFromBalanceFor" -> "StakeStarter._depositTokenFrom" [ color = "#1bc6a6" ];
+  "StakeStarter.stakeStartFromBalanceFor" -> "StakeStarter._stakeStartFor" [ color = "#1bc6a6" ];
+  "StakeStarter.stakeStartFromBalanceFor" -> "StakeStarter._stakeCount" [ color = "#1bc6a6" ];
+  "StakeStarter.stakeStartFromBalanceFor" -> "StakeStarter.address" [ color = "#1bc6a6" ];
+  "StakeStarter.stakeStartFromBalanceFor" -> "StakeStarter._logSettings" [ color = "#1bc6a6" ];
+  "StakeStarter.stakeStartFromWithdrawableFor" -> "StakeStarter._stakeStartFor" [ color = "#1bc6a6" ];
+  "StakeStarter.stakeStartFromWithdrawableFor" -> "StakeStarter._deductWithdrawable" [ color = "#1bc6a6" ];
+  "StakeStarter.stakeStartFromWithdrawableFor" -> "StakeStarter._stakeCount" [ color = "#1bc6a6" ];
+  "StakeStarter.stakeStartFromWithdrawableFor" -> "StakeStarter.address" [ color = "#1bc6a6" ];
+  "StakeStarter.stakeStartFromWithdrawableFor" -> "StakeStarter._logSettings" [ color = "#1bc6a6" ];
+  "StakeStarter.stakeStartFromUnattributedFor" -> "StakeStarter._stakeStartFor" [ color = "#1bc6a6" ];
+  "StakeStarter.stakeStartFromUnattributedFor" -> "StakeStarter._clamp" [ color = "#1bc6a6" ];
+  "StakeStarter.stakeStartFromUnattributedFor" -> "StakeStarter._getUnattributed" [ color = "#1bc6a6" ];
+  "StakeStarter.stakeStartFromUnattributedFor" -> "StakeStarter._stakeCount" [ color = "#1bc6a6" ];
+  "StakeStarter.stakeStartFromUnattributedFor" -> "StakeStarter.address" [ color = "#1bc6a6" ];
+  "StakeStarter.stakeStartFromUnattributedFor" -> "StakeStarter._logSettings" [ color = "#1bc6a6" ];
+  "StakeEnder.stakeEndByConsent" -> "StakeEnder._stakeEndByConsent" [ color = "#1bc6a6" ];
+  "StakeEnder.stakeEndByConsent" -> "StakeEnder._currentDay" [ color = "#1bc6a6" ];
+  "StakeEnder.stakeEndByConsent" -> "StakeEnder._stakeCount" [ color = "#1bc6a6" ];
+  "StakeEnder.stakeEndByConsent" -> "StakeEnder.address" [ color = "#1bc6a6" ];
+  "StakeEnder._verifyStakeMatchesIndex" -> "StakeEnder._getStake" [ color = "#1bc6a6" ];
+  "StakeEnder._verifyStakeMatchesIndex" -> "StakeEnder.address" [ color = "#1bc6a6" ];
+  "StakeEnder._stakeEndByConsent" -> "StakeEnder._stakeIdToInfo" [ color = "#1bc6a6" ];
+  "StakeEnder._stakeEndByConsent" -> "StakeEnder._verifyStakeMatchesIndex" [ color = "#1bc6a6" ];
+  "StakeEnder._stakeEndByConsent" -> "StakeEnder._isCapable" [ color = "#1bc6a6" ];
+  "StakeEnder._stakeEndByConsent" -> "StakeEnder._isEarlyEnding" [ color = "#1bc6a6" ];
+  "StakeEnder._stakeEndByConsent" -> "StakeEnder._isCapable" [ color = "#1bc6a6" ];
+  "StakeEnder._stakeEndByConsent" -> "StakeEnder._isCapable" [ color = "#1bc6a6" ];
+  "StakeEnder._stakeEndByConsent" -> "StakeEnder._mintHedron" [ color = "#1bc6a6" ];
+  "StakeEnder._stakeEndByConsent" -> "StakeEnder._computeMagnitude" [ color = "#1bc6a6" ];
+  "StakeEnder._stakeEndByConsent" -> "StakeEnder._checkAndExecTip" [ color = "#1bc6a6" ];
+  "StakeEnder._stakeEndByConsent" -> "StakeEnder._attributeFunds" [ color = "#1bc6a6" ];
+  "StakeEnder._stakeEndByConsent" -> "StakeEnder._stakeEnd" [ color = "#1bc6a6" ];
+  "StakeEnder._stakeEndByConsent" -> "StakeEnder._computeMagnitude" [ color = "#1bc6a6" ];
+  "StakeEnder._stakeEndByConsent" -> "StakeEnder._checkAndExecTip" [ color = "#1bc6a6" ];
+  "StakeEnder._stakeEndByConsent" -> "StakeEnder._computeMagnitude" [ color = "#1bc6a6" ];
+  "StakeEnder._stakeEndByConsent" -> "StakeEnder._computeMagnitude" [ color = "#1bc6a6" ];
+  "StakeEnder._stakeEndByConsent" -> "StakeEnder._stakeStartFor" [ color = "#1bc6a6" ];
+  "StakeEnder._stakeEndByConsent" -> "StakeEnder._decrementCopyIterations" [ color = "#1bc6a6" ];
+  "StakeEnder._stakeEndByConsent" -> "StakeEnder._logSettingsUpdate" [ color = "#1bc6a6" ];
+  "StakeEnder._stakeEndByConsent" -> "StakeEnder._attributeFunds" [ color = "#1bc6a6" ];
+  "StakeEnder._stakeEndByConsent" -> "StakeEnder._isCapable" [ color = "#1bc6a6" ];
+  "StakeEnder._stakeEndByConsent" -> "StakeEnder._executeTipList" [ color = "#1bc6a6" ];
+  "StakeEnder._stakeEndByConsent" -> "StakeEnder._isCapable" [ color = "#1bc6a6" ];
+  "StakeEnder.stakeEndByConsentForMany" -> "StakeEnder._currentDay" [ color = "#1bc6a6" ];
+  "StakeEnder.stakeEndByConsentForMany" -> "StakeEnder._stakeCount" [ color = "#1bc6a6" ];
+  "StakeEnder.stakeEndByConsentForMany" -> "StakeEnder.address" [ color = "#1bc6a6" ];
+  "StakeEnder.stakeEndByConsentForMany" -> "StakeEnder._stakeEndByConsent" [ color = "#1bc6a6" ];
+  "StakeEnder._logSettings" -> "StakeEnder._setDefaultSettings" [ color = "#1bc6a6" ];
+  "StakeEnder._logSettings" -> "StakeEnder._writePreservedSettingsUpdate" [ color = "#1bc6a6" ];
+  "Tipper.<Constructor>" -> "Tipper._addCurrencyToList" [ color = "#1bc6a6" ];
+  "Tipper.<Constructor>" -> "Tipper.address" [ color = "#1bc6a6" ];
+  "Tipper.<Constructor>" -> "Tipper._addCurrencyToList" [ color = "#1bc6a6" ];
+  "Tipper.<Constructor>" -> "Tipper._addCurrencyToList" [ color = "#1bc6a6" ];
+  "Tipper.stakeIdTipSize" -> "Tipper._stakeIdTipSize" [ color = "#1bc6a6" ];
+  "Tipper._executeTipList" -> "Tipper._clamp" [ color = "#1bc6a6" ];
+  "Tipper._executeTipList" -> "Tipper._clamp" [ color = "#1bc6a6" ];
+  "Tipper.encodeTipSettings" -> "Tipper._encodeTipSettings" [ color = "#1bc6a6" ];
+  "Tipper._encodeTipSettings" -> "Tipper.NotAllowed" [ color = "#1bc6a6" ];
+  "Tipper.depositAndAddTipToStake" -> "Tipper._depositTokenFrom" [ color = "#1bc6a6" ];
+  "Tipper.depositAndAddTipToStake" -> "Tipper._verifyTipAmountAllowed" [ color = "#1bc6a6" ];
+  "Tipper.depositAndAddTipToStake" -> "Tipper._addToTokenWithdrawable" [ color = "#1bc6a6" ];
+  "Tipper.depositAndAddTipToStake" -> "Tipper._checkStakeCustodian" [ color = "#1bc6a6" ];
+  "Tipper.depositAndAddTipToStake" -> "Tipper._addTipToStake" [ color = "#1bc6a6" ];
+  "Tipper.removeTipFromStake" -> "Tipper._removeTipFromStake" [ color = "#1bc6a6" ];
+  "Tipper._removeTipFromStake" -> "Tipper._verifyStakeOwnership" [ color = "#1bc6a6" ];
+  "Tipper._removeTipFromStake" -> "Tipper.address" [ color = "#1bc6a6" ];
+  "Tipper._removeTipFromStake" -> "Tipper._addToTokenWithdrawable" [ color = "#1bc6a6" ];
+  "Tipper._removeTipFromStake" -> "Tipper._logSettingsUpdate" [ color = "#1bc6a6" ];
+  "Tipper.addTipToStake" -> "Tipper._verifyTipAmountAllowed" [ color = "#1bc6a6" ];
+  "Tipper.addTipToStake" -> "Tipper._checkStakeCustodian" [ color = "#1bc6a6" ];
+  "Tipper.addTipToStake" -> "Tipper._addTipToStake" [ color = "#1bc6a6" ];
+  "Tipper._verifyTipAmountAllowed" -> "Tipper._stakeIdToInfo" [ color = "#1bc6a6" ];
+  "Tipper._verifyTipAmountAllowed" -> "Tipper.NotAllowed" [ color = "#1bc6a6" ];
+  "Tipper._checkStakeCustodian" -> "Tipper._stakeCount" [ color = "#1bc6a6" ];
+  "Tipper._checkStakeCustodian" -> "Tipper.address" [ color = "#1bc6a6" ];
+  "Tipper._checkStakeCustodian" -> "Tipper.NotAllowed" [ color = "#1bc6a6" ];
+  "Tipper._checkStakeCustodian" -> "Tipper._getStake" [ color = "#1bc6a6" ];
+  "Tipper._checkStakeCustodian" -> "Tipper.address" [ color = "#1bc6a6" ];
+  "Tipper._checkStakeCustodian" -> "Tipper._stakeIdToIndex" [ color = "#1bc6a6" ];
+  "Tipper._checkStakeCustodian" -> "Tipper.NotAllowed" [ color = "#1bc6a6" ];
+  "Tipper._addTipToStake" -> "Tipper._clamp" [ color = "#1bc6a6" ];
+  "Tipper._addTipToStake" -> "Tipper._stakeIdToOwner" [ color = "#1bc6a6" ];
+  "Tipper._addTipToStake" -> "Tipper._logSettingsUpdate" [ color = "#1bc6a6" ];
+  "Tipper._addTipToStake" -> "Tipper.address" [ color = "#1bc6a6" ];
+  "Tipper._addTipToStake" -> "Tipper.NotAllowed" [ color = "#1bc6a6" ];
+  "Tipper._addTipToStake" -> "Tipper._encodeTipSettings" [ color = "#1bc6a6" ];
+  "UnderlyingStakeable.stakeCount" -> "UnderlyingStakeable._stakeCount" [ color = "#1bc6a6" ];
+  "UnderlyingStakeable.balanceOf" -> "UnderlyingStakeable._balanceOf" [ color = "#1bc6a6" ];
+  "UnderlyingStakeable.stakeLists" -> "UnderlyingStakeable._getStake" [ color = "#1bc6a6" ];
+  "UnderlyingStakeable.currentDay" -> "UnderlyingStakeable._currentDay" [ color = "#1bc6a6" ];
+  "UnderlyingStakeable.isEarlyEnding" -> "UnderlyingStakeable._isEarlyEnding" [ color = "#1bc6a6" ];
+  "Multicall.multicall" -> "Multicall._multicall" [ color = "#1bc6a6" ];
+  "Multicall.multicallWithDeadline" -> "Multicall.Deadline" [ color = "#1bc6a6" ];
+  "Multicall.multicallWithDeadline" -> "Multicall._multicall" [ color = "#1bc6a6" ];
+  "Multicall.multicallWithPreviousBlockHash" -> "Multicall.blockhash" [ color = "#1bc6a6" ];
+  "Multicall.multicallWithPreviousBlockHash" -> "Multicall.BlockHash" [ color = "#1bc6a6" ];
+  "Multicall.multicallWithPreviousBlockHash" -> "Multicall.blockhash" [ color = "#1bc6a6" ];
+  "Multicall.multicallWithPreviousBlockHash" -> "Multicall._multicall" [ color = "#1bc6a6" ];
+  "Multicall._multicall" -> "Multicall.address" [ color = "#1bc6a6" ];
+  "Bank._getUnattributed" -> "Bank._getBalance" [ color = "#1bc6a6" ];
+  "Bank._getUnattributed" -> "Bank.address" [ color = "#1bc6a6" ];
+  "Bank._getBalance" -> "Bank.address" [ color = "#1bc6a6" ];
+  "Bank.getUnattributed" -> "Bank._getUnattributed" [ color = "#1bc6a6" ];
+  "Bank.clamp" -> "Bank._clamp" [ color = "#1bc6a6" ];
+  "Bank.depositToken" -> "Bank._depositTokenTo" [ color = "#1bc6a6" ];
+  "Bank.depositTokenTo" -> "Bank._depositTokenTo" [ color = "#1bc6a6" ];
+  "Bank._depositTokenTo" -> "Bank._depositTokenFrom" [ color = "#1bc6a6" ];
+  "Bank._depositTokenTo" -> "Bank._addToTokenWithdrawable" [ color = "#1bc6a6" ];
+  "Bank.collectUnattributed" -> "Bank._collectUnattributed" [ color = "#1bc6a6" ];
+  "Bank.collectUnattributed" -> "Bank._getUnattributed" [ color = "#1bc6a6" ];
+  "Bank._collectUnattributed" -> "Bank._clamp" [ color = "#1bc6a6" ];
+  "Bank._collectUnattributed" -> "Bank._withdrawTokenTo" [ color = "#1bc6a6" ];
+  "Bank._collectUnattributed" -> "Bank._addToTokenWithdrawable" [ color = "#1bc6a6" ];
+  "Bank.collectUnattributedPercent" -> "Bank._getUnattributed" [ color = "#1bc6a6" ];
+  "Bank.collectUnattributedPercent" -> "Bank._collectUnattributed" [ color = "#1bc6a6" ];
+  "Bank.withdrawTokenTo" -> "Bank._withdrawTokenTo" [ color = "#1bc6a6" ];
+  "Bank.withdrawTokenTo" -> "Bank._deductWithdrawable" [ color = "#1bc6a6" ];
+  "Bank._getTokenBalance" -> "Bank.address" [ color = "#1bc6a6" ];
+  "Bank._getTokenBalance" -> "Bank.address" [ color = "#1bc6a6" ];
+  "Bank._getTokenBalance" -> "Bank.address" [ color = "#1bc6a6" ];
+  "Bank._deductWithdrawable" -> "Bank._clamp" [ color = "#1bc6a6" ];
+  "Bank._depositTokenFrom" -> "Bank.address" [ color = "#1bc6a6" ];
+  "Bank._depositTokenFrom" -> "Bank.address" [ color = "#1bc6a6" ];
+  "Bank.depositTokenUnattributed" -> "Bank._depositTokenFrom" [ color = "#1bc6a6" ];
+  "Bank._withdrawTokenTo" -> "Bank.address" [ color = "#1bc6a6" ];
+  "Bank._withdrawTokenTo" -> "to.sendValue" [ color = "white" ];
+  "Bank._attributeFunds" -> "Bank._isCapable" [ color = "#1bc6a6" ];
+  "Bank._attributeFunds" -> "Bank._withdrawTokenTo" [ color = "#1bc6a6" ];
+  "Bank._attributeFunds" -> "Bank.payable" [ color = "#1bc6a6" ];
+  "Bank._attributeFunds" -> "Bank._addToTokenWithdrawable" [ color = "#1bc6a6" ];
+  "Address.sendValue" -> "Address.address" [ color = "#1bc6a6" ];
+  "Address.functionCall" -> "Address.functionCallWithValue" [ color = "#1bc6a6" ];
+  "Address.functionCall" -> "Address.functionCallWithValue" [ color = "#1bc6a6" ];
+  "Address.functionCallWithValue" -> "Address.functionCallWithValue" [ color = "#1bc6a6" ];
+  "Address.functionCallWithValue" -> "Address.address" [ color = "#1bc6a6" ];
+  "Address.functionCallWithValue" -> "Address.verifyCallResultFromTarget" [ color = "#1bc6a6" ];
+  "Address.functionStaticCall" -> "Address.functionStaticCall" [ color = "#1bc6a6" ];
+  "Address.functionStaticCall" -> "target.staticcall" [ color = "white" ];
+  "Address.functionStaticCall" -> "Address.verifyCallResultFromTarget" [ color = "#1bc6a6" ];
+  "Address.functionDelegateCall" -> "Address.functionDelegateCall" [ color = "#1bc6a6" ];
+  "Address.functionDelegateCall" -> "target.delegatecall" [ color = "white" ];
+  "Address.functionDelegateCall" -> "Address.verifyCallResultFromTarget" [ color = "#1bc6a6" ];
+  "Address.verifyCallResultFromTarget" -> "Address.isContract" [ color = "#1bc6a6" ];
+  "Address.verifyCallResultFromTarget" -> "Address._revert" [ color = "#1bc6a6" ];
+  "Address.verifyCallResult" -> "Address._revert" [ color = "#1bc6a6" ];
+  "ERC20.transfer" -> "ERC20._msgSender" [ color = "#1bc6a6" ];
+  "ERC20.transfer" -> "ERC20._transfer" [ color = "#1bc6a6" ];
+  "ERC20.approve" -> "ERC20._msgSender" [ color = "#1bc6a6" ];
+  "ERC20.approve" -> "ERC20._approve" [ color = "#1bc6a6" ];
+  "ERC20.transferFrom" -> "ERC20._msgSender" [ color = "#1bc6a6" ];
+  "ERC20.transferFrom" -> "ERC20._spendAllowance" [ color = "#1bc6a6" ];
+  "ERC20.transferFrom" -> "ERC20._transfer" [ color = "#1bc6a6" ];
+  "ERC20.increaseAllowance" -> "ERC20._msgSender" [ color = "#1bc6a6" ];
+  "ERC20.increaseAllowance" -> "ERC20._approve" [ color = "#1bc6a6" ];
+  "ERC20.increaseAllowance" -> "ERC20.allowance" [ color = "#1bc6a6" ];
+  "ERC20.decreaseAllowance" -> "ERC20._msgSender" [ color = "#1bc6a6" ];
+  "ERC20.decreaseAllowance" -> "ERC20.allowance" [ color = "#1bc6a6" ];
+  "ERC20.decreaseAllowance" -> "ERC20._approve" [ color = "#1bc6a6" ];
+  "ERC20._transfer" -> "ERC20.address" [ color = "#1bc6a6" ];
+  "ERC20._transfer" -> "ERC20.address" [ color = "#1bc6a6" ];
+  "ERC20._transfer" -> "ERC20._beforeTokenTransfer" [ color = "#1bc6a6" ];
+  "ERC20._transfer" -> "ERC20._afterTokenTransfer" [ color = "#1bc6a6" ];
+  "ERC20._mint" -> "ERC20.address" [ color = "#1bc6a6" ];
+  "ERC20._mint" -> "ERC20._beforeTokenTransfer" [ color = "#1bc6a6" ];
+  "ERC20._mint" -> "ERC20.address" [ color = "#1bc6a6" ];
+  "ERC20._mint" -> "ERC20.address" [ color = "#1bc6a6" ];
+  "ERC20._mint" -> "ERC20._afterTokenTransfer" [ color = "#1bc6a6" ];
+  "ERC20._mint" -> "ERC20.address" [ color = "#1bc6a6" ];
+  "ERC20._burn" -> "ERC20.address" [ color = "#1bc6a6" ];
+  "ERC20._burn" -> "ERC20._beforeTokenTransfer" [ color = "#1bc6a6" ];
+  "ERC20._burn" -> "ERC20.address" [ color = "#1bc6a6" ];
+  "ERC20._burn" -> "ERC20.address" [ color = "#1bc6a6" ];
+  "ERC20._burn" -> "ERC20._afterTokenTransfer" [ color = "#1bc6a6" ];
+  "ERC20._burn" -> "ERC20.address" [ color = "#1bc6a6" ];
+  "ERC20._approve" -> "ERC20.address" [ color = "#1bc6a6" ];
+  "ERC20._approve" -> "ERC20.address" [ color = "#1bc6a6" ];
+  "ERC20._spendAllowance" -> "ERC20.allowance" [ color = "#1bc6a6" ];
+  "ERC20._spendAllowance" -> "ERC20.type" [ color = "#1bc6a6" ];
+  "ERC20._spendAllowance" -> "ERC20._approve" [ color = "#1bc6a6" ];
+  "Capable.isCapable" -> "Capable._isCapable" [ color = "#1bc6a6" ];
+  "CurrencyList.addCurrencyToList" -> "token.isContract" [ color = "white" ];
+  "CurrencyList.addCurrencyToList" -> "CurrencyList.NotAllowed" [ color = "#1bc6a6" ];
+  "CurrencyList.addCurrencyToList" -> "CurrencyList.address" [ color = "#1bc6a6" ];
+  "CurrencyList.addCurrencyToList" -> "CurrencyList._addCurrencyToList" [ color = "#1bc6a6" ];
+  "StakeInfo._verifyStakeOwnership" -> "StakeInfo._stakeIdToOwner" [ color = "#1bc6a6" ];
+  "StakeInfo._verifyStakeOwnership" -> "StakeInfo.StakeNotOwned" [ color = "#1bc6a6" ];
+  "StakeInfo._verifyStakeOwnership" -> "StakeInfo._stakeIdToOwner" [ color = "#1bc6a6" ];
+  "StakeInfo._verifyCustodian" -> "StakeInfo._stakeIdToOwner" [ color = "#1bc6a6" ];
+  "StakeInfo._verifyCustodian" -> "StakeInfo.address" [ color = "#1bc6a6" ];
+  "StakeInfo._verifyCustodian" -> "StakeInfo.StakeNotOwned" [ color = "#1bc6a6" ];
+  "StakeInfo._verifyCustodian" -> "StakeInfo._stakeIdToOwner" [ color = "#1bc6a6" ];
+  "StakeInfo._verifyCustodian" -> "StakeInfo.address" [ color = "#1bc6a6" ];
+  "StakeInfo.stakeIdToOwner" -> "StakeInfo._stakeIdToOwner" [ color = "#1bc6a6" ];
+  "StakeInfo._stakeIdToOwner" -> "StakeInfo.address" [ color = "#1bc6a6" ];
+  "StakeInfo._stakeIdToInfo" -> "StakeInfo.address" [ color = "#1bc6a6" ];
+  "StakeInfo.stakeIdToIndex" -> "StakeInfo._stakeIdToIndex" [ color = "#1bc6a6" ];
+  "EncodableSettings._setDefaultSettings" -> "EncodableSettings._logSettingsUpdate" [ color = "#1bc6a6" ];
+  "EncodableSettings.stakeIdSettings" -> "EncodableSettings._decodeSettings" [ color = "#1bc6a6" ];
+  "EncodableSettings.decodeConsentAbilities" -> "EncodableSettings._decodeConsentAbilities" [ color = "#1bc6a6" ];
+  "EncodableSettings.updateSettings" -> "EncodableSettings._updateEncodedSettings" [ color = "#1bc6a6" ];
+  "EncodableSettings.updateSettings" -> "EncodableSettings._encodeSettings" [ color = "#1bc6a6" ];
+  "EncodableSettings.updateSettingsEncoded" -> "EncodableSettings._updateEncodedSettings" [ color = "#1bc6a6" ];
+  "EncodableSettings._updateEncodedSettings" -> "StakeInfo._verifyStakeOwnership" [ color = "#1bc6a6" ];
+  "EncodableSettings._updateEncodedSettings" -> "EncodableSettings._writePreservedSettingsUpdate" [ color = "#1bc6a6" ];
+  "EncodableSettings._writePreservedSettingsUpdate" -> "EncodableSettings._logSettingsUpdate" [ color = "#1bc6a6" ];
+  "EncodableSettings.idToDecodedSettings" -> "EncodableSettings._decodeSettings" [ color = "#1bc6a6" ];
+  "EncodableSettings.readEncodedSettings" -> "EncodableSettings._readEncodedSettings" [ color = "#1bc6a6" ];
+  "EncodableSettings.encodeSettings" -> "EncodableSettings._encodeSettings" [ color = "#1bc6a6" ];
+  "EncodableSettings._encodeSettings" -> "EncodableSettings._encodeConsentAbilities" [ color = "#1bc6a6" ];
+  "EncodableSettings.decodeSettings" -> "EncodableSettings._decodeSettings" [ color = "#1bc6a6" ];
+  "EncodableSettings._decodeSettings" -> "EncodableSettings._decodeConsentAbilities" [ color = "#1bc6a6" ];
+  "EncodableSettings.encodeConsentAbilities" -> "EncodableSettings._encodeConsentAbilities" [ color = "#1bc6a6" ];
+  "EncodableSettings.defaultSettings" -> "EncodableSettings._defaultSettings" [ color = "#1bc6a6" ];
+  "SingletonHedronManager.mintHedronRewards" -> "Tipper._stakeIdToOwner" [ color = "#1bc6a6" ];
+  "SingletonHedronManager.mintHedronRewards" -> "Tipper._stakeIdToInfo" [ color = "#1bc6a6" ];
+  "SingletonHedronManager.mintHedronRewards" -> "Bank._isCapable" [ color = "#1bc6a6" ];
+  "SingletonHedronManager.mintHedronRewards" -> "Tipper._addToTokenWithdrawable" [ color = "#1bc6a6" ];
+  "SingletonHedronManager.mintHedronRewards" -> "SingletonHedronManager._mintHedron" [ color = "#1bc6a6" ];
+  "SingletonHedronManager.mintHedronRewards" -> "Tipper._addToTokenWithdrawable" [ color = "#1bc6a6" ];
+  "SingletonHedronManager._mintHedron" -> "SingletonHedronManager._mintNativeHedron" [ color = "#1bc6a6" ];
+  "UnderlyingStakeManager._stakeStartFor" -> "Tipper.address" [ color = "#1bc6a6" ];
+  "UnderlyingStakeManager._stakeStartFor" -> "UnderlyingStakeManager._encodeInfo" [ color = "#1bc6a6" ];
+  "UnderlyingStakeManager._stakeEnd" -> "UnderlyingStakeable._balanceOf" [ color = "#1bc6a6" ];
+  "UnderlyingStakeManager._stakeEnd" -> "Tipper.address" [ color = "#1bc6a6" ];
+  "UnderlyingStakeManager._stakeEnd" -> "Tipper._getStake" [ color = "#1bc6a6" ];
+  "UnderlyingStakeManager._stakeEnd" -> "Tipper.address" [ color = "#1bc6a6" ];
+  "UnderlyingStakeManager._stakeEnd" -> "UnderlyingStakeManager._encodeInfo" [ color = "#1bc6a6" ];
+  "UnderlyingStakeManager._stakeEnd" -> "Tipper.address" [ color = "#1bc6a6" ];
+  "UnderlyingStakeManager._stakeEnd" -> "UnderlyingStakeable._balanceOf" [ color = "#1bc6a6" ];
+  "UnderlyingStakeManager._stakeEnd" -> "Tipper.address" [ color = "#1bc6a6" ];
+  "UnderlyingStakeManager.stakeStart" -> "Tipper._depositTokenFrom" [ color = "#1bc6a6" ];
+  "UnderlyingStakeManager.stakeStart" -> "UnderlyingStakeManager._stakeStartFor" [ color = "#1bc6a6" ];
+  "UnderlyingStakeManager.stakeStart" -> "Tipper._stakeCount" [ color = "#1bc6a6" ];
+  "UnderlyingStakeManager.stakeStart" -> "Tipper.address" [ color = "#1bc6a6" ];
+  "UnderlyingStakeManager.stakeEnd" -> "Tipper._verifyStakeOwnership" [ color = "#1bc6a6" ];
+  "UnderlyingStakeManager.stakeEnd" -> "UnderlyingStakeManager._stakeEnd" [ color = "#1bc6a6" ];
+  "UnderlyingStakeManager.stakeEnd" -> "Tipper._stakeCount" [ color = "#1bc6a6" ];
+  "UnderlyingStakeManager.stakeEnd" -> "Tipper.address" [ color = "#1bc6a6" ];
+  "UnderlyingStakeManager.stakeEnd" -> "Bank._withdrawTokenTo" [ color = "#1bc6a6" ];
+  "UnderlyingStakeManager.stakeEnd" -> "Bank.payable" [ color = "#1bc6a6" ];
+  "UnderlyingStakeManager.stakeEndById" -> "Tipper._verifyStakeOwnership" [ color = "#1bc6a6" ];
+  "UnderlyingStakeManager.stakeEndById" -> "Tipper._stakeIdToInfo" [ color = "#1bc6a6" ];
+  "UnderlyingStakeManager.stakeEndById" -> "UnderlyingStakeManager._stakeEnd" [ color = "#1bc6a6" ];
+  "UnderlyingStakeManager.stakeEndById" -> "Tipper._stakeCount" [ color = "#1bc6a6" ];
+  "UnderlyingStakeManager.stakeEndById" -> "Tipper.address" [ color = "#1bc6a6" ];
+  "UnderlyingStakeManager.stakeEndById" -> "Bank._withdrawTokenTo" [ color = "#1bc6a6" ];
+  "UnderlyingStakeManager.stakeEndById" -> "Bank.payable" [ color = "#1bc6a6" ];
+  "UnderlyingStakeManager._stakeRestartById" -> "Tipper._verifyStakeOwnership" [ color = "#1bc6a6" ];
+  "UnderlyingStakeManager._stakeRestartById" -> "Tipper._stakeIdToInfo" [ color = "#1bc6a6" ];
+  "UnderlyingStakeManager._stakeRestartById" -> "Tipper._getStake" [ color = "#1bc6a6" ];
+  "UnderlyingStakeManager._stakeRestartById" -> "Tipper.address" [ color = "#1bc6a6" ];
+  "UnderlyingStakeManager._stakeRestartById" -> "Tipper._stakeCount" [ color = "#1bc6a6" ];
+  "UnderlyingStakeManager._stakeRestartById" -> "Tipper.address" [ color = "#1bc6a6" ];
+  "UnderlyingStakeManager._stakeRestartById" -> "UnderlyingStakeManager._stakeEnd" [ color = "#1bc6a6" ];
+  "UnderlyingStakeManager._stakeRestartById" -> "UnderlyingStakeManager._stakeStartFor" [ color = "#1bc6a6" ];
+  "UnderlyingStakeManager.stakeRestartById" -> "UnderlyingStakeManager._stakeRestartById" [ color = "#1bc6a6" ];
+  "UnderlyingStakeManager.stakeRestartManyById" -> "UnderlyingStakeManager._stakeRestartById" [ color = "#1bc6a6" ];
+  "GoodAccounting.stakeGoodAccounting" -> "GoodAccounting._stakeGoodAccounting" [ color = "#1bc6a6" ];
+  "GoodAccounting.checkStakeGoodAccounting" -> "GoodAccounting._checkStakeGoodAccounting" [ color = "#1bc6a6" ];
+  "GoodAccounting.checkStakeGoodAccounting" -> "Tipper.address" [ color = "#1bc6a6" ];
+  "GoodAccounting.checkStakeGoodAccounting" -> "Tipper._stakeIdToIndex" [ color = "#1bc6a6" ];
+  "GoodAccounting.checkStakeGoodAccountingFor" -> "GoodAccounting._checkStakeGoodAccounting" [ color = "#1bc6a6" ];
+  "GoodAccounting.isGoodAccountable" -> "GoodAccounting._isGoodAccountable" [ color = "#1bc6a6" ];
+  "GoodAccounting.isStakeIdGoodAccountable" -> "GoodAccounting._isGoodAccountable" [ color = "#1bc6a6" ];
+  "GoodAccounting.isStakeIdGoodAccountable" -> "Tipper.address" [ color = "#1bc6a6" ];
+  "GoodAccounting.isStakeIdGoodAccountable" -> "Tipper._stakeIdToIndex" [ color = "#1bc6a6" ];
+  "GoodAccounting._isGoodAccountable" -> "Tipper._getStake" [ color = "#1bc6a6" ];
+  "GoodAccounting._isGoodAccountable" -> "UnderlyingStakeable._isEarlyEnding" [ color = "#1bc6a6" ];
+  "GoodAccounting._checkStakeGoodAccounting" -> "GoodAccounting._isGoodAccountable" [ color = "#1bc6a6" ];
+  "GoodAccounting._checkStakeGoodAccounting" -> "GoodAccounting._stakeGoodAccounting" [ color = "#1bc6a6" ];
+  "Magnitude.computeMagnitude" -> "Magnitude._computeMagnitude" [ color = "#1bc6a6" ];
+  "StakeEnder._setDefaultSettings" -> "StakeEnder._logSettingsUpdate" [ color = "#1bc6a6" ];
+  "EncodableSettings._defaultSettings" -> "EncodableSettings._decodeSettings" [ color = "#1bc6a6" ];
+  "HSIStakeManager.depositHsi" -> "HSIStakeManager._deposit721" [ color = "#1bc6a6" ];
+  "HSIStakeManager.depositHsi" -> "StakeEnder.address" [ color = "#1bc6a6" ];
+  "HSIStakeManager.depositHsi" -> "UnderlyingStakeManager._encodeInfo" [ color = "#1bc6a6" ];
+  "HSIStakeManager.depositHsi" -> "StakeEnder._setDefaultSettings" [ color = "#1bc6a6" ];
+  "HSIStakeManager.depositHsi" -> "StakeEnder._logSettingsUpdate" [ color = "#1bc6a6" ];
+  "HSIStakeManager._deposit721" -> "StakeEnder.address" [ color = "#1bc6a6" ];
+  "HSIStakeManager.hsiAddressToId" -> "HSIStakeManager._hsiAddressToId" [ color = "#1bc6a6" ];
+  "HSIStakeManager._hsiAddressToId" -> "StakeEnder._getStake" [ color = "#1bc6a6" ];
+  "HSIStakeManager.withdrawHsi" -> "Tipper._verifyStakeOwnership" [ color = "#1bc6a6" ];
+  "HSIStakeManager.withdrawHsi" -> "StakeEnder._stakeIdToInfo" [ color = "#1bc6a6" ];
+  "HSIStakeManager.withdrawHsi" -> "Tipper._stakeIdTipSize" [ color = "#1bc6a6" ];
+  "HSIStakeManager.withdrawHsi" -> "Tipper._removeTipFromStake" [ color = "#1bc6a6" ];
+  "HSIStakeManager.withdrawHsi" -> "StakeEnder._logSettingsUpdate" [ color = "#1bc6a6" ];
+  "HSIStakeManager.withdrawHsi" -> "HSIStakeManager._withdraw721" [ color = "#1bc6a6" ];
+  "HSIStakeManager._withdraw721" -> "StakeEnder.address" [ color = "#1bc6a6" ];
+  "HSIStakeManager.hsiStakeEndMany" -> "StakeEnder._currentDay" [ color = "#1bc6a6" ];
+  "HSIStakeManager.hsiStakeEndMany" -> "StakeEnder.address" [ color = "#1bc6a6" ];
+  "HSIStakeManager.hsiStakeEndMany" -> "StakeEnder._stakeEndByConsent" [ color = "#1bc6a6" ];
+  "StakeEnder._verifyStakeMatchesIndex" -> "StakeEnder.address" [ color = "#1bc6a6" ];
+  "StakeEnder._verifyStakeMatchesIndex" -> "StakeEnder._stakeCount" [ color = "#1bc6a6" ];
+  "StakeEnder._verifyStakeMatchesIndex" -> "StakeEnder._getStake" [ color = "#1bc6a6" ];
+  "StakeEnder._stakeEnd" -> "StakeEnder.address" [ color = "#1bc6a6" ];
+  "StakeEnder._stakeEnd" -> "StakeEnder.address" [ color = "#1bc6a6" ];
+  "StakeEnder._stakeEnd" -> "StakeEnder._stakeIdToInfo" [ color = "#1bc6a6" ];
+  "StakeEnder._stakeEnd" -> "UnderlyingStakeManager._encodeInfo" [ color = "#1bc6a6" ];
+  "StakeEnder._stakeStartFor" -> "UnderlyingStakeManager._encodeInfo" [ color = "#1bc6a6" ];
+  "StakeEnder._mintHedron" -> "HSIStakeManager._mintInstancedHedron" [ color = "#1bc6a6" ];
+  "StakeEnder._mintHedron" -> "StakeEnder.address" [ color = "#1bc6a6" ];
+  "Tipper._checkStakeCustodian" -> "StakeInfo._verifyCustodian" [ color = "#1bc6a6" ];
+  "MaximusStakeManager.onlyPerpetual" -> "Tipper.NotAllowed" [ color = "#1bc6a6" ];
+  "MaximusStakeManager.stakeEndAs" -> "IPublicEndStakeable.STAKE_END_DAY" [ color = "white" ];
+  "MaximusStakeManager.stakeEndAs" -> "IPublicEndStakeable.STAKE_IS_ACTIVE" [ color = "white" ];
+  "MaximusStakeManager.stakeEndAs" -> "IPublicEndStakeable.mintHedron" [ color = "white" ];
+  "MaximusStakeManager.stakeEndAs" -> "IPublicEndStakeable.endStakeHEX" [ color = "white" ];
+  "MaximusStakeManager.stakeEndAs" -> "IPublicEndStakeable.getCurrentPeriod" [ color = "white" ];
+  "MaximusStakeManager.flush" -> "Bank._getTokenBalance" [ color = "#1bc6a6" ];
+  "MaximusStakeManager.flush" -> "StakeEnder.address" [ color = "#1bc6a6" ];
+  "MaximusStakeManager.flush" -> "Bank._getTokenBalance" [ color = "#1bc6a6" ];
+  "GasReimberser.flush" -> "GasReimberser.payable" [ color = "#1bc6a6" ];
+  "GasReimberser.flush" -> "PoolContract.getEndStaker" [ color = "white" ];
+  "GasReimberser.flush" -> "GasReimberser.address" [ color = "#1bc6a6" ];
+  "GasReimberser.flush" -> "ender.sendValue" [ color = "white" ];
+  "GasReimberser.flush_erc20" -> "PoolContract.getEndStaker" [ color = "white" ];
+  "GasReimberser.flush_erc20" -> "GasReimberser.address" [ color = "#1bc6a6" ];
+  "IsolatedStakeManagerFactory.createIsolatedManager" -> "IsolatedStakeManagerFactory.address" [ color = "#1bc6a6" ];
+  "IsolatedStakeManagerFactory.createIsolatedManager" -> "IsolatedStakeManagerFactory.address" [ color = "#1bc6a6" ];
+  "IsolatedStakeManager.<Constructor>" -> "IsolatedStakeManager._setAddressAuthorization" [ color = "#1bc6a6" ];
+  "IsolatedStakeManager.<Constructor>" -> "IsolatedStakeManager._transferOwnership" [ color = "#1bc6a6" ];
+  "IsolatedStakeManager.setAuthorization" -> "IsolatedStakeManager._setAddressAuthorization" [ color = "#1bc6a6" ];
+  "IsolatedStakeManager.setStartAuthorization" -> "IsolatedStakeManager._setAuthorization" [ color = "#1bc6a6" ];
+  "IsolatedStakeManager.setStartAuthorization" -> "IsolatedStakeManager._startAuthorizationKey" [ color = "#1bc6a6" ];
+  "IsolatedStakeManager.startAuthorizationKey" -> "IsolatedStakeManager._startAuthorizationKey" [ color = "#1bc6a6" ];
+  "IsolatedStakeManager.stakeStart" -> "IsolatedStakeManager._getAddressSetting" [ color = "#1bc6a6" ];
+  "IsolatedStakeManager.stakeStart" -> "Capable._isCapable" [ color = "#1bc6a6" ];
+  "IsolatedStakeManager.stakeStart" -> "IsolatedStakeManager.NotAllowed" [ color = "#1bc6a6" ];
+  "IsolatedStakeManager.stakeStart" -> "IsolatedStakeManager._transferFromOwner" [ color = "#1bc6a6" ];
+  "IsolatedStakeManager.stakeStart" -> "IsolatedStakeManager._stakeStart" [ color = "#1bc6a6" ];
+  "IsolatedStakeManager.stakeStartWithAuthorization" -> "Capable._isCapable" [ color = "#1bc6a6" ];
+  "IsolatedStakeManager.stakeStartWithAuthorization" -> "IsolatedStakeManager._startAuthorizationKey" [ color = "#1bc6a6" ];
+  "IsolatedStakeManager.stakeStartWithAuthorization" -> "IsolatedStakeManager.NotAllowed" [ color = "#1bc6a6" ];
+  "IsolatedStakeManager.stakeStartWithAuthorization" -> "IsolatedStakeManager._stakeStart" [ color = "#1bc6a6" ];
+  "IsolatedStakeManager.transferFromOwner" -> "IsolatedStakeManager._transferFromOwner" [ color = "#1bc6a6" ];
+  "IsolatedStakeManager.stakeEnd" -> "UnderlyingStakeable._getStake" [ color = "#1bc6a6" ];
+  "IsolatedStakeManager.stakeEnd" -> "Multicall.address" [ color = "#1bc6a6" ];
+  "IsolatedStakeManager.stakeEnd" -> "IsolatedStakeManager._settingsCheck" [ color = "#1bc6a6" ];
+  "IsolatedStakeManager.stakeEnd" -> "IsolatedStakeManager.NotAllowed" [ color = "#1bc6a6" ];
+  "IsolatedStakeManager.stakeEnd" -> "IsolatedStakeManager._endStake" [ color = "#1bc6a6" ];
+  "IsolatedStakeManager.transferToOwner" -> "IsolatedStakeManager._transferToOwner" [ color = "#1bc6a6" ];
+  "IsolatedStakeManager.checkAndStakeEnd" -> "UnderlyingStakeable._getStake" [ color = "#1bc6a6" ];
+  "IsolatedStakeManager.checkAndStakeEnd" -> "Multicall.address" [ color = "#1bc6a6" ];
+  "IsolatedStakeManager.checkAndStakeEnd" -> "IsolatedStakeManager._settingsCheck" [ color = "#1bc6a6" ];
+  "IsolatedStakeManager.checkAndStakeEnd" -> "IsolatedStakeManager._endStake" [ color = "#1bc6a6" ];
+  "IsolatedStakeManager._transferToOwner" -> "Capable._isCapable" [ color = "#1bc6a6" ];
+  "IsolatedStakeManager._transferToOwner" -> "IsolatedStakeManager._getAddressSetting" [ color = "#1bc6a6" ];
+  "IsolatedStakeManager._transferToOwner" -> "IsolatedStakeManager.NotAllowed" [ color = "#1bc6a6" ];
+  "IsolatedStakeManager._transferToOwner" -> "IsolatedStakeManager.owner" [ color = "#1bc6a6" ];
+  "IsolatedStakeManager._transferToOwner" -> "UnderlyingStakeable._balanceOf" [ color = "#1bc6a6" ];
+  "IsolatedStakeManager._transferToOwner" -> "Multicall.address" [ color = "#1bc6a6" ];
+  "IsolatedStakeManager._settingsCheck" -> "IsolatedStakeManager._getAddressSetting" [ color = "#1bc6a6" ];
+  "IsolatedStakeManager._settingsCheck" -> "UnderlyingStakeable._isEarlyEnding" [ color = "#1bc6a6" ];
+  "IsolatedStakeManager._settingsCheck" -> "UnderlyingStakeable._currentDay" [ color = "#1bc6a6" ];
+  "IsolatedStakeManager._settingsCheck" -> "Capable._isCapable" [ color = "#1bc6a6" ];
+  "IsolatedStakeManager._settingsCheck" -> "Capable._isCapable" [ color = "#1bc6a6" ];
+  "IsolatedStakeManager._stakeStart" -> "UnderlyingStakeable._balanceOf" [ color = "#1bc6a6" ];
+  "IsolatedStakeManager._stakeStart" -> "Multicall.address" [ color = "#1bc6a6" ];
+  "IsolatedStakeManager._transferFromOwner" -> "Capable._isCapable" [ color = "#1bc6a6" ];
+  "IsolatedStakeManager._transferFromOwner" -> "IsolatedStakeManager._getAddressSetting" [ color = "#1bc6a6" ];
+  "IsolatedStakeManager._transferFromOwner" -> "IsolatedStakeManager.NotAllowed" [ color = "#1bc6a6" ];
+  "IsolatedStakeManager._transferFromOwner" -> "IsolatedStakeManager.owner" [ color = "#1bc6a6" ];
+  "IsolatedStakeManager._transferFromOwner" -> "Multicall.address" [ color = "#1bc6a6" ];
+  "Ownable2Step.transferOwnership" -> "Ownable2Step.owner" [ color = "#1bc6a6" ];
+  "Ownable2Step._transferOwnership" -> "Ownable._transferOwnership" [ color = "white" ];
+  "Ownable2Step.acceptOwnership" -> "Ownable2Step._msgSender" [ color = "#1bc6a6" ];
+  "Ownable2Step.acceptOwnership" -> "Ownable2Step.pendingOwner" [ color = "#1bc6a6" ];
+  "Ownable2Step.acceptOwnership" -> "Ownable2Step._transferOwnership" [ color = "#1bc6a6" ];
+  "Ownable.<Constructor>" -> "Ownable._transferOwnership" [ color = "#1bc6a6" ];
+  "Ownable.<Constructor>" -> "Ownable._msgSender" [ color = "#1bc6a6" ];
+  "Ownable.onlyOwner" -> "Ownable._checkOwner" [ color = "#1bc6a6" ];
+  "Ownable._checkOwner" -> "Ownable.owner" [ color = "#1bc6a6" ];
+  "Ownable._checkOwner" -> "Ownable._msgSender" [ color = "#1bc6a6" ];
+  "Ownable.renounceOwnership" -> "Ownable._transferOwnership" [ color = "#1bc6a6" ];
+  "Ownable.renounceOwnership" -> "Ownable.address" [ color = "#1bc6a6" ];
+  "Ownable.transferOwnership" -> "Ownable.address" [ color = "#1bc6a6" ];
+  "Ownable.transferOwnership" -> "Ownable._transferOwnership" [ color = "#1bc6a6" ];
+  "AuthorizationManager._setAuthorization" -> "AuthorizationManager.NotAllowed" [ color = "#1bc6a6" ];
+  "AuthorizationManager._setAddressAuthorization" -> "AuthorizationManager._setAuthorization" [ color = "#1bc6a6" ];
+  "AuthorizationManager.isAddressAuthorized" -> "AuthorizationManager._isAddressAuthorized" [ color = "#1bc6a6" ];
+  "AuthorizationManager._isAddressAuthorized" -> "AuthorizationManager._isAuthorized" [ color = "#1bc6a6" ];
+  "AuthorizationManager._isAuthorized" -> "Capable._isCapable" [ color = "#1bc6a6" ];
+
+
+rankdir=LR
+node [shape=plaintext]
+subgraph cluster_01 { 
+label = "Legend";
+key [label=<<table border="0" cellpadding="2" cellspacing="0" cellborder="0">
+  <tr><td align="right" port="i1">Internal Call</td></tr>
+  <tr><td align="right" port="i2">External Call</td></tr>
+  <tr><td align="right" port="i3">Defined Contract</td></tr>
+  <tr><td align="right" port="i4">Undefined Contract</td></tr>
+  </table>>]
+key2 [label=<<table border="0" cellpadding="2" cellspacing="0" cellborder="0">
+  <tr><td port="i1">&nbsp;&nbsp;&nbsp;</td></tr>
+  <tr><td port="i2">&nbsp;&nbsp;&nbsp;</td></tr>
+  <tr><td port="i3" bgcolor="#445773">&nbsp;&nbsp;&nbsp;</td></tr>
+  <tr><td port="i4">
+    <table border="1" cellborder="0" cellspacing="0" cellpadding="7" color="#e8726d">
+      <tr>
+       <td></td>
+      </tr>
+     </table>
+  </td></tr>
+  </table>>]
+key:i1:e -> key2:i1:w [color="#1bc6a6"]
+key:i2:e -> key2:i2:w [color="white"]
+}
+}

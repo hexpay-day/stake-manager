@@ -14,7 +14,10 @@ contract Bank is Capable {
    * gets unattributed tokens floating in the contract
    */
   function _getUnattributed(address token) internal view returns(uint256) {
-    return _getBalance(token, address(this)) - attributed[token];
+    return _getBalance({
+      token: token,
+      owner: address(this)
+    }) - attributed[token];
   }
   function _getBalance(address token, address owner) internal view returns(uint256) {
     return token == address(0) ? owner.balance : IERC20(token).balanceOf(owner);
@@ -23,7 +26,9 @@ contract Bank is Capable {
    * gets the amount of unattributed tokens
    */
   function getUnattributed(address token) external view returns(uint256) {
-    return _getUnattributed(token);
+    return _getUnattributed({
+      token: token
+    });
   }
   /**
    * given a provided input amount, clamp the input to a maximum, using maximum if 0 provided
@@ -31,7 +36,10 @@ contract Bank is Capable {
    * @param max the maximum amount that the value can be
    */
   function clamp(uint256 amount, uint256 max) external pure returns(uint256) {
-    return _clamp(amount, max);
+    return _clamp({
+      amount: amount,
+      max: max
+    });
   }
   /**
    * clamp a given amount to the maximum amount
@@ -49,7 +57,11 @@ contract Bank is Capable {
    * and can be refused by calling the dangerous version
    */
   function depositToken(address token, uint256 amount) external payable returns(uint256) {
-    return _depositTokenTo(token, msg.sender, amount);
+    return _depositTokenTo({
+      token: token,
+      to: msg.sender,
+      amount: amount
+    });
   }
   /**
    * deposit an amount of tokens to the contract and attribute
@@ -58,11 +70,23 @@ contract Bank is Capable {
    * @param amount the amount of tokens
    */
   function depositTokenTo(address token, address to, uint256 amount) external payable returns(uint256) {
-    return _depositTokenTo(token, to, amount);
+    return _depositTokenTo({
+      token: token,
+      to: to,
+      amount: amount
+    });
   }
   function _depositTokenTo(address token, address to, uint256 amount) internal returns(uint256) {
-    amount = _depositTokenFrom(token, msg.sender, amount);
-    _addToTokenWithdrawable(token, to, amount);
+    amount = _depositTokenFrom({
+      token: token,
+      depositor: msg.sender,
+      amount: amount
+    });
+    _addToTokenWithdrawable({
+      token: token,
+      to: to,
+      amount: amount
+    });
     return amount;
   }
   /**
@@ -87,9 +111,17 @@ contract Bank is Capable {
     withdrawable = _clamp(amount, max);
     if (withdrawable > 0) {
       if (transferOut) {
-        return _withdrawTokenTo(token, to, withdrawable);
+        _withdrawTokenTo({
+          token: token,
+          to: to,
+          amount: withdrawable
+        });
       } else {
-        _addToTokenWithdrawable(token, to, withdrawable);
+        _addToTokenWithdrawable({
+          token: token,
+          to: to,
+          amount: withdrawable
+        });
       }
     }
   }
@@ -115,7 +147,15 @@ contract Bank is Capable {
    * @param amount the amount that should be deducted from the sender's balance
    */
   function withdrawTokenTo(address token, address payable to, uint256 amount) external payable returns(uint256) {
-    return _withdrawTokenTo(token, to, _deductWithdrawable(token, msg.sender, amount));
+    return _withdrawTokenTo({
+      token: token,
+      to: to,
+      amount: _deductWithdrawable({
+        token: token,
+        account: msg.sender,
+        amount: amount
+      })
+    });
   }
   function _getTokenBalance(address token) internal view returns(uint256) {
     return token == address(0)
@@ -125,12 +165,12 @@ contract Bank is Capable {
 
   /**
    * adds a balance to the provided staker of the magnitude given in amount
-   * @param staker the staker to add a withdrawable balance to
+   * @param to the account to add a withdrawable balance to
    * @param amount the amount to add to the staker's withdrawable balance as well as the attributed tokens
    */
-  function _addToTokenWithdrawable(address token, address staker, uint256 amount) internal {
+  function _addToTokenWithdrawable(address token, address to, uint256 amount) internal {
     unchecked {
-      withdrawableBalanceOf[token][staker] = withdrawableBalanceOf[token][staker] + amount;
+      withdrawableBalanceOf[token][to] = withdrawableBalanceOf[token][to] + amount;
       attributed[token] = attributed[token] + amount;
     }
   }
@@ -143,7 +183,10 @@ contract Bank is Capable {
    */
   function _deductWithdrawable(address token, address account, uint256 amount) internal returns(uint256) {
     uint256 withdrawable = withdrawableBalanceOf[token][account];
-    amount = _clamp(amount, withdrawable);
+    amount = _clamp({
+      amount: amount,
+      max: withdrawable
+    });
     unchecked {
       withdrawableBalanceOf[token][account] = withdrawable - amount;
       attributed[token] = attributed[token] - amount;
@@ -151,10 +194,10 @@ contract Bank is Capable {
     return amount;
   }
   /** deposits tokens from a staker and marks them for that staker */
-  function _depositTokenFrom(address token, address staker, uint256 amount) internal returns(uint256 amnt) {
+  function _depositTokenFrom(address token, address depositor, uint256 amount) internal returns(uint256 amnt) {
     if (token != address(0)) {
       if (amount > 0) {
-        IERC20(token).transferFrom(staker, address(this), amount);
+        IERC20(token).transferFrom(depositor, address(this), amount);
         amnt = amount;
       }
     } else {
@@ -168,7 +211,11 @@ contract Bank is Capable {
    * @param amount the number of tokens to deposit
    */
   function depositTokenUnattributed(address token, uint256 amount) external {
-    _depositTokenFrom(token, msg.sender, amount);
+    _depositTokenFrom({
+      token: token,
+      depositor: msg.sender,
+      amount: amount
+    });
   }
   /**
    * transfers tokens to a recipient
@@ -185,9 +232,17 @@ contract Bank is Capable {
   }
   function _attributeFunds(uint256 settings, uint256 index, address token, address staker, uint256 amount) internal {
     if (_isCapable(settings, index)) {
-      _withdrawTokenTo(token, payable(staker), amount);
+      _withdrawTokenTo({
+        token: token,
+        to: payable(staker),
+        amount: amount
+      });
     } else {
-      _addToTokenWithdrawable(token, staker, amount);
+      _addToTokenWithdrawable({
+        token: token,
+        to: staker,
+        amount: amount
+      });
     }
   }
 }

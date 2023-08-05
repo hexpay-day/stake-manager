@@ -50,7 +50,7 @@ contract StakeInfo {
   function _stakeIdToIndex(uint256 stakeId) internal view returns(uint256) {
     return stakeIdInfo[stakeId] >> 160;
   }
-  function _encodeInfo(uint256 index, address staker) internal pure returns(uint256) {
-    return (index << 160) | uint160(staker);
+  function _encodeInfo(uint256 index, address owner) internal pure returns(uint256) {
+    return (index << 160) | uint160(owner);
   }
 }
