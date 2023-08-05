@@ -13,7 +13,7 @@ contract StakeEnder is Magnitude, Tipper, SingletonHedronManager {
    * @param stakeId the stake id on the underlying contract to end
    */
   function stakeEndByConsent(uint256 stakeId) external payable returns(uint256 delta, uint256 count) {
-    return _stakeEndByConsent(stakeId, _stakeCount(address(this)));
+    return _stakeEndByConsent(stakeId, (_currentDay() << 128) | _stakeCount(address(this)));
   }
   function _verifyStakeMatchesIndex(uint256 index, uint256 stakeId) internal view virtual returns(
     IStakeable.StakeStore memory stake
@@ -41,8 +41,7 @@ contract StakeEnder is Magnitude, Tipper, SingletonHedronManager {
     if (!_isCapable(setting, 0)) {
       return (0, stakeCount);
     }
-    uint256 today = _currentDay();
-    if (_isEarlyEnding(stake.lockedDay, stake.stakedDays, today) && !_isCapable(setting, 1)) {
+    if (_isEarlyEnding(stake.lockedDay, stake.stakedDays, stakeCount >> 128) && !_isCapable(setting, 1)) {
       return (0, stakeCount);
     }
     if (_isCapable(setting, 3)) {
@@ -69,7 +68,7 @@ contract StakeEnder is Magnitude, Tipper, SingletonHedronManager {
       }
     }
     --stakeCount;
-    delta = _stakeEnd(idx, stakeId, stakeCount);
+    delta = _stakeEnd(idx, stakeId, uint128(stakeCount));
     // direct funds after end stake
     // only place the stake struct exists is in memory in this method
     {
@@ -98,14 +97,14 @@ contract StakeEnder is Magnitude, Tipper, SingletonHedronManager {
         stake
       );
       uint256 newStakeDays = _computeMagnitude(
-        MAX_DAYS, setting << 216 >> 248, setting << 224 >> 240, today,
+        MAX_DAYS, setting << 216 >> 248, setting << 224 >> 240, stakeCount >> 128,
         stake
       );
       if (newStakeDays > 0) {
         unchecked {
           delta -= newStakeAmount; // checked for underflow
         }
-        nextStakeId = _stakeStartFor(staker, newStakeAmount, newStakeDays, stakeCount);
+        nextStakeId = _stakeStartFor(staker, newStakeAmount, newStakeDays, uint128(stakeCount));
         ++stakeCount;
         // settings will be maintained for the new stake
         // note, because 0 is used, one often needs to use x-1
@@ -140,7 +139,7 @@ contract StakeEnder is Magnitude, Tipper, SingletonHedronManager {
   function stakeEndByConsentForMany(uint256[] calldata stakeIds) external payable {
     uint256 i;
     uint256 len = stakeIds.length;
-    uint256 count = _stakeCount(address(this));
+    uint256 count = (_currentDay() << 128) | _stakeCount(address(this));
     do {
       (, count) = _stakeEndByConsent(stakeIds[i], count);
       unchecked {

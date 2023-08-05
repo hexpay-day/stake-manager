@@ -117,7 +117,7 @@ contract HSIStakeManager is StakeEnder {
   function hsiStakeEndMany(address[] calldata hsiAddresses) external {
     uint256 len = hsiAddresses.length;
     uint256 i;
-    uint256 count = IHEXStakeInstanceManager(hsim).hsiCount(address(this));
+    uint256 count = (_currentDay() << 128) | IHEXStakeInstanceManager(hsim).hsiCount(address(this));
     do {
       (, count) = _stakeEndByConsent(uint160(hsiAddresses[i]), count);
       unchecked {

@@ -125,7 +125,7 @@ const networks: Record<string, NetworkUserConfig> = {
 const settings = {
   optimizer: {
     enabled: true,
-    runs: 100_000,
+    runs: 200,
   },
 }
 
