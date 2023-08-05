@@ -76,43 +76,40 @@ contract HSIStakeManager is StakeEnder {
     tokenId = IHEXStakeInstanceManager(hsim).hexStakeTokenize(index, hsiAddress);
     IERC721(hsim).transferFrom(address(this), owner, tokenId);
   }
-  /**
-   * mint rewards and transfer them the owner of each hsi
-   * @param hsiAddresses variable params for each call
-   * @notice any combination of owners can be passed,
-   * however, it is most efficient to order the hsi address by owner
-   */
-  function mintRewardsFromHSIAddress(address[] calldata hsiAddresses) external {
-    uint256 len = hsiAddresses.length;
-    uint256 i;
-    uint256 hedronTokens;
-    address hsiAddress = hsiAddresses[0];
-    address currentOwner;
-    uint256 stakeId;
-    (, address to) = _stakeIdToInfo(uint256(uint160(hsiAddress)));
-    address hedronAddress = hedron;
-    uint256 index;
-    do {
-      hsiAddress = hsiAddresses[i];
-      stakeId = uint256(uint160(hsiAddress));
-      (index, currentOwner) = _stakeIdToInfo(stakeId);
-      if (currentOwner != to) {
-        if (hedronTokens > 0) {
-          _addToTokenWithdrawable(hedronAddress, to, hedronTokens);
-          hedronTokens = 0;
-        }
-      }
-      to = currentOwner;
-      if (_isCapable(stakeIdToSettings[stakeId], 0)) {
-        hedronTokens += _mintHedron(index, uint256(uint160(hsiAddress)));
-      }
-      unchecked {
-        ++i;
-      }
-    } while (i < len);
-    if (hedronTokens > 0) {
-      _addToTokenWithdrawable(hedronAddress, to, hedronTokens);
-    }
+  // function mintHedronRewards(address[] calldata hsiAddresses) external {
+  //   uint256 len = hsiAddresses.length;
+  //   uint256 i;
+  //   uint256 hedronTokens;
+  //   address hsiAddress = hsiAddresses[0];
+  //   address currentOwner;
+  //   uint256 stakeId;
+  //   (, address to) = _stakeIdToInfo(uint256(uint160(hsiAddress)));
+  //   address hedronAddress = hedron;
+  //   uint256 index;
+  //   do {
+  //     hsiAddress = hsiAddresses[i];
+  //     stakeId = uint256(uint160(hsiAddress));
+  //     (index, currentOwner) = _stakeIdToInfo(stakeId);
+  //     if (currentOwner != to) {
+  //       if (hedronTokens > 0) {
+  //         _addToTokenWithdrawable(hedronAddress, to, hedronTokens);
+  //         hedronTokens = 0;
+  //       }
+  //     }
+  //     to = currentOwner;
+  //     if (_isCapable(stakeIdToSettings[stakeId], 0)) {
+  //       hedronTokens += _mintHedron(index, uint256(uint160(hsiAddress)));
+  //     }
+  //     unchecked {
+  //       ++i;
+  //     }
+  //   } while (i < len);
+  //   if (hedronTokens > 0) {
+  //     _addToTokenWithdrawable(hedronAddress, to, hedronTokens);
+  //   }
+  // }
+  function _checkCanMintHedronRewards(address currentOwner, uint256 id) internal view override returns(bool) {
+    return msg.sender == currentOwner || _isCapable(stakeIdToSettings[id], 0);
   }
   function hsiStakeEndMany(address[] calldata hsiAddresses) external {
     uint256 len = hsiAddresses.length;

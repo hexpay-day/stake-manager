@@ -69,7 +69,7 @@ describe('HSIStakeManager.sol', () => {
       await utils.moveForwardDays(10, x)
       await expect(x.hsiStakeManager.withdrawableBalanceOf(x.hedron.address, signer1.address))
         .eventually.to.equal(0)
-      await expect(x.hsiStakeManager.mintRewardsFromHSIAddress(_.map(x.hsiTargets, 'hsiAddress')))
+      await expect(x.hsiStakeManager.mintHedronRewards(_.map(x.hsiTargets, 'hsiAddress')))
         .to.emit(x.hedron, 'Transfer')
         .withArgs(hre.ethers.constants.AddressZero, x.hsiStakeManager.address, anyUint)
         // .printGasUsage()
@@ -83,7 +83,7 @@ describe('HSIStakeManager.sol', () => {
       ])), false)
       const [, signerB] = x.signers
       await utils.moveForwardDays(10, x)
-      await expect(x.hsiStakeManager.connect(signerB).mintRewardsFromHSIAddress(_.map(x.hsiTargets, 'hsiAddress')))
+      await expect(x.hsiStakeManager.connect(signerB).mintHedronRewards(_.map(x.hsiTargets, 'hsiAddress')))
         .to.emit(x.hedron, 'Transfer')
         .withArgs(hre.ethers.constants.AddressZero, x.hsiStakeManager.address, anyUint)
     })

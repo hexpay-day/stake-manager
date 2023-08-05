@@ -2,6 +2,8 @@ import dotenv from 'dotenv'
 dotenv.config()
 import * as yargs from 'yargs'
 
+Error.stackTraceLimit = Infinity
+
 export const args = yargs.options({
   chain: {
     type: 'string',

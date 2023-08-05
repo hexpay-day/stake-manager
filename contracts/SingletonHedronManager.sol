@@ -12,19 +12,18 @@ contract SingletonHedronManager is EncodableSettings, UnderlyingStakeManager {
    * @param stakeIds list of stake ids to mint
    * @notice any combination of owners can be passed, however, it is most efficient to order the hsi address by owner
    */
-  function mintRewardsFromStakeIds(uint64[] calldata stakeIds) external {
+  function mintHedronRewards(uint256[] calldata stakeIds) external {
     uint256 len = stakeIds.length;
     uint256 i;
     uint256 hedronTokens;
     address currentOwner;
     address to = _stakeIdToOwner(stakeIds[0]);
     uint256 stakeIndex;
-    address hedronAddress = hedron;
     do {
       (stakeIndex, currentOwner) = _stakeIdToInfo(stakeIds[i]);
-      if (msg.sender == currentOwner || _isCapable(stakeIdToSettings[stakeIds[i]], 2)) {
+      if (_checkCanMintHedronRewards(currentOwner, stakeIds[i])) {
         if (currentOwner != to) {
-          _addToTokenWithdrawable(hedronAddress, to, hedronTokens);
+          _addToTokenWithdrawable(hedron, to, hedronTokens);
           hedronTokens = 0;
         }
         to = currentOwner;
@@ -35,10 +34,13 @@ contract SingletonHedronManager is EncodableSettings, UnderlyingStakeManager {
       }
     } while (i < len);
     if (hedronTokens > 0) {
-      _addToTokenWithdrawable(hedronAddress, to, hedronTokens);
+      _addToTokenWithdrawable(hedron, to, hedronTokens);
     }
   }
-  function _mintHedron(uint256 index, uint256 id) internal virtual returns(uint256) {
+  function _checkCanMintHedronRewards(address currentOwner, uint256 id) internal view virtual returns(bool) {
+    return msg.sender == currentOwner || _isCapable(stakeIdToSettings[id], 2);
+  }
+  function _mintHedron(uint256 index, uint256 id) internal virtual returns(uint256 amount) {
     return _mintNativeHedron(index, id);
   }
   function _mintNativeHedron(uint256 index, uint256 stakeId) internal returns(uint256 amount) {

@@ -23,7 +23,7 @@ describe('SingletonHedronManager.sol', () => {
       const [signerA] = x.signers
       await x.stakeManager.connect(signerA).multicall(data, false)
       await utils.moveForwardDays(2, x)
-      await expect(x.stakeManager.mintRewardsFromStakeIds(x.stakeIds))
+      await expect(x.stakeManager.mintHedronRewards(x.stakeIds))
         .to.emit(x.hedron, 'Transfer')
         .withArgs(hre.ethers.constants.AddressZero, x.stakeManager.address, anyUint)
       await expect(x.hedron.balanceOf(x.stakeManager.address))
@@ -45,7 +45,7 @@ describe('SingletonHedronManager.sol', () => {
       const [signerA] = x.signers
       await x.stakeManager.connect(signerA).multicall(data, false)
       await utils.moveForwardDays(2, x)
-      await x.stakeManager.mintRewardsFromStakeIds(x.stakeIds)
+      await x.stakeManager.mintHedronRewards(x.stakeIds)
       await expect(x.hedron.balanceOf(signerA.address))
         .eventually.to.equal(0)
       await expect(x.stakeManager.withdrawTokenTo(x.hedron.address, signerA.address, 100))
@@ -59,7 +59,7 @@ describe('SingletonHedronManager.sol', () => {
       await expect(x.hedron.balanceOf(signerA.address))
         .eventually.to.be.greaterThan(100)
       await utils.moveForwardDays(2, x)
-      await x.stakeManager.mintRewardsFromStakeIds(x.stakeIds)
+      await x.stakeManager.mintHedronRewards(x.stakeIds)
       await expect(x.stakeManager.withdrawTokenTo(x.hedron.address, signerA.address, hre.ethers.constants.MaxInt256))
         .to.emit(x.hedron, 'Transfer')
         .withArgs(x.stakeManager.address, signerA.address, anyUint)
@@ -92,7 +92,7 @@ describe('SingletonHedronManager.sol', () => {
       )))
       await x.stakeManager.connect(signerB).multicall(signerBUpdateSettings, false)
       await utils.moveForwardDays(2, x)
-      await x.stakeManager.mintRewardsFromStakeIds(stakeIds)
+      await x.stakeManager.mintHedronRewards(stakeIds)
 
       await expect(x.stakeManager.withdrawableBalanceOf(x.hedron.address, signerA.address))
         .eventually.to.be.greaterThan(0)
