@@ -4,10 +4,9 @@ pragma solidity ^0.8.17;
 import "./UnderlyingStakeable.sol";
 import "./Bank.sol";
 import "./CurrencyList.sol";
-import "./StakeInfo.sol";
 import "./EncodableSettings.sol";
 
-contract Tipper is Bank, UnderlyingStakeable, CurrencyList, StakeInfo, EncodableSettings {
+contract Tipper is Bank, UnderlyingStakeable, CurrencyList, EncodableSettings {
   constructor()
     Bank()
     UnderlyingStakeable()
@@ -99,6 +98,7 @@ contract Tipper is Bank, UnderlyingStakeable, CurrencyList, StakeInfo, Encodable
         limit = uint96(tip >> 128);
         tip = (uint64(tip >> 64) * block.basefee) / uint64(tip);
         tip = _clamp(tip, limit);
+        // this is a refund
         unchecked {
           withdrawableBalance += (limit - tip);
         }
