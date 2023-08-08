@@ -44,7 +44,7 @@ contract TestStakeManager is Test {
     while (numDays > 0) {
       skip(24*60*60);
       vm.startPrank(marcher);
-      IStakeable(hx).stakeStart(1 * decimalShift, 5555);
+      IHEX(hx).stakeStart(1 * decimalShift, 5555);
       vm.stopPrank();
       numDays = numDays - 1;
     }
@@ -121,12 +121,12 @@ contract TestStakeManager is Test {
   }
   function _directStakeStart(address sender, uint256 amount, uint256 daysStaked) internal {
     vm.startPrank(sender);
-    IStakeable(hx).stakeStart(amount, daysStaked);
+    IHEX(hx).stakeStart(amount, daysStaked);
     vm.stopPrank();
   }
   function _directStakeEnd(address sender, uint256 index, uint256 stakeId) internal {
     vm.startPrank(sender);
-    IStakeable(hx).stakeEnd(index, uint40(stakeId));
+    IHEX(hx).stakeEnd(index, uint40(stakeId));
     vm.stopPrank();
   }
   function _updateSettings(address stakeOwner, uint256 stakeId, EncodableSettings.Settings memory settings) internal {

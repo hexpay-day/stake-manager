@@ -143,13 +143,13 @@ contract StakeEnder is Magnitude, Tipper, SingletonHedronManager {
         y: delta,
         stake: stake
       });
-      uint256 newStakeDays = _computeMagnitude({
+      uint256 newStakeDays = (setting << 216 >> 248) > 0 ? _computeMagnitude({
         limit: MAX_DAYS,
         method: setting << 216 >> 248,
         x: setting << 224 >> 240,
         y: count >> 128,
         stake: stake
-      });
+      }) : 0;
       if (newStakeDays > 0) {
         unchecked {
           delta -= newStakeAmount; // checked for underflow
