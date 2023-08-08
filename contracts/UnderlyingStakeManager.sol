@@ -93,9 +93,9 @@ contract UnderlyingStakeManager is GoodAccounting {
     _verifyStakeOwnership(msg.sender, _stakeId);
     (uint256 stakeIndex, address staker) = _stakeIdToInfo(_stakeId);
     IStakeable.StakeStore memory stake = _getStake(address(this), stakeIndex);
-    uint256 stakeCount = _stakeCount(address(this)) - 1;
-    amount = _stakeEnd(stakeIndex, _stakeId, stakeCount);
-    stakeId = _stakeStartFor(staker, amount, stake.stakedDays, stakeCount);
+    uint256 count = _stakeCount(address(this)) - 1;
+    amount = _stakeEnd(stakeIndex, _stakeId, count);
+    stakeId = _stakeStartFor(staker, amount, stake.stakedDays, count);
   }
   function stakeRestartById(uint256 _stakeId) external returns(uint256 amount, uint256 stakeId) {
     return _stakeRestartById(_stakeId);

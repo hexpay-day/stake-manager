@@ -121,7 +121,7 @@ contract HSIStakeManager is StakeEnder {
     do {
       (, count) = _stakeEndByConsent({
         stakeId: uint160(hsiAddresses[i]),
-        stakeCount: count
+        count: count
       });
       unchecked {
         ++i;

@@ -15,7 +15,7 @@ contract StakeEnder is Magnitude, Tipper, SingletonHedronManager {
   function stakeEndByConsent(uint256 stakeId) external payable returns(uint256 delta, uint256 count) {
     return _stakeEndByConsent({
       stakeId: stakeId,
-      stakeCount: (_currentDay() << 128) | _stakeCount({
+      count: (_currentDay() << 128) | _stakeCount({
         staker: address(this)
       })
     });
@@ -41,7 +41,7 @@ contract StakeEnder is Magnitude, Tipper, SingletonHedronManager {
    * @dev the stake count is today | stake count because
    * if there were 2 variables, the contract ended up too large
    */
-  function _stakeEndByConsent(uint256 stakeId, uint256 stakeCount) internal returns(uint256 delta, uint256) {
+  function _stakeEndByConsent(uint256 stakeId, uint256 count) internal returns(uint256 delta, uint256) {
     (uint256 idx, address staker) = _stakeIdToInfo({
       stakeId: stakeId
     });
@@ -50,24 +50,24 @@ contract StakeEnder is Magnitude, Tipper, SingletonHedronManager {
       stakeId: stakeId
     });
     if (stake.stakeId == 0) {
-      return (0, stakeCount);
+      return (0, count);
     }
     uint256 setting = stakeIdToSettings[stakeId];
     if (!_isCapable({
       setting: setting,
       index: 0
     })) {
-      return (0, stakeCount);
+      return (0, count);
     }
     if (_isEarlyEnding({
       lockedDay: stake.lockedDay,
       stakedDays: stake.stakedDays,
-      targetDay: stakeCount >> 128
+      targetDay: count >> 128
     }) && !_isCapable({
       setting: setting,
       index: 1
     })) {
-      return (0, stakeCount);
+      return (0, count);
     }
     if (_isCapable({
       setting: setting,
@@ -104,11 +104,11 @@ contract StakeEnder is Magnitude, Tipper, SingletonHedronManager {
         });
       }
     }
-    --stakeCount;
+    --count;
     delta = _stakeEnd({
       stakeIndex: idx,
       stakeId: stakeId,
-      stakeCountAfter: uint128(stakeCount)
+      stakeCountAfter: uint128(count)
     });
     // direct funds after end stake
     // only place the stake struct exists is in memory in this method
@@ -147,7 +147,7 @@ contract StakeEnder is Magnitude, Tipper, SingletonHedronManager {
         limit: MAX_DAYS,
         method: setting << 216 >> 248,
         x: setting << 224 >> 240,
-        y: stakeCount >> 128,
+        y: count >> 128,
         stake: stake
       });
       if (newStakeDays > 0) {
@@ -158,9 +158,9 @@ contract StakeEnder is Magnitude, Tipper, SingletonHedronManager {
           owner: staker,
           amount: newStakeAmount,
           newStakedDays: newStakeDays,
-          index: uint128(stakeCount)
+          index: uint128(count)
         });
-        ++stakeCount;
+        ++count;
         // settings will be maintained for the new stake
         // note, because 0 is used, one often needs to use x-1
         // for the number of times you want to copy
@@ -169,7 +169,10 @@ contract StakeEnder is Magnitude, Tipper, SingletonHedronManager {
         setting = (_decrementCopyIterations({
           setting: setting
         }) >> 2 << 2) | 1;
-        _logSettingsUpdate(nextStakeId, setting);
+        _logSettingsUpdate({
+          stakeId: nextStakeId,
+          settings: setting
+        });
       }
     }
     if (delta > 0) {
@@ -199,7 +202,7 @@ contract StakeEnder is Magnitude, Tipper, SingletonHedronManager {
         }) ? nextStakeId : 0
       });
     }
-    return (delta, stakeCount);
+    return (delta, count);
   }
   /**
    * end many stakes at the same time
@@ -218,7 +221,7 @@ contract StakeEnder is Magnitude, Tipper, SingletonHedronManager {
     do {
       (, count) = _stakeEndByConsent({
         stakeId: stakeIds[i],
-        stakeCount: count
+        count: count
       });
       unchecked {
         ++i;
@@ -230,7 +233,7 @@ contract StakeEnder is Magnitude, Tipper, SingletonHedronManager {
    * @param stakeId the id of the newly minted stake
    * @param settings optional settings passed by stake starter
    */
-  function _logSettings(uint256 stakeId, uint256 settings) internal {
+  function _logSettingsInitiation(uint256 stakeId, uint256 settings) internal {
     if (settings == 0) {
       _setDefaultSettings({
         stakeId: stakeId
@@ -238,7 +241,7 @@ contract StakeEnder is Magnitude, Tipper, SingletonHedronManager {
     } else {
       _writePreservedSettingsUpdate({
         stakeId: stakeId,
-        settings: settings
+        settings:  settings
       });
     }
   }

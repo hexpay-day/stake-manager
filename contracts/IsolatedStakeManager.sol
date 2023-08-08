@@ -191,7 +191,7 @@ contract IsolatedStakeManager is Stakeable, Ownable2Step, AuthorizationManager {
    * check the settings of the running address
    * @param stake the stake to check authorization over
    */
-  function _settingsCheck(StakeStore memory stake) internal view returns(bool) {
+  function _settingsCheck(IStakeable.StakeStore memory stake) internal view returns(bool) {
     uint256 setting = _getAddressSetting(msg.sender);
     if (_isEarlyEnding(stake.lockedDay, stake.stakedDays, _currentDay())) {
       // can early end stake

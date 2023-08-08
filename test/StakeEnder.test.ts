@@ -5,7 +5,7 @@ import _ from 'lodash'
 import * as withArgs from '@nomicfoundation/hardhat-chai-matchers/withArgs'
 import * as utils from './utils'
 import { EncodableSettings } from "../artifacts/types"
-import { IStakeable } from "../artifacts/types/contracts/IHEX"
+import { IStakeable }  from '../artifacts/types/contracts/IHEX'
 
 describe("StakeManager", function () {
   describe('UnderlyingStakeable', () => {
