@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.17;
 
-import "./Stakeable.sol";
-
 contract StakeInfo {
   /**
    * @notice the owner of a stake indexed by the stake id

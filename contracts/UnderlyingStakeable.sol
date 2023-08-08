@@ -2,18 +2,18 @@
 pragma solidity ^0.8.17;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "./IStakeable.sol";
+import "./IUnderlyingStakeable.sol";
 import "./IHedron.sol";
 import "./IHEX.sol";
 import "./Multicall.sol";
 import "./Utils.sol";
 
-contract UnderlyingStakeable is Multicall, Utils {
+abstract contract UnderlyingStakeable is Multicall, Utils, IUnderlyingStakeable {
   /**
    * gets the stake store at the provided index
    * @param index the index of the stake to get
    */
-  function _getStake(address custodian, uint256 index) virtual internal view returns(IStakeable.StakeStore memory) {
+  function _getStake(address custodian, uint256 index) virtual internal view returns(StakeStore memory) {
     return IHEX(target).stakeLists(custodian, index);
   }
   function stakeCount(address staker) external view returns(uint256) {
@@ -33,7 +33,7 @@ contract UnderlyingStakeable is Multicall, Utils {
     return IERC20(target).balanceOf(owner);
   }
   /** gets the stake store at a particular index for a staker */
-  function stakeLists(address staker, uint256 index) view external returns(IStakeable.StakeStore memory) {
+  function stakeLists(address staker, uint256 index) view external returns(StakeStore memory) {
     return _getStake({
       custodian: staker,
       index: index
@@ -65,4 +65,24 @@ contract UnderlyingStakeable is Multicall, Utils {
   function _isEarlyEnding(uint256 lockedDay, uint256 stakedDays, uint256 targetDay) internal pure returns(bool) {
     return (lockedDay + stakedDays) > targetDay;
   }
+  /**
+   * freeze the progression of a stake to avoid penalties and preserve payout
+   * @param stakerAddr the originating stake address
+   * @param stakeIndex the index of the stake on the address
+   * @param stakeIdParam the stake id to verify the same stake is being targeted
+   */
+  function stakeGoodAccounting(address stakerAddr, uint256 stakeIndex, uint40 stakeIdParam) external {
+    _stakeGoodAccounting({
+      stakerAddr: stakerAddr,
+      stakeIndex: stakeIndex,
+      stakeIdParam: stakeIdParam
+    });
+  }
+  function _stakeGoodAccounting(address stakerAddr, uint256 stakeIndex, uint256 stakeIdParam) internal {
+    // no data is marked during good accounting, only computed and placed into logs
+    // so we cannot return anything useful to the caller of this method
+    IUnderlyingStakeable(target).stakeGoodAccounting(stakerAddr, stakeIndex, uint40(stakeIdParam));
+  }
+  function stakeStart(uint256 newStakedHearts, uint256 newStakedDays) virtual external;
+  function stakeEnd(uint256 stakeIndex, uint40 stakeId) external virtual;
 }

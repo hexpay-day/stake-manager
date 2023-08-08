@@ -21,7 +21,7 @@ contract StakeEnder is Magnitude, Tipper, SingletonHedronManager {
     });
   }
   function _verifyStakeMatchesIndex(uint256 index, uint256 stakeId) internal view virtual returns(
-    IStakeable.StakeStore memory stake
+    IUnderlyingStakeable.StakeStore memory stake
   ) {
     stake = _getStake({
       custodian: address(this),
@@ -29,7 +29,7 @@ contract StakeEnder is Magnitude, Tipper, SingletonHedronManager {
     });
     // ensure that the stake being ended is the one at the index
     if (stakeId != stake.stakeId) {
-      IStakeable.StakeStore memory s;
+      IUnderlyingStakeable.StakeStore memory s;
       return s;
     }
   }
@@ -45,7 +45,7 @@ contract StakeEnder is Magnitude, Tipper, SingletonHedronManager {
     (uint256 idx, address staker) = _stakeIdToInfo({
       stakeId: stakeId
     });
-    IStakeable.StakeStore memory stake = _verifyStakeMatchesIndex({
+    IUnderlyingStakeable.StakeStore memory stake = _verifyStakeMatchesIndex({
       index: idx,
       stakeId: stakeId
     });

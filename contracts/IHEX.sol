@@ -152,7 +152,7 @@ interface IHEX is IERC20, IERC20Metadata, IUnderlyingStakeable {
     uint256 data0,
     uint40 indexed stakeId
   );
-  function stakeLists(address staker, uint256 index) view external returns(IStakeable.StakeStore memory);
+  function stakeLists(address staker, uint256 index) view external returns(StakeStore memory);
   function currentDay() external view returns (uint256);
   function globalInfo() external view returns(uint256[13] memory);
 }

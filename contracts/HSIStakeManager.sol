@@ -8,7 +8,6 @@ import "./IHEXStakeInstanceManager.sol";
 import "./IHEX.sol";
 import "./Multicall.sol";
 import "./StakeEnder.sol";
-import "./IStakeable.sol";
 import "./Tipper.sol";
 import "./Magnitude.sol";
 
@@ -129,7 +128,7 @@ contract HSIStakeManager is StakeEnder {
     } while (i < len);
   }
   function _verifyStakeMatchesIndex(uint256, uint256 stakeId) internal view override returns(
-    IStakeable.StakeStore memory stake
+    IUnderlyingStakeable.StakeStore memory stake
   ) {
     // we are only testing existance because we do not have
     // the underlying stake index

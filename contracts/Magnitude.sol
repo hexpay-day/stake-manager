@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.17;
 
-import "./IStakeable.sol";
+import "./IUnderlyingStakeable.sol";
 
 contract Magnitude {
   /**
@@ -13,7 +13,7 @@ contract Magnitude {
    */
   function _computeMagnitude(
     uint256 limit, uint256 method, uint256 x, uint256 y,
-    IStakeable.StakeStore memory stake
+    IUnderlyingStakeable.StakeStore memory stake
   ) internal pure returns(uint256 amount) {
     // we can use unchecked here because all minuses (-)
     // are checked before they are run
@@ -65,7 +65,7 @@ contract Magnitude {
    */
   function computeMagnitude(
     uint256 limit, uint256 method, uint256 x, uint256 y,
-    IStakeable.StakeStore memory stake
+    IUnderlyingStakeable.StakeStore memory stake
   ) external pure returns(uint256) {
     return _computeMagnitude({
       limit: limit,

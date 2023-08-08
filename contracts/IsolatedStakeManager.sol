@@ -4,9 +4,8 @@ pragma solidity ^0.8.17;
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/access/Ownable2Step.sol";
 import "./AuthorizationManager.sol";
-import "./Stakeable.sol";
 
-contract IsolatedStakeManager is Stakeable, Ownable2Step, AuthorizationManager {
+contract IsolatedStakeManager is Ownable2Step, AuthorizationManager {
   constructor(address account) AuthorizationManager(31) {
     /*
      * by index:
@@ -176,7 +175,7 @@ contract IsolatedStakeManager is Stakeable, Ownable2Step, AuthorizationManager {
    * the stakeIndex and stakeId does not match
    */
   function _endStake(uint256 stakeIndex, uint40 stakeId) internal {
-    IStakeable(target).stakeEnd(stakeIndex, stakeId);
+    IUnderlyingStakeable(target).stakeEnd(stakeIndex, stakeId);
   }
   /**
    * transfer balance to the owner of this contract
@@ -191,7 +190,7 @@ contract IsolatedStakeManager is Stakeable, Ownable2Step, AuthorizationManager {
    * check the settings of the running address
    * @param stake the stake to check authorization over
    */
-  function _settingsCheck(IStakeable.StakeStore memory stake) internal view returns(bool) {
+  function _settingsCheck(IUnderlyingStakeable.StakeStore memory stake) internal view returns(bool) {
     uint256 setting = _getAddressSetting(msg.sender);
     if (_isEarlyEnding(stake.lockedDay, stake.stakedDays, _currentDay())) {
       // can early end stake
@@ -222,7 +221,7 @@ contract IsolatedStakeManager is Stakeable, Ownable2Step, AuthorizationManager {
   function _stakeStart(uint256 newStakedDays) internal {
     uint256 stakedHearts = _balanceOf(address(this));
     if (stakedHearts > 0) {
-      IStakeable(target).stakeStart({
+      IUnderlyingStakeable(target).stakeStart({
         newStakedHearts: stakedHearts,
         newStakedDays: newStakedDays
       });

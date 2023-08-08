@@ -6,7 +6,7 @@ import "./Bank.sol";
 import "./CurrencyList.sol";
 import "./EncodableSettings.sol";
 
-contract Tipper is Bank, UnderlyingStakeable, CurrencyList, EncodableSettings {
+abstract contract Tipper is Bank, UnderlyingStakeable, CurrencyList, EncodableSettings {
   constructor()
     Bank()
     UnderlyingStakeable()

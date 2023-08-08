@@ -5,7 +5,7 @@ import _ from 'lodash'
 import * as withArgs from '@nomicfoundation/hardhat-chai-matchers/withArgs'
 import * as utils from './utils'
 import { EncodableSettings } from "../artifacts/types"
-import { IStakeable }  from '../artifacts/types/contracts/IHEX'
+import { IUnderlyingStakeable } from '../artifacts/types/contracts/IHEX'
 
 describe("StakeManager", function () {
   describe('UnderlyingStakeable', () => {
@@ -1125,7 +1125,7 @@ describe("StakeManager", function () {
   })
   describe('computeMagnitude', () => {
     const oneHundredHex = hre.ethers.utils.parseUnits('100', 8).toBigInt()
-    const stake: IStakeable.StakeStoreStruct = {
+    const stake: IUnderlyingStakeable.StakeStoreStruct = {
       stakeId: 0,
       stakedDays: 10,
       lockedDay: 1000,
@@ -1152,7 +1152,7 @@ describe("StakeManager", function () {
     it('3: returns a computed day based on a tight ladder', async () => {
       const x = await loadFixture(utils.deployFixture)
       let currentDay!: number
-      let stk!: IStakeable.StakeStoreStruct
+      let stk!: IUnderlyingStakeable.StakeStoreStruct
       currentDay = (await x.hex.currentDay()).toNumber()
       stk = {
         ...stake,

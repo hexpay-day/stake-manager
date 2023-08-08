@@ -18,9 +18,9 @@ contract UnderlyingStakeManager is GoodAccounting {
     uint256 newStakedDays,
     uint256 index
   ) internal virtual returns(uint256 stakeId) {
-    Stakeable(target).stakeStart(amount, newStakedDays);
+    IUnderlyingStakeable(target).stakeStart(amount, newStakedDays);
     // get the stake id
-    stakeId = Stakeable(target).stakeLists(address(this), index).stakeId;
+    stakeId = IUnderlyingStakeable(target).stakeLists(address(this), index).stakeId;
     stakeIdInfo[stakeId] = _encodeInfo(index, owner);
   }
   /**
@@ -35,7 +35,7 @@ contract UnderlyingStakeManager is GoodAccounting {
     // cannot use tokens attributed here because of tipping
     uint256 balanceBefore = _balanceOf(address(this));
     // end the stake - attributed to contract or through the managed stake
-    Stakeable(target).stakeEnd(stakeIndex, uint40(stakeId));
+    IUnderlyingStakeable(target).stakeEnd(stakeIndex, uint40(stakeId));
     if (stakeCountAfter > stakeIndex) {
       uint256 shiftingStakeId = _getStake(address(this), stakeIndex).stakeId;
       uint256 stakeInfo = stakeIdInfo[shiftingStakeId];
@@ -92,7 +92,7 @@ contract UnderlyingStakeManager is GoodAccounting {
   function _stakeRestartById(uint256 _stakeId) internal returns(uint256 amount, uint256 stakeId) {
     _verifyStakeOwnership(msg.sender, _stakeId);
     (uint256 stakeIndex, address staker) = _stakeIdToInfo(_stakeId);
-    IStakeable.StakeStore memory stake = _getStake(address(this), stakeIndex);
+    IUnderlyingStakeable.StakeStore memory stake = _getStake(address(this), stakeIndex);
     uint256 count = _stakeCount(address(this)) - 1;
     amount = _stakeEnd(stakeIndex, _stakeId, count);
     stakeId = _stakeStartFor(staker, amount, stake.stakedDays, count);

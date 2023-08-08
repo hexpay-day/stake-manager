@@ -4,7 +4,7 @@ pragma solidity ^0.8.17;
 import "./Capable.sol";
 import "./UnderlyingStakeable.sol";
 
-contract AuthorizationManager is UnderlyingStakeable, Capable {
+abstract contract AuthorizationManager is UnderlyingStakeable, Capable {
   /**
    * tracks which keys are provided which authorization permissions
    * @dev most of the time the keys will be addresses
