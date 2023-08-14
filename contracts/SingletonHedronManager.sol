@@ -1,12 +1,10 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.17;
 
-// import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "./IHedron.sol";
-import "./EncodableSettings.sol";
 import "./UnderlyingStakeManager.sol";
 
-contract SingletonHedronManager is EncodableSettings, UnderlyingStakeManager {
+contract SingletonHedronManager is UnderlyingStakeManager {
   /**
    * mint rewards and transfer them to a provided address
    * @param stakeIds list of stake ids to mint

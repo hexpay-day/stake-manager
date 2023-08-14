@@ -386,5 +386,4 @@ abstract contract Tipper is Bank, UnderlyingStakeable, CurrencyList, EncodableSe
   // thank you for your contribution to the protocol
   // the mev bots smile upon thee
   receive() external payable {}
-  fallback() external payable {}
 }

@@ -1,12 +1,10 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.17;
 
-import "./Tipper.sol";
 import "./SingletonHedronManager.sol";
-import "./StakeEnder.sol";
 import "./Magnitude.sol";
 
-contract StakeEnder is Magnitude, Tipper, SingletonHedronManager {
+contract StakeEnder is Magnitude, SingletonHedronManager {
   uint256 public constant MAX_DAYS = 5555;
   /**
    * end a stake for someone other than the sender of the transaction
