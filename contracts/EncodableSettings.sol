@@ -290,9 +290,10 @@ abstract contract EncodableSettings is StakeInfo {
     if (copyIterations == 0) {
       return uint8(setting);
     }
-    if (copyIterations < 255) {
-      --copyIterations;
+    if (copyIterations == 255) {
+      return setting;
     }
+    --copyIterations;
     return (setting >> 16 << 16) | (copyIterations << 8) | uint8(setting);
   }
   /**
