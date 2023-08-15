@@ -5,7 +5,7 @@ import { expect } from "chai"
 import * as utils from './utils'
 import _ from 'lodash'
 
-describe.only('EarningsOracle.sol', () => {
+describe('EarningsOracle.sol', () => {
   const deployOracle = async (min: ethers.BigNumberish, untilDay: ethers.BigNumberish) => {
     const EarningsOracle = await hre.ethers.getContractFactory('EarningsOracle')
     const oracle = await EarningsOracle.deploy(min, untilDay)
@@ -30,7 +30,7 @@ describe.only('EarningsOracle.sol', () => {
     const currentDay = _currentDay.toBigInt()
     const maxDay = currentDay - offset
     while (true) {
-      const currentSize = await x.oracle.payoutTotalSize()
+      const currentSize = await x.oracle.totalsCount()
       const startDay = currentSize.toBigInt()
       if (startDay > maxDay) {
         throw new Error('cannot set to current day or higher')
@@ -49,7 +49,7 @@ describe.only('EarningsOracle.sol', () => {
     }
   }
   const launchCurrentSub1 = async () => launchUpTo(1n)
-  const launchCurrent = async () => launchUpTo()
+  // const launchCurrent = async () => launchUpTo()
   describe('IHEX', () => {
     let x!: Awaited<ReturnType<typeof launchZero>>
     beforeEach(async () => {
@@ -92,9 +92,9 @@ describe.only('EarningsOracle.sol', () => {
     beforeEach(async () => {
       x = await loadFixture(launchZero)
     })
-    describe('payoutTotalSize', () => {
+    describe('totalsCount', () => {
       it('launches with 0 read items', async () => {
-        await expect(x.oracle.payoutTotalSize())
+        await expect(x.oracle.totalsCount())
           .eventually.to.equal(0)
       })
       it('returns a number commenserate with the amount of days that have been read', async () => {
@@ -102,7 +102,7 @@ describe.only('EarningsOracle.sol', () => {
         await x.oracle.incrementDay()
         await x.oracle.incrementDay()
         await x.oracle.incrementDay()
-        await expect(x.oracle.payoutTotalSize())
+        await expect(x.oracle.totalsCount())
           .eventually.to.equal(4)
       })
     })
@@ -110,7 +110,7 @@ describe.only('EarningsOracle.sol', () => {
       it('requires the next available day', async () => {
         await expect(x.oracle.storeDay(1))
           .to.revertedWithCustomError(x.oracle, 'NotAllowed')
-        const currentSize = await x.oracle.payoutTotalSize()
+        const currentSize = await x.oracle.totalsCount()
         await x.oracle.storeDay(currentSize)
         await expect(x.oracle.storeDay(currentSize))
           .to.revertedWithCustomError(x.oracle, 'NotAllowed')
@@ -123,7 +123,7 @@ describe.only('EarningsOracle.sol', () => {
         await x.oracle.incrementDay()
         await x.oracle.incrementDay()
         await x.oracle.incrementDay()
-        await expect(x.oracle.payoutTotalSize())
+        await expect(x.oracle.totalsCount())
           .eventually.to.equal(4)
       })
     })
@@ -136,43 +136,44 @@ describe.only('EarningsOracle.sol', () => {
     describe('payoutDelta', () => {
       it('provides the amount of tokens paid out during that time in an accumulative number', async () => {
         const split = 6
-        const size = await x.oracle.payoutTotalSize()
+        const size = await x.oracle.totalsCount()
         const end = size.toBigInt() - 1n
         const zeroToSplit = await x.oracle.payoutDelta(0, split)
         const splitToEnd = await x.oracle.payoutDelta(split, end)
-        await expect(x.oracle.payoutDelta(0, end))
-          .eventually.to.equal(zeroToSplit.toBigInt() + splitToEnd.toBigInt())
+        const all = await x.oracle.payoutDelta(0, end)
+        expect(all.payout).to.equal(zeroToSplit.payout.toBigInt() + splitToEnd.payout.toBigInt())
+        expect(all.shares).to.equal(zeroToSplit.shares.toBigInt() + splitToEnd.shares.toBigInt())
       })
       it('fails if an out of bounds value is provided', async () => {
-        const size = await x.oracle.payoutTotalSize()
+        const size = await x.oracle.totalsCount()
         await expect(x.oracle.payoutDelta(0, size))
           .to.revertedWithPanic()
       })
     })
     describe('incrementDay', () => {
       it('increases the day by 1', async () => {
-        const size = await x.oracle.payoutTotalSize()
+        const size = await x.oracle.totalsCount()
         await x.oracle.incrementDay()
-        await expect(x.oracle.payoutTotalSize())
+        await expect(x.oracle.totalsCount())
           .eventually.to.equal(size.toBigInt() + 1n)
       })
     })
     describe('storeDays', () => {
       it('stores a range of days', async () => {
-        const previousSize = await x.oracle.payoutTotalSize()
+        const previousSize = await x.oracle.totalsCount()
         const startDay = previousSize.toBigInt()
         const rangeSize = 10n
         await x.oracle.storeDays(startDay, startDay + rangeSize)
-        await expect(x.oracle.payoutTotalSize())
+        await expect(x.oracle.totalsCount())
           .eventually.to.equal(startDay + rangeSize)
       })
     })
     describe('catchUpDays', () => {
       it('catches up a limited number of days without relying on knowing the start / end days', async () => {
-        const previousSize = await x.oracle.payoutTotalSize()
+        const previousSize = await x.oracle.totalsCount()
         const rangeSize = 10n
         await x.oracle.catchUpDays(rangeSize)
-        await expect(x.oracle.payoutTotalSize())
+        await expect(x.oracle.totalsCount())
           .eventually.to.equal(previousSize.toBigInt() + rangeSize)
       })
     })
@@ -185,45 +186,30 @@ describe.only('EarningsOracle.sol', () => {
     })
     describe('catchUpDays', () => {
       it('is clamped by the current day', async () => {
-        const _currentSize = await x.oracle.payoutTotalSize()
+        const _currentSize = await x.oracle.totalsCount()
         const currentSize = _currentSize.toBigInt()
         await x.oracle.catchUpDays(5000n)
-        await expect(x.oracle.payoutTotalSize())
+        await expect(x.oracle.totalsCount())
           .eventually.to.equal(x.currentDay)
         expect(x.currentDay - currentSize).to.be.lessThan(5n)
         // dealing in indexes again
-        await expect(x.oracle.payoutTotal(x.currentDay - 1n))
-          .eventually.not.to.equal(await x.oracle.payoutTotal(x.currentDay - 2n))
+        await expect(x.oracle.totals(x.currentDay - 1n))
+          .eventually.not.to.equal(await x.oracle.totals(x.currentDay - 2n))
       })
     })
     describe('incrementDay', () => {
       it('is clamped by the current day', async () => {
-        const _size = await x.oracle.payoutTotalSize()
+        const _size = await x.oracle.totalsCount()
         let size = _size.toBigInt()
         await x.oracle.incrementDay()
         ++size
-        await expect(x.oracle.payoutTotalSize())
+        await expect(x.oracle.totalsCount())
           .eventually.to.equal(size)
         await x.oracle.incrementDay()
         // no data collected
-        await expect(x.oracle.payoutTotalSize())
+        await expect(x.oracle.totalsCount())
           .eventually.to.equal(size)
       })
     })
   })
-  // describe('has all current data pulled over', () => {
-  //   let x!: Awaited<ReturnType<typeof launchCurrent>>
-  //   beforeEach(async function () {
-  //     this.timeout(120_000)
-  //     x = await loadFixture(launchCurrent)
-  //   })
-  //   describe('incrementDay', () => {
-  //     it('is clamped by the current day', async () => {
-  //       const size = await x.oracle.payoutTotalSize()
-  //       await x.oracle.incrementDay() // just does nothing
-  //       await expect(x.oracle.payoutTotalSize())
-  //         .eventually.to.equal(size)
-  //     })
-  //   })
-  // })
 })

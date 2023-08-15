@@ -2,5 +2,8 @@
 pragma solidity ^0.8.17;
 
 import "./TransferrableStakeManager.sol";
+import "./EarningsOracle.sol";
 
-contract StakeManager is TransferrableStakeManager {}
+contract StakeManager is TransferrableStakeManager, EarningsOracle {
+  constructor() EarningsOracle(1, 0) {}
+}
