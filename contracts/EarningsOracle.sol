@@ -27,6 +27,7 @@ contract EarningsOracle {
   /**
    * deploy contract and start collecting data immediately.
    * pass 0 for untilDay arg to skip collection and start with nothing in payoutTotal array
+   * @param lastZeroDay the final day to allow zero value (used to filter out empty values)
    * @param untilDay the day to end collection
    */
   constructor(uint256 lastZeroDay, uint256 untilDay) {
