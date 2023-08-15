@@ -97,22 +97,23 @@ contract EarningsOracle {
   /**
    * checks the current day and increments the stored days if not yet covered
    */
-  function incrementDay() external returns(uint256 previousTotalPayout) {
-    if (payoutTotal.length >= IHEX(target).currentDay()) {
+  function incrementDay() external returns(uint256 previousTotalPayout, uint256 day) {
+    uint256 size = payoutTotal.length;
+    if (size >= IHEX(target).currentDay()) {
       // no need to increment
-      return 0;
+      return (0, 0);
     }
-    return _storeDay({
-      day: payoutTotal.length,
+    return (_storeDay({
+      day: size,
       _previousTotalPayout: 0
-    });
+    }), size);
   }
   /**
    * store a range of day payout information. untilDay is exclusive unless startDay and untilDay match
    * @param startDay the day to start storing day information
    * @param untilDay the day to stop storing day information
    */
-  function _storeDays(uint256 startDay, uint256 untilDay) internal returns(uint256 previousTotalPayout) {
+  function _storeDays(uint256 startDay, uint256 untilDay) internal returns(uint256 previousTotalPayout, uint256 day) {
     do {
       previousTotalPayout = _storeDay({
         day: startDay,
@@ -122,14 +123,16 @@ contract EarningsOracle {
         ++startDay;
       }
     } while (startDay < untilDay);
-    return previousTotalPayout;
+    return (previousTotalPayout, --startDay);
   }
   /**
-   * store a range of day payout information.
+   * store a range of day payout information. range is not constrained by max catch up days constant
+   * nor is it constrained to the current day so if it goes beyond the current day or has not yet been stored
+   * then it is subject to failure
    * @param startDay the day to start storing day information
    * @param untilDay the day to stop storing day information. Until day is inclusive and incremented internally
    */
-  function storeDays(uint256 startDay, uint256 untilDay) external returns(uint256 previousTotalPayout) {
+  function storeDays(uint256 startDay, uint256 untilDay) external returns(uint256 previousTotalPayout, uint256 day) {
     ++untilDay;
     return _storeDays({
       startDay: startDay,
@@ -138,19 +141,23 @@ contract EarningsOracle {
   }
   /**
    * catch up the contract by reading up to 1_000 days of payout information at a time
-   * @param max the maximum number of days to iterate over - capped at 1_000 due to sload constraints
+   * @param iterations the maximum number of days to iterate over - capped at 1_000 due to sload constraints
    */
-  function catchUpDays(uint256 max) external returns(uint256 previousTotalPayout) {
-    max = max > MAX_CATCH_UP_DAYS ? MAX_CATCH_UP_DAYS : max;
-    uint256 current = payoutTotal.length;
-    max += current;
+  function catchUpDays(uint256 iterations) external returns(uint256 previousTotalPayout, uint256 day) {
+    // constrain by gas costs
+    iterations = iterations > MAX_CATCH_UP_DAYS ? MAX_CATCH_UP_DAYS : iterations;
+    uint256 startDay = payoutTotal.length;
+    // add startDay to range size
+    iterations += startDay;
+    // constrain by startDay
     uint256 limit = IHEX(target).currentDay() + 1;
-    if (max > limit) {
-      max = limit;
+    if (iterations > limit) {
+      iterations = limit;
     }
     return _storeDays({
-      startDay: current,
-      untilDay: max
+      startDay: startDay,
+      // iterations is used as untilDay to reduce number of variables in stack
+      untilDay: iterations
     });
   }
 }
