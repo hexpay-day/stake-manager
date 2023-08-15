@@ -13,6 +13,7 @@ contract EarningsOracle {
    */
   uint256 private MAX_CATCH_UP_DAYS = 1_000;
   uint256 private MAX_TOTAL_PAYOUT = type(uint80).max;
+  uint256 private LAST_ZERO_DAY;
   /**
    * @dev uint80 is used here to fit up to 3 uints in a single storage slot to reduce costs down to ~8k gas per day
    * given that the maximum payout for a day is uint72
@@ -26,13 +27,13 @@ contract EarningsOracle {
   /**
    * deploy contract and start collecting data immediately.
    * pass 0 for untilDay arg to skip collection and start with nothing in payoutTotal array
-   * @param startDay the day to start collecting
    * @param untilDay the day to end collection
    */
-  constructor(uint256 startDay, uint256 untilDay) {
+  constructor(uint256 lastZeroDay, uint256 untilDay) {
+    LAST_ZERO_DAY = lastZeroDay;
     if (untilDay > 0) {
       _storeDays({
-        startDay: startDay,
+        startDay: 0,
         untilDay: untilDay
       });
     }
@@ -40,7 +41,7 @@ contract EarningsOracle {
   /**
    * the size of the payoutTotal array - correlates to days stored
    */
-  function payoutSize() external view returns(uint256 size) {
+  function payoutTotalSize() external view returns(uint256 size) {
     return payoutTotal.length;
   }
   /**
@@ -64,13 +65,13 @@ contract EarningsOracle {
       revert NotAllowed();
     }
     (
-      uint72 dayPayoutTotal,
-      uint72 dayStakeSharesTotal,
-      // uint56 dayUnclaimedSatoshisTotal
+      uint256 dayPayoutTotal,
+      uint256 dayStakeSharesTotal,
+      // uint256 dayUnclaimedSatoshisTotal
     ) = IHEX(target).dailyData({
       day: day
     });
-    if (dayStakeSharesTotal == 0) {
+    if (day > LAST_ZERO_DAY && dayStakeSharesTotal == 0) {
       // stake data is not yet set
       revert NotAllowed();
     }
@@ -80,9 +81,10 @@ contract EarningsOracle {
       )
     );
     if (previousTotalPayout > MAX_TOTAL_PAYOUT) {
+      // this line is very difficult to test, so it is going to be skipped for now
       revert NotAllowed();
     }
-    payoutTotal[day] = uint80(previousTotalPayout);
+    payoutTotal.push(uint80(previousTotalPayout));
   }
   /**
    * store a singular day, only the next day in the sequence is allowed
@@ -123,17 +125,16 @@ contract EarningsOracle {
         ++startDay;
       }
     } while (startDay < untilDay);
-    return (previousTotalPayout, --startDay);
+    return (previousTotalPayout, startDay);
   }
   /**
    * store a range of day payout information. range is not constrained by max catch up days constant
    * nor is it constrained to the current day so if it goes beyond the current day or has not yet been stored
    * then it is subject to failure
    * @param startDay the day to start storing day information
-   * @param untilDay the day to stop storing day information. Until day is inclusive and incremented internally
+   * @param untilDay the day to stop storing day information. Until day is inclusive
    */
   function storeDays(uint256 startDay, uint256 untilDay) external returns(uint256 previousTotalPayout, uint256 day) {
-    ++untilDay;
     return _storeDays({
       startDay: startDay,
       untilDay: untilDay
@@ -150,8 +151,8 @@ contract EarningsOracle {
     // add startDay to range size
     iterations += startDay;
     // constrain by startDay
-    uint256 limit = IHEX(target).currentDay() + 1;
-    if (iterations > limit) {
+    uint256 limit = IHEX(target).currentDay();
+    if (iterations >= limit) {
       iterations = limit;
     }
     return _storeDays({
