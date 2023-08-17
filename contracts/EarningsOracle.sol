@@ -57,6 +57,22 @@ contract EarningsOracle is Utils {
     );
   }
   /**
+   * multiply the difference of the payout by a constant and divide that result by the denominator
+   * subtract half of the difference between the two days to find the possible lower bound
+   * @param startDay the day to start counting
+   * @param untilDay the day to stop counting
+   * @param multiplier a number to multiply by the difference of the payout
+   */
+  function payoutDeltaTrucated(uint256 startDay, uint256 untilDay, uint256 multiplier) external view returns(uint256 payout) {
+    return ((
+      (totals[untilDay].payout - totals[startDay].payout) * multiplier
+    ) / (
+      totals[untilDay].shares - totals[startDay].shares
+    )) - (
+      (untilDay - startDay) / 2
+    );
+  }
+  /**
    * store the payout total for a given day. day must be the next day in the sequence (start with 0)
    * day must have data available to read from the hex contract
    * @param day the day being targeted
