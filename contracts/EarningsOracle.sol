@@ -186,7 +186,7 @@ contract EarningsOracle is Utils {
     iterations += startDay;
     // constrain by startDay
     uint256 limit = IHEX(target).currentDay();
-    if (iterations > limit) {
+    if (iterations == startDay || iterations > limit) {
       iterations = limit;
     }
     return _storeDays({
