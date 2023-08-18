@@ -6,7 +6,7 @@ import { IHEX } from './IHEX.sol';
 import { Utils } from './Utils.sol';
 
 contract EarningsOracle is Utils {
-  uint96 public immutable LAST_ZERO_DAY;
+  uint96 public immutable lastZeroDay;
   /**
    * @dev this max constraint is very generous given that the sstore opcode costs ~20k gas at the time of writing
    */
@@ -27,8 +27,8 @@ contract EarningsOracle is Utils {
    * @param lastZeroDay the final day to allow zero value (used to filter out empty values)
    * @param untilDay the day to end collection
    */
-  constructor(uint256 lastZeroDay, uint256 untilDay) {
-    LAST_ZERO_DAY = uint96(lastZeroDay);
+  constructor(uint96 _lastZeroDay, uint256 untilDay) {
+    LAST_ZERO_DAY = _lastZeroDay;
     if (untilDay > 0) {
       _storeDays({
         startDay: 0,
