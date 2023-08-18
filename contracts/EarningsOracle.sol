@@ -24,11 +24,11 @@ contract EarningsOracle is Utils {
   /**
    * deploy contract and start collecting data immediately.
    * pass 0 for untilDay arg to skip collection and start with nothing in payoutTotal array
-   * @param lastZeroDay the final day to allow zero value (used to filter out empty values)
+   * @param _lastZeroDay the final day to allow zero value (used to filter out empty values)
    * @param untilDay the day to end collection
    */
   constructor(uint96 _lastZeroDay, uint256 untilDay) {
-    LAST_ZERO_DAY = _lastZeroDay;
+    lastZeroDay = _lastZeroDay;
     if (untilDay > 0) {
       _storeDays({
         startDay: 0,
@@ -94,7 +94,7 @@ contract EarningsOracle is Utils {
     ) = IHEX(TARGET).dailyData({
       day: day
     });
-    if (day > LAST_ZERO_DAY && dayStakeSharesTotal == 0) {
+    if (day > lastZeroDay && dayStakeSharesTotal == 0) {
       // stake data is not yet set
       revert NotAllowed();
     }
