@@ -1,17 +1,17 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity ^0.8.17;
+pragma solidity ^0.8.16;
 
 import { IUnderlyingStakeable } from './IUnderlyingStakeable.sol';
 import { IHEX } from './IHEX.sol';
 import { Utils } from './Utils.sol';
 
 contract EarningsOracle is Utils {
-  uint96 private LAST_ZERO_DAY;
+  uint96 public immutable LAST_ZERO_DAY;
   /**
    * @dev this max constraint is very generous given that the sstore opcode costs ~20k gas at the time of writing
    */
-  uint128 private MAX_CATCH_UP_DAYS = 1_000;
-  uint128 private MAX_TOTAL_PAYOUT = type(uint128).max;
+  uint128 public constant MAX_CATCH_UP_DAYS = 1_000;
+  uint128 public constant MAX_TOTAL_PAYOUT = type(uint128).max;
   TotalStore[] public totals;
   struct TotalStore {
     uint128 payout;

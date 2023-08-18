@@ -1,9 +1,7 @@
-import { task, type HardhatUserConfig, extendEnvironment } from "hardhat/config";
+import { task, type HardhatUserConfig } from "hardhat/config";
 import type {
   Artifact,
   HardhatNetworkUserConfig,
-  HardhatRuntimeEnvironment,
-  HttpNetworkUserConfig,
   NetworkUserConfig,
 } from "hardhat/types";
 import * as fs from 'fs'
@@ -15,6 +13,7 @@ import 'solidity-coverage'
 import 'hardhat-vizor'
 import 'hardhat-gas-reporter'
 import 'hardhat-dependency-compiler'
+import 'hardhat-slither'
 import * as ethers from "ethers";
 
 import * as conf from './src/config'
@@ -139,7 +138,7 @@ try {
 const config: HardhatUserConfig = {
   solidity: {
     compilers: [{
-      version: "0.8.18",
+      version: "0.8.16",
       settings,
     }, {
       version: '0.5.13',
