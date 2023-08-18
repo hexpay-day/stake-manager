@@ -138,7 +138,7 @@ try {
 const config: HardhatUserConfig = {
   solidity: {
     compilers: [{
-      version: "0.8.16",
+      version: "0.8.18",
       settings,
     }, {
       version: '0.5.13',

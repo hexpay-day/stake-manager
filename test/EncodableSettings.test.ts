@@ -25,7 +25,8 @@ describe('EncodableSettings.sol', () => {
       expect(settings.newStakeDaysMagnitude).to.equal(0)
       expect(settings.newStakeDaysMethod).to.equal(0)
       const [signer1] = x.signers
-      await x.stakeManager.stakeStartFromBalanceFor(signer1.address, x.stakedAmount, 1, 0)
+      const defaultSettings = await x.stakeManager.defaultEncodedSettings()
+      await x.stakeManager.stakeStartFromBalanceFor(signer1.address, x.stakedAmount, 1, defaultSettings)
       settings = await x.stakeManager.defaultSettings()
       await expect(x.stakeManager.stakeIdSettings(x.nextStakeId))
         .eventually.to.deep.equal(settings)

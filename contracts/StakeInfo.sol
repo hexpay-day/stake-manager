@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity ^0.8.16;
+pragma solidity =0.8.18;
 
 contract StakeInfo {
   /**
@@ -11,11 +11,20 @@ contract StakeInfo {
    * @notice this error is thrown when the stake in question
    * is not owned by the expected address
    */
+  constructor() {
+    stakeIdInfo[0] = 0;
+  }
   error StakeNotOwned(address provided, address expected);
+  function verifyStakeOwnership(address owner, uint256 stakeId) external view {
+    _verifyStakeOwnership(owner, stakeId);
+  }
   function _verifyStakeOwnership(address owner, uint256 stakeId) internal view {
     if (_stakeIdToOwner(stakeId) != owner) {
       revert StakeNotOwned(owner, _stakeIdToOwner(stakeId));
     }
+  }
+  function verifyCustodian(uint256 stakeId) external view {
+    _verifyCustodian(stakeId);
   }
   function _verifyCustodian(uint256 stakeId) internal view {
     if (_stakeIdToOwner(stakeId) == address(0)) {
@@ -33,6 +42,9 @@ contract StakeInfo {
   function _stakeIdToOwner(uint256 stakeId) internal view returns(address) {
     return address(uint160(stakeIdInfo[stakeId]));
   }
+  function stakeIdToInfo(uint256 stakeId) external view returns(uint256, address) {
+    return _stakeIdToInfo(stakeId);
+  }
   function _stakeIdToInfo(uint256 stakeId) internal view returns(uint256, address) {
     uint256 info = stakeIdInfo[stakeId];
     return (info >> 160, address(uint160(info)));
@@ -47,6 +59,9 @@ contract StakeInfo {
   }
   function _stakeIdToIndex(uint256 stakeId) internal view returns(uint256) {
     return stakeIdInfo[stakeId] >> 160;
+  }
+  function encodeInfo(uint256 index, address owner) external pure returns(uint256) {
+    return _encodeInfo(index, owner);
   }
   function _encodeInfo(uint256 index, address owner) internal pure returns(uint256) {
     return (index << 160) | uint160(owner);

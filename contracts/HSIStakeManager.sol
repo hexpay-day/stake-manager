@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity ^0.8.16;
+pragma solidity =0.8.18;
 
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
@@ -19,13 +19,6 @@ contract HSIStakeManager is StakeEnder {
     = 0x000000000000000000000000000000000000000000000000000000000000000d;
   function defaultEncodedSettings() external override pure returns(uint256) {
     return DEFAULT_ENCODED_SETTINGS;
-  }
-  // takes the hsi address (as stake id)
-  function _setDefaultSettings(uint256 stakeId) internal override {
-    _logSettingsUpdate({
-      stakeId: stakeId,
-      settings: DEFAULT_ENCODED_SETTINGS
-    });
   }
   function _defaultSettings() internal override pure returns(Settings memory) {
     return _decodeSettings({
@@ -50,16 +43,10 @@ contract HSIStakeManager is StakeEnder {
       index: index,
       owner: owner
     });
-    if (encodedSettings == 0) {
-      _setDefaultSettings({
-        stakeId: stakeId
-      });
-    } else {
-      _logSettingsUpdate({
-        stakeId: stakeId,
-        settings: encodedSettings
-      });
-    }
+    _logPreservedSettingsUpdate({
+      stakeId: stakeId,
+      settings: encodedSettings
+    });
   }
   function _deposit721(address token, uint256 tokenId) internal returns(address owner) {
     owner = IERC721(token).ownerOf(tokenId);

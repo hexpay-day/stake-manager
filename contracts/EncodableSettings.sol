@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity ^0.8.16;
+pragma solidity =0.8.18;
 
 import "./StakeInfo.sol";
 
@@ -53,13 +53,7 @@ abstract contract EncodableSettings is StakeInfo {
   function defaultEncodedSettings() external virtual pure returns(uint256) {
     return DEFAULT_ENCODED_SETTINGS;
   }
-  function _setDefaultSettings(uint256 stakeId) internal virtual {
-    _logSettingsUpdate({
-      stakeId: stakeId,
-      settings: DEFAULT_ENCODED_SETTINGS
-    });
-  }
-  function stakeIdSettings(uint256 stakeId) external view returns(Settings memory) {
+  function stakeIdSettings(uint256 stakeId) external view returns (Settings memory) {
     return _decodeSettings({
       encoded: stakeIdToSettings[stakeId]
     });
@@ -132,11 +126,6 @@ abstract contract EncodableSettings is StakeInfo {
     emit UpdateSettings({
       stakeId: stakeId,
       settings: settings
-    });
-  }
-  function idToDecodedSettings(uint256 stakeId) external view returns (Settings memory) {
-    return _decodeSettings({
-      encoded: stakeIdToSettings[stakeId]
     });
   }
   /**
@@ -284,6 +273,9 @@ abstract contract EncodableSettings is StakeInfo {
         hasExternalTips: false
       })
     );
+  }
+  function decrementCopyIterations(uint256 settings) external pure returns(uint256) {
+    return _decrementCopyIterations(settings);
   }
   function _decrementCopyIterations(uint256 setting) internal pure returns(uint256) {
     uint256 copyIterations = uint8(setting >> 8);

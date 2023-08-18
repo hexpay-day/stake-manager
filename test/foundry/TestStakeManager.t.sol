@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity ^0.8.16;
+pragma solidity =0.8.18;
 
 import { Test } from "forge-std/Test.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
@@ -14,8 +14,10 @@ contract TestStakeManager is Test {
   uint256 public decimalShift;
   uint256 public startingBalance;
   uint256 public nextStakeId;
+  uint256 public defaultEncodedSettings;
   function setUp() public virtual {
     stkMngr = new StakeManager();
+    defaultEncodedSettings = stkMngr.defaultEncodedSettings();
     uint256 decimals = 8; //IERC20Metadata(hx).decimals();
     decimalShift = 10**decimals;
     startingBalance = 1_000_000 * decimalShift;
@@ -71,7 +73,7 @@ contract TestStakeManager is Test {
   }
   function _managedStakeStart(address sender, uint256 amount, uint256 stakeDays) internal {
     vm.startPrank(sender);
-    stkMngr.stakeStartFromBalanceFor(sender, amount, stakeDays, 0);
+    stkMngr.stakeStartFromBalanceFor(sender, amount, stakeDays, defaultEncodedSettings);
     vm.stopPrank();
   }
   function _managedStakeEndById(address sender, uint256 stakeId) internal {
