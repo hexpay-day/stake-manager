@@ -28,7 +28,7 @@ contract StakeStarter is StakeEnder {
       newStakedDays: newStakedDays,
       index: _stakeCount(address(this))
     });
-    _logSettingsInitiation({
+    _logPreservedSettingsUpdate({
       stakeId: stakeId,
       settings: settings
     });
@@ -57,7 +57,7 @@ contract StakeStarter is StakeEnder {
         staker: address(this)
       })
     });
-    _logSettingsInitiation({
+    _logPreservedSettingsUpdate({
       stakeId: stakeId,
       settings: settings
     });
@@ -81,7 +81,7 @@ contract StakeStarter is StakeEnder {
       newStakedDays: newStakedDays,
       index: _stakeCount(address(this))
     });
-    _logSettingsInitiation({
+    _logPreservedSettingsUpdate({
       stakeId: stakeId,
       settings: settings
     });

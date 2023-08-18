@@ -226,21 +226,4 @@ contract StakeEnder is Magnitude, SingletonHedronManager {
       }
     } while(i < len);
   }
-  /**
-   * save a newly started stake's settings
-   * @param stakeId the id of the newly minted stake
-   * @param settings optional settings passed by stake starter
-   */
-  function _logSettingsInitiation(uint256 stakeId, uint256 settings) internal {
-    if (settings == 0) {
-      _setDefaultSettings({
-        stakeId: stakeId
-      });
-    } else {
-      _writePreservedSettingsUpdate({
-        stakeId: stakeId,
-        settings:  settings
-      });
-    }
-  }
 }

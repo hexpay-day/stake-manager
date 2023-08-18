@@ -103,12 +103,12 @@ abstract contract EncodableSettings is StakeInfo {
       owner: msg.sender,
       stakeId: stakeId
     });
-    _writePreservedSettingsUpdate({
+    _logPreservedSettingsUpdate({
       stakeId: stakeId,
       settings: settings
     });
   }
-  function _writePreservedSettingsUpdate(
+  function _logPreservedSettingsUpdate(
     uint256 stakeId,
     uint256 settings
   ) internal {
