@@ -28,7 +28,7 @@ contract GasReimberser is IGasReimberser, Utils {
     address payable ender = payable(pc.getEndStaker());
     require(msg.sender == ender, "Only End Staker can run this function.");
     uint256 amount = address(this).balance;
-    if (amount > ZERO) {
+    if (amount > 0) {
       ender.sendValue(amount);
     }
   }
@@ -37,7 +37,7 @@ contract GasReimberser is IGasReimberser, Utils {
     address ender = pc.getEndStaker();
     require(msg.sender == ender, "Only End Staker can run this function.");
     uint256 balance = IERC20(token_contract_address).balanceOf(address(this));
-    if (balance > ZERO) {
+    if (balance > 0) {
       IERC20(token_contract_address).transfer(ender, balance);
     }
   }

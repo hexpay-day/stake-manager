@@ -5,5 +5,5 @@ import "./TransferrableStakeManager.sol";
 import "./EarningsOracle.sol";
 
 contract StakeManager is TransferrableStakeManager, EarningsOracle {
-  constructor() EarningsOracle(ONE, ZERO) {}
+  constructor() EarningsOracle(1, 0) {}
 }

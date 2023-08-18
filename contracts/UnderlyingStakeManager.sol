@@ -58,7 +58,7 @@ contract UnderlyingStakeManager is GoodAccounting {
         owner: address(this)
       }) - balanceBefore;
     }
-    stakeIdInfo[stakeId] = ZERO;
+    stakeIdInfo[stakeId] = 0;
   }
   /**
    * starts a stake from the provided amount
@@ -100,7 +100,7 @@ contract UnderlyingStakeManager is GoodAccounting {
       stakeId: stakeId,
       stakeCountAfter: _stakeCount({
         staker: address(this)
-      }) - ONE
+      }) - 1
     });
     _withdrawTokenTo({
       token: TARGET,
@@ -130,7 +130,7 @@ contract UnderlyingStakeManager is GoodAccounting {
       stakeId: stakeId,
       stakeCountAfter: _stakeCount({
         staker: address(this)
-      }) - ONE
+      }) - 1
     });
     _withdrawTokenTo({
       token: TARGET,
@@ -147,7 +147,7 @@ contract UnderlyingStakeManager is GoodAccounting {
     IUnderlyingStakeable.StakeStore memory stake = _getStake(address(this), stakeIndex);
     uint256 count = _stakeCount({
       staker: address(this)
-    }) - ONE;
+    }) - 1;
     amount = _stakeEnd({
       stakeIndex: stakeIndex,
       stakeId: stakeId,

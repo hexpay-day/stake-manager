@@ -22,9 +22,9 @@ contract TransferrableStakeManager is StakeStarter {
     });
     settings = stakeIdToSettings[stakeId];
     settings = (
-      (settings >> COPY_EXTERNAL_TIPS_INDEX << COPY_EXTERNAL_TIPS_INDEX)
-      | (settings << STAKE_IS_TRANSFERRABLE_UNUSED_SPACE >> STAKE_IS_TRANSFERRABLE_UNUSED_SPACE)
-      | encoded << STAKE_IS_TRANSFERRABLE_INDEX
+      (settings >> INDEX_COPY_EXTERNAL_TIPS << INDEX_COPY_EXTERNAL_TIPS)
+      | (settings << UNUSED_SPACE_STAKE_IS_TRANSFERRABLE >> UNUSED_SPACE_STAKE_IS_TRANSFERRABLE)
+      | encoded << INDEX_STAKE_IS_TRANSFERRABLE
     );
     _logSettingsUpdate({
       stakeId: stakeId,

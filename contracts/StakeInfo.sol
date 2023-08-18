@@ -14,7 +14,7 @@ contract StakeInfo is Utils {
    * is not owned by the expected address
    */
   constructor() {
-    stakeIdInfo[ZERO] = ZERO;
+    stakeIdInfo[0] = 0;
   }
   error StakeNotOwned(address provided, address expected);
   function verifyStakeOwnership(address owner, uint256 stakeId) external view {
@@ -29,7 +29,7 @@ contract StakeInfo is Utils {
     _verifyCustodian(stakeId);
   }
   function _verifyCustodian(uint256 stakeId) internal view {
-    if (_stakeIdToOwner(stakeId) == ZERO_ADDRESS) {
+    if (_stakeIdToOwner(stakeId) == address(0)) {
       revert StakeNotOwned(_stakeIdToOwner(stakeId), address(this));
     }
   }

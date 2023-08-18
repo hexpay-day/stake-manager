@@ -14,7 +14,7 @@ abstract contract Tipper is Bank, UnderlyingStakeable, CurrencyList, EncodableSe
     StakeInfo()
     EncodableSettings()
   {
-    _addCurrencyToList(ZERO_ADDRESS);
+    _addCurrencyToList(address(0));
     // this line allows hex to be tipped by factor of basefee
     _addCurrencyToList(TARGET);
     _addCurrencyToList(HEDRON);
@@ -275,12 +275,12 @@ abstract contract Tipper is Bank, UnderlyingStakeable, CurrencyList, EncodableSe
       _logSettingsUpdate({
         stakeId: stakeId,
         settings: (
-          (setting >> COPY_ITERATIONS_INDEX << COPY_ITERATIONS_INDEX)
+          (setting >> INDEX_COPY_ITERATIONS << INDEX_COPY_ITERATIONS)
           // only remove information about the existance of a list
           // not whether or not to copy said list in subsequent stakes
           // should it exist again
           // in other words, copying remains in the hands of the staker
-          | (uint8(setting << ONE) >> ONE)
+          | (uint8(setting << 1) >> 1)
         )
       });
     }
@@ -346,7 +346,7 @@ abstract contract Tipper is Bank, UnderlyingStakeable, CurrencyList, EncodableSe
       max: withdrawableBalanceOf[token][account]
     });
     if (amount < 1) {
-      return (ZERO, ZERO);
+      return (0, 0);
     }
     tipStakeIdToStaker[stakeId] = _stakeIdToOwner({
       stakeId: stakeId
@@ -355,14 +355,14 @@ abstract contract Tipper is Bank, UnderlyingStakeable, CurrencyList, EncodableSe
     // 0b00000001 | 0b10000000 => 0b10000001
     // 0b10000001 | 0b10000000 => 0b10000001
     uint256 currentSettings = stakeIdToSettings[stakeId];
-    uint256 updatedSettings = currentSettings | (ONE << HAS_EXTERNAL_TIPS_INDEX);
+    uint256 updatedSettings = currentSettings | (1 << INDEX_HAS_EXTERNAL_TIPS);
     if (updatedSettings != currentSettings) {
       _logSettingsUpdate({
         stakeId: stakeId,
         settings: updatedSettings
       });
     }
-    if (amount > ZERO) {
+    if (amount > 0) {
       unchecked {
         withdrawableBalanceOf[token][account] -= amount;
         // settings must be provided with each addition
@@ -371,7 +371,7 @@ abstract contract Tipper is Bank, UnderlyingStakeable, CurrencyList, EncodableSe
       }
     }
     uint256 currencyIndex = currencyToIndex[token];
-    if (currencyIndex == 0 && token != ZERO_ADDRESS) {
+    if (currencyIndex == 0 && token != address(0)) {
       revert NotAllowed();
     }
     uint256 setting = _encodeTipSettings({

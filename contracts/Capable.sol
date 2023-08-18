@@ -1,9 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity =0.8.18;
 
-import { Utils } from "./Utils.sol";
-
-contract Capable is Utils {
+contract Capable {
   /**
    * check if the number, in binary form, has a 1 at the provided index
    * @param setting the setting number that holds up to 256 flags as 1/0
@@ -19,6 +17,6 @@ contract Capable is Utils {
     // in binary checks:
     // take the setting and shift it some number of bits left (leaving space for 1)
     // then go the opposite direction, once again leaving only space for 1
-    return 1 == (setting << (MAX_UINT8 - index) >> MAX_UINT8);
+    return 1 == (setting << (255 - index) >> 255);
   }
 }

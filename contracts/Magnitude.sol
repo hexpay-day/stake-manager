@@ -2,9 +2,8 @@
 pragma solidity =0.8.18;
 
 import { IUnderlyingStakeable } from "./IUnderlyingStakeable.sol";
-import { Utils } from "./Utils.sol";
 
-contract Magnitude is Utils {
+contract Magnitude {
   /**
    * compute a useful value from 2 inputs
    * @param method the method to use to compute a result
@@ -19,9 +18,9 @@ contract Magnitude is Utils {
     // we can use unchecked here because all minuses (-)
     // are checked before they are run
     unchecked {
-      if (method < FOUR) {
-        if (method < THREE) {
-          if (method == ONE) amount = x; // 1
+      if (method < 4) {
+        if (method < 3) {
+          if (method == 1) amount = x; // 1
           else {
             amount = stake.stakedDays; // 2 - repeat number of days
           }
@@ -35,24 +34,24 @@ contract Magnitude is Utils {
             // did not end on first available day
             if (daysAfterLock >= stakedDays) {
               // presumptive value extrapolated backward
-              lockedDay = y - (daysAfterLock % (stakedDays + ONE));
+              lockedDay = y - (daysAfterLock % (stakedDays + 1));
             } // else locked day was last presumptive locked day
             amount = stakedDays - (y - lockedDay);
           }
         }
       } else {
         // y = y: 4 - (default: total)
-        if (method == FIVE) {
+        if (method == 5) {
           // principle only
           y = stake.stakedHearts;
-        } else if (method == SIX) {
+        } else if (method == 6) {
           // yield only
           if (y > stake.stakedHearts) {
             y = y - stake.stakedHearts;
           }
         }
         uint256 denominator = uint32(x);
-        uint256 numerator = uint32(x >> THIRTY_TWO);
+        uint256 numerator = uint32(x >> 32);
         amount = (numerator * y) / denominator;
       }
     }
@@ -68,8 +67,8 @@ contract Magnitude is Utils {
     uint256 limit, uint256 method, uint256 x, uint256 y,
     IUnderlyingStakeable.StakeStore memory stake
   ) external pure returns(uint256) {
-    if (limit  == ZERO || method == ZERO) {
-      return ZERO;
+    if (limit  == 0 || method == 0) {
+      return 0;
     }
     return _computeMagnitude({
       limit: limit,

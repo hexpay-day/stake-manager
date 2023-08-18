@@ -49,15 +49,15 @@ contract MaximusStakeManager is HSIStakeManager {
   function stakeEndAs(address rewarded, address perpetual, uint256 stakeId) external onlyPerpetual(perpetual) {
     IPublicEndStakeable endable = IPublicEndStakeable(perpetual);
     // STAKE_END_DAY is locked + staked days - 1 so > is correct in this case
-    if (IHEX(TARGET).currentDay() > endable.STAKE_END_DAY() && endable.STAKE_IS_ACTIVE()) {
-      endable.mintHedron(ZERO, uint40(stakeId));
-      endable.endStakeHEX(ZERO, uint40(stakeId));
+    if (_currentDay() > endable.STAKE_END_DAY() && endable.STAKE_IS_ACTIVE()) {
+      endable.mintHedron(0, uint40(stakeId));
+      endable.endStakeHEX(0, uint40(stakeId));
       // by now we have incremented by 1 since the start of this function
       uint256 currentPeriod = endable.getCurrentPeriod();
       rewardsTo[perpetual][currentPeriod] = rewarded;
       // add 1 because the period will increment at the next stake start (1 week's time)
       // so this contract should also recognize that range until the end
-      rewardsTo[perpetual][currentPeriod + ONE] = rewarded;
+      rewardsTo[perpetual][currentPeriod + 1] = rewarded;
     }
   }
   /**
@@ -90,7 +90,7 @@ contract MaximusStakeManager is HSIStakeManager {
       uint256 bal = _getTokenBalance({
         token: token
       });
-      if (token == ZERO_ADDRESS) {
+      if (token == address(0)) {
         IGasReimberser(gasReimberser).flush();
       } else {
         IGasReimberser(gasReimberser).flush_erc20(token);

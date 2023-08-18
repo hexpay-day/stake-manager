@@ -2,9 +2,8 @@
 pragma solidity =0.8.18;
 
 import { IsolatedStakeManager } from "./IsolatedStakeManager.sol";
-import { Utils } from "./Utils.sol";
 
-contract IsolatedStakeManagerFactory is Utils {
+contract IsolatedStakeManagerFactory {
   event CreateIsolatedStakeManager(address owner, address instance);
   /**
    * @notice a mapping of a key that contains a modifier and the owning address
@@ -13,7 +12,7 @@ contract IsolatedStakeManagerFactory is Utils {
   mapping(address => address) public isolatedStakeManagers;
   function createIsolatedManager(address staker) external returns(address existing) {
     existing = isolatedStakeManagers[staker];
-    if (existing != ZERO_ADDRESS) {
+    if (existing != address(0)) {
       return existing;
     }
     // this scopes up to 2 stake managers to a single address
