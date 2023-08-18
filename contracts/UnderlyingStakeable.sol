@@ -14,7 +14,7 @@ abstract contract UnderlyingStakeable is Multicall, Utils, IUnderlyingStakeable 
    * @param index the index of the stake to get
    */
   function _getStake(address custodian, uint256 index) virtual internal view returns(StakeStore memory) {
-    return IHEX(target).stakeLists(custodian, index);
+    return IUnderlyingStakeable(TARGET).stakeLists(custodian, index);
   }
   function stakeCount(address staker) external view returns(uint256) {
     return _stakeCount({
@@ -22,7 +22,7 @@ abstract contract UnderlyingStakeable is Multicall, Utils, IUnderlyingStakeable 
     });
   }
   function _stakeCount(address staker) internal view returns(uint256) {
-    return IHEX(target).stakeCount(staker);
+    return IUnderlyingStakeable(TARGET).stakeCount(staker);
   }
   function balanceOf(address owner) external view returns(uint256) {
     return _balanceOf({
@@ -30,7 +30,7 @@ abstract contract UnderlyingStakeable is Multicall, Utils, IUnderlyingStakeable 
     });
   }
   function _balanceOf(address owner) internal view returns(uint256) {
-    return IERC20(target).balanceOf(owner);
+    return IERC20(TARGET).balanceOf(owner);
   }
   /** gets the stake store at a particular index for a staker */
   function stakeLists(address staker, uint256 index) view external returns(StakeStore memory) {
@@ -44,10 +44,10 @@ abstract contract UnderlyingStakeable is Multicall, Utils, IUnderlyingStakeable 
     return _currentDay();
   }
   function _currentDay() internal view returns(uint256) {
-    return IHEX(target).currentDay();
+    return IUnderlyingStakeable(TARGET).currentDay();
   }
   function globalInfo() external view returns(uint256[13] memory) {
-    return IHEX(target).globalInfo();
+    return IUnderlyingStakeable(TARGET).globalInfo();
   }
   /**
    * check whether or not the stake is being ended early
@@ -81,7 +81,7 @@ abstract contract UnderlyingStakeable is Multicall, Utils, IUnderlyingStakeable 
   function _stakeGoodAccounting(address stakerAddr, uint256 stakeIndex, uint256 stakeIdParam) internal {
     // no data is marked during good accounting, only computed and placed into logs
     // so we cannot return anything useful to the caller of this method
-    IUnderlyingStakeable(target).stakeGoodAccounting(stakerAddr, stakeIndex, uint40(stakeIdParam));
+    IUnderlyingStakeable(TARGET).stakeGoodAccounting(stakerAddr, stakeIndex, uint40(stakeIdParam));
   }
   function stakeStart(uint256 newStakedHearts, uint256 newStakedDays) virtual external;
   function stakeEnd(uint256 stakeIndex, uint40 stakeId) external virtual;

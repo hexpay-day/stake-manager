@@ -9,7 +9,7 @@ describe('IsolatedStakeManager.sol', () => {
   describe('state', () => {
     it('knows what to target', async () => {
       const x = await loadFixture(utils.deployFixture)
-      await expect(x.isolatedStakeManager.target())
+      await expect(x.isolatedStakeManager.TARGET())
         .eventually.to.equal(utils.hexAddress)
     })
   })

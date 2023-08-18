@@ -18,9 +18,9 @@ contract UnderlyingStakeManager is GoodAccounting {
     uint256 newStakedDays,
     uint256 index
   ) internal virtual returns(uint256 stakeId) {
-    IUnderlyingStakeable(target).stakeStart(amount, newStakedDays);
+    IUnderlyingStakeable(TARGET).stakeStart(amount, newStakedDays);
     // get the stake id
-    stakeId = IUnderlyingStakeable(target).stakeLists(address(this), index).stakeId;
+    stakeId = IUnderlyingStakeable(TARGET).stakeLists(address(this), index).stakeId;
     stakeIdInfo[stakeId] = _encodeInfo({
       index: index,
       owner: owner
@@ -38,7 +38,7 @@ contract UnderlyingStakeManager is GoodAccounting {
     // cannot use tokens attributed here because of tipping
     uint256 balanceBefore = _balanceOf(address(this));
     // end the stake - attributed to contract or through the managed stake
-    IUnderlyingStakeable(target).stakeEnd(stakeIndex, uint40(stakeId));
+    IUnderlyingStakeable(TARGET).stakeEnd(stakeIndex, uint40(stakeId));
     if (stakeCountAfter > stakeIndex) {
       uint256 shiftingStakeId = _getStake({
         custodian: address(this),
@@ -68,7 +68,7 @@ contract UnderlyingStakeManager is GoodAccounting {
   function stakeStart(uint256 amount, uint256 newStakedDays) external override virtual {
     // ensures amount under/from sender is sufficient
     _depositTokenFrom({
-      token: target,
+      token: TARGET,
       depositor: msg.sender,
       amount: amount
     });
@@ -102,7 +102,7 @@ contract UnderlyingStakeManager is GoodAccounting {
       }) - 1
     });
     _withdrawTokenTo({
-      token: target,
+      token: TARGET,
       to: payable(msg.sender),
       amount: amount
     });
@@ -132,7 +132,7 @@ contract UnderlyingStakeManager is GoodAccounting {
       }) - 1
     });
     _withdrawTokenTo({
-      token: target,
+      token: TARGET,
       to: payable(msg.sender),
       amount: amount
     });

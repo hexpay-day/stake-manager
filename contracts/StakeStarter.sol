@@ -17,7 +17,7 @@ contract StakeStarter is StakeEnder {
     uint256 settings
   ) external payable returns(uint256 stakeId) {
     _depositTokenFrom({
-      token: target,
+      token: TARGET,
       depositor: msg.sender,
       amount: amount
     });
@@ -48,7 +48,7 @@ contract StakeStarter is StakeEnder {
     stakeId = _stakeStartFor({
       owner: to,
       amount: _deductWithdrawable({
-        token: target,
+        token: TARGET,
         account: msg.sender,
         amount: amount
       }),
@@ -77,7 +77,7 @@ contract StakeStarter is StakeEnder {
   ) external payable returns(uint256 stakeId) {
     stakeId = _stakeStartFor({
       owner: to,
-      amount: _clamp(amount, _getUnattributed(target)),
+      amount: _clamp(amount, _getUnattributed(TARGET)),
       newStakedDays: newStakedDays,
       index: _stakeCount(address(this))
     });

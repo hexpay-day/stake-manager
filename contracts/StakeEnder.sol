@@ -86,7 +86,7 @@ contract StakeEnder is Magnitude, SingletonHedronManager {
           hedronAmount = _checkAndExecTip({
             stakeId: stakeId,
             staker: staker,
-            token: hedron,
+            token: HEDRON,
             amount: hedronTip,
             delta: hedronAmount
           });
@@ -96,7 +96,7 @@ contract StakeEnder is Magnitude, SingletonHedronManager {
         _attributeFunds({
           settings: setting,
           index: 4,
-          token: hedron,
+          token: HEDRON,
           staker: staker,
           amount: hedronAmount
         });
@@ -124,7 +124,7 @@ contract StakeEnder is Magnitude, SingletonHedronManager {
           delta = _checkAndExecTip({
             stakeId: stakeId,
             staker: staker,
-            token: target,
+            token: TARGET,
             amount: targetTip,
             delta: delta
           });
@@ -177,7 +177,7 @@ contract StakeEnder is Magnitude, SingletonHedronManager {
       _attributeFunds({
         settings: setting,
         index: 4,
-        token: target,
+        token: TARGET,
         staker: staker,
         amount: delta
       });

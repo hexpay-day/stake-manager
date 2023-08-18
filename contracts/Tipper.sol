@@ -16,8 +16,8 @@ abstract contract Tipper is Bank, UnderlyingStakeable, CurrencyList, EncodableSe
   {
     _addCurrencyToList(address(0));
     // this line allows hex to be tipped by factor of basefee
-    _addCurrencyToList(target);
-    _addCurrencyToList(hedron);
+    _addCurrencyToList(TARGET);
+    _addCurrencyToList(HEDRON);
   }
   uint256 public constant MAX_256 = type(uint256).max;
   mapping(uint256 => address) internal _tipStakeIdToStaker;

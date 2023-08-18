@@ -31,7 +31,7 @@ contract SingletonHedronManager is UnderlyingStakeManager {
       })) {
         if (currentOwner != to) {
           _addToTokenWithdrawable({
-            token: hedron,
+            token: HEDRON,
             to: to,
             amount: hedronTokens
           });
@@ -49,7 +49,7 @@ contract SingletonHedronManager is UnderlyingStakeManager {
     } while (i < len);
     if (hedronTokens > 0) {
       _addToTokenWithdrawable({
-        token: hedron,
+        token: HEDRON,
         to: to,
         amount: hedronTokens
       });
@@ -62,9 +62,9 @@ contract SingletonHedronManager is UnderlyingStakeManager {
     });
   }
   function _mintNativeHedron(uint256 index, uint256 stakeId) internal returns(uint256 amount) {
-    return IHedron(hedron).mintNative(index, uint40(stakeId));
+    return IHedron(HEDRON).mintNative(index, uint40(stakeId));
   }
   function _mintInstancedHedron(uint256 index, address hsiAddress) internal returns(uint256 amount) {
-    return IHedron(hedron).mintInstanced(index, hsiAddress);
+    return IHedron(HEDRON).mintInstanced(index, hsiAddress);
   }
 }

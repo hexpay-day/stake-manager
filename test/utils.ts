@@ -6,7 +6,6 @@ import * as hre from 'hardhat'
 import _ from "lodash"
 import * as ethers from 'ethers'
 import * as Chai from "chai"
-import { HSIStakeManager } from "../artifacts/types"
 
 Chai.Assertion.addMethod('printGasUsage', function (this: any) {
   let subject = this._obj

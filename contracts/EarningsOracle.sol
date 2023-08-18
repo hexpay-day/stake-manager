@@ -91,7 +91,7 @@ contract EarningsOracle is Utils {
       uint256 dayPayoutTotal,
       uint256 dayStakeSharesTotal,
       // uint256 dayUnclaimedSatoshisTotal
-    ) = IHEX(target).dailyData({
+    ) = IHEX(TARGET).dailyData({
       day: day
     });
     if (day > LAST_ZERO_DAY && dayStakeSharesTotal == 0) {
@@ -99,20 +99,17 @@ contract EarningsOracle is Utils {
       revert NotAllowed();
     }
     (uint256 payout, uint256 shares) = (_total.payout, _total.shares);
-    total.payout = dayPayoutTotal + (
-      payout > 0 ? payout : (
-        day > 0 ? totals[day - 1].payout : 0
-      )
-    );
+    if (payout == 0 && shares == 0 && day > 0) {
+      TotalStore memory prev = totals[day - 1];
+      payout = prev.payout;
+      shares = prev.shares;
+    }
+    total.payout = dayPayoutTotal + payout;
     if (total.payout > MAX_TOTAL_PAYOUT) {
       // this line is very difficult to test, so it is going to be skipped for now
       revert NotAllowed();
     }
-    total.shares = dayStakeSharesTotal + (
-      shares > 0 ? shares : (
-        day > 0 ? totals[day - 1].shares : 0
-      )
-    );
+    total.shares = dayStakeSharesTotal + shares;
     if (total.shares > MAX_TOTAL_PAYOUT) {
       // this line is very difficult to test, so it is going to be skipped for now
       revert NotAllowed();
@@ -137,7 +134,7 @@ contract EarningsOracle is Utils {
    */
   function incrementDay() external returns(Total memory total, uint256 day) {
     uint256 size = totals.length;
-    if (size >= IHEX(target).currentDay()) {
+    if (size >= IHEX(TARGET).currentDay()) {
       // no need to increment
       return (total, 0);
     }
@@ -189,7 +186,7 @@ contract EarningsOracle is Utils {
     // add startDay to range size
     iterations += startDay;
     // constrain by startDay
-    uint256 limit = IHEX(target).currentDay();
+    uint256 limit = IHEX(TARGET).currentDay();
     if (iterations == startDay || iterations > limit) {
       iterations = limit;
     }

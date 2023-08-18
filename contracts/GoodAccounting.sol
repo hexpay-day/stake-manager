@@ -71,7 +71,7 @@ abstract contract GoodAccounting is StakeInfo, Tipper {
     uint256 index,
     uint256 stakeId
   ) internal view returns(GoodAccountingStatus) {
-    uint256 count = IHEX(target).stakeCount(staker);
+    uint256 count = IHEX(TARGET).stakeCount(staker);
     if (index >= count) {
       return GoodAccountingStatus.MISCOUNT;
     }
@@ -86,7 +86,7 @@ abstract contract GoodAccounting is StakeInfo, Tipper {
     if (_isEarlyEnding({
       lockedDay: stake.lockedDay,
       stakedDays: stake.stakedDays,
-      targetDay: IHEX(target).currentDay()
+      targetDay: IHEX(TARGET).currentDay()
     })) {
       // return if it is too early to run good accounting
       return GoodAccountingStatus.EARLY;
