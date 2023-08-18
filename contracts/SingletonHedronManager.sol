@@ -18,7 +18,7 @@ contract SingletonHedronManager is UnderlyingStakeManager {
     uint256 stakeIndex;
     uint256 stakeId;
     address to = _stakeIdToOwner({
-      stakeId: stakeIds[0]
+      stakeId: stakeIds[ZERO]
     });
     do {
       stakeId = stakeIds[i];
@@ -27,7 +27,7 @@ contract SingletonHedronManager is UnderlyingStakeManager {
       });
       if (msg.sender == currentOwner || _isCapable({
         setting: stakeIdToSettings[stakeId],
-        index: 2
+        index: CAN_MINT_HEDRON_INDEX
       })) {
         if (currentOwner != to) {
           _addToTokenWithdrawable({
@@ -35,7 +35,7 @@ contract SingletonHedronManager is UnderlyingStakeManager {
             to: to,
             amount: hedronTokens
           });
-          hedronTokens = 0;
+          hedronTokens = ZERO;
         }
         to = currentOwner;
         hedronTokens += _mintHedron({
@@ -47,7 +47,7 @@ contract SingletonHedronManager is UnderlyingStakeManager {
         ++i;
       }
     } while (i < len);
-    if (hedronTokens > 0) {
+    if (hedronTokens > ZERO) {
       _addToTokenWithdrawable({
         token: HEDRON,
         to: to,

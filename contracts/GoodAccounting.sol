@@ -1,10 +1,11 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity =0.8.18;
 
-import "./UnderlyingStakeable.sol";
-import "./Bank.sol";
-import "./StakeInfo.sol";
-import "./Tipper.sol";
+import { IHEX } from "./IHEX.sol";
+import { UnderlyingStakeable } from "./UnderlyingStakeable.sol";
+import { Bank } from "./Bank.sol";
+import { StakeInfo } from "./StakeInfo.sol";
+import { Tipper } from "./Tipper.sol";
 
 abstract contract GoodAccounting is StakeInfo, Tipper {
   /**
@@ -91,7 +92,7 @@ abstract contract GoodAccounting is StakeInfo, Tipper {
       // return if it is too early to run good accounting
       return GoodAccountingStatus.EARLY;
     }
-    if (stake.unlockedDay > 0) {
+    if (stake.unlockedDay > ZERO) {
       // the stake has already been ended
       return GoodAccountingStatus.ENDED;
     }

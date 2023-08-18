@@ -29,9 +29,9 @@ contract EarningsOracle is Utils {
    */
   constructor(uint96 _lastZeroDay, uint256 untilDay) {
     lastZeroDay = _lastZeroDay;
-    if (untilDay > 0) {
+    if (untilDay > ZERO) {
       _storeDays({
-        startDay: 0,
+        startDay: ZERO,
         untilDay: untilDay
       });
     }
@@ -99,8 +99,8 @@ contract EarningsOracle is Utils {
       revert NotAllowed();
     }
     (uint256 payout, uint256 shares) = (_total.payout, _total.shares);
-    if (payout == 0 && shares == 0 && day > 0) {
-      TotalStore memory prev = totals[day - 1];
+    if (payout == ZERO && shares == ZERO && day > ZERO) {
+      TotalStore memory prev = totals[day - ONE];
       payout = prev.payout;
       shares = prev.shares;
     }

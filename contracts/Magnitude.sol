@@ -1,9 +1,10 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity =0.8.18;
 
-import "./IUnderlyingStakeable.sol";
+import { IUnderlyingStakeable } from "./IUnderlyingStakeable.sol";
+import { Utils } from "./Utils.sol";
 
-contract Magnitude {
+contract Magnitude is Utils {
   /**
    * compute a useful value from 2 inputs
    * @param method the method to use to compute a result
@@ -18,9 +19,9 @@ contract Magnitude {
     // we can use unchecked here because all minuses (-)
     // are checked before they are run
     unchecked {
-      if (method < 4) {
-        if (method < 3) {
-          if (method == 1) amount = x; // 1
+      if (method < FOUR) {
+        if (method < THREE) {
+          if (method == ONE) amount = x; // 1
           else {
             amount = stake.stakedDays; // 2 - repeat number of days
           }
@@ -34,24 +35,24 @@ contract Magnitude {
             // did not end on first available day
             if (daysAfterLock >= stakedDays) {
               // presumptive value extrapolated backward
-              lockedDay = y - (daysAfterLock % (stakedDays + 1));
+              lockedDay = y - (daysAfterLock % (stakedDays + ONE));
             } // else locked day was last presumptive locked day
             amount = stakedDays - (y - lockedDay);
           }
         }
       } else {
         // y = y: 4 - (default: total)
-        if (method == 5) {
+        if (method == FIVE) {
           // principle only
           y = stake.stakedHearts;
-        } else if (method == 6) {
+        } else if (method == SIX) {
           // yield only
           if (y > stake.stakedHearts) {
             y = y - stake.stakedHearts;
           }
         }
         uint256 denominator = uint32(x);
-        uint256 numerator = uint32(x >> 32);
+        uint256 numerator = uint32(x >> THIRTY_TWO);
         amount = (numerator * y) / denominator;
       }
     }
@@ -67,8 +68,8 @@ contract Magnitude {
     uint256 limit, uint256 method, uint256 x, uint256 y,
     IUnderlyingStakeable.StakeStore memory stake
   ) external pure returns(uint256) {
-    if (limit  == 0 || method == 0) {
-      return 0;
+    if (limit  == ZERO || method == ZERO) {
+      return ZERO;
     }
     return _computeMagnitude({
       limit: limit,

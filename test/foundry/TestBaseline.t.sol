@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity =0.8.18;
 
-import "./TestStakeManager.t.sol";
+import { TestStakeManager } from "./TestStakeManager.t.sol";
+import { StakeManager } from "contracts/StakeManager.sol";
 
 contract TestBaselineEnd1 is TestStakeManager {
   function setUp() override virtual public {

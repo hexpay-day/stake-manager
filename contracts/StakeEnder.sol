@@ -5,7 +5,8 @@ import "./SingletonHedronManager.sol";
 import "./Magnitude.sol";
 
 contract StakeEnder is Magnitude, SingletonHedronManager {
-  uint256 public constant MAX_DAYS = 5555;
+  uint8 public constant TODAY_INDEX = 128;
+
   /**
    * end a stake for someone other than the sender of the transaction
    * @param stakeId the stake id on the underlying contract to end
@@ -13,7 +14,7 @@ contract StakeEnder is Magnitude, SingletonHedronManager {
   function stakeEndByConsent(uint256 stakeId) external payable returns(uint256 delta, uint256 count) {
     return _stakeEndByConsent({
       stakeId: stakeId,
-      count: (_currentDay() << 128) | _stakeCount({
+      _count: (_currentDay() << TODAY_INDEX) | _stakeCount({
         staker: address(this)
       })
     });
@@ -39,7 +40,8 @@ contract StakeEnder is Magnitude, SingletonHedronManager {
    * @dev the stake count is today | stake count because
    * if there were 2 variables, the contract ended up too large
    */
-  function _stakeEndByConsent(uint256 stakeId, uint256 count) internal returns(uint256 delta, uint256) {
+  function _stakeEndByConsent(uint256 stakeId, uint256 _count) internal returns(uint256 delta, uint256 count) {
+    count = _count;
     (uint256 idx, address staker) = _stakeIdToInfo({
       stakeId: stakeId
     });
@@ -47,25 +49,25 @@ contract StakeEnder is Magnitude, SingletonHedronManager {
       index: idx,
       stakeId: stakeId
     });
-    if (stake.stakeId == 0) {
-      return (0, count);
+    if (stake.stakeId == ZERO) {
+      return (ZERO, count);
     }
     uint256 setting = stakeIdToSettings[stakeId];
     if (!_isCapable({
       setting: setting,
-      index: 0
+      index: CAN_STAKE_END_INDEX
     })) {
-      return (0, count);
+      return (ZERO, count);
     }
     if (_isEarlyEnding({
       lockedDay: stake.lockedDay,
       stakedDays: stake.stakedDays,
-      targetDay: count >> 128
+      targetDay: count >> TODAY_INDEX
     }) && !_isCapable({
       setting: setting,
-      index: 1
+      index: CAN_EARLY_STAKE_END_INDEX
     })) {
-      return (0, count);
+      return (ZERO, count);
     }
     if (_isCapable({
       setting: setting,
@@ -73,16 +75,16 @@ contract StakeEnder is Magnitude, SingletonHedronManager {
     })) {
       // consent has been confirmed
       uint256 hedronAmount = _mintHedron(idx, stakeId);
-      uint256 hedronTipMethod = setting >> 248;
-      if (hedronTipMethod > 0) {
+      uint256 hedronTipMethod = setting >> UINT8_UNUSED_SPACE_RIGHT;
+      if (hedronTipMethod > ZERO) {
         uint256 hedronTip = _computeMagnitude({
           limit: hedronAmount,
           method: hedronTipMethod,
-          x: setting << 8 >> 192,
+          x: setting << HEDRON_TIP_MAGNITUDE_UNUSED_SPACE >> UINT64_UNUSED_SPACE_RIGHT,
           y: hedronAmount,
           stake: stake
         });
-        if (hedronTip > 0) {
+        if (hedronTip > ZERO) {
           hedronAmount = _checkAndExecTip({
             stakeId: stakeId,
             staker: staker,
@@ -92,10 +94,10 @@ contract StakeEnder is Magnitude, SingletonHedronManager {
           });
         }
       }
-      if (hedronAmount > 0) {
+      if (hedronAmount > ZERO) {
         _attributeFunds({
           settings: setting,
-          index: 4,
+          index: SHOULD_SEND_TOKENS_TO_STAKER_INDEX,
           token: HEDRON,
           staker: staker,
           amount: hedronAmount
@@ -111,16 +113,16 @@ contract StakeEnder is Magnitude, SingletonHedronManager {
     // direct funds after end stake
     // only place the stake struct exists is in memory in this method
     {
-      uint256 tipMethod = setting << 72 >> 248;
-      if (tipMethod > 0) {
+      uint256 tipMethod = setting << TIP_METHOD_UNUSED_SPACE >> UINT8_UNUSED_SPACE_RIGHT;
+      if (tipMethod > ZERO) {
         uint256 targetTip = _computeMagnitude({
           limit: delta,
           method: tipMethod,
-          x: uint64(setting >> 112),
+          x: uint64(setting >> TIP_MAGNITUDE_INDEX),
           y: delta,
           stake: stake
         });
-        if (targetTip > 0) {
+        if (targetTip > ZERO) {
           delta = _checkAndExecTip({
             stakeId: stakeId,
             staker: staker,
@@ -131,9 +133,9 @@ contract StakeEnder is Magnitude, SingletonHedronManager {
         }
       }
     }
-    uint256 newStakeMethod = setting << 144 >> 248;
+    uint256 newStakeMethod = setting << NEW_STAKE_METHOD_UNUSED_SPACE >> UINT8_UNUSED_SPACE_RIGHT;
     uint256 nextStakeId;
-    if (delta > 0 && newStakeMethod > 0) {
+    if (delta > ZERO && newStakeMethod > ZERO) {
       uint256 newStakeAmount = _computeMagnitude({
         limit: delta,
         method: newStakeMethod,
@@ -141,14 +143,17 @@ contract StakeEnder is Magnitude, SingletonHedronManager {
         y: delta,
         stake: stake
       });
-      uint256 newStakeDays = (setting << 216 >> 248) > 0 ? _computeMagnitude({
-        limit: MAX_DAYS,
-        method: setting << 216 >> 248,
-        x: setting << 224 >> 240,
-        y: count >> 128,
-        stake: stake
-      }) : 0;
-      if (newStakeDays > 0) {
+      uint256 newStakeDays = (
+        setting << NEW_STAKE_DAYS_METHOD_UNUSED_SPACE >> UINT8_UNUSED_SPACE_RIGHT) > ZERO
+          ? _computeMagnitude({
+            limit: MAX_DAYS,
+            method: setting << NEW_STAKE_DAYS_METHOD_UNUSED_SPACE >> UINT8_UNUSED_SPACE_RIGHT,
+            x: setting << NEW_STAKE_DAYS_MAGNITUDE_UNUSED_SPACE >> UINT16_UNUSED_SPACE_RIGHT,
+            y: count >> TODAY_INDEX,
+            stake: stake
+          })
+          : ZERO;
+      if (newStakeDays > ZERO) {
         unchecked {
           delta -= newStakeAmount; // checked for underflow
         }
@@ -166,17 +171,17 @@ contract StakeEnder is Magnitude, SingletonHedronManager {
         // being easier to think about it as x-2
         setting = (_decrementCopyIterations({
           setting: setting
-        }) >> 2 << 2) | 1;
+        }) >> CAN_MINT_HEDRON_INDEX << CAN_MINT_HEDRON_INDEX) | ONE;
         _logSettingsUpdate({
           stakeId: nextStakeId,
           settings: setting
         });
       }
     }
-    if (delta > 0) {
+    if (delta > ZERO) {
       _attributeFunds({
         settings: setting,
-        index: 4,
+        index: SHOULD_SEND_TOKENS_TO_STAKER_INDEX,
         token: TARGET,
         staker: staker,
         amount: delta
@@ -184,20 +189,20 @@ contract StakeEnder is Magnitude, SingletonHedronManager {
     }
     // skip logging because it will be zero forever
     // use stake end event as means of determining zeroing out
-    stakeIdToSettings[stakeId] = 0;
+    stakeIdToSettings[stakeId] = ZERO;
     // execute tips after we know that the stake can be ended
     // but before hedron is added to the withdrawable mapping
     if (_isCapable({
       setting: setting,
-      index: 7
+      index: HAS_EXTERNAL_TIPS_INDEX
     })) {
       _executeTipList({
         stakeId: stakeId,
         staker: staker,
-        nextStakeId: nextStakeId > 0 && _isCapable({
+        nextStakeId: nextStakeId > ZERO && _isCapable({
           setting: setting,
-          index: 6
-        }) ? nextStakeId : 0
+          index: COPY_EXTERNAL_TIPS_INDEX
+        }) ? nextStakeId : ZERO
       });
     }
     return (delta, count);
@@ -213,13 +218,13 @@ contract StakeEnder is Magnitude, SingletonHedronManager {
   function stakeEndByConsentForMany(uint256[] calldata stakeIds) external payable {
     uint256 i;
     uint256 len = stakeIds.length;
-    uint256 count = (_currentDay() << 128) | _stakeCount({
+    uint256 count = (_currentDay() << TODAY_INDEX) | _stakeCount({
       staker: address(this)
     });
     do {
       (, count) = _stakeEndByConsent({
         stakeId: stakeIds[i],
-        count: count
+        _count: count
       });
       unchecked {
         ++i;

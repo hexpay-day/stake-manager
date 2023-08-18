@@ -6,7 +6,7 @@
     "lint": "solhint 'contracts/**/*.sol'",
     "test": "hardhat test",
     "coverage": "hardhat coverage",
-    "analyze": "hardhat slither",
+    "analyze": "slither ./contracts/ --solc-remaps @openzeppelin=node_modules/@openzeppelin",
     "foundry:test": "forge test --fork-url 'https://rpc.pulsechain.com' -vvv"
   },
   "files": [

@@ -78,8 +78,9 @@ describe('HSIStakeManager.sol', () => {
     })
     it('anyone can mint rewards', async () => {
       const x = await loadFixture(utils.deployAndProcureHSIFixture)
+      const defaultEncodedSettings = await x.hsiStakeManager.defaultEncodedSettings()
       await x.hsiStakeManager.multicall(_.flatMap(x.hsiTargets, (target) => ([
-        x.hsiStakeManager.interface.encodeFunctionData('depositHsi', [target.tokenId, 0]),
+        x.hsiStakeManager.interface.encodeFunctionData('depositHsi', [target.tokenId, defaultEncodedSettings]),
       ])), false)
       const [, signerB] = x.signers
       await utils.moveForwardDays(10, x)
@@ -89,8 +90,9 @@ describe('HSIStakeManager.sol', () => {
     })
     it('end deposited stakes', async () => {
       const x = await loadFixture(utils.deployAndProcureHSIFixture)
+      const defaultEncodedSettings = await x.hsiStakeManager.defaultEncodedSettings()
       const deposits = _.flatMap(x.hsiTargets, (target) => ([
-        x.hsiStakeManager.interface.encodeFunctionData('depositHsi', [target.tokenId, 0]),
+        x.hsiStakeManager.interface.encodeFunctionData('depositHsi', [target.tokenId, defaultEncodedSettings]),
       ]))
       await expect(x.hsiStakeManager.multicall(deposits, false))
         .to.emit(x.hsim, 'Transfer')
@@ -109,8 +111,9 @@ describe('HSIStakeManager.sol', () => {
     })
     it('end deposited stakes in any order', async () => {
       const x = await loadFixture(utils.deployAndProcureHSIFixture)
+      const defaultEncodedSettings = await x.hsiStakeManager.defaultEncodedSettings()
       const deposits = _.flatMap(x.hsiTargets, (target) => ([
-        x.hsiStakeManager.interface.encodeFunctionData('depositHsi', [target.tokenId, 0]),
+        x.hsiStakeManager.interface.encodeFunctionData('depositHsi', [target.tokenId, defaultEncodedSettings]),
       ]))
       await expect(x.hsiStakeManager.multicall(deposits, false))
         .to.emit(x.hsim, 'Transfer')
@@ -155,10 +158,11 @@ describe('HSIStakeManager.sol', () => {
       const encodedSettings = await x.hsiStakeManager.encodeSettings(settings)
       const firstStakeTarget = x.hsiTargets[0]
       const lastHsiTarget = x.hsiTargets[x.hsiTargets.length - 1]
+      const defaultEncoded = await x.hsiStakeManager.defaultEncodedSettings()
       await expect(x.hsiStakeManager.multicall(_.map(x.hsiTargets, (target) => (
         x.hsiStakeManager.interface.encodeFunctionData('depositHsi', [
           target.tokenId,
-          target === lastHsiTarget ? 0 : encodedSettings,
+          target === lastHsiTarget ? defaultEncoded : encodedSettings,
         ])
       )), false))
         .to.emit(x.hsim, 'Transfer')
@@ -167,7 +171,6 @@ describe('HSIStakeManager.sol', () => {
       await expect(x.hsiStakeManager.stakeIdToSettings(firstStakeTarget.hsiAddress))
         .eventually.to.equal(encodedSettings)
       // const lastStake = await x.hex.stakeLists(lastHsiTarget.hsiAddress, 0)
-      const defaultEncoded = await x.hsiStakeManager.defaultEncodedSettings()
       await expect(x.hsiStakeManager.stakeIdToSettings(lastHsiTarget.hsiAddress))
         .eventually.to.equal(defaultEncoded)
       const lastStakeIdSettings = await x.hsiStakeManager.stakeIdToSettings(lastHsiTarget.hsiAddress)

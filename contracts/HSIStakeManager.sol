@@ -43,7 +43,7 @@ contract HSIStakeManager is StakeEnder {
       index: index,
       owner: owner
     });
-    _logPreservedSettingsUpdate({
+    _logSettingsUpdate({
       stakeId: stakeId,
       settings: encodedSettings
     });
@@ -72,12 +72,12 @@ contract HSIStakeManager is StakeEnder {
     (uint256 index, address owner) = _stakeIdToInfo({
       stakeId: stakeId
     });
-    uint256 tipCount = _stakeIdTipSize({
-      stakeId: stakeId
-    });
-    if (tipCount > 0) {
+    if (_isCapable(stakeIdToSettings[stakeId], HAS_EXTERNAL_TIPS_INDEX)) {
+      uint256 tipCount = _stakeIdTipSize({
+        stakeId: stakeId
+      });
       uint256[] memory indexes = new uint256[](tipCount);
-      for (uint256 i = 0; i < indexes.length; ++i) {
+      for (uint256 i = ZERO; i < indexes.length; ++i) {
         indexes[i] = i;
       }
       _removeTipFromStake({
@@ -85,7 +85,7 @@ contract HSIStakeManager is StakeEnder {
         indexes: indexes
       });
     }
-    stakeIdInfo[stakeId] = 0;
+    stakeIdInfo[stakeId] = ZERO;
     _logSettingsUpdate({
       stakeId: stakeId,
       settings: 0
@@ -103,11 +103,11 @@ contract HSIStakeManager is StakeEnder {
   function hsiStakeEndMany(address[] calldata hsiAddresses) external {
     uint256 len = hsiAddresses.length;
     uint256 i;
-    uint256 count = (_currentDay() << 128) | IHEXStakeInstanceManager(HSIM).hsiCount(address(this));
+    uint256 count = (_currentDay() << TODAY_INDEX) | IHEXStakeInstanceManager(HSIM).hsiCount(address(this));
     do {
       (, count) = _stakeEndByConsent({
         stakeId: uint160(hsiAddresses[i]),
-        count: count
+        _count: count
       });
       unchecked {
         ++i;
@@ -120,7 +120,7 @@ contract HSIStakeManager is StakeEnder {
     // we are only testing existance because we do not have
     // the underlying stake index
     address hsiAddress = address(uint160(stakeId));
-    if (_stakeCount({ staker: hsiAddress }) == 1) {
+    if (_stakeCount({ staker: hsiAddress }) == ONE) {
       stake = _getStake({
         custodian: hsiAddress,
         index: 0
@@ -146,7 +146,7 @@ contract HSIStakeManager is StakeEnder {
         owner: movedOwner
       });
     }
-    stakeIdInfo[stakeId] = 0;
+    stakeIdInfo[stakeId] = ZERO;
   }
   function _stakeStartFor(
     address staker,

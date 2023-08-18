@@ -1,9 +1,10 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity =0.8.18;
 
-import "./IsolatedStakeManager.sol";
+import { IsolatedStakeManager } from "./IsolatedStakeManager.sol";
+import { Utils } from "./Utils.sol";
 
-contract IsolatedStakeManagerFactory {
+contract IsolatedStakeManagerFactory is Utils {
   event CreateIsolatedStakeManager(address owner, address instance);
   /**
    * @notice a mapping of a key that contains a modifier and the owning address
@@ -12,7 +13,7 @@ contract IsolatedStakeManagerFactory {
   mapping(address => address) public isolatedStakeManagers;
   function createIsolatedManager(address staker) external returns(address existing) {
     existing = isolatedStakeManagers[staker];
-    if (existing != address(0)) {
+    if (existing != ZERO_ADDRESS) {
       return existing;
     }
     // this scopes up to 2 stake managers to a single address

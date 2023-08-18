@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity =0.8.18;
 
-import "@openzeppelin/contracts/utils/Address.sol";
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import { Address } from "@openzeppelin/contracts/utils/Address.sol";
+import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import { Utils } from "./Utils.sol";
 
 interface IGasReimberser {
   function flush() external;
@@ -15,7 +16,7 @@ interface PoolContract {
 
 // this contract was modeled after the following tweet:
 // https://twitter.com/TantoNomini/status/1630677746795057152
-contract GasReimberser is IGasReimberser {
+contract GasReimberser is IGasReimberser, Utils {
   using Address for address payable;
   address public immutable POOL_ADDRESS;
   constructor(address poolAddress) {
@@ -27,7 +28,7 @@ contract GasReimberser is IGasReimberser {
     address payable ender = payable(pc.getEndStaker());
     require(msg.sender == ender, "Only End Staker can run this function.");
     uint256 amount = address(this).balance;
-    if (amount > 0) {
+    if (amount > ZERO) {
       ender.sendValue(amount);
     }
   }
@@ -36,7 +37,7 @@ contract GasReimberser is IGasReimberser {
     address ender = pc.getEndStaker();
     require(msg.sender == ender, "Only End Staker can run this function.");
     uint256 balance = IERC20(token_contract_address).balanceOf(address(this));
-    if (balance > 0) {
+    if (balance > ZERO) {
       IERC20(token_contract_address).transfer(ender, balance);
     }
   }

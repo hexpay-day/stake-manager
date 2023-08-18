@@ -184,7 +184,9 @@ contract IsolatedStakeManager is Ownable2Step, AuthorizationManager {
     if (!_isCapable(_getAddressSetting(msg.sender), 3)) {
       revert NotAllowed();
     }
-    IERC20(TARGET).transfer(owner(), _balanceOf(address(this)));
+    if (!IERC20(TARGET).transfer(owner(), _balanceOf(address(this)))) {
+      revert TransferFailed(address(this), owner(), _balanceOf(address(this)));
+    }
   }
   /**
    * check the settings of the running address
@@ -238,6 +240,8 @@ contract IsolatedStakeManager is Ownable2Step, AuthorizationManager {
     })) {
       revert NotAllowed();
     }
-    IERC20(TARGET).transferFrom(owner(), address(this), amount);
+    if (!IERC20(TARGET).transferFrom(owner(), address(this), amount)) {
+      revert TransferFailed(owner(), address(this), amount);
+    }
   }
 }

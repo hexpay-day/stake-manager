@@ -4,6 +4,7 @@ pragma solidity =0.8.18;
 import "@openzeppelin/contracts/utils/Address.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "./Capable.sol";
+import "./Utils.sol";
 
 contract Bank is Capable {
   using Address for address payable;
@@ -20,7 +21,7 @@ contract Bank is Capable {
     }) - attributed[token];
   }
   function _getBalance(address token, address owner) internal view returns(uint256) {
-    return token == address(0) ? owner.balance : IERC20(token).balanceOf(owner);
+    return token == ZERO_ADDRESS ? owner.balance : IERC20(token).balanceOf(owner);
   }
   /**
    * gets the amount of unattributed tokens
@@ -142,7 +143,7 @@ contract Bank is Capable {
   }
   /**
    * transfer an amount of tokens currently attributed to the withdrawable balance of the sender
-   * @param token the token to transfer - uses address(0) for native
+   * @param token the token to transfer - uses ZERO_ADDRESS for native
    * @param to the to of the funds
    * @param amount the amount that should be deducted from the sender's balance
    */
@@ -158,7 +159,7 @@ contract Bank is Capable {
     });
   }
   function _getTokenBalance(address token) internal view returns(uint256) {
-    return token == address(0)
+    return token == ZERO_ADDRESS
       ? address(this).balance
       : IERC20(token).balanceOf(address(this));
   }
@@ -195,9 +196,11 @@ contract Bank is Capable {
   }
   /** deposits tokens from a staker and marks them for that staker */
   function _depositTokenFrom(address token, address depositor, uint256 amount) internal returns(uint256 amnt) {
-    if (token != address(0)) {
+    if (token != ZERO_ADDRESS) {
       if (amount > 0) {
-        IERC20(token).transferFrom(depositor, address(this), amount);
+        if (!IERC20(token).transferFrom(depositor, address(this), amount)) {
+          revert TransferFailed(depositor, address(this), amount);
+        }
         amnt = amount;
       }
     } else {
@@ -223,10 +226,12 @@ contract Bank is Capable {
    * @param amount the number of tokens to send
    */
   function _withdrawTokenTo(address token, address payable to, uint256 amount) internal returns(uint256) {
-    if (token == address(0)) {
+    if (token == ZERO_ADDRESS) {
       to.sendValue(amount);
     } else {
-      IERC20(token).transfer(to, amount);
+      if (!IERC20(token).transfer(to, amount)) {
+        revert TransferFailed(address(this), to, amount);
+      }
     }
     return amount;
   }

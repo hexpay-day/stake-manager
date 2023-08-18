@@ -2,9 +2,12 @@
 pragma solidity =0.8.18;
 
 import { Test } from "forge-std/Test.sol";
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
-import "contracts/StakeManager.sol";
+import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
+import { StakeManager } from "contracts/StakeManager.sol";
+import { EncodableSettings } from "contracts/EncodableSettings.sol";
+import { Multicall } from "contracts/Multicall.sol";
+import { IHEX } from "contracts/IHEX.sol";
 
 contract TestStakeManager is Test {
   StakeManager public stkMngr;
