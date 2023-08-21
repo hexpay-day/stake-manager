@@ -72,10 +72,10 @@ contract HSIStakeManager is StakeEnder {
     (uint256 index, address owner) = _stakeIdToInfo({
       stakeId: stakeId
     });
-    if (_isCapable(stakeIdToSettings[stakeId], INDEX_HAS_EXTERNAL_TIPS)) {
-      uint256 tipCount = _stakeIdTipSize({
-        stakeId: stakeId
-      });
+    uint256 tipCount = _stakeIdTipSize({
+      stakeId: stakeId
+    });
+    if (tipCount > 0) {
       uint256 i;
       uint256[] memory indexes = new uint256[](tipCount);
       do {
