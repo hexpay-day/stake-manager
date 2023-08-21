@@ -71,7 +71,7 @@ contract StakeEnder is Magnitude, SingletonHedronManager {
     }
     if (_isCapable({
       setting: setting,
-      index: 3
+      index: INDEX_CAN_MINT_HEDRON_AT_END
     })) {
       // consent has been confirmed
       uint256 hedronAmount = _mintHedron(idx, stakeId);

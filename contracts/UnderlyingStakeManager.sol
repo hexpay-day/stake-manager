@@ -93,11 +93,14 @@ contract UnderlyingStakeManager is GoodAccounting {
    * or requires that the staker send start and end methods (0)
    */
   function stakeEnd(uint256 stakeIndex, uint40 stakeId) external override virtual {
+    _stakeEndByIndexAndId(stakeIndex, stakeId);
+  }
+  function _stakeEndByIndexAndId(uint256 stakeIndex, uint256 stakeId) internal virtual returns(uint256 amount) {
     _verifyStakeOwnership({
       owner: msg.sender,
       stakeId: stakeId
     });
-    uint256 amount = _stakeEnd({
+    amount = _stakeEnd({
       stakeIndex: stakeIndex,
       stakeId: stakeId,
       stakeCountAfter: _stakeCount({
@@ -120,25 +123,10 @@ contract UnderlyingStakeManager is GoodAccounting {
    * or requires that the staker send start and end methods (0)
    */
   function stakeEndById(uint256 stakeId) external virtual returns(uint256 amount) {
-    _verifyStakeOwnership({
-      owner: msg.sender,
-      stakeId: stakeId
-    });
     (uint256 stakeIndex, ) = _stakeIdToInfo({
       stakeId: stakeId
     });
-    amount = _stakeEnd({
-      stakeIndex: stakeIndex,
-      stakeId: stakeId,
-      stakeCountAfter: _stakeCount({
-        staker: address(this)
-      }) - 1
-    });
-    _withdrawTokenTo({
-      token: TARGET,
-      to: payable(msg.sender),
-      amount: amount
-    });
+    return _stakeEndByIndexAndId(stakeIndex, stakeId);
   }
   function _stakeRestartById(uint256 stakeId) internal returns(uint256 amount, uint256 newStakeId) {
     _verifyStakeOwnership({
