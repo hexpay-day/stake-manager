@@ -235,8 +235,11 @@ contract Bank is Capable, Utils {
     }
     return amount;
   }
-  function _attributeFunds(uint256 settings, uint256 index, address token, address staker, uint256 amount) internal {
-    if (_isCapable(settings, index)) {
+  function _attributeFunds(uint256 setting, uint256 index, address token, address staker, uint256 amount) internal {
+    if (_isCapable({
+      setting: setting,
+      index: index
+    })) {
       _withdrawTokenTo({
         token: token,
         to: payable(staker),

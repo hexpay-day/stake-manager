@@ -5,6 +5,12 @@ import "./IHedron.sol";
 import "./UnderlyingStakeManager.sol";
 
 contract SingletonHedronManager is UnderlyingStakeManager {
+  function _createTo(uint256 setting, address owner) internal pure returns(uint256 to) {
+    return ((_isCapable({
+      setting: setting,
+      index: INDEX_SHOULD_SEND_TOKENS_TO_STAKER
+    }) ? 1 : 0) << ADDRESS_BIT_LENGTH) | uint160(owner);
+  }
   /**
    * mint rewards and transfer them to a provided address
    * @param stakeIds list of stake ids to mint
@@ -17,27 +23,32 @@ contract SingletonHedronManager is UnderlyingStakeManager {
     address currentOwner;
     uint256 stakeIndex;
     uint256 stakeId;
-    address to = _stakeIdToOwner({
+    uint256 setting = stakeIdToSettings[stakeId];
+    uint256 to = _createTo(setting, _stakeIdToOwner({
       stakeId: stakeIds[0]
-    });
+    }));
     do {
       stakeId = stakeIds[i];
       (stakeIndex, currentOwner) = _stakeIdToInfo({
         stakeId: stakeId
       });
+      setting = stakeIdToSettings[stakeId];
       if (msg.sender == currentOwner || _isCapable({
-        setting: stakeIdToSettings[stakeId],
+        setting: setting,
         index: INDEX_CAN_MINT_HEDRON
       })) {
-        if (currentOwner != to) {
-          _addToTokenWithdrawable({
+        uint256 currentTo = _createTo(setting, currentOwner);
+        if (currentTo != to) {
+          _attributeFunds({
+            setting: setting,
+            index: INDEX_SHOULD_SEND_TOKENS_TO_STAKER,
             token: HEDRON,
-            to: to,
+            staker: address(uint160(to)),
             amount: hedronTokens
           });
           hedronTokens = 0;
         }
-        to = currentOwner;
+        to = currentTo;
         hedronTokens += _mintHedron({
           index: stakeIndex,
           stakeId: stakeId
@@ -48,9 +59,11 @@ contract SingletonHedronManager is UnderlyingStakeManager {
       }
     } while (i < len);
     if (hedronTokens > 0) {
-      _addToTokenWithdrawable({
+      _attributeFunds({
+        setting: setting,
+        index: INDEX_SHOULD_SEND_TOKENS_TO_STAKER,
         token: HEDRON,
-        to: to,
+        staker: address(uint160(to)),
         amount: hedronTokens
       });
     }

@@ -96,7 +96,7 @@ contract StakeEnder is Magnitude, SingletonHedronManager {
       }
       if (hedronAmount > 0) {
         _attributeFunds({
-          settings: setting,
+          setting: setting,
           index: INDEX_SHOULD_SEND_TOKENS_TO_STAKER,
           token: HEDRON,
           staker: staker,
@@ -180,7 +180,7 @@ contract StakeEnder is Magnitude, SingletonHedronManager {
     }
     if (delta > 0) {
       _attributeFunds({
-        settings: setting,
+        setting: setting,
         index: INDEX_SHOULD_SEND_TOKENS_TO_STAKER,
         token: TARGET,
         staker: staker,
