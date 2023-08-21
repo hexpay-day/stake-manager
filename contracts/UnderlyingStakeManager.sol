@@ -37,7 +37,9 @@ contract UnderlyingStakeManager is GoodAccounting {
   ) internal virtual returns(uint256 delta) {
     // calculate the balance before
     // cannot use tokens attributed here because of tipping
-    uint256 balanceBefore = _balanceOf(address(this));
+    uint256 balanceBefore = _balanceOf({
+      owner: address(this)
+    });
     // end the stake - attributed to contract or through the managed stake
     IUnderlyingStakeable(TARGET).stakeEnd(stakeIndex, uint40(stakeId));
     if (stakeCountAfter > stakeIndex) {

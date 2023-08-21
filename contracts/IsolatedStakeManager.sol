@@ -184,8 +184,16 @@ contract IsolatedStakeManager is Ownable2Step, AuthorizationManager {
     if (!_isCapable(_getAddressSetting(msg.sender), 3)) {
       revert NotAllowed();
     }
-    if (!IERC20(TARGET).transfer(owner(), _balanceOf(address(this)))) {
-      revert TransferFailed(address(this), owner(), _balanceOf(address(this)));
+    if (!IERC20(TARGET).transfer(owner(), _balanceOf({
+      owner: address(this)
+    }))) {
+      revert TransferFailed({
+        from: address(this),
+        to: owner(),
+        amount: _balanceOf({
+          owner: address(this)
+        })
+      });
     }
   }
   /**
@@ -221,7 +229,9 @@ contract IsolatedStakeManager is Ownable2Step, AuthorizationManager {
    * @param newStakedDays a number of days to start a stake for
    */
   function _stakeStart(uint256 newStakedDays) internal {
-    uint256 stakedHearts = _balanceOf(address(this));
+    uint256 stakedHearts = _balanceOf({
+      owner: address(this)
+    });
     if (stakedHearts > 0) {
       IUnderlyingStakeable(TARGET).stakeStart({
         newStakedHearts: stakedHearts,
@@ -241,7 +251,11 @@ contract IsolatedStakeManager is Ownable2Step, AuthorizationManager {
       revert NotAllowed();
     }
     if (!IERC20(TARGET).transferFrom(owner(), address(this), amount)) {
-      revert TransferFailed(owner(), address(this), amount);
+      revert TransferFailed({
+        from: owner(),
+        to: address(this),
+        amount: amount
+      });
     }
   }
 }

@@ -199,7 +199,11 @@ contract Bank is Capable, Utils {
     if (token != address(0)) {
       if (amount > 0) {
         if (!IERC20(token).transferFrom(depositor, address(this), amount)) {
-          revert TransferFailed(depositor, address(this), amount);
+          revert TransferFailed({
+            from: depositor,
+            to: address(this),
+            amount: amount
+          });
         }
         amnt = amount;
       }
@@ -230,7 +234,11 @@ contract Bank is Capable, Utils {
       to.sendValue(amount);
     } else {
       if (!IERC20(token).transfer(to, amount)) {
-        revert TransferFailed(address(this), to, amount);
+        revert TransferFailed({
+          from: address(this),
+          to: to,
+          amount: amount
+        });
       }
     }
     return amount;
