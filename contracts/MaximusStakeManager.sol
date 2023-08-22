@@ -27,7 +27,6 @@ contract MaximusStakeManager is HSIStakeManager {
     uint256 amount
   );
   constructor() {
-    // unfortunately, this is the appropriate place to have this code
     perpetualWhitelist[0x0d86EB9f43C57f6FF3BC9E23D8F9d82503f0e84b] = true; // maxi
     perpetualWhitelist[0x6b32022693210cD2Cfc466b9Ac0085DE8fC34eA6] = true; // deci
     perpetualWhitelist[0x6B0956258fF7bd7645aa35369B55B61b8e6d6140] = true; // lucky
