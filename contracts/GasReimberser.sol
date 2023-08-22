@@ -4,15 +4,8 @@ pragma solidity =0.8.18;
 import { Address } from "@openzeppelin/contracts/utils/Address.sol";
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { Utils } from "./Utils.sol";
-
-interface IGasReimberser {
-  function flush() external;
-  function flush_erc20(address token) external;
-}
-
-interface PoolContract {
-  function getEndStaker() external view returns(address end_staker_address);
-}
+import { IGasReimberser } from "./interfaces/IGasReimberser.sol";
+import { IPoolContract } from "./interfaces/IPoolContract.sol";
 
 // this contract was modeled after the following tweet:
 // https://twitter.com/TantoNomini/status/1630677746795057152
@@ -24,7 +17,7 @@ contract GasReimberser is IGasReimberser, Utils {
   }
   receive() external payable {}
   function flush() external {
-    PoolContract pc = PoolContract(POOL_ADDRESS);
+    IPoolContract pc = IPoolContract(POOL_ADDRESS);
     address payable ender = payable(pc.getEndStaker());
     require(msg.sender == ender, "Only End Staker can run this function.");
     uint256 amount = address(this).balance;
@@ -33,7 +26,7 @@ contract GasReimberser is IGasReimberser, Utils {
     }
   }
   function flush_erc20(address token_contract_address) external {
-    PoolContract pc = PoolContract(POOL_ADDRESS);
+    IPoolContract pc = IPoolContract(POOL_ADDRESS);
     address ender = pc.getEndStaker();
     require(msg.sender == ender, "Only End Staker can run this function.");
     uint256 balance = IERC20(token_contract_address).balanceOf(address(this));
