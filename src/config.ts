@@ -20,6 +20,11 @@ export const args = yargs.options({
     default: 2,
     describe: 'the default verbosity of the tracer',
   },
+  viaIR: {
+    required: false,
+    type: 'boolean',
+    default: false,
+  },
   tracerOpcodes: {
     required: false,
     type: 'array',

@@ -122,6 +122,7 @@ const networks: Record<string, NetworkUserConfig> = {
   },
 }
 const settings = {
+  viaIR: conf.args.viaIR,
   optimizer: {
     enabled: true,
     runs: 200,

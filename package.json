@@ -5,7 +5,7 @@
     "build": "yarn run lint && hardhat compile",
     "lint": "solhint 'contracts/**/*.sol'",
     "test": "hardhat test",
-    "coverage": "hardhat coverage",
+    "coverage": "VIA_I_R=true hardhat coverage",
     "analyze": "slither ./contracts/ --solc-remaps @openzeppelin=node_modules/@openzeppelin",
     "foundry:test": "forge test --fork-url 'https://rpc.pulsechain.com' -vvv"
   },
