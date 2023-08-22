@@ -20,13 +20,6 @@ import * as conf from './src/config'
 
 import { main as impersonateAndFund } from './tasks/impersonate-and-fund'
 
-// extendEnvironment((hre: HardhatRuntimeEnvironment) => {
-//   const config = hre.network.config as HttpNetworkUserConfig
-//   if (config?.url) {
-//     hre.ethers.provider = new hre.ethers.providers.JsonRpcProvider(config.url)
-//   }
-// })
-
 task('impersonate-and-fund', 'impersonate an address and fund another address with a provided amount of hex')
   .addOptionalParam('impersonate', 'the address to impersonate', '0x075e72a5edf65f0a5f44699c7654c1a76941ddc8')
   .addOptionalParam('amount', 'the amount to send to the provided address', '0')
@@ -122,7 +115,6 @@ const networks: Record<string, NetworkUserConfig> = {
   },
 }
 const settings = {
-  viaIR: conf.args.viaIR,
   optimizer: {
     enabled: true,
     runs: 200,

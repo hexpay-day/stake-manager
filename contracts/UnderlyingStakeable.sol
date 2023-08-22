@@ -2,9 +2,9 @@
 pragma solidity =0.8.18;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "./IUnderlyingStakeable.sol";
-import "./IHedron.sol";
-import "./IHEX.sol";
+import "./interfaces/IUnderlyingStakeable.sol";
+import "./interfaces/IHedron.sol";
+import "./interfaces/IHEX.sol";
 import "./Multicall.sol";
 import "./Utils.sol";
 

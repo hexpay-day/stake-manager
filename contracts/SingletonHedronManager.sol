@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity =0.8.18;
 
-import "./IHedron.sol";
+import "./interfaces/IHedron.sol";
 import "./UnderlyingStakeManager.sol";
 
 contract SingletonHedronManager is UnderlyingStakeManager {

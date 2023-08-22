@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity =0.8.18;
 
-import { IHEX } from "./IHEX.sol";
+import { IHEX } from "./interfaces/IHEX.sol";
 import { UnderlyingStakeable } from "./UnderlyingStakeable.sol";
 import { Bank } from "./Bank.sol";
 import { StakeInfo } from "./StakeInfo.sol";

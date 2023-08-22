@@ -7,7 +7,7 @@ import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/I
 import { StakeManager } from "contracts/StakeManager.sol";
 import { EncodableSettings } from "contracts/EncodableSettings.sol";
 import { Multicall } from "contracts/Multicall.sol";
-import { IHEX } from "contracts/IHEX.sol";
+import { IHEX } from "contracts/interfaces/IHEX.sol";
 
 contract TestStakeManager is Test {
   StakeManager public stkMngr;

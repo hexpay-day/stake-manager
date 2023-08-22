@@ -2,7 +2,7 @@
 pragma solidity =0.8.18;
 
 import { GoodAccounting } from "./GoodAccounting.sol";
-import { IUnderlyingStakeable } from "./IUnderlyingStakeable.sol";
+import { UnderlyingStakeable } from "./UnderlyingStakeable.sol";
 
 contract UnderlyingStakeManager is GoodAccounting {
   /**
@@ -19,9 +19,9 @@ contract UnderlyingStakeManager is GoodAccounting {
     uint256 newStakedDays,
     uint256 index
   ) internal virtual returns(uint256 stakeId) {
-    IUnderlyingStakeable(TARGET).stakeStart(amount, newStakedDays);
+    UnderlyingStakeable(TARGET).stakeStart(amount, newStakedDays);
     // get the stake id
-    stakeId = IUnderlyingStakeable(TARGET).stakeLists(address(this), index).stakeId;
+    stakeId = UnderlyingStakeable(TARGET).stakeLists(address(this), index).stakeId;
     stakeIdInfo[stakeId] = _encodeInfo({
       index: index,
       owner: owner
@@ -41,7 +41,7 @@ contract UnderlyingStakeManager is GoodAccounting {
       owner: address(this)
     });
     // end the stake - attributed to contract or through the managed stake
-    IUnderlyingStakeable(TARGET).stakeEnd(stakeIndex, uint40(stakeId));
+    UnderlyingStakeable(TARGET).stakeEnd(stakeIndex, uint40(stakeId));
     if (stakeCountAfter > stakeIndex) {
       uint256 shiftingStakeId = _getStake({
         custodian: address(this),
@@ -134,7 +134,7 @@ contract UnderlyingStakeManager is GoodAccounting {
       stakeId: stakeId
     });
     (uint256 stakeIndex, address staker) = _stakeIdToInfo(stakeId);
-    IUnderlyingStakeable.StakeStore memory stake = _getStake(address(this), stakeIndex);
+    UnderlyingStakeable.StakeStore memory stake = _getStake(address(this), stakeIndex);
     uint256 count = _stakeCount({
       staker: address(this)
     }) - 1;

@@ -3,9 +3,9 @@ pragma solidity =0.8.18;
 
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/utils/Address.sol";
-import "./IPublicEndStakeable.sol";
+import "./interfaces/IPublicEndStakeable.sol";
 import "./HSIStakeManager.sol";
-import { IGasReimberser } from './GasReimberser.sol';
+import { GasReimberser } from './GasReimberser.sol';
 
 contract MaximusStakeManager is HSIStakeManager {
   using Address for address payable;
@@ -91,9 +91,9 @@ contract MaximusStakeManager is HSIStakeManager {
         token: token
       });
       if (token == address(0)) {
-        IGasReimberser(gasReimberser).flush();
+        GasReimberser(payable(gasReimberser)).flush();
       } else {
-        IGasReimberser(gasReimberser).flush_erc20(token);
+        GasReimberser(payable(gasReimberser)).flush_erc20(token);
       }
       bal = _getTokenBalance({
         token: token

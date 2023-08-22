@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity =0.8.18;
 
-import { IUnderlyingStakeable } from './IUnderlyingStakeable.sol';
-import { IHEX } from './IHEX.sol';
+import { IHEX } from './interfaces/IHEX.sol';
 import { Utils } from './Utils.sol';
 
 contract EarningsOracle is Utils {

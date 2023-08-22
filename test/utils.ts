@@ -1,7 +1,7 @@
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers"
-import { impersonateAccount, loadFixture, stopImpersonatingAccount, time } from "@nomicfoundation/hardhat-network-helpers"
+import { impersonateAccount, loadFixture, time } from "@nomicfoundation/hardhat-network-helpers"
 import { days } from "@nomicfoundation/hardhat-network-helpers/dist/src/helpers/time/duration"
-import type { IHEX } from "../artifacts/types/contracts/IHEX"
+import type { IHEX } from "../artifacts/types/contracts/interfaces/IHEX"
 import * as hre from 'hardhat'
 import _ from "lodash"
 import * as ethers from 'ethers'
@@ -49,7 +49,7 @@ export const deployFixture = async () => {
   const _signers = await hre.ethers.getSigners()
   const signers = _signers.slice(0, 20)
   const [signer] = signers
-  const hex = await hre.ethers.getContractAt('contracts/IHEX.sol:IHEX', hexAddress) as IHEX
+  const hex = await hre.ethers.getContractAt('contracts/interfaces/IHEX.sol:IHEX', hexAddress) as IHEX
   const hedron = await hre.ethers.getContractAt('IHedron', hedronAddress)
   const hsim = await hre.ethers.getContractAt('IHEXStakeInstanceManager', await hedron.hsim())
   const ExistingStakeManager = await hre.ethers.getContractFactory('ExistingStakeManager')
