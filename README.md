@@ -2,16 +2,16 @@
 
 build the contracts
 ```bash
-yarn run build
+pnpm run build
 ```
 
 note: sometimes tests fail if your network connection is a little slow at the time and are running for the first time after a fresh install or deleting the cache
 
 run tests
 ```bash
-yarn run foundry:test
-yarn run test
-yarn run test --trace-error # with error traces
+pnpm run foundry:test
+pnpm run test
+pnpm run test --trace-error # with error traces
 ```
 
 ### Run Traces

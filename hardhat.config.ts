@@ -61,11 +61,6 @@ const pulsechain: HardhatNetworkUserConfig = {
       hardforkHistory: {
         merge: 17_233_001,
         shanghai: 17_233_001,
-        // grayGlacier: 15_050_000,
-        // arrowGlacier: 13_773_000,
-        // london: 12_965_000,
-        // berlin: 12_244_000,
-        // miurGlacier: 9_200_000,
       },
     },
   },
@@ -73,7 +68,7 @@ const pulsechain: HardhatNetworkUserConfig = {
 
 const ethereum: HardhatNetworkUserConfig = {
   forking: {
-    url: 'https://rpc.ankr.com/eth',
+    url: 'https://eth.llamarpc.com',
     blockNumber: conf.args.blockNumber,
   },
 }
@@ -120,6 +115,8 @@ const settings = {
     runs: 200,
   },
 }
+
+const explorerApiKey = 'abc'
 
 let hexArtifact = {} as unknown as Artifact;
 try {
@@ -195,6 +192,33 @@ const config: HardhatUserConfig = {
     gasCost: enabled,
     enabled,
   }))(false),
+  etherscan: {
+    apiKey: {
+      'external': explorerApiKey,
+    },
+    customChains: [{
+      network: 'external',
+      chainId: 1,
+      urls: {
+        apiURL: 'https://etherscan.io/api',
+        browserURL: 'https://etherscan.io/',
+      },
+    }, {
+      network: 'external',
+      chainId: 369,
+      urls: {
+        apiURL: 'https://scan.pulsechain.com/api',
+        browserURL: 'https://scan.pulsechain.com/',
+      },
+    }, {
+      network: 'external',
+      chainId: 943,
+      urls: {
+        apiURL: 'https://scan.v4.testnet.pulsechain.com/api',
+        browserURL: 'https://scan.v4.testnet.pulsechain.com/',
+      },
+    }],
+  },
 };
 
 export default config;

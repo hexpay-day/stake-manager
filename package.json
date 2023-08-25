@@ -2,7 +2,7 @@
   "license": "UNLICENSED",
   "name": "@hexpayday/stake-manager",
   "scripts": {
-    "build": "yarn run lint && hardhat compile",
+    "build": "pnpm run lint && hardhat compile",
     "lint": "solhint 'contracts/**/*.sol'",
     "test": "hardhat test",
     "coverage": "hardhat coverage",
@@ -49,9 +49,6 @@
     "typechain": "^8.1.0",
     "typescript": "^5.0.4",
     "yargs": "^17.7.2"
-  },
-  "dependencies": {
-    "solc": "0.8.16"
   },
   "version": "1.0.9"
 }
