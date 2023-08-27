@@ -1,4 +1,4 @@
-import { task, type HardhatUserConfig } from "hardhat/config";
+import { task, type HardhatUserConfig, types } from "hardhat/config";
 import type {
   Artifact,
   HardhatNetworkAccountsConfig,
@@ -8,6 +8,7 @@ import type {
 import * as fs from 'fs'
 import * as path from 'path'
 import "@nomicfoundation/hardhat-toolbox";
+import * as helpers from '@nomicfoundation/hardhat-network-helpers'
 import "hardhat-preprocessor"
 import 'hardhat-tracer'
 import 'solidity-coverage'
@@ -21,6 +22,7 @@ import * as conf from './src/config'
 
 import { main as deploy } from './tasks/deploy'
 import { main as impersonateAndFund } from './tasks/impersonate-and-fund'
+import { main as increase } from './tasks/time-warp'
 
 task('impersonate-and-fund', 'impersonate an address and fund another address with a provided amount of hex')
   // address is valid on pulsechain v4 + ethereum
@@ -35,6 +37,12 @@ task('impersonate-and-fund', 'impersonate an address and fund another address wi
 
 task('deploy', 'deploys contracts')
   .setAction(deploy)
+
+const units = Object.keys(helpers.time.duration)
+task('increase', 'increases the timestamp of the chain by a magnitude and unit')
+  .addPositionalParam('magnitude', 'the size of the jump', '1')
+  .addPositionalParam('unit', 'the unit of the time jump', 'days')
+  .setAction(increase)
 
 function getRemappings() {
   return fs
