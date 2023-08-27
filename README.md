@@ -37,6 +37,7 @@ in the case of the hexpay.day developers, they may wish to provide the following
 # where stakes will be ended / managed from
 TEST_ADDRESS=0xE971e07BF9917e91DFbeD9165f2ea8e6FF876880
 # where contracts will be deployed from
+# must be first address of `DEPLOY_MNEMONIC`
 DEPLOY_ADDRESS=0x73CaB6c9EDA8aBc28099aF9F5dBd100Aa998Ae72
 ```
 
