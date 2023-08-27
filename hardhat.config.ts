@@ -8,7 +8,6 @@ import type {
 import * as fs from 'fs'
 import * as path from 'path'
 import "@nomicfoundation/hardhat-toolbox";
-import * as helpers from '@nomicfoundation/hardhat-network-helpers'
 import "hardhat-preprocessor"
 import 'hardhat-tracer'
 import 'solidity-coverage'
@@ -38,7 +37,6 @@ task('impersonate-and-fund', 'impersonate an address and fund another address wi
 task('deploy', 'deploys contracts')
   .setAction(deploy)
 
-const units = Object.keys(helpers.time.duration)
 task('increase', 'increases the timestamp of the chain by a magnitude and unit')
   .addPositionalParam('magnitude', 'the size of the jump', '1')
   .addPositionalParam('unit', 'the unit of the time jump', 'days')
