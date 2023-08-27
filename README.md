@@ -20,6 +20,23 @@ pnpm run test --trace-error # with error traces
 npx hardhat trace --hash 0xdeadbeef... # tx hash
 ```
 
+### Local Development
+
+to run a node locally, simply run
+```bash
+npx hardhat node
+```
+
+then, in another terminal, you can run the `local-development` script to fund your deploy mnemonic (env: `DEPLOY_MNEMONIC`)
+```bash
+./local-development
+```
+
+in the case of the hexpay.day developers, they may wish to provide the following series of envs
+```
+
+```
+
 ### Auditors
 
 The contracts that need to be reviewed are in the `contracts` folder and excludes the `references` and `interfaces` folders. The contracts folder is ~2400 sloc. The reference contract ([HEX.sol](https://etherscan.io/token/0x2b591e99afe9f32eaa6214f7b7629768c40eeb39#code)) is ~1640 SLOC, but has been modified from the original source so can only be used as a logical reference, not a byte for byte copy reference. Original can be found on etherscan. The [HEDRON](https://etherscan.io/token/0x3819f64f282bf135d62168c1e513280daf905e06#code) and [HSIM](https://etherscan.io/token/0x8bd3d1472a656e312e94fb1bbdd599b8c51d18e3#code) contracts are also available on etherscan and are ~2700 sloc combined.

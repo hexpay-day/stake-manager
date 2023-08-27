@@ -1,6 +1,7 @@
 import { task, type HardhatUserConfig } from "hardhat/config";
 import type {
   Artifact,
+  HardhatNetworkAccountsConfig,
   HardhatNetworkUserConfig,
   NetworkUserConfig,
 } from "hardhat/types";
@@ -18,14 +19,22 @@ import * as ethers from "ethers";
 
 import * as conf from './src/config'
 
+import { main as deploy } from './tasks/deploy'
 import { main as impersonateAndFund } from './tasks/impersonate-and-fund'
 
 task('impersonate-and-fund', 'impersonate an address and fund another address with a provided amount of hex')
-  .addOptionalParam('impersonate', 'the address to impersonate', '0x075e72a5edf65f0a5f44699c7654c1a76941ddc8')
+  // address is valid on pulsechain v4 + ethereum
+  // pulsechain is: 0x5280aa3cF5D6246B8a17dFA3D75Db26617B73937
+  .addOptionalParam('impersonate', 'the address to impersonate')
   .addOptionalParam('amount', 'the amount to send to the provided address', '0')
   .addOptionalParam('decimal', 'the amount in decimal form to send to the provided address', '0')
-  .addOptionalParam('to', 'where to send the funds', '0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266')
+  // hexpay.day deployer
+  .addOptionalParam('to', 'where to send the funds', '0x73CaB6c9EDA8aBc28099aF9F5dBd100Aa998Ae72')
+  .addOptionalParam('token', 'the token to send', '0x2b591e99afE9f32eAA6214f7B7629768c40Eeb39')
   .setAction(impersonateAndFund)
+
+task('deploy', 'deploys contracts')
+  .setAction(deploy)
 
 function getRemappings() {
   return fs
@@ -35,7 +44,21 @@ function getRemappings() {
     .map((line) => line.trim().split("="));
 }
 
+const defaultNetwork = {
+  timeout: 100_000_000,
+}
+
+const defaultHardhatNetwork = {
+  ...defaultNetwork,
+  accounts: {
+    accountsBalance: ethers.utils.parseEther((1_000_000).toString()).toString(),
+    count: 3,
+    mnemonic: conf.args.mnemonic,
+  } as HardhatNetworkAccountsConfig,
+}
+
 const pulsechainV4: HardhatNetworkUserConfig = {
+  ...defaultHardhatNetwork,
   forking: {
     url: 'https://rpc.v4.testnet.pulsechain.com',
     blockNumber: conf.args.blockNumber,
@@ -51,6 +74,7 @@ const pulsechainV4: HardhatNetworkUserConfig = {
 }
 
 const pulsechain: HardhatNetworkUserConfig = {
+  ...defaultHardhatNetwork,
   forking: {
     url: 'https://rpc.pulsechain.com',
     blockNumber: conf.args.blockNumber,
@@ -67,6 +91,7 @@ const pulsechain: HardhatNetworkUserConfig = {
 }
 
 const ethereum: HardhatNetworkUserConfig = {
+  ...defaultHardhatNetwork,
   forking: {
     url: 'https://eth.llamarpc.com',
     blockNumber: conf.args.blockNumber,
@@ -78,13 +103,7 @@ const hardhatNetworks: Record<string, HardhatNetworkUserConfig> = {
   pulsechain,
   ethereum,
   local: ethereum,
-}
-
-const defaultNetwork = {
-  timeout: 100_000_000,
-  accounts: {
-    mnemonic: 'test test test test test test test test test test test junk',
-  },
+  localhost: ethereum,
 }
 
 const networks: Record<string, NetworkUserConfig> = {
@@ -106,6 +125,11 @@ const networks: Record<string, NetworkUserConfig> = {
   local: {
     ...defaultNetwork,
     url: ethereum.forking?.url,
+    ...ethereum,
+  },
+  localhost: {
+    ...defaultNetwork,
+    url: 'http://127.0.0.1:8545/',
     ...ethereum,
   },
 }
