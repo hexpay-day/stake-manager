@@ -8,6 +8,7 @@ export const main = async (args: any, hre: HardhatRuntimeEnvironment) => {
   console.log('deployer %o', addr)
   const ExistingStakeManager = await hre.ethers.getContractFactory('ExistingStakeManager')
   const StakeManager = await hre.ethers.getContractFactory('StakeManager')
+  const IsolatedStakeManagerFactory = await hre.ethers.getContractFactory('IsolatedStakeManagerFactory')
   let nonce = await waitUntilNonce(signer, 0)
   const existingStakeManager = await ExistingStakeManager.deploy({
     nonce,
@@ -22,6 +23,13 @@ export const main = async (args: any, hre: HardhatRuntimeEnvironment) => {
   })
   await stakeManager.deployed()
   console.log('@%o StakeManager() -> %o @ %o', nonce, stakeManager.address, stakeManager.deployTransaction.hash)
+  nonce = await waitUntilNonce(signer, 2)
+  const isolatedStakeManagerFactory = await IsolatedStakeManagerFactory.deploy({
+    nonce,
+    type: 2,
+  })
+  await isolatedStakeManagerFactory.deployed()
+  console.log('@%o IsolatedStakeManagerFactory() -> %o @ %o', nonce, isolatedStakeManagerFactory.address, isolatedStakeManagerFactory.deployTransaction.hash)
 }
 
 const waitUntilNonce = async (signer: SignerWithAddress, nonce: number) => {
