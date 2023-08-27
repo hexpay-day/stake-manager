@@ -32,9 +32,12 @@ then, in another terminal, you can run the `local-development` script to fund yo
 ./local-development
 ```
 
-in the case of the hexpay.day developers, they may wish to provide the following series of envs
+in the case of the hexpay.day developers, they may wish to provide the following series of envs and run the local development script as noted above in order to test in a browser
 ```
-
+# where stakes will be ended / managed from
+TEST_ADDRESS=0xE971e07BF9917e91DFbeD9165f2ea8e6FF876880
+# where contracts will be deployed from
+DEPLOY_ADDRESS=0x73CaB6c9EDA8aBc28099aF9F5dBd100Aa998Ae72
 ```
 
 ### Auditors
