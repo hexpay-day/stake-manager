@@ -33,7 +33,7 @@ then, in another terminal, you can run the `local-development` script to fund yo
 ```
 
 in the case of the hexpay.day developers, they may wish to provide the following series of envs and run the local development script as noted above in order to test in a browser
-```
+```bash
 # where stakes will be ended / managed from
 TEST_ADDRESS=0xE971e07BF9917e91DFbeD9165f2ea8e6FF876880
 # where contracts will be deployed from
