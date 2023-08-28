@@ -4,7 +4,7 @@ pragma solidity =0.8.18;
 import { TestStakeManager } from "./TestStakeManager.t.sol";
 import { UnderlyingStakeManager } from "contracts/UnderlyingStakeManager.sol";
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import { Multicall } from "contracts/Multicall.sol";
+import { MulticallExtension } from "contracts/MulticallExtension.sol";
 
 contract TestSingletonStakeManager is TestStakeManager {
   function testDeposits() public {
@@ -83,7 +83,7 @@ contract TestSingletonStakeManager is TestStakeManager {
       startingBalance / 2, 20
     );
     vm.startPrank(vm.addr(1));
-    Multicall(stkMngr).multicall(calls, false);
+    MulticallExtension(stkMngr).multicall(calls, false);
     vm.stopPrank();
   }
   function testManagedStakeRestarts() public {

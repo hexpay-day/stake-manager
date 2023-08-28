@@ -1,14 +1,14 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity =0.8.18;
 
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "./interfaces/IUnderlyingStakeable.sol";
-import "./interfaces/IHedron.sol";
-import "./interfaces/IHEX.sol";
-import "./Multicall.sol";
-import "./Utils.sol";
+import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import { IUnderlyingStakeable } from "./interfaces/IUnderlyingStakeable.sol";
+import { IHedron } from "./interfaces/IHedron.sol";
+import { IHEX } from  "./interfaces/IHEX.sol";
+import { MulticallExtension } from "./MulticallExtension.sol";
+import { Utils } from "./Utils.sol";
 
-abstract contract UnderlyingStakeable is Multicall, Utils, IUnderlyingStakeable {
+abstract contract UnderlyingStakeable is MulticallExtension, Utils, IUnderlyingStakeable {
   /**
    * gets the stake store at the provided index
    * @param index the index of the stake to get

@@ -6,7 +6,6 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "./interfaces/IHedron.sol";
 import "./interfaces/IHEXStakeInstanceManager.sol";
 import "./interfaces/IHEX.sol";
-import "./Multicall.sol";
 import "./StakeEnder.sol";
 import "./Tipper.sol";
 import "./Magnitude.sol";

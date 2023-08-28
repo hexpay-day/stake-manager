@@ -2,10 +2,10 @@
 pragma solidity =0.8.18;
 
 /**
- * this multicall extension is useful for permissioned calls
+ * this multicall extension is useful for chaining permissioned calls
  * in other words, calls that operate on the senders funds or settings
  */
-contract Multicall {
+contract MulticallExtension {
   error BlockHash(bytes32 expected, bytes32 actual);
   error Deadline(uint256 deadline, uint256 currentTime);
   event TxFailed(uint256 indexed index, bytes result);
