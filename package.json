@@ -50,5 +50,5 @@
     "typescript": "^5.0.4",
     "yargs": "^17.7.2"
   },
-  "version": "1.0.9"
+  "version": "1.0.10"
 }
