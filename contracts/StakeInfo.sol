@@ -13,9 +13,6 @@ contract StakeInfo is Utils {
    * @notice this error is thrown when the stake in question
    * is not owned by the expected address
    */
-  constructor() {
-    stakeIdInfo[0] = 0;
-  }
   error StakeNotOwned(address provided, address expected);
   function verifyStakeOwnership(address owner, uint256 stakeId) external view {
     _verifyStakeOwnership(owner, stakeId);
