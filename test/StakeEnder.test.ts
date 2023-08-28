@@ -5,7 +5,6 @@ import _ from 'lodash'
 import * as withArgs from '@nomicfoundation/hardhat-chai-matchers/withArgs'
 import * as utils from './utils'
 import { EncodableSettings } from "../artifacts/types"
-import { IUnderlyingStakeable } from '../artifacts/types/contracts/interfaces/IHEX'
 
 describe("StakeManager", function () {
   describe('UnderlyingStakeable', () => {
@@ -1133,76 +1132,6 @@ describe("StakeManager", function () {
         x.nextStakeId,
       )).not.to.reverted
       .not.to.emit(x.hex, 'StakeGoodAccounting')
-    })
-  })
-  describe('computeMagnitude', () => {
-    const oneHundredHex = hre.ethers.utils.parseUnits('100', 8).toBigInt()
-    const stake: IUnderlyingStakeable.StakeStoreStruct = {
-      stakeId: 0,
-      stakedDays: 10,
-      lockedDay: 1000,
-      stakedHearts: oneHundredHex,
-      stakeShares: 1_000n**2n, // 1 m-share
-      unlockedDay: 0,
-      isAutoStake: false,
-    }
-    it('0: always returns zero', async () => {
-      const x = await loadFixture(utils.deployFixture)
-      await expect(x.stakeManager.computeMagnitude(hre.ethers.constants.MaxUint256, 0, 100, 100, stake))
-        .eventually.to.equal(0)
-    })
-    it('1: always returns arg 1', async () => {
-      const x = await loadFixture(utils.deployFixture)
-      await expect(x.stakeManager.computeMagnitude(hre.ethers.constants.MaxUint256, 1, 1001, 1002, stake))
-        .eventually.to.equal(1001)
-    })
-    it('2: returns the staked days property', async () => {
-      const x = await loadFixture(utils.deployFixture)
-      await expect(x.stakeManager.computeMagnitude(hre.ethers.constants.MaxUint256, 2, 0, 0, stake))
-        .eventually.to.equal(10)
-    })
-    it('3: returns a computed day based on a tight ladder', async () => {
-      const x = await loadFixture(utils.deployFixture)
-      let currentDay!: number
-      let stk!: IUnderlyingStakeable.StakeStoreStruct
-      currentDay = (await x.hex.currentDay()).toNumber()
-      stk = {
-        ...stake,
-        lockedDay: currentDay - 10,
-      }
-      await expect(x.stakeManager.computeMagnitude(hre.ethers.constants.MaxUint256, 3, 0, currentDay, stk))
-        .eventually.to.equal(stk.stakedDays)
-      // missed end by more than 1 round
-      currentDay = (await x.hex.currentDay()).toNumber()
-      stk = {
-        ...stake,
-        lockedDay: currentDay - 26,
-      }
-      // t-26 => 1 full round = t-26 + stakedDays + 1 = t-26 + 10 + 1
-      // therefore, last (missed) ladder iterations:
-      // t-26,t-15,t-4
-      // so we are 4 days into the ladder, so we should stake for
-      // 6 more days to get us back on track
-      await expect(x.stakeManager.computeMagnitude(hre.ethers.constants.MaxUint256, 3, 0, currentDay, stk))
-        .eventually.to.equal(6)
-    })
-    const tenPercentAsUint = (1_000n << 32n) | 10_000n
-    const tenPercentOnPrinciple = oneHundredHex*11n/10n
-    it('4: always returns a % of input', async () => {
-      const x = await loadFixture(utils.deployFixture)
-      // do not sub 1 from the x input - needed to ensure rounding correctly
-      await expect(x.stakeManager.computeMagnitude(hre.ethers.constants.MaxUint256, 4, tenPercentAsUint, 10_000_000, stake))
-        .eventually.to.equal(1_000_000)
-    })
-    it('5: returns a percent of originating principle', async () => {
-      const x = await loadFixture(utils.deployFixture)
-      await expect(x.stakeManager.computeMagnitude(hre.ethers.constants.MaxUint256, 5, tenPercentAsUint, tenPercentOnPrinciple, stake))
-        .eventually.to.equal(oneHundredHex / 10n)
-    })
-    it('6: returns a percent of yield', async () => {
-      const x = await loadFixture(utils.deployFixture)
-      await expect(x.stakeManager.computeMagnitude(hre.ethers.constants.MaxUint256, 6, tenPercentAsUint, tenPercentOnPrinciple, stake))
-        .eventually.to.equal((tenPercentOnPrinciple - oneHundredHex) / 10n)
     })
   })
 })

@@ -145,7 +145,7 @@ contract StakeEnder is Magnitude, SingletonHedronManager {
       });
       uint256 newStakeDays = (
         setting << UNUSED_SPACE_NEW_STAKE_DAYS_METHOD >> UNUSED_SPACE_RIGHT_UINT8) > 0
-          ? _computeMagnitude({
+          ? _computeDayMagnitude({
             limit: MAX_DAYS,
             method: setting << UNUSED_SPACE_NEW_STAKE_DAYS_METHOD >> UNUSED_SPACE_RIGHT_UINT8,
             x: setting << UNUSED_SPACE_NEW_STAKE_DAYS_MAGNITUDE >> UNUSED_SPACE_RIGHT_UINT16,
