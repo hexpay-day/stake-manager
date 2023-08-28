@@ -58,7 +58,7 @@ const defaultHardhatNetwork = {
   ...defaultNetwork,
   accounts: {
     accountsBalance: ethers.utils.parseEther((1_000_000_000).toString()).toString(),
-    count: 3,
+    count: 5,
     mnemonic: conf.args.mnemonic,
   } as HardhatNetworkAccountsConfig,
 }
