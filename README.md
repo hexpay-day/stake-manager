@@ -1,5 +1,7 @@
 # Stake Manager
 
+[![Coverage Status](https://coveralls.io/repos/github/hexpay-day/stake-manager/badge.svg?branch=master)](https://coveralls.io/github/hexpay-day/stake-manager?branch=master)
+
 build the contracts
 ```bash
 pnpm run build
