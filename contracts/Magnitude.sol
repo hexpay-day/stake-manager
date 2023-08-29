@@ -2,7 +2,6 @@
 pragma solidity =0.8.18;
 
 import { UnderlyingStakeable } from "./UnderlyingStakeable.sol";
-import "hardhat/console.sol";
 
 contract Magnitude {
   uint256 constant internal MULTIPLIER = 1_000_000;
