@@ -76,7 +76,7 @@ abstract contract EncodableSettings is StakeInfo {
    */
   event UpdateSettings(uint256 indexed stakeId, uint256 settings);
   uint256 private constant DEFAULT_ENCODED_SETTINGS
-    = uint256(0x000000000000000000000000000000000000040000000100000001020000ff01);
+    = uint256(0x000000000000000000000000000000000000020000000100000001020000ff01);
   function defaultEncodedSettings() external virtual pure returns(uint256) {
     return DEFAULT_ENCODED_SETTINGS;
   }
@@ -250,7 +250,7 @@ abstract contract EncodableSettings is StakeInfo {
     );
   }
   function _defaultSettings() internal virtual pure returns(Settings memory settings) {
-    // 0x00000000000000000000000000000000000000000000040000000100000001020000ff01
+    // 0x00000000000000000000000000000000000000000000020000000100000001020000ff01
     return Settings(
       /*
        * by default, there is no hedron tip
@@ -266,7 +266,7 @@ abstract contract EncodableSettings is StakeInfo {
        * by default, assume that all tokens minted from an end stake
        * should go directly into a new stake
        */
-      uint8(4), uint64((1 << 32) | 1), // new stake amount
+      uint8(2), uint64((1 << 32) | 1), // new stake amount
       /*
        * by default, assume that by using this contract, users want efficiency gains
        * so by default, restarting their stakes are the most efficient means of managing tokens
@@ -313,7 +313,7 @@ abstract contract EncodableSettings is StakeInfo {
     if (copyIterations == 0) {
       return uint8(setting);
     }
-    if (copyIterations == MAX_UINT8) {
+    if (copyIterations >= MAX_UINT8) {
       return setting;
     }
     --copyIterations;
