@@ -177,6 +177,21 @@ describe('EarningsOracle.sol', () => {
           .eventually.to.equal(previousSize.toBigInt() + rangeSize)
       })
     })
+    describe('payoutDeltaTrucated', () => {
+      it('gives a minimum value that should have been claimable by the range for a given magnitude', async () => {
+        const rangeSize = 700n
+        await x.oracle.catchUpDays(rangeSize)
+        // day 2 did not really exist for anyone
+        await expect(x.oracle.payoutDeltaTrucated(600, 608, 3_292_329_556_204n))
+          .eventually.to.be.approximately(15_458_700_172, 154_587_001) // within 1%
+        await expect(x.oracle.payoutDeltaTrucated(600, 638, 619_696_658_739_089n))
+          .eventually.to.be.approximately(13_779_168_165_104, 13_779_168_165) // within 0.1%
+        // await expect(x.oracle.payoutDeltaTrucated(600, 608, 3_292_329_556_204n))
+        //   .eventually.to.be.equal(15_458_700_172)
+        // await expect(x.oracle.payoutDeltaTrucated(600, 638, 619_696_658_739_089n))
+        //   .eventually.to.be.equal(13_779_168_165_104) // within 1%
+      })
+    })
   })
   describe('has almost all current data pulled over', () => {
     let x!: Awaited<ReturnType<typeof launchCurrentSub1>>

@@ -4,6 +4,8 @@ pragma solidity =0.8.18;
 import { IHEX } from './interfaces/IHEX.sol';
 import { Utils } from './Utils.sol';
 
+import "hardhat/console.sol";
+
 contract EarningsOracle is Utils {
   uint96 public immutable lastZeroDay;
   /**
@@ -11,6 +13,7 @@ contract EarningsOracle is Utils {
    */
   uint128 public constant MAX_CATCH_UP_DAYS = 1_000;
   uint128 public constant MAX_TOTAL_PAYOUT = type(uint128).max;
+  uint256 public constant SHARE_SCALE = 1e5;
   TotalStore[] public totals;
   struct TotalStore {
     uint128 payout;
@@ -69,8 +72,11 @@ contract EarningsOracle is Utils {
     uint256 untilDay,
     uint256 multiplier
   ) external view returns(uint256 payout) {
+    console.log(startDay, untilDay);
+    console.log(totals[startDay].payout, totals[untilDay].payout);
+    console.log(totals[startDay].shares, totals[untilDay].shares);
     return ((
-      (totals[untilDay].payout - totals[startDay].payout) * multiplier
+      (totals[untilDay].payout - totals[startDay].payout) * multiplier * (untilDay - startDay)
     ) / (
       totals[untilDay].shares - totals[startDay].shares
     )) - (
