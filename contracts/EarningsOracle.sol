@@ -50,10 +50,12 @@ contract EarningsOracle is Utils {
   function payoutDelta(uint256 startDay, uint256 untilDay) external view returns(uint256 payout, uint256 shares) {
     TotalStore memory start = totals[startDay];
     TotalStore memory until = totals[untilDay];
-    return (
-      until.payout - start.payout,
-      until.shares - start.shares
-    );
+    unchecked {
+      return (
+        until.payout - start.payout,
+        until.shares - start.shares
+      );
+    }
   }
   /**
    * multiply the difference of the payout by a constant and divide that result by the denominator
@@ -72,7 +74,8 @@ contract EarningsOracle is Utils {
     ) / (
       totals[untilDay].shares - totals[startDay].shares
     )) - (
-      untilDay - startDay
+      // for a 1 day span, the amount is actually known
+      (untilDay - startDay) - 1
     );
   }
   /**
