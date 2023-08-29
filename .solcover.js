@@ -3,6 +3,7 @@ module.exports = {
   skipFiles: [
     'reference',
     'interfaces',
+    'test',
   ],
   // solcOptimizerDetails: {
   //   peephole: false,

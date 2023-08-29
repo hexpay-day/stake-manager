@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity =0.8.18;
 
-import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-import "@openzeppelin/contracts/utils/Address.sol";
-import "./interfaces/IPublicEndStakeable.sol";
-import "./HSIStakeManager.sol";
-import { GasReimberser } from './GasReimberser.sol';
+import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import { Address } from "@openzeppelin/contracts/utils/Address.sol";
+import { IPublicEndStakeable } from "./interfaces/IPublicEndStakeable.sol";
+import { HSIStakeManager } from "./HSIStakeManager.sol";
+import { IGasReimberser } from './interfaces/IGasReimberser.sol';
 
 contract MaximusStakeManager is HSIStakeManager {
   using Address for address payable;
@@ -90,9 +90,9 @@ contract MaximusStakeManager is HSIStakeManager {
         token: token
       });
       if (token == address(0)) {
-        GasReimberser(payable(gasReimberser)).flush();
+        IGasReimberser(payable(gasReimberser)).flush();
       } else {
-        GasReimberser(payable(gasReimberser)).flush_erc20(token);
+        IGasReimberser(payable(gasReimberser)).flush_erc20(token);
       }
       bal = _getTokenBalance({
         token: token

@@ -3,9 +3,9 @@ pragma solidity =0.8.18;
 
 import { Address } from "@openzeppelin/contracts/utils/Address.sol";
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import { Utils } from "./Utils.sol";
-import { IGasReimberser } from "./interfaces/IGasReimberser.sol";
-import { IPoolContract } from "./interfaces/IPoolContract.sol";
+import { Utils } from "../Utils.sol";
+import { IGasReimberser } from "../interfaces/IGasReimberser.sol";
+import { IPoolContract } from "../interfaces/IPoolContract.sol";
 
 // this contract was modeled after the following tweet:
 // https://twitter.com/TantoNomini/status/1630677746795057152
