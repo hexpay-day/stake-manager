@@ -189,7 +189,7 @@ describe('EarningsOracle.sol', () => {
         // await expect(x.oracle.payoutDeltaTrucated(600, 608, 3_292_329_556_204n))
         //   .eventually.to.be.equal(15_458_700_172)
         // await expect(x.oracle.payoutDeltaTrucated(600, 638, 619_696_658_739_089n))
-        //   .eventually.to.be.equal(13_779_168_165_104) // within 1%
+        //   .eventually.to.be.equal(13_779_168_165_104)
       })
     })
   })

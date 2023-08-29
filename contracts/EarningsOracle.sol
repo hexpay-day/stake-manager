@@ -4,8 +4,6 @@ pragma solidity =0.8.18;
 import { IHEX } from './interfaces/IHEX.sol';
 import { Utils } from './Utils.sol';
 
-import "hardhat/console.sol";
-
 contract EarningsOracle is Utils {
   uint96 public immutable lastZeroDay;
   /**
@@ -72,9 +70,6 @@ contract EarningsOracle is Utils {
     uint256 untilDay,
     uint256 multiplier
   ) external view returns(uint256 payout) {
-    console.log(startDay, untilDay);
-    console.log(totals[startDay].payout, totals[untilDay].payout);
-    console.log(totals[startDay].shares, totals[untilDay].shares);
     return ((
       (totals[untilDay].payout - totals[startDay].payout) * multiplier * (untilDay - startDay)
     ) / (
