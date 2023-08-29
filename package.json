@@ -2,7 +2,7 @@
   "license": "UNLICENSED",
   "name": "@hexpayday/stake-manager",
   "scripts": {
-    "build": "yarn run lint && hardhat compile",
+    "build": "npm run lint && hardhat compile",
     "lint": "solhint 'contracts/**/*.sol'",
     "test": "hardhat test",
     "coverage": "hardhat coverage",
