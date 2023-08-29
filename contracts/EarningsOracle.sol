@@ -109,6 +109,7 @@ contract EarningsOracle is Utils {
     }
     total.payout = dayPayoutTotal + payout;
     total.shares = dayStakeSharesTotal + shares;
+    // coveralls-ignore-start
     if (total.payout > MAX_UINT_128 || total.shares > MAX_UINT_128) {
       // this line is very difficult to test, so it is going to be skipped
       // until an easy way to test it can be devised for low effort
@@ -121,6 +122,7 @@ contract EarningsOracle is Utils {
       // ((2^72)-1)*365*200 << 2^128-1
       revert NotAllowed();
     }
+    // coveralls-ignore-stop
     totals.push(TotalStore({
       payout: uint128(total.payout),
       shares: uint128(total.shares)
