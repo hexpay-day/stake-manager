@@ -2,10 +2,12 @@
 pragma solidity =0.8.18;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/access/Ownable2Step.sol";
 import "./AuthorizationManager.sol";
 
 contract IsolatedStakeManager is Ownable2Step, AuthorizationManager {
+  using SafeERC20 for IERC20;
   constructor(address account) AuthorizationManager(31) {
     /*
      * by index:
@@ -184,17 +186,9 @@ contract IsolatedStakeManager is Ownable2Step, AuthorizationManager {
     if (!_isCapable(_getAddressSetting(msg.sender), 3)) {
       revert NotAllowed();
     }
-    if (!IERC20(TARGET).transfer(owner(), _balanceOf({
+    IERC20(TARGET).safeTransfer(owner(), _balanceOf({
       owner: address(this)
-    }))) {
-      revert TransferFailed({
-        from: address(this),
-        to: owner(),
-        amount: _balanceOf({
-          owner: address(this)
-        })
-      });
-    }
+    }));
   }
   /**
    * check the settings of the running address
@@ -250,12 +244,6 @@ contract IsolatedStakeManager is Ownable2Step, AuthorizationManager {
     })) {
       revert NotAllowed();
     }
-    if (!IERC20(TARGET).transferFrom(owner(), address(this), amount)) {
-      revert TransferFailed({
-        from: owner(),
-        to: address(this),
-        amount: amount
-      });
-    }
+    IERC20(TARGET).safeTransferFrom(owner(), address(this), amount);
   }
 }

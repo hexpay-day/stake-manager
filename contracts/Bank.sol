@@ -3,11 +3,13 @@ pragma solidity =0.8.18;
 
 import "@openzeppelin/contracts/utils/Address.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "./Capable.sol";
 import "./Utils.sol";
 
 contract Bank is Capable, Utils {
   using Address for address payable;
+  using SafeERC20 for IERC20;
 
   mapping(address => uint256) public attributed;
   mapping(address => mapping(address => uint256)) public withdrawableBalanceOf;
@@ -198,13 +200,7 @@ contract Bank is Capable, Utils {
   function _depositTokenFrom(address token, address depositor, uint256 amount) internal returns(uint256 amnt) {
     if (token != address(0)) {
       if (amount > 0) {
-        if (!IERC20(token).transferFrom(depositor, address(this), amount)) {
-          revert TransferFailed({
-            from: depositor,
-            to: address(this),
-            amount: amount
-          });
-        }
+        IERC20(token).safeTransferFrom(depositor, address(this), amount);
         amnt = amount;
       }
     } else {
@@ -233,13 +229,7 @@ contract Bank is Capable, Utils {
     if (token == address(0)) {
       to.sendValue(amount);
     } else {
-      if (!IERC20(token).transfer(to, amount)) {
-        revert TransferFailed({
-          from: address(this),
-          to: to,
-          amount: amount
-        });
-      }
+      IERC20(token).safeTransfer(to, amount);
     }
     return amount;
   }
