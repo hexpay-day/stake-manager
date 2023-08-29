@@ -36,7 +36,7 @@ jobs:
       #     restore-keys: |
       #       ${{ runner.OS }}-${{ matrix.node }}-npm-cache-
 
-      - name: Install npm dependencies
+      - name: Install dependencies
         run: yarn # switch to `npm ci` when Node.js 6 support is dropped
 
       - name: Run build (+lint)
