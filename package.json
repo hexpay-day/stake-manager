@@ -6,6 +6,7 @@
     "lint": "solhint 'contracts/**/*.sol'",
     "test": "hardhat test",
     "coverage": "hardhat coverage",
+    "coveralls": "hardhat test",
     "sloc": "sloc contracts",
     "analyze": "slither ./contracts/ --solc-remaps @openzeppelin=node_modules/@openzeppelin",
     "foundry:test": "forge test --fork-url 'https://rpc.pulsechain.com' -vvv"
@@ -13,6 +14,10 @@
   "files": [
     "artifacts"
   ],
+  "engines": {
+    "node": "16.19",
+    "npm": "9.3"
+  },
   "devDependencies": {
     "@ethersproject/abi": "^5.7.0",
     "@ethersproject/bytes": "^5.7.0",
@@ -32,6 +37,7 @@
     "@types/node": "^20.5.0",
     "@types/yargs": "^17.0.24",
     "chai": "^4.2.0",
+    "coveralls": "^3.1.1",
     "debug": "^4.3.4",
     "dotenv": "^16.0.3",
     "ethers": "5.7.2",
@@ -43,6 +49,7 @@
     "hardhat-tracer": "^2.5.0",
     "hardhat-vizor": "^0.0.23",
     "lodash": "^4.17.21",
+    "mocha-lcov-reporter": "^1.3.0",
     "solhint": "^3.4.1",
     "solidity-coverage": "^0.8.4",
     "ts-node": "^10.9.1",
