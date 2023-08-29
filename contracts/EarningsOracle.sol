@@ -10,7 +10,7 @@ contract EarningsOracle is Utils {
    * @dev this max constraint is very generous given that the sstore opcode costs ~20k gas at the time of writing
    */
   uint128 public constant MAX_CATCH_UP_DAYS = 1_000;
-  uint128 public constant MAX_TOTAL_PAYOUT = type(uint128).max;
+  uint128 public constant MAX_UINT_128 = type(uint128).max;
   uint256 public constant SHARE_SCALE = 1e5;
   TotalStore[] public totals;
   struct TotalStore {
@@ -108,13 +108,17 @@ contract EarningsOracle is Utils {
       shares = prev.shares;
     }
     total.payout = dayPayoutTotal + payout;
-    if (total.payout > MAX_TOTAL_PAYOUT) {
-      // this line is very difficult to test, so it is going to be skipped for now
-      revert NotAllowed();
-    }
     total.shares = dayStakeSharesTotal + shares;
-    if (total.shares > MAX_TOTAL_PAYOUT) {
-      // this line is very difficult to test, so it is going to be skipped for now
+    if (total.payout > MAX_UINT_128 || total.shares > MAX_UINT_128) {
+      // this line is very difficult to test, so it is going to be skipped
+      // until an easy way to test it can be devised for low effort
+      // basically hex would have to break for the line to be hit
+      // total supply: 59004373824667548121*20% - for the staked hex
+      // total shares on any given day: 9828590775299543795 (<2^72-1 as maximum)
+      // inflation rate: 3.69% maximum
+      // assume 200 years
+      // 59004373824667548121*(1.0369^200) << 2^128-1
+      // ((2^72)-1)*365*200 << 2^128-1
       revert NotAllowed();
     }
     totals.push(TotalStore({
