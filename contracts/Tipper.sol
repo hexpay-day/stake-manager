@@ -296,10 +296,10 @@ abstract contract Tipper is Bank, UnderlyingStakeable, CurrencyList, EncodableSe
       stakeId: stakeId,
       amount: amount
     });
-    // deduct from sender account
     _checkStakeCustodian({
       stakeId: stakeId
     });
+    // deduct from sender account
     return _addTipToStake({
       token: token,
       account: msg.sender,

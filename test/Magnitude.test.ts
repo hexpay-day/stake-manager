@@ -5,12 +5,12 @@ import _ from 'lodash'
 import * as utils from './utils'
 import { IUnderlyingStakeable } from '../artifacts/types/contracts/interfaces/IHEX'
 
-
 describe('Magnitude.sol', () => {
   const principle = hre.ethers.utils.parseUnits('100', 8).toBigInt()
   const tenPercentAsUint = (1_000n << 32n) | 10_000n
   const yieldFromPrinciple = principle*11n/10n
   const principleAndYield = principle+yieldFromPrinciple
+  const minInt24 = 2n**23n // zero point for int24
   const stake: IUnderlyingStakeable.StakeStoreStruct = {
     stakeId: 0,
     stakedDays: 10,
@@ -73,28 +73,39 @@ describe('Magnitude.sol', () => {
       await expect(x.stakeManager.computeMagnitude(hre.ethers.constants.MaxUint256, 1, 1001, 1002, stake))
         .eventually.to.equal(1001)
     })
-    it('2: always returns a % of input', async () => {
+    it('2: returns a % of total', async () => {
       const x = await loadFixture(utils.deployFixture)
       // do not sub 1 from the x input - needed to ensure rounding correctly
       await expect(x.stakeManager.computeMagnitude(hre.ethers.constants.MaxUint256, 2, tenPercentAsUint, 10_000_000, stake))
         .eventually.to.equal(1_000_000)
     })
-    it('3: returns a percent of originating principle', async () => {
+    it('3: returns a % of principle', async () => {
       const x = await loadFixture(utils.deployFixture)
       await expect(x.stakeManager.computeMagnitude(hre.ethers.constants.MaxUint256, 3, tenPercentAsUint, principleAndYield, stake))
         .eventually.to.equal(principle / 10n)
     })
-    it('4: returns a percent of yield', async () => {
+    it('4: returns a % of yield', async () => {
       const x = await loadFixture(utils.deployFixture)
       await expect(x.stakeManager.computeMagnitude(hre.ethers.constants.MaxUint256, 4, tenPercentAsUint, principleAndYield, stake))
         .eventually.to.equal(yieldFromPrinciple / 10n)
     })
-    it('5: uses x as a further bitpacked value', async () => {
+    it('5: uses (x/y)+b as a further bitpacked value with total', async () => {
       const x = await loadFixture(utils.deployFixture)
-      const minInt24 = 2n**23n // zero point for int24
-      const xOverYPlusB = ( (minInt24 + -500n) << 32n ) | ( 3n << 16n ) | 40n; // b + (input * 3) / 40
+      const xOverYPlusB = ( (minInt24 + -500n) << 32n ) | ( 3n << 16n ) | 40n; // -500 + (input * 3) / 40
       await expect(x.stakeManager.computeMagnitude(hre.ethers.constants.MaxUint256, 5, xOverYPlusB, principleAndYield, stake))
         .eventually.to.equal(((principleAndYield * 3n) - 500n) / 40n)
+    })
+    it('6: uses (x/y)+b as a further bitpacked value with principle', async () => {
+      const x = await loadFixture(utils.deployFixture)
+      const xOverYPlusB = ( (minInt24 + -500n) << 32n ) | ( 3n << 16n ) | 40n; // -500 + (input * 3) / 40
+      await expect(x.stakeManager.computeMagnitude(hre.ethers.constants.MaxUint256, 6, xOverYPlusB, principleAndYield, stake))
+        .eventually.to.equal(((principle * 3n) - 500n) / 40n)
+    })
+    it('7: uses (x/y)+b as a further bitpacked value with yield', async () => {
+      const x = await loadFixture(utils.deployFixture)
+      const xOverYPlusB = ( (minInt24 + -500n) << 32n ) | ( 3n << 16n ) | 40n; // -500 + (input * 3) / 40
+      await expect(x.stakeManager.computeMagnitude(hre.ethers.constants.MaxUint256, 7, xOverYPlusB, principleAndYield, stake))
+        .eventually.to.equal(((yieldFromPrinciple * 3n) - 500n) / 40n)
     })
   })
 })

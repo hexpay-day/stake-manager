@@ -188,16 +188,20 @@ export const deployAndProcureHSIFixture = async () => {
     hsiAddress: addr,
     stakeId: hsiStakeIds[index],
   }))
+  const addrToId = new Map<string, bigint>()
   for (let i = 0; i < hsiTargetsPartial.length; i++) {
     const count = await x.hsim.hsiCount(signerA.address)
+    const index = count.toBigInt() - 1n
     const target = hsiTargetsPartial[hsiTargetsPartial.length - 1 - i]
-    await x.hsim.hexStakeTokenize(count.toNumber() - 1, target.hsiAddress)
+    await x.hsim.hexStakeTokenize(index, target.hsiAddress)
+    addrToId.set(target.hsiAddress, index)
   }
   const hsiTargets = await Promise.all(hsiTargetsPartial.reverse().map(async (target, index) => {
     const tokenId = await x.hsim.tokenOfOwnerByIndex(signerA.address, index)
     return {
       ...target,
       tokenId,
+      hsiIndex: addrToId.get(target.hsiAddress) as bigint,
     }
   }))
   await x.hsim.setApprovalForAll(x.hsiStakeManager.address, true)

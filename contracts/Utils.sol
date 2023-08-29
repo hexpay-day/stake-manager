@@ -3,7 +3,6 @@ pragma solidity =0.8.18;
 
 contract Utils {
   error NotAllowed();
-  error TransferFailed(address from, address to, uint256 amount);
   address public constant TARGET = 0x2b591e99afE9f32eAA6214f7B7629768c40Eeb39;
   uint16 public constant MAX_DAYS = 5555;
   uint16 internal constant SLOTS = 256;

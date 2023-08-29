@@ -14,6 +14,7 @@ contract StakeInfo is Utils {
    * is not owned by the expected address
    */
   error StakeNotOwned(address provided, address expected);
+  error StakeNotCustodied(uint256 stakeId);
   function verifyStakeOwnership(address owner, uint256 stakeId) external view {
     _verifyStakeOwnership(owner, stakeId);
   }
@@ -27,7 +28,7 @@ contract StakeInfo is Utils {
   }
   function _verifyCustodian(uint256 stakeId) internal view {
     if (_stakeIdToOwner(stakeId) == address(0)) {
-      revert StakeNotOwned(_stakeIdToOwner(stakeId), address(this));
+      revert StakeNotCustodied(stakeId);
     }
   }
   /**
@@ -35,16 +36,16 @@ contract StakeInfo is Utils {
    * the stake's settings and ability to end it outright
    * @param stakeId the stake id in question
    */
-  function stakeIdToOwner(uint256 stakeId) external view returns(address) {
+  function stakeIdToOwner(uint256 stakeId) external view returns(address owner) {
     return _stakeIdToOwner(stakeId);
   }
-  function _stakeIdToOwner(uint256 stakeId) internal view returns(address) {
+  function _stakeIdToOwner(uint256 stakeId) internal view returns(address owner) {
     return address(uint160(stakeIdInfo[stakeId]));
   }
-  function stakeIdToInfo(uint256 stakeId) external view returns(uint256, address) {
+  function stakeIdToInfo(uint256 stakeId) external view returns(uint256 id, address owner) {
     return _stakeIdToInfo(stakeId);
   }
-  function _stakeIdToInfo(uint256 stakeId) internal view returns(uint256, address) {
+  function _stakeIdToInfo(uint256 stakeId) internal view returns(uint256 id, address owner) {
     uint256 info = stakeIdInfo[stakeId];
     return (info >> ADDRESS_BIT_LENGTH, address(uint160(info)));
   }
@@ -53,16 +54,16 @@ contract StakeInfo is Utils {
    * and could be moved by other people
    * @param stakeId the stake id to target
    */
-  function stakeIdToIndex(uint256 stakeId) external view returns(uint256) {
+  function stakeIdToIndex(uint256 stakeId) external view returns(uint256 index) {
     return _stakeIdToIndex(stakeId);
   }
-  function _stakeIdToIndex(uint256 stakeId) internal view returns(uint256) {
+  function _stakeIdToIndex(uint256 stakeId) internal view returns(uint256 index) {
     return stakeIdInfo[stakeId] >> ADDRESS_BIT_LENGTH;
   }
-  function encodeInfo(uint256 index, address owner) external pure returns(uint256) {
+  function encodeInfo(uint256 index, address owner) external pure returns(uint256 info) {
     return _encodeInfo(index, owner);
   }
-  function _encodeInfo(uint256 index, address owner) internal pure returns(uint256) {
+  function _encodeInfo(uint256 index, address owner) internal pure returns(uint256 info) {
     return (index << ADDRESS_BIT_LENGTH) | uint160(owner);
   }
 }
