@@ -6,7 +6,7 @@
     "lint": "solhint 'contracts/**/*.sol'",
     "test": "hardhat test",
     "coverage": "hardhat coverage",
-    "coveralls": "hardhat coverage && shx cat ./coverage/lcov.info | node ./node_modules/coveralls/bin/coveralls.js --verbose",
+    "coveralls": "hardhat coverage && shx cat ./coverage/lcov.info | coveralls --verbose",
     "sloc": "sloc contracts",
     "analyze": "slither ./contracts/ --solc-remaps @openzeppelin=node_modules/@openzeppelin",
     "foundry:test": "forge test --fork-url 'https://rpc.pulsechain.com' -vvv"
