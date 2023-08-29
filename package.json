@@ -15,8 +15,8 @@
     "artifacts"
   ],
   "engines": {
-    "node": "16.19",
-    "npm": "9.3"
+    "node": ">=16.19",
+    "npm": ">=8"
   },
   "devDependencies": {
     "@ethersproject/abi": "^5.7.0",
