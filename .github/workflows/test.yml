@@ -30,9 +30,9 @@ jobs:
         uses: actions/cache@v3
         with:
           path: ~/.npm
-          key: ${{ runner.OS }}-npm-cache-${{ hashFiles('**/package-lock.json') }}
+          key: ${{ runner.OS }}-${{ matrix.node }}-npm-cache-${{ hashFiles('**/package-lock.json') }}
           restore-keys: |
-            ${{ runner.OS }}-npm-cache-
+            ${{ runner.OS }}-${{ matrix.node }}-npm-cache-
 
       - name: Run build (+lint)
         run: npm run build
