@@ -2,7 +2,7 @@
   "license": "UNLICENSED",
   "name": "@hexpayday/stake-manager",
   "scripts": {
-    "build": "npm run lint && hardhat compile",
+    "build": "yarn run lint && hardhat compile",
     "lint": "solhint 'contracts/**/*.sol'",
     "test": "hardhat test",
     "coverage": "hardhat coverage",
@@ -16,7 +16,7 @@
   ],
   "engines": {
     "node": ">=16.19",
-    "npm": ">=8"
+    "yarn": ">=1.22"
   },
   "devDependencies": {
     "@ethersproject/abi": "^5.7.0",
