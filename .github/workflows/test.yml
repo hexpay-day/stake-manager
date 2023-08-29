@@ -26,9 +26,6 @@ jobs:
         with:
           node-version: ${{ matrix.node }}
 
-      - name: Install npm dependencies
-        run: npm install # switch to `npm ci` when Node.js 6 support is dropped
-
       - name: Cache NPM dependencies
         uses: actions/cache@v3
         with:
@@ -37,8 +34,19 @@ jobs:
           restore-keys: |
             ${{ runner.OS }}-${{ matrix.node }}-npm-cache-
 
+      - name: Install npm dependencies
+        run: npm install # switch to `npm ci` when Node.js 6 support is dropped
+
       - name: Run build (+lint)
         run: npm run build
+
+      - name: Cache Hardhat
+        uses: actions/cache@v3
+        with:
+          path: ./cache_hardhat
+          key: ${{ runner.OS }}-${{ matrix.node }}-hardhat-cache-${{ env.CHAIN }}-${{ env.BLOCK_NUMBER }}
+          restore-keys: |
+            ${{ runner.OS }}-${{ matrix.node }}-hardhat-cache-${{ env.CHAIN }}-${{ env.BLOCK_NUMBER }}
 
       # - uses: 721labs/hardhat-session-action@main
       #   id: start-session
