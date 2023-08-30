@@ -4,8 +4,6 @@ pragma solidity =0.8.18;
 import "./interfaces/IHedron.sol";
 import "./UnderlyingStakeManager.sol";
 
-import "hardhat/console.sol";
-
 contract SingletonHedronManager is UnderlyingStakeManager {
   function createTo(uint256 setting, address owner) external pure returns(uint256 to) {
     return _createTo({
