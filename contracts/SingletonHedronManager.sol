@@ -4,12 +4,20 @@ pragma solidity =0.8.18;
 import "./interfaces/IHedron.sol";
 import "./UnderlyingStakeManager.sol";
 
+import "hardhat/console.sol";
+
 contract SingletonHedronManager is UnderlyingStakeManager {
+  function createTo(uint256 setting, address owner) external pure returns(uint256 to) {
+    return _createTo({
+      setting: setting,
+      owner: owner
+    });
+  }
   function _createTo(uint256 setting, address owner) internal pure returns(uint256 to) {
     return ((_isCapable({
       setting: setting,
       index: INDEX_SHOULD_SEND_TOKENS_TO_STAKER
-    }) ? 1 : 0) << ADDRESS_BIT_LENGTH) | uint160(owner);
+    }) ? uint256(1) : uint256(0)) << ADDRESS_BIT_LENGTH) | uint160(owner);
   }
   /**
    * mint rewards and transfer them to a provided address
@@ -49,10 +57,12 @@ contract SingletonHedronManager is UnderlyingStakeManager {
           hedronTokens = 0;
         }
         to = currentTo;
-        hedronTokens += _mintHedron({
-          index: stakeIndex,
-          stakeId: stakeId
-        });
+        unchecked {
+          hedronTokens += _mintHedron({
+            index: stakeIndex,
+            stakeId: stakeId
+          });
+        }
       }
       unchecked {
         ++i;

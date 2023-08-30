@@ -59,6 +59,14 @@ describe('HSIStakeManager.sol', () => {
         .withArgs(x.hsiTargets[0].hsiAddress, x.usdc.address, 0, tipSettings)
     })
   })
+  describe('createTo', () => {
+    it('encodes a boolean and a value', async () => {
+      const x = await loadFixture(utils.deployFixture)
+      const [signer1] = x.signers
+      await expect(x.stakeManager.createTo(hre.ethers.constants.MaxUint256, signer1.address))
+        .eventually.to.equal(1n << 160n | BigInt(signer1.address))
+    })
+  })
   describe('mintRewardsFromHSIAddress', () => {
     it('can mint rewards', async () => {
       const x = await loadFixture(utils.deployAndProcureHSIFixture)
@@ -101,6 +109,8 @@ describe('HSIStakeManager.sol', () => {
       expect(tx)
         .to.emit(x.hedron, 'Transfer')
         .withArgs(x.hsiStakeManager.address, signer1.address, anyUint)
+      // extra mint in the same day
+      await x.hsiStakeManager.mintHedronRewards(_.map(x.hsiTargets, 'hsiAddress'))
     })
     it('anyone can mint rewards', async () => {
       const x = await loadFixture(utils.deployAndProcureHSIFixture)
