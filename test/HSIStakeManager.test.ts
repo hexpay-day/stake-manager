@@ -66,6 +66,9 @@ describe('HSIStakeManager.sol', () => {
       await x.hsiStakeManager.multicall(_.flatMap(x.hsiTargets, (target) => ([
         x.hsiStakeManager.interface.encodeFunctionData('depositHsi', [target.tokenId, 0]),
       ])), false)
+      await utils.moveForwardDays(1, x)
+      await expect(x.hsiStakeManager.mintHedronRewards(_.map(x.hsiTargets, 'hsiAddress')))
+        .not.to.emit(x.hedron, 'Transfer')
       await utils.moveForwardDays(10, x)
       await expect(x.hsiStakeManager.withdrawableBalanceOf(x.hedron.address, signer1.address))
         .eventually.to.equal(0)
@@ -73,8 +76,31 @@ describe('HSIStakeManager.sol', () => {
         .to.emit(x.hedron, 'Transfer')
         .withArgs(hre.ethers.constants.AddressZero, x.hsiStakeManager.address, anyUint)
         // .printGasUsage()
+      const withdrawable = await x.hsiStakeManager.withdrawableBalanceOf(x.hedron.address, signer1.address)
+      expect(withdrawable).to.be.greaterThan(0)
+      await utils.moveForwardDays(10, x)
+      const stakeId = x.hsiTargets[0].hsiAddress
+      const currentSettings = await x.hsiStakeManager.stakeIdToSettings(stakeId)
+      const decodedSettings = await x.hsiStakeManager.decodeSettings(currentSettings)
+      // this tells system to send any remaining tokens to staker
+      await Promise.all(x.hsiTargets.map(({ hsiAddress }) => (
+        x.hsiStakeManager.updateSettings(hsiAddress, {
+          ...decodedSettings,
+          consentAbilities: {
+            ...decodedSettings.consentAbilities,
+            shouldSendTokensToStaker: true,
+          },
+        })
+      )))
+      const tx = await x.hsiStakeManager.mintHedronRewards(_.map(x.hsiTargets, 'hsiAddress'))
       await expect(x.hsiStakeManager.withdrawableBalanceOf(x.hedron.address, signer1.address))
-        .eventually.to.be.greaterThan(0)
+        .eventually.to.equal(withdrawable)
+      expect(tx)
+        .to.emit(x.hedron, 'Transfer')
+        .withArgs(hre.ethers.constants.AddressZero, x.hsiStakeManager.address, anyUint)
+      expect(tx)
+        .to.emit(x.hedron, 'Transfer')
+        .withArgs(x.hsiStakeManager.address, signer1.address, anyUint)
     })
     it('anyone can mint rewards', async () => {
       const x = await loadFixture(utils.deployAndProcureHSIFixture)
