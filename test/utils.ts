@@ -248,3 +248,5 @@ export const leechUsdc = async (amount: bigint, to: string, x: X) => {
     await x.usdc.connect(swa).transfer(to, amount)
   })
 }
+
+export const absMinInt16 = 2n**15n // zero point for int16

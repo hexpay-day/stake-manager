@@ -315,10 +315,12 @@ abstract contract EncodableSettings is StakeInfo {
       return (next * 4) + (current % 4);
     }
   }
-  function decrementCopyIterations(uint256 settings, uint256 nextNewStakeDaysMethod) external pure returns(uint256) {
-    return _decrementCopyIterations(settings, nextNewStakeDaysMethod);
+  function decrementCopyIterations(uint256 setting) external pure returns(uint256) {
+    return _decrementCopyIterations({
+      setting: setting
+    });
   }
-  function _decrementCopyIterations(uint256 setting, uint256 nextNewStakeDaysMethod) internal pure returns(uint256) {
+  function _decrementCopyIterations(uint256 setting) internal pure returns(uint256) {
     uint256 copyIterations = uint8(setting >> INDEX_COPY_ITERATIONS);
     if (copyIterations == 0) {
       return uint8(setting);
@@ -327,15 +329,6 @@ abstract contract EncodableSettings is StakeInfo {
       return setting;
     }
     --copyIterations;
-    if (nextNewStakeDaysMethod > ZERO) {
-      // var of 1 sets to 0 next time
-      nextNewStakeDaysMethod = (nextNewStakeDaysMethod  % FOUR) - ONE;
-      setting = (
-        (setting >> INDEX_NEW_STAKE_MAGNITUDE << INDEX_NEW_STAKE_MAGNITUDE)
-        | nextNewStakeDaysMethod
-        | (setting << UNUSED_SPACE_NEW_STAKE_DAYS_MAGNITUDE >> UNUSED_SPACE_NEW_STAKE_DAYS_MAGNITUDE)
-      );
-    }
     return (
       (setting >> INDEX_NEW_STAKE_DAYS_MAGNITUDE << INDEX_NEW_STAKE_DAYS_MAGNITUDE)
       | (copyIterations << INDEX_COPY_ITERATIONS)

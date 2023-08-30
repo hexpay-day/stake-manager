@@ -177,12 +177,12 @@ describe('HSIStakeManager.sol', () => {
       const x = await loadFixture(utils.deployAndProcureHSIFixture)
       const [signer1, signer2] = x.signers
       // give 10% of the yield to the end staker
-      const encoded10Percent = (1n << 32n) | 10n
+      const encoded10Percent = await x.stakeManager.encodeLinear(5, 0, 1, 0, 10, 0, 0)
       const settings = {
-        hedronTipMethod: 6,
-        hedronTipMagnitude: encoded10Percent,
-        tipMethod: 6,
-        tipMagnitude: encoded10Percent,
+        hedronTipMethod: encoded10Percent.encodedMethod,
+        hedronTipMagnitude: encoded10Percent.encodedMagnitude,
+        tipMethod: encoded10Percent.encodedMethod,
+        tipMagnitude: encoded10Percent.encodedMagnitude,
         consentAbilities: await x.stakeManager.decodeConsentAbilities(parseInt('001111', 2)),
         // unused on hsi
         newStakeDaysMethod: 0,

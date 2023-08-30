@@ -143,39 +143,40 @@ contract StakeEnder is Magnitude, SingletonHedronManager {
         y2: delta,
         y1: stake.stakedHearts
       });
-      uint256 newStakeDaysMethod = setting << UNUSED_SPACE_NEW_STAKE_DAYS_METHOD >> UNUSED_SPACE_RIGHT_UINT8;
-      if (newStakeDaysMethod > ZERO) {
-        uint256 newStakeDays = _computeDayMagnitude({
-          limit: MAX_DAYS,
-          method: newStakeDaysMethod % FOUR,
-          x: setting << UNUSED_SPACE_NEW_STAKE_DAYS_MAGNITUDE >> UNUSED_SPACE_RIGHT_UINT16,
-          today: count >> INDEX_TODAY,
-          lockedDay: stake.lockedDay,
-          stakedDays: stake.stakedDays
-        });
-        unchecked {
-          delta -= newStakeAmount; // checked for underflow
+      if (newStakeAmount > ZERO) {
+        uint256 newStakeDaysMethod = setting << UNUSED_SPACE_NEW_STAKE_DAYS_METHOD >> UNUSED_SPACE_RIGHT_UINT8;
+        if (newStakeDaysMethod > ZERO) {
+          uint256 newStakeDays = _computeDayMagnitude({
+            limit: MAX_DAYS,
+            method: newStakeDaysMethod % FOUR,
+            x: setting << UNUSED_SPACE_NEW_STAKE_DAYS_MAGNITUDE >> UNUSED_SPACE_RIGHT_UINT16,
+            today: count >> INDEX_TODAY,
+            lockedDay: stake.lockedDay,
+            stakedDays: stake.stakedDays
+          });
+          unchecked {
+            delta -= newStakeAmount; // checked for underflow
+          }
+          nextStakeId = _stakeStartFor({
+            owner: staker,
+            amount: newStakeAmount,
+            newStakedDays: newStakeDays,
+            index: uint128(count)
+          });
+          ++count;
+          // settings will be maintained for the new stake
+          // note, because 0 is used, one often needs to use x-1
+          // for the number of times you want to copy
+          // but because permissions are maintained, it may end up
+          // being easier to think about it as x-2
+          setting = (_decrementCopyIterations({
+            setting: setting
+          }) >> INDEX_CAN_MINT_HEDRON << INDEX_CAN_MINT_HEDRON) | ONE;
+          _logSettingsUpdate({
+            stakeId: nextStakeId,
+            settings: setting
+          });
         }
-        nextStakeId = _stakeStartFor({
-          owner: staker,
-          amount: newStakeAmount,
-          newStakedDays: newStakeDays,
-          index: uint128(count)
-        });
-        ++count;
-        // settings will be maintained for the new stake
-        // note, because 0 is used, one often needs to use x-1
-        // for the number of times you want to copy
-        // but because permissions are maintained, it may end up
-        // being easier to think about it as x-2
-        setting = (_decrementCopyIterations({
-          setting: setting,
-          nextNewStakeDaysMethod: newStakeDaysMethod / FOUR // 1-3 yields 0: no change
-        }) >> INDEX_CAN_MINT_HEDRON << INDEX_CAN_MINT_HEDRON) | ONE;
-        _logSettingsUpdate({
-          stakeId: nextStakeId,
-          settings: setting
-        });
       }
     }
     if (delta > ZERO) {
