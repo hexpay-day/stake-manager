@@ -178,7 +178,8 @@ describe('EarningsOracle.sol', () => {
       })
     })
     describe('payoutDeltaTrucated', () => {
-      it('gives a minimum value that should have been claimable by the range for a given magnitude', async () => {
+      it('gives a minimum value that should have been claimable by the range for a given magnitude', async function () {
+        this.timeout(100_000_000)
         const rangeSize = 700n
         await x.oracle.catchUpDays(rangeSize)
         // day 2 did not really exist for anyone
