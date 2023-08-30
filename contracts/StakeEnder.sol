@@ -81,8 +81,8 @@ contract StakeEnder is Magnitude, SingletonHedronManager {
           limit: hedronAmount,
           method: hedronTipMethod,
           x: setting << UNUSED_SPACE_HEDRON_TIP_MAGNITUDE >> UNUSED_SPACE_RIGHT_UINT64,
-          y: hedronAmount,
-          stake: stake
+          y2: hedronAmount,
+          y1: 0
         });
         if (hedronTip > 0) {
           hedronAmount = _checkAndExecTip({
@@ -119,8 +119,8 @@ contract StakeEnder is Magnitude, SingletonHedronManager {
           limit: delta,
           method: tipMethod,
           x: uint64(setting >> INDEX_TIP_MAGNITUDE),
-          y: delta,
-          stake: stake
+          y2: delta,
+          y1: stake.stakedHearts
         });
         if (targetTip > 0) {
           delta = _checkAndExecTip({
@@ -140,20 +140,19 @@ contract StakeEnder is Magnitude, SingletonHedronManager {
         limit: delta,
         method: newStakeMethod,
         x: setting << 152 >> 192,
-        y: delta,
-        stake: stake
+        y2: delta,
+        y1: stake.stakedHearts
       });
-      uint256 newStakeDays = (
-        setting << UNUSED_SPACE_NEW_STAKE_DAYS_METHOD >> UNUSED_SPACE_RIGHT_UINT8) > 0
-          ? _computeDayMagnitude({
-            limit: MAX_DAYS,
-            method: setting << UNUSED_SPACE_NEW_STAKE_DAYS_METHOD >> UNUSED_SPACE_RIGHT_UINT8,
-            x: setting << UNUSED_SPACE_NEW_STAKE_DAYS_MAGNITUDE >> UNUSED_SPACE_RIGHT_UINT16,
-            y: count >> INDEX_TODAY,
-            stake: stake
-          })
-          : 0;
-      if (newStakeDays > 0) {
+      uint256 newStakeDaysMethod = setting << UNUSED_SPACE_NEW_STAKE_DAYS_METHOD >> UNUSED_SPACE_RIGHT_UINT8;
+      if (newStakeDaysMethod > 0) {
+        uint256 newStakeDays = _computeDayMagnitude({
+          limit: MAX_DAYS,
+          method: newStakeDaysMethod % 4,
+          x: setting << UNUSED_SPACE_NEW_STAKE_DAYS_MAGNITUDE >> UNUSED_SPACE_RIGHT_UINT16,
+          today: count >> INDEX_TODAY,
+          lockedDay: stake.lockedDay,
+          stakedDays: stake.stakedDays
+        });
         unchecked {
           delta -= newStakeAmount; // checked for underflow
         }
@@ -170,7 +169,8 @@ contract StakeEnder is Magnitude, SingletonHedronManager {
         // but because permissions are maintained, it may end up
         // being easier to think about it as x-2
         setting = (_decrementCopyIterations({
-          setting: setting
+          setting: setting,
+          nextNewStakeDaysMethod: newStakeDaysMethod / 4 // 1-3 yields 0: no change
         }) >> INDEX_CAN_MINT_HEDRON << INDEX_CAN_MINT_HEDRON) | 1;
         _logSettingsUpdate({
           stakeId: nextStakeId,

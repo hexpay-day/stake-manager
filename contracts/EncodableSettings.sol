@@ -76,7 +76,7 @@ abstract contract EncodableSettings is StakeInfo {
    */
   event UpdateSettings(uint256 indexed stakeId, uint256 settings);
   uint256 private constant DEFAULT_ENCODED_SETTINGS
-    = uint256(0x000000000000000000000000000000000000020000000100000001020000ff01);
+    = uint256(0x000000000000000000000000000000000000020000000000000000020000ff01);
   function defaultEncodedSettings() external virtual pure returns(uint256) {
     return DEFAULT_ENCODED_SETTINGS;
   }
@@ -250,7 +250,7 @@ abstract contract EncodableSettings is StakeInfo {
     );
   }
   function _defaultSettings() internal virtual pure returns(Settings memory settings) {
-    // 0x00000000000000000000000000000000000000000000020000000100000001020000ff01
+    // 0x00000000000000000000000000000000000000000000020000000000000000020000ff01
     return Settings(
       /*
        * by default, there is no hedron tip
@@ -266,7 +266,7 @@ abstract contract EncodableSettings is StakeInfo {
        * by default, assume that all tokens minted from an end stake
        * should go directly into a new stake
        */
-      uint8(2), uint64((1 << 32) | 1), // new stake amount
+      uint8(2), uint64(0), // new stake amount
       /*
        * by default, assume that by using this contract, users want efficiency gains
        * so by default, restarting their stakes are the most efficient means of managing tokens
@@ -305,10 +305,19 @@ abstract contract EncodableSettings is StakeInfo {
       })
     );
   }
-  function decrementCopyIterations(uint256 settings) external pure returns(uint256) {
-    return _decrementCopyIterations(settings);
+  function encodeNewStakeDaysMethod(uint256 next, uint256 current) external pure returns(uint256) {
+    return _encodeNewStakeDaysMethod(next, current);
   }
-  function _decrementCopyIterations(uint256 setting) internal pure returns(uint256) {
+  function _encodeNewStakeDaysMethod(uint256 next, uint256 current) internal pure returns(uint256) {
+    unchecked {
+      // ((0-3 -> 1-4) * 4) + current(<3) = result
+      return (next * 4) + (current % 4);
+    }
+  }
+  function decrementCopyIterations(uint256 settings, uint256 nextNewStakeDaysMethod) external pure returns(uint256) {
+    return _decrementCopyIterations(settings, nextNewStakeDaysMethod);
+  }
+  function _decrementCopyIterations(uint256 setting, uint256 nextNewStakeDaysMethod) internal pure returns(uint256) {
     uint256 copyIterations = uint8(setting >> INDEX_COPY_ITERATIONS);
     if (copyIterations == 0) {
       return uint8(setting);
@@ -317,6 +326,15 @@ abstract contract EncodableSettings is StakeInfo {
       return setting;
     }
     --copyIterations;
+    if (nextNewStakeDaysMethod > 0) {
+      // var of 1 sets to 0 next time
+      nextNewStakeDaysMethod = (nextNewStakeDaysMethod  % 4) - 1;
+      setting = (
+        (setting >> INDEX_NEW_STAKE_MAGNITUDE << INDEX_NEW_STAKE_MAGNITUDE)
+        | nextNewStakeDaysMethod
+        | (setting << UNUSED_SPACE_NEW_STAKE_DAYS_MAGNITUDE >> UNUSED_SPACE_NEW_STAKE_DAYS_MAGNITUDE)
+      );
+    }
     return (
       (setting >> INDEX_NEW_STAKE_DAYS_MAGNITUDE << INDEX_NEW_STAKE_DAYS_MAGNITUDE)
       | (copyIterations << INDEX_COPY_ITERATIONS)

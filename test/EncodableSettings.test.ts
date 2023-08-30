@@ -65,29 +65,40 @@ describe('EncodableSettings.sol', () => {
     it('returns 0 if 0 is passed (in the second byte)', async () => {
       const x = await loadFixture(utils.deployFixture)
       // settings (uint256) is provided to decrement copy iterations
-      await expect(x.stakeManager.decrementCopyIterations(0))
+      await expect(x.stakeManager.decrementCopyIterations(0, 0))
         .eventually.to.equal(0)
     })
     it('preserves number in first byte', async () => {
       const x = await loadFixture(utils.deployFixture)
       // settings (uint256) is provided to decrement copy iterations
-      await expect(x.stakeManager.decrementCopyIterations(240n))
+      await expect(x.stakeManager.decrementCopyIterations(240n, 0))
         .eventually.to.equal(240n)
     })
     it('returns 255 if 255 is passed (in the second byte)', async () => {
       const x = await loadFixture(utils.deployFixture)
-      await expect(x.stakeManager.decrementCopyIterations(255n << 8n))
+      await expect(x.stakeManager.decrementCopyIterations(255n << 8n, 0))
         .eventually.to.equal(255n << 8n)
     })
     it('any number less than 255 in the second byte is decremented', async () => {
       const x = await loadFixture(utils.deployFixture)
-      await expect(x.stakeManager.decrementCopyIterations(254n << 8n))
+      await expect(x.stakeManager.decrementCopyIterations(254n << 8n, 0))
         .eventually.to.equal(253n << 8n)
     })
     it('preserves numbers above the second byte', async () => {
       const x = await loadFixture(utils.deployFixture)
-      await expect(x.stakeManager.decrementCopyIterations(123n << 16n | 254n << 8n))
+      await expect(x.stakeManager.decrementCopyIterations(123n << 16n | 254n << 8n, 0))
         .eventually.to.equal(123n << 16n | 253n << 8n)
+    })
+  })
+  describe('encodeNewStakeDaysMethod', () => {
+    it('returns a modulated value depending on its size', async () => {
+      const x = await loadFixture(utils.deployFixture)
+      await expect(x.stakeManager.encodeNewStakeDaysMethod(0, 4))
+        .eventually.to.equal(0)
+      await expect(x.stakeManager.encodeNewStakeDaysMethod(0, 3))
+        .eventually.to.equal(3)
+      await expect(x.stakeManager.encodeNewStakeDaysMethod(3, 3))
+        .eventually.to.equal(15)
     })
   })
 })

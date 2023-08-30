@@ -211,8 +211,8 @@ describe('HSIStakeManager.sol', () => {
         // unused on hsi
         newStakeDaysMethod: 2,
         newStakeDaysMagnitude: 0,
-        newStakeMethod: 4,
-        newStakeMagnitude: 1n << 32n | 1n,
+        newStakeMethod: 2,
+        newStakeMagnitude: 0,
         copyIterations: 0,
       }
       const encodedSettings = await x.stakeManager.encodeSettings(settings)

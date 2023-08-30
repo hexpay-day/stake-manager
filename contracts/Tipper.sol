@@ -95,6 +95,12 @@ abstract contract Tipper is Bank, UnderlyingStakeable, CurrencyList, EncodableSe
         tip = uint96(tip >> 128);
         limit = tip;
       } else {
+        if (_isCapable({
+          setting: tip,
+          index: 127
+        })) {
+          // wants to use magnitude
+        }
         limit = uint96(tip >> 128);
         tip = (uint64(tip >> 64) * block.basefee) / uint64(tip);
         tip = _clamp(tip, limit);
