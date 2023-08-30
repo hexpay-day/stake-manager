@@ -5,12 +5,12 @@ import { IHEX } from './interfaces/IHEX.sol';
 import { Utils } from './Utils.sol';
 
 contract EarningsOracle is Utils {
-  uint96 public immutable lastZeroDay;
+  uint256 public immutable lastZeroDay;
   /**
    * @dev this max constraint is very generous given that the sstore opcode costs ~20k gas at the time of writing
    */
-  uint128 public constant MAX_CATCH_UP_DAYS = 1_000;
-  uint128 public constant MAX_UINT_128 = type(uint128).max;
+  uint256 public constant MAX_CATCH_UP_DAYS = 1_000;
+  uint256 public constant MAX_UINT_128 = type(uint128).max;
   uint256 public constant SHARE_SCALE = 1e5;
   TotalStore[] public totals;
   struct TotalStore {
@@ -27,9 +27,9 @@ contract EarningsOracle is Utils {
    * @param _lastZeroDay the final day to allow zero value (used to filter out empty values)
    * @param untilDay the day to end collection
    */
-  constructor(uint96 _lastZeroDay, uint256 untilDay) {
+  constructor(uint256 _lastZeroDay, uint256 untilDay) {
     lastZeroDay = _lastZeroDay;
-    if (untilDay > 0) {
+    if (untilDay > ZERO) {
       _storeDays({
         startDay: 0,
         untilDay: untilDay
@@ -102,8 +102,8 @@ contract EarningsOracle is Utils {
       revert NotAllowed();
     }
     (uint256 payout, uint256 shares) = (_total.payout, _total.shares);
-    if (payout == 0 && shares == 0 && day > 0) {
-      TotalStore memory prev = totals[day - 1];
+    if (payout == ZERO && shares == ZERO && day > ZERO) {
+      TotalStore memory prev = totals[day - ONE];
       payout = prev.payout;
       shares = prev.shares;
     }

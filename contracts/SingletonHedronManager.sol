@@ -15,7 +15,7 @@ contract SingletonHedronManager is UnderlyingStakeManager {
     return ((_isCapable({
       setting: setting,
       index: INDEX_SHOULD_SEND_TOKENS_TO_STAKER
-    }) ? uint256(1) : uint256(0)) << ADDRESS_BIT_LENGTH) | uint160(owner);
+    }) ? ONE : ZERO) << ADDRESS_BIT_LENGTH) | uint160(owner);
   }
   /**
    * mint rewards and transfer them to a provided address
@@ -31,7 +31,7 @@ contract SingletonHedronManager is UnderlyingStakeManager {
     uint256 stakeId;
     uint256 setting = stakeIdToSettings[stakeId];
     uint256 to = _createTo(setting, _stakeIdToOwner({
-      stakeId: stakeIds[0]
+      stakeId: stakeIds[ZERO]
     }));
     do {
       stakeId = stakeIds[i];
@@ -52,7 +52,7 @@ contract SingletonHedronManager is UnderlyingStakeManager {
             staker: address(uint160(to)),
             amount: hedronTokens
           });
-          hedronTokens = 0;
+          hedronTokens = ZERO;
         }
         to = currentTo;
         unchecked {
@@ -66,7 +66,7 @@ contract SingletonHedronManager is UnderlyingStakeManager {
         ++i;
       }
     } while (i < len);
-    if (hedronTokens > 0) {
+    if (hedronTokens > ZERO) {
       _attributeFunds({
         setting: setting,
         index: INDEX_SHOULD_SEND_TOKENS_TO_STAKER,

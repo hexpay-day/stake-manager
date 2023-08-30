@@ -60,7 +60,7 @@ contract UnderlyingStakeManager is GoodAccounting {
         owner: address(this)
       }) - balanceBefore;
     }
-    stakeIdInfo[stakeId] = 0;
+    stakeIdInfo[stakeId] = ZERO;
   }
   /**
    * starts a stake from the provided amount

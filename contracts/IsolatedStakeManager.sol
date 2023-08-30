@@ -77,11 +77,11 @@ contract IsolatedStakeManager is Ownable2Step, AuthorizationManager {
     // blanket start authorization
     if (!_isCapable({
       setting: setting,
-      index: 0
+      index: ZERO
     })) {
       revert NotAllowed();
     }
-    if (newStakedHearts > 0) {
+    if (newStakedHearts > ZERO) {
       _transferFromOwner({
         amount: newStakedHearts
       });
@@ -98,7 +98,7 @@ contract IsolatedStakeManager is Ownable2Step, AuthorizationManager {
     // scoped authorization - to keep non-permitted contracts from griefing users
     if (!_isCapable({
       setting: authorization[_startAuthorizationKey(msg.sender, newStakedDays)],
-      index: 0
+      index: ZERO
     })) {
       revert NotAllowed();
     }
@@ -183,7 +183,10 @@ contract IsolatedStakeManager is Ownable2Step, AuthorizationManager {
    * transfer balance to the owner of this contract
    */
   function _transferToOwner() internal {
-    if (!_isCapable(_getAddressSetting(msg.sender), 3)) {
+    if (!_isCapable({
+      setting: _getAddressSetting(msg.sender),
+      index: THREE
+    })) {
       revert NotAllowed();
     }
     IERC20(TARGET).safeTransfer(owner(), _balanceOf({
@@ -200,13 +203,13 @@ contract IsolatedStakeManager is Ownable2Step, AuthorizationManager {
       // can early end stake
       return _isCapable({
         setting: setting,
-        index: 2
+        index: TWO
       });
     } else {
       // can end stake
       return _isCapable({
         setting: setting,
-        index: 1
+        index: ONE
       });
     }
   }
@@ -216,7 +219,7 @@ contract IsolatedStakeManager is Ownable2Step, AuthorizationManager {
    * @param stakeDays the number of days to stake
    */
   function _startAuthorizationKey(address runner, uint256 stakeDays) internal pure returns(bytes32) {
-    return bytes32(uint256(uint160(runner)) << 16 | uint16(stakeDays));
+    return bytes32(uint256(uint160(runner)) << SIXTEEN | uint16(stakeDays));
   }
   /**
    * starts a stake on the underlying contract for a given number of days
@@ -226,7 +229,7 @@ contract IsolatedStakeManager is Ownable2Step, AuthorizationManager {
     uint256 stakedHearts = _balanceOf({
       owner: address(this)
     });
-    if (stakedHearts > 0) {
+    if (stakedHearts > ZERO) {
       IUnderlyingStakeable(TARGET).stakeStart({
         newStakedHearts: stakedHearts,
         newStakedDays: newStakedDays
@@ -240,7 +243,7 @@ contract IsolatedStakeManager is Ownable2Step, AuthorizationManager {
   function _transferFromOwner(uint256 amount) internal {
     if (!_isCapable({
       setting: _getAddressSetting(msg.sender),
-      index: 4
+      index: FOUR
     })) {
       revert NotAllowed();
     }

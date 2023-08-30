@@ -5,31 +5,32 @@ import "./StakeInfo.sol";
 
 abstract contract EncodableSettings is StakeInfo {
   // the index of the first bit of targeted information
-  uint8 internal constant UNUSED_SPACE_RIGHT_UINT8 = 248;
-  uint8 internal constant UNUSED_SPACE_RIGHT_UINT16 = 240;
-  uint8 internal constant UNUSED_SPACE_RIGHT_UINT64 = 192;
-  uint8 internal constant INDEX_HEDRON_TIP_METHOD = 248;
-  uint8 internal constant INDEX_HEDRON_TIP_MAGNITUDE = 184;
-  uint8 internal constant UNUSED_SPACE_HEDRON_TIP_MAGNITUDE = 8;
-  uint8 internal constant INDEX_TIP_METHOD = 176;
-  uint8 internal constant UNUSED_SPACE_TIP_METHOD = 72;
-  uint8 internal constant INDEX_TIP_MAGNITUDE = 112;
-  uint8 internal constant INDEX_NEW_STAKE_METHOD = 104;
-  uint8 internal constant UNUSED_SPACE_NEW_STAKE_METHOD = 144;
-  uint8 internal constant INDEX_NEW_STAKE_MAGNITUDE = 40;
-  uint8 internal constant INDEX_NEW_STAKE_DAYS_METHOD = 32;
-  uint8 internal constant UNUSED_SPACE_NEW_STAKE_DAYS_METHOD = 216;
-  uint8 internal constant INDEX_NEW_STAKE_DAYS_MAGNITUDE = 16;
-  uint8 internal constant UNUSED_SPACE_NEW_STAKE_DAYS_MAGNITUDE = 224;
-  uint8 internal constant INDEX_COPY_ITERATIONS = 8;
-  uint8 internal constant INDEX_HAS_EXTERNAL_TIPS = 7;
-  uint8 internal constant INDEX_COPY_EXTERNAL_TIPS = 6;
-  uint8 internal constant INDEX_STAKE_IS_TRANSFERRABLE = 5;
-  uint8 internal constant UNUSED_SPACE_STAKE_IS_TRANSFERRABLE = 251;
-  uint8 internal constant INDEX_SHOULD_SEND_TOKENS_TO_STAKER = 4;
-  uint8 internal constant INDEX_CAN_MINT_HEDRON_AT_END = 3;
-  uint8 internal constant INDEX_CAN_MINT_HEDRON = 2;
-  uint8 internal constant INDEX_CAN_EARLY_STAKE_END = 1;
+  uint256 internal constant UNUSED_SPACE_RIGHT_UINT8 = 248;
+  uint256 internal constant UNUSED_SPACE_RIGHT_UINT16 = 240;
+  uint256 internal constant UNUSED_SPACE_RIGHT_UINT64 = 192;
+  uint256 internal constant INDEX_HEDRON_TIP_METHOD = UNUSED_SPACE_RIGHT_UINT8;
+  uint256 internal constant INDEX_HEDRON_TIP_MAGNITUDE = 184;
+  uint256 internal constant UNUSED_SPACE_HEDRON_TIP_MAGNITUDE = EIGHT;
+  uint256 internal constant INDEX_TIP_METHOD = 176;
+  uint256 internal constant UNUSED_SPACE_TIP_METHOD = 72;
+  uint256 internal constant INDEX_TIP_MAGNITUDE = 112;
+  uint256 internal constant INDEX_NEW_STAKE_METHOD = 104;
+  uint256 internal constant UNUSED_SPACE_NEW_STAKE_METHOD = 144;
+  uint256 internal constant INDEX_NEW_STAKE_MAGNITUDE = 40;
+  uint256 internal constant INDEX_NEW_STAKE_DAYS_METHOD = THIRTY_TWO;
+  uint256 internal constant UNUSED_SPACE_NEW_STAKE_DAYS_METHOD = 216;
+  uint256 internal constant INDEX_NEW_STAKE_DAYS_MAGNITUDE = SIXTEEN;
+  uint256 internal constant UNUSED_SPACE_NEW_STAKE_DAYS_MAGNITUDE = 224;
+  uint256 internal constant INDEX_COPY_ITERATIONS = EIGHT;
+  uint256 internal constant INDEX_HAS_EXTERNAL_TIPS = 7;
+  uint256 internal constant INDEX_COPY_EXTERNAL_TIPS = 6;
+  uint256 internal constant INDEX_STAKE_IS_TRANSFERRABLE = 5;
+  uint256 internal constant UNUSED_SPACE_STAKE_IS_TRANSFERRABLE = 251;
+  uint256 internal constant INDEX_SHOULD_SEND_TOKENS_TO_STAKER = FOUR;
+  uint256 internal constant INDEX_CAN_MINT_HEDRON_AT_END = THREE;
+  uint256 internal constant INDEX_CAN_MINT_HEDRON = TWO;
+  uint256 internal constant INDEX_CAN_EARLY_STAKE_END = ONE;
+  uint256 internal constant INDEX_CAN_STAKE_END = ZERO;
 
   struct ConsentAbilities {
     bool canStakeEnd;
@@ -92,14 +93,14 @@ abstract contract EncodableSettings is StakeInfo {
   }
   function _decodeConsentAbilities(uint256 abilities) internal pure returns(ConsentAbilities memory) {
     return ConsentAbilities({
-      hasExternalTips: (abilities >> INDEX_HAS_EXTERNAL_TIPS) % 2 == 1,
-      copyExternalTips: (abilities >> INDEX_COPY_EXTERNAL_TIPS) % 2 == 1,
-      stakeIsTransferrable: (abilities >> INDEX_STAKE_IS_TRANSFERRABLE) % 2 == 1,
-      shouldSendTokensToStaker: (abilities >> INDEX_SHOULD_SEND_TOKENS_TO_STAKER) % 2 == 1,
-      canMintHedronAtEnd: (abilities >> INDEX_CAN_MINT_HEDRON_AT_END) % 2 == 1,
-      canMintHedron: (abilities >> INDEX_CAN_MINT_HEDRON) % 2 == 1,
-      canEarlyStakeEnd: (abilities >> INDEX_CAN_EARLY_STAKE_END) % 2 == 1,
-      canStakeEnd: abilities % 2 == 1
+      hasExternalTips: (abilities >> INDEX_HAS_EXTERNAL_TIPS) % TWO == ONE,
+      copyExternalTips: (abilities >> INDEX_COPY_EXTERNAL_TIPS) % TWO == ONE,
+      stakeIsTransferrable: (abilities >> INDEX_STAKE_IS_TRANSFERRABLE) % TWO == ONE,
+      shouldSendTokensToStaker: (abilities >> INDEX_SHOULD_SEND_TOKENS_TO_STAKER) % TWO == ONE,
+      canMintHedronAtEnd: (abilities >> INDEX_CAN_MINT_HEDRON_AT_END) % TWO == ONE,
+      canMintHedron: (abilities >> INDEX_CAN_MINT_HEDRON) % TWO == ONE,
+      canEarlyStakeEnd: (abilities >> INDEX_CAN_EARLY_STAKE_END) % TWO == ONE,
+      canStakeEnd: abilities % TWO == ONE
     });
   }
   /**
@@ -138,8 +139,8 @@ abstract contract EncodableSettings is StakeInfo {
       stakeId: stakeId,
       settings: (
         (settings >> INDEX_COPY_ITERATIONS << INDEX_COPY_ITERATIONS)
-        | (uint8(stakeIdToSettings[stakeId]) >> INDEX_HAS_EXTERNAL_TIPS << INDEX_HAS_EXTERNAL_TIPS)
-        | (uint8(settings) << 1 >> 1)
+        | uint8(stakeIdToSettings[stakeId] >> INDEX_HAS_EXTERNAL_TIPS << INDEX_HAS_EXTERNAL_TIPS)
+        | (uint8(settings << ONE) >> ONE)
       )
     });
   }
@@ -239,14 +240,14 @@ abstract contract EncodableSettings is StakeInfo {
   }
   function _encodeConsentAbilities(ConsentAbilities memory consentAbilities) internal pure returns(uint256) {
     return (
-      (consentAbilities.hasExternalTips ? 1 : 0) << INDEX_HAS_EXTERNAL_TIPS |
-      (consentAbilities.copyExternalTips ? 1 : 0) << INDEX_COPY_EXTERNAL_TIPS |
-      (consentAbilities.stakeIsTransferrable ? 1 : 0) << INDEX_STAKE_IS_TRANSFERRABLE |
-      (consentAbilities.shouldSendTokensToStaker ? 1 : 0) << INDEX_SHOULD_SEND_TOKENS_TO_STAKER |
-      (consentAbilities.canMintHedronAtEnd ? 1 : 0) << INDEX_CAN_MINT_HEDRON_AT_END |
-      (consentAbilities.canMintHedron ? 1 : 0) << INDEX_CAN_MINT_HEDRON |
-      (consentAbilities.canEarlyStakeEnd ? 1 : 0) << INDEX_CAN_EARLY_STAKE_END |
-      (consentAbilities.canStakeEnd ? 1 : 0)
+      (consentAbilities.hasExternalTips ? ONE : ZERO) << INDEX_HAS_EXTERNAL_TIPS |
+      (consentAbilities.copyExternalTips ? ONE : ZERO) << INDEX_COPY_EXTERNAL_TIPS |
+      (consentAbilities.stakeIsTransferrable ? ONE : ZERO) << INDEX_STAKE_IS_TRANSFERRABLE |
+      (consentAbilities.shouldSendTokensToStaker ? ONE : ZERO) << INDEX_SHOULD_SEND_TOKENS_TO_STAKER |
+      (consentAbilities.canMintHedronAtEnd ? ONE : ZERO) << INDEX_CAN_MINT_HEDRON_AT_END |
+      (consentAbilities.canMintHedron ? ONE : ZERO) << INDEX_CAN_MINT_HEDRON |
+      (consentAbilities.canEarlyStakeEnd ? ONE : ZERO) << INDEX_CAN_EARLY_STAKE_END |
+      (consentAbilities.canStakeEnd ? ONE : ZERO)
     );
   }
   function _defaultSettings() internal virtual pure returns(Settings memory settings) {
@@ -256,23 +257,23 @@ abstract contract EncodableSettings is StakeInfo {
        * by default, there is no hedron tip
        * assume that stakers will manage their own stakes at bare minimum
        */
-      uint8(0), uint64(0), // hedron tip
+      uint8(ZERO), uint64(ZERO), // hedron tip
       /*
        * by default, there is no tip
        * assume that stakers will manage their own stakes at bare minimum
        */
-      uint8(0), uint64(0), // tip
+      uint8(ZERO), uint64(ZERO), // tip
       /*
        * by default, assume that all tokens minted from an end stake
        * should go directly into a new stake
        */
-      uint8(2), uint64(0), // new stake amount
+      uint8(TWO), uint64(ZERO), // new stake amount
       /*
        * by default, assume that by using this contract, users want efficiency gains
        * so by default, restarting their stakes are the most efficient means of managing tokens
        */
-      uint8(2), uint16(0),
-      255, // restart forever
+      uint8(TWO), uint16(ZERO),
+      uint8(MAX_UINT8), // restart forever
       /*
        * by index: 00000001
        * 7: signal to ender that tips exist to be collected (allows contract to avoid an SLOAD) (0)
@@ -326,9 +327,9 @@ abstract contract EncodableSettings is StakeInfo {
       return setting;
     }
     --copyIterations;
-    if (nextNewStakeDaysMethod > 0) {
+    if (nextNewStakeDaysMethod > ZERO) {
       // var of 1 sets to 0 next time
-      nextNewStakeDaysMethod = (nextNewStakeDaysMethod  % 4) - 1;
+      nextNewStakeDaysMethod = (nextNewStakeDaysMethod  % FOUR) - ONE;
       setting = (
         (setting >> INDEX_NEW_STAKE_MAGNITUDE << INDEX_NEW_STAKE_MAGNITUDE)
         | nextNewStakeDaysMethod

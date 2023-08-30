@@ -5,8 +5,7 @@ import { Utils } from "./Utils.sol";
 import { UnderlyingStakeable } from "./UnderlyingStakeable.sol";
 
 contract Magnitude is Utils {
-  uint256 constant internal MULTIPLIER = 2;
-  int256 constant internal MIN_INT_16 = type(int16).min;
+  uint256 constant internal MULTIPLIER = TWO;
   function _computeDayMagnitude(
     uint256 limit, uint256 method, uint256 x,
     uint256 today, // today
@@ -14,8 +13,8 @@ contract Magnitude is Utils {
     uint256 stakedDays
   ) internal pure returns(uint256 amount) {
     unchecked {
-      if (method < 3) {
-        if (method == 1) {
+      if (method < THREE) {
+        if (method == ONE) {
           // useful when you want the next stake start to be
           // entirely different and simply repeat after that
           amount = x; // 1
@@ -31,7 +30,7 @@ contract Magnitude is Utils {
           // did not end on first available day
           if (daysAfterLock >= stakedDays) {
             // presumptive value extrapolated backward
-            lockedDay = today - (daysAfterLock % (stakedDays + 1));
+            lockedDay = today - (daysAfterLock % (stakedDays + ONE));
           } // else locked day was last presumptive locked day
           amount = stakedDays - (today - lockedDay);
         }
@@ -55,15 +54,15 @@ contract Magnitude is Utils {
     // we can use unchecked here because all minuses (-)
     // are checked before they are run
     unchecked {
-      if (method < 3) {
-        if (method == 1) {
+      if (method < THREE) {
+        if (method == ONE) {
           amount = x; // 1
         } else {
           amount = y2; // 2
         }
       } else {
         // shift range from 0-4 iterative 3 to 0-2 iterative 3
-        amount = _xyMethod(x, _yDeltas(method % 3, y2, y1), method - 3);
+        amount = _xyMethod(x, _yDeltas(method % THREE, y2, y1), method - THREE);
       }
       amount = amount > limit ? limit : amount;
     }
@@ -76,34 +75,34 @@ contract Magnitude is Utils {
       // at this point
       // x (numerator + denominator) only takes up 64 bits
       // at this point, the max number that our method can be is 253
-      uint256 scaleFactor = method / 3;
+      uint256 scaleFactor = method / THREE;
       // 3-5 is a flag to set "b"
       if (scaleFactor > 0) {
         // if we are here, we should assume that b will probably be set to non 0
         // even with uint16 (max: 65535), we can still get down to 0.01% increments
         // with scaling we can go even further
-        (numerator, denominator, b) = _decodeLinear(scaleFactor - 1, x);
+        (numerator, denominator, b) = _decodeLinear(scaleFactor - ONE, x);
       } else {
         // "b" is 0
         denominator = uint32(x);
-        numerator = int256(uint256(uint32(x >> 32)));
+        numerator = int256(uint256(uint32(x >> THIRTY_TWO)));
       }
       int256 amnt = b + ((numerator * int256(y)) / int256(denominator));
-      amount = amnt < 0 ? 0 : uint256(amnt);
+      amount = amnt < 0 ? ZERO : uint256(amnt);
     }
   }
   function _yDeltas(uint256 method, uint256 y2, uint256 y1) internal pure returns(uint256 y) {
     unchecked {
       y = y2;
-      if (method == 1) {
+      if (method == ONE) {
         // y1 only
         y = y1;
-      } else if (method == 2) {
+      } else if (method == TWO) {
         // yield only
         if (y2 > y1) {
           y = y2 - y1;
         } else {
-          y = 0;
+          y = ZERO;
         }
       }
     }
@@ -132,10 +131,10 @@ contract Magnitude is Utils {
     bFactor = _bFactor;
     unchecked {
       input = uint256(
-        (uint64(uint16(int16(b)) - uint16(int16(MIN_INT_16))) << 48)
-        | (uint256(uint8(xFactor)) << 40)
-        | (uint40(uint16(int16(x)) - uint16(int16(MIN_INT_16))) << 24)
-        | (uint256(uint8(yFactor)) << 16)
+        (uint256(uint16(int16(b)) - uint16(int16(MIN_INT_16))) << FOURTY_EIGHT)
+        | (uint256(uint8(xFactor)) << FOURTY)
+        | (uint256(uint16(int16(x)) - uint16(int16(MIN_INT_16))) << TWENTY_FOUR)
+        | (uint256(uint8(yFactor)) << SIXTEEN)
         | uint256(uint16(y))
       );
     }
@@ -175,12 +174,12 @@ contract Magnitude is Utils {
     unchecked {
       // in order of location on the series of bits
       // denominator
-      y = uint16(input) * (MULTIPLIER ** uint8(input >> 16)); // udd*(4^sfd)*s=d
+      y = uint16(input) * (MULTIPLIER ** uint8(input >> SIXTEEN)); // udd*(4^sfd)*s=d
       // numerator
-      x = int16(uint16(input >> 24)) + int16(-MIN_INT_16);
-      x *= int256(MULTIPLIER ** uint8(input >> 40)); // udn*(16^sfn)*s=n
+      x = int16(uint16(input >> TWENTY_FOUR)) + int16(-MIN_INT_16);
+      x *= int256(MULTIPLIER ** uint8(input >> FOURTY)); // udn*(16^sfn)*s=n
       // offset
-      b = int16(uint16(input >> 48)) + int16(-MIN_INT_16);
+      b = int16(uint16(input >> FOURTY_EIGHT)) + int16(-MIN_INT_16);
       b *= int256(MULTIPLIER ** bFactor); // b*(16^sfn)*s=b
     }
   }
@@ -195,8 +194,8 @@ contract Magnitude is Utils {
     uint256 limit, uint256 method, uint256 x, uint256 y2,
     uint256 y1
   ) external pure returns(uint256) {
-    if (limit == 0 || method == 0) {
-      return 0;
+    if (limit == ZERO || method == ZERO) {
+      return ZERO;
     }
     return _computeMagnitude({
       limit: limit,
@@ -220,8 +219,8 @@ contract Magnitude is Utils {
     uint256 lockedDay, // lockedDay
     uint256 stakedDays
   ) external pure returns(uint256) {
-    if (limit == 0 || method == 0) {
-      return 0;
+    if (limit == ZERO || method == ZERO) {
+      return ZERO;
     }
     return _computeDayMagnitude({
       limit: limit,

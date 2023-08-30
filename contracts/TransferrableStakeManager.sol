@@ -12,7 +12,7 @@ contract TransferrableStakeManager is StakeStarter {
   function removeTransferrability(uint256 stakeId) external payable returns(uint256 settings) {
     return _updateTransferrability({
       stakeId: stakeId,
-      encoded: 0
+      encoded: ZERO
     });
   }
   function _updateTransferrability(uint256 stakeId, uint256 encoded) internal returns(uint256 settings) {
@@ -39,7 +39,7 @@ contract TransferrableStakeManager is StakeStarter {
   function _canTransfer(uint256 stakeId) internal view returns(bool) {
     return _isCapable({
       setting: stakeIdToSettings[stakeId],
-      index: 5
+      index: INDEX_STAKE_IS_TRANSFERRABLE
     });
   }
   function stakeTransfer(uint256 stakeId, address to) external payable {

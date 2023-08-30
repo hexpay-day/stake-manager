@@ -26,7 +26,7 @@ contract CurrencyList is Utils {
     if (!token.isContract()) {
       revert NotAllowed();
     }
-    if (currencyToIndex[token] > 0 || token == address(0)) {
+    if (currencyToIndex[token] > ZERO || token == address(0)) {
       return currencyToIndex[token];
     }
     return _addCurrencyToList({

@@ -1,4 +1,4 @@
-import { loadFixture, setNextBlockBaseFeePerGas } from "@nomicfoundation/hardhat-network-helpers"
+import { loadFixture } from "@nomicfoundation/hardhat-network-helpers"
 import { expect } from "chai"
 import * as hre from "hardhat"
 import _ from 'lodash'

@@ -92,7 +92,7 @@ abstract contract GoodAccounting is StakeInfo, Tipper {
       // return if it is too early to run good accounting
       return GoodAccountingStatus.EARLY;
     }
-    if (stake.unlockedDay > 0) {
+    if (stake.unlockedDay > ZERO) {
       // the stake has already been ended
       return GoodAccountingStatus.ENDED;
     }

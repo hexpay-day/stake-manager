@@ -49,8 +49,8 @@ contract MaximusStakeManager is HSIStakeManager {
     IPublicEndStakeable endable = IPublicEndStakeable(perpetual);
     // STAKE_END_DAY is locked + staked days - 1 so > is correct in this case
     if (_currentDay() > endable.STAKE_END_DAY() && endable.STAKE_IS_ACTIVE()) {
-      endable.mintHedron(0, uint40(stakeId));
-      endable.endStakeHEX(0, uint40(stakeId));
+      endable.mintHedron(ZERO, uint40(stakeId));
+      endable.endStakeHEX(ZERO, uint40(stakeId));
       // by now we have incremented by 1 since the start of this function
       uint256 currentPeriod = endable.getCurrentPeriod();
       rewardsTo[perpetual][currentPeriod] = rewarded;

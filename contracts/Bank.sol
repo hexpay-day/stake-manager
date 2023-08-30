@@ -7,7 +7,7 @@ import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "./Capable.sol";
 import "./Utils.sol";
 
-contract Bank is Capable, Utils {
+contract Bank is Capable {
   using Address for address payable;
   using SafeERC20 for IERC20;
 
@@ -51,7 +51,7 @@ contract Bank is Capable, Utils {
    * @param max the limit that the value can be
    */
   function _clamp(uint256 amount, uint256 max) internal pure returns(uint256) {
-    return amount == 0 || amount > max ? max : amount;
+    return amount == ZERO || amount > max ? max : amount;
   }
   /**
    * transfer a given number of tokens to the contract to be used by the contract's methods
@@ -105,14 +105,20 @@ contract Bank is Capable, Utils {
     address payable to,
     uint256 amount
   ) external payable returns(uint256) {
-    return _collectUnattributed(token, transferOut, to, amount, _getUnattributed(token));
+    return _collectUnattributed({
+      token: token,
+      transferOut: transferOut,
+      to: to,
+      amount: amount,
+      max: _getUnattributed(token)
+    });
   }
   function _collectUnattributed(
     address token, bool transferOut, address payable to,
     uint256 amount, uint256 max
   ) internal returns(uint256 withdrawable) {
     withdrawable = _clamp(amount, max);
-    if (withdrawable > 0) {
+    if (withdrawable > ZERO) {
       if (transferOut) {
         _withdrawTokenTo({
           token: token,
@@ -140,7 +146,7 @@ contract Bank is Capable, Utils {
     uint256 basisPoints
   ) external returns(uint256 amount) {
     uint256 unattributed = _getUnattributed(token);
-    amount = (unattributed * basisPoints) / 10_000;
+    amount = (unattributed * basisPoints) / TEN_K;
     _collectUnattributed(token, transferOut, recipient, amount, unattributed);
   }
   /**
@@ -199,7 +205,7 @@ contract Bank is Capable, Utils {
   /** deposits tokens from a staker and marks them for that staker */
   function _depositTokenFrom(address token, address depositor, uint256 amount) internal returns(uint256 amnt) {
     if (token != address(0)) {
-      if (amount > 0) {
+      if (amount > ZERO) {
         IERC20(token).safeTransferFrom(depositor, address(this), amount);
         amnt = amount;
       }

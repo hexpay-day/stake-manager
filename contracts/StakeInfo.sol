@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity =0.8.18;
 
-import { Utils } from "./Utils.sol";
+import { Capable } from "./Capable.sol";
 
-contract StakeInfo is Utils {
+contract StakeInfo is Capable {
   /**
    * @notice the owner of a stake indexed by the stake id
    * index + 160(owner)

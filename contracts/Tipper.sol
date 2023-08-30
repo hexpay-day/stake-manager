@@ -286,7 +286,7 @@ abstract contract Tipper is Bank, UnderlyingStakeable, CurrencyList, EncodableSe
           // not whether or not to copy said list in subsequent stakes
           // should it exist again
           // in other words, copying remains in the hands of the staker
-          | (uint8(setting << 1) >> 1)
+          | (uint8(setting << ONE) >> ONE)
         )
       });
     }

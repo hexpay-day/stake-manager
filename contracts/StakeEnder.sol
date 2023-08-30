@@ -55,9 +55,9 @@ contract StakeEnder is Magnitude, SingletonHedronManager {
     uint256 setting = stakeIdToSettings[stakeId];
     if (!_isCapable({
       setting: setting,
-      index: 0
+      index: INDEX_CAN_STAKE_END
     })) {
-      return (0, count);
+      return (ZERO, count);
     }
     if (_isEarlyEnding({
       lockedDay: stake.lockedDay,
@@ -67,7 +67,7 @@ contract StakeEnder is Magnitude, SingletonHedronManager {
       setting: setting,
       index: INDEX_CAN_EARLY_STAKE_END
     })) {
-      return (0, count);
+      return (ZERO, count);
     }
     if (_isCapable({
       setting: setting,
@@ -76,15 +76,15 @@ contract StakeEnder is Magnitude, SingletonHedronManager {
       // consent has been confirmed
       uint256 hedronAmount = _mintHedron(idx, stakeId);
       uint256 hedronTipMethod = setting >> UNUSED_SPACE_RIGHT_UINT8;
-      if (hedronTipMethod > 0) {
+      if (hedronTipMethod > ZERO) {
         uint256 hedronTip = _computeMagnitude({
           limit: hedronAmount,
           method: hedronTipMethod,
           x: setting << UNUSED_SPACE_HEDRON_TIP_MAGNITUDE >> UNUSED_SPACE_RIGHT_UINT64,
           y2: hedronAmount,
-          y1: 0
+          y1: ZERO
         });
-        if (hedronTip > 0) {
+        if (hedronTip > ZERO) {
           hedronAmount = _checkAndExecTip({
             stakeId: stakeId,
             staker: staker,
@@ -135,19 +135,19 @@ contract StakeEnder is Magnitude, SingletonHedronManager {
     }
     uint256 newStakeMethod = setting << UNUSED_SPACE_NEW_STAKE_METHOD >> UNUSED_SPACE_RIGHT_UINT8;
     uint256 nextStakeId;
-    if (delta > 0 && newStakeMethod > 0) {
+    if (delta > 0 && newStakeMethod > ZERO) {
       uint256 newStakeAmount = _computeMagnitude({
         limit: delta,
         method: newStakeMethod,
-        x: setting << 152 >> 192,
+        x: setting << 152 >> UNUSED_SPACE_RIGHT_UINT64,
         y2: delta,
         y1: stake.stakedHearts
       });
       uint256 newStakeDaysMethod = setting << UNUSED_SPACE_NEW_STAKE_DAYS_METHOD >> UNUSED_SPACE_RIGHT_UINT8;
-      if (newStakeDaysMethod > 0) {
+      if (newStakeDaysMethod > ZERO) {
         uint256 newStakeDays = _computeDayMagnitude({
           limit: MAX_DAYS,
-          method: newStakeDaysMethod % 4,
+          method: newStakeDaysMethod % FOUR,
           x: setting << UNUSED_SPACE_NEW_STAKE_DAYS_MAGNITUDE >> UNUSED_SPACE_RIGHT_UINT16,
           today: count >> INDEX_TODAY,
           lockedDay: stake.lockedDay,
@@ -170,15 +170,15 @@ contract StakeEnder is Magnitude, SingletonHedronManager {
         // being easier to think about it as x-2
         setting = (_decrementCopyIterations({
           setting: setting,
-          nextNewStakeDaysMethod: newStakeDaysMethod / 4 // 1-3 yields 0: no change
-        }) >> INDEX_CAN_MINT_HEDRON << INDEX_CAN_MINT_HEDRON) | 1;
+          nextNewStakeDaysMethod: newStakeDaysMethod / FOUR // 1-3 yields 0: no change
+        }) >> INDEX_CAN_MINT_HEDRON << INDEX_CAN_MINT_HEDRON) | ONE;
         _logSettingsUpdate({
           stakeId: nextStakeId,
           settings: setting
         });
       }
     }
-    if (delta > 0) {
+    if (delta > ZERO) {
       _attributeFunds({
         setting: setting,
         index: INDEX_SHOULD_SEND_TOKENS_TO_STAKER,
@@ -189,7 +189,7 @@ contract StakeEnder is Magnitude, SingletonHedronManager {
     }
     // skip logging because it will be zero forever
     // use stake end event as means of determining zeroing out
-    stakeIdToSettings[stakeId] = 0;
+    stakeIdToSettings[stakeId] = ZERO;
     // execute tips after we know that the stake can be ended
     // but before hedron is added to the withdrawable mapping
     if (_isCapable({
@@ -199,10 +199,10 @@ contract StakeEnder is Magnitude, SingletonHedronManager {
       _executeTipList({
         stakeId: stakeId,
         staker: staker,
-        nextStakeId: nextStakeId > 0 && _isCapable({
+        nextStakeId: nextStakeId > ZERO && _isCapable({
           setting: setting,
           index: INDEX_COPY_EXTERNAL_TIPS
-        }) ? nextStakeId : 0
+        }) ? nextStakeId : ZERO
       });
     }
     return (delta, count);
