@@ -167,4 +167,8 @@ interface IHEX is IERC20, IERC20Metadata, IUnderlyingStakeable {
     uint72 dayStakeSharesTotal,
     uint56 dayUnclaimedSatoshisTotal
   );
+  function dailyDataRange(uint256 beginDay, uint256 endDay)
+    external
+    view
+    returns (uint256[] memory list);
 }

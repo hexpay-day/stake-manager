@@ -101,16 +101,22 @@ contract EarningsOracle is Utils {
       // stake data is not yet set
       revert NotAllowed();
     }
-    (uint256 payout, uint256 shares) = (_total.payout, _total.shares);
+    (uint256 payout, uint256 shares) = _readTotals(day, _total);
+    return _saveDay(dayPayoutTotal + payout, dayStakeSharesTotal + shares);
+  }
+  function _readTotals(uint256 day, Total memory _total) internal returns(uint256 payout, uint256 shares) {
+    (payout, shares) = (_total.payout, _total.shares);
     if (payout == ZERO && shares == ZERO && day > ZERO) {
       TotalStore memory prev = totals[day - ONE];
       payout = prev.payout;
       shares = prev.shares;
     }
-    total.payout = dayPayoutTotal + payout;
-    total.shares = dayStakeSharesTotal + shares;
+  }
+  function _saveDay(uint256 payout, uint256 shares) internal returns(Total memory total) {
+    total.payout = payout;
+    total.shares = shares;
     // coveralls-ignore-start
-    if (total.payout > MAX_UINT_128 || total.shares > MAX_UINT_128) {
+    if (payout > MAX_UINT_128 || shares > MAX_UINT_128) {
       // this line is very difficult to test, so it is going to be skipped
       // until an easy way to test it can be devised for low effort
       // basically hex would have to break for the line to be hit
@@ -124,8 +130,8 @@ contract EarningsOracle is Utils {
     }
     // coveralls-ignore-stop
     totals.push(TotalStore({
-      payout: uint128(total.payout),
-      shares: uint128(total.shares)
+      payout: uint128(payout),
+      shares: uint128(shares)
     }));
   }
   /**
@@ -158,6 +164,17 @@ contract EarningsOracle is Utils {
    * @param untilDay the day to stop storing day information
    */
   function _storeDays(uint256 startDay, uint256 untilDay) internal returns(Total memory total, uint256 day) {
+    // uint256[] memory range = IHEX(TARGET).dailyDataRange(startDay, untilDay);
+    // uint256 len = range.length;
+    // uint256 i;
+    // do {
+    //   (dayPayoutTotal, dayStakeSharesTotal) = _readTotals(startDay, total);
+    //   total = _saveDay(
+    //     dayPayoutTotal + uint72(range[i] << ONE_44),
+    //     dayStakeSharesTotal + uint72(range[i] << SEVENTY_TWO)
+    //   );
+    //   unchecked { ++i; ++startDay; }
+    // } while (i < len);
     if (startDay < untilDay) {
       do {
         total = _storeDay({
