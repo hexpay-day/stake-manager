@@ -3,6 +3,7 @@ import { expect } from "chai"
 import * as hre from "hardhat"
 import * as utils from './utils'
 import _ from 'lodash'
+import { EncodableSettings } from "../artifacts/types"
 
 describe('EncodableSettings.sol', () => {
   describe('default methods', () => {
@@ -52,6 +53,16 @@ describe('EncodableSettings.sol', () => {
     })
   })
   describe('encode/decodeConsentAbilities', () => {
+    const decodedConsentAbilitiesToResult = (abilities: EncodableSettings.ConsentAbilitiesStruct) => Object.assign([
+      abilities.canStakeEnd,
+      abilities.canEarlyStakeEnd,
+      abilities.canMintHedron,
+      abilities.canMintHedronAtEnd,
+      abilities.shouldSendTokensToStaker,
+      abilities.stakeIsTransferrable,
+      abilities.copyExternalTips,
+      abilities.hasExternalTips,
+    ], abilities)
     it('can encode and decode consent abilities', async () => {
       const x = await loadFixture(utils.deployFixture)
       const abilities = {
@@ -73,18 +84,39 @@ describe('EncodableSettings.sol', () => {
       await expect(x.stakeManager.isCapable(encoded, 2)).eventually.to.equal(true)
       await expect(x.stakeManager.isCapable(encoded, 1)).eventually.to.equal(false)
       await expect(x.stakeManager.isCapable(encoded, 0)).eventually.to.equal(true)
-      const decodedAbilitiesResult = Object.assign([
-        abilities.canStakeEnd,
-        abilities.canEarlyStakeEnd,
-        abilities.canMintHedron,
-        abilities.canMintHedronAtEnd,
-        abilities.shouldSendTokensToStaker,
-        abilities.stakeIsTransferrable,
-        abilities.copyExternalTips,
-        abilities.hasExternalTips,
-      ], abilities)
       await expect(x.stakeManager.decodeConsentAbilities(encoded))
-        .eventually.to.deep.equal(decodedAbilitiesResult)
+        .eventually.to.deep.equal(decodedConsentAbilitiesToResult(abilities))
+    })
+    it('can be all true or false', async () => {
+      const x = await loadFixture(utils.deployFixture)
+      const decodedZero = await x.stakeManager.decodeConsentAbilities(0)
+      const decodedEff = await x.stakeManager.decodeConsentAbilities('0xff')
+      expect(decodedZero)
+        .to.equal(decodedConsentAbilitiesToResult({
+          canStakeEnd: false,
+          canEarlyStakeEnd: false,
+          canMintHedron: false,
+          canMintHedronAtEnd: false,
+          shouldSendTokensToStaker: false,
+          stakeIsTransferrable: false,
+          copyExternalTips: false,
+          hasExternalTips: false,
+        }))
+      expect(decodedEff)
+        .to.equal(decodedConsentAbilitiesToResult({
+          canStakeEnd: true,
+          canEarlyStakeEnd: true,
+          canMintHedron: true,
+          canMintHedronAtEnd: true,
+          shouldSendTokensToStaker: true,
+          stakeIsTransferrable: true,
+          copyExternalTips: true,
+          hasExternalTips: true,
+        }))
+      await expect(x.stakeManager.encodeConsentAbilities(decodedZero))
+        .eventually.to.equal(0)
+      await expect(x.stakeManager.encodeConsentAbilities(decodedEff))
+        .eventually.to.equal('0xff')
     })
   })
   describe('updateSettingsEncoded', () => {
