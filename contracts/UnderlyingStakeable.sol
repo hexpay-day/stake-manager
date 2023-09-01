@@ -63,7 +63,9 @@ abstract contract UnderlyingStakeable is MulticallExtension, Utils, IUnderlyingS
     });
   }
   function _isEarlyEnding(uint256 lockedDay, uint256 stakedDays, uint256 targetDay) internal pure returns(bool) {
-    return (lockedDay + stakedDays) > targetDay;
+    unchecked {
+      return (lockedDay + stakedDays) > targetDay;
+    }
   }
   /**
    * freeze the progression of a stake to avoid penalties and preserve payout

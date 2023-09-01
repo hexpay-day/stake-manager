@@ -171,10 +171,13 @@ contract EarningsOracle is Utils {
     uint256 i;
     do {
       (payout, shares) = _readTotals(startDay, total);
-      payout += uint72(range[i]);
-      shares += uint72(range[i] >> SEVENTY_TWO);
-      total = _saveDay(payout, shares);
-      unchecked { ++i; ++startDay; }
+      unchecked {
+        payout += uint72(range[i]);
+        shares += uint72(range[i] >> SEVENTY_TWO);
+        total = _saveDay(payout, shares);
+        ++i;
+        ++startDay;
+      }
     } while (i < len);
     return (Total(payout, shares), startDay);
   }
