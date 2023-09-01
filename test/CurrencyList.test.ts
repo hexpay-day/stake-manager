@@ -4,7 +4,7 @@ import { expect } from "chai"
 import * as utils from './utils'
 import _ from 'lodash'
 
-describe.only('CurrencyList.sol', () => {
+describe('CurrencyList.sol', () => {
   it('starts with 3 tokens', async () => {
     const x = await loadFixture(utils.deployFixture)
     await expect(x.stakeManager.currencyListSize())
