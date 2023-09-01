@@ -146,4 +146,21 @@ describe('Magnitude.sol', () => {
         ])
     })
   })
+  describe('decodeLinear', () => {
+    it('fails if method is greater than uint8 max', async () => {
+      const x = await loadFixture(utils.deployFixture)
+      await expect(x.stakeManager.decodeLinear(256, 0))
+        .to.revertedWithCustomError(x.stakeManager, 'NotAllowed')
+    })
+    it('fails if method < 3', async () => {
+      const x = await loadFixture(utils.deployFixture)
+      await expect(x.stakeManager.decodeLinear(2, 0))
+        .to.revertedWithCustomError(x.stakeManager, 'NotAllowed')
+    })
+    it('decodes xyb data from method and magnitude inputs', async () => {
+      const x = await loadFixture(utils.deployFixture)
+      await expect(x.stakeManager.decodeLinear(3, xOverYPlusB))
+        .eventually.to.deep.equal([3, 40, -500])
+    })
+  })
 })

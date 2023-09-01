@@ -180,13 +180,13 @@ contract Magnitude is Utils {
       // in order of location on the series of bits
       // numerator
       x = int16(uint16(magnitude >> FOURTY_EIGHT)) + int16(-MIN_INT_16);
-      x *= int256(MULTIPLIER ** ((method - THREE) / THREE)); // udn*(2^sfn)*s=n
+      x *= int256(MULTIPLIER ** ((method - THREE) / THREE)); // udn*(2^sfn)=n
       // denominator - uint
       y = uint16(magnitude >> TWENTY_FOUR);
-      y *= (MULTIPLIER ** uint8(magnitude >> FOURTY)); // udd*(4^sfd)*s=d
+      y *= (MULTIPLIER ** uint8(magnitude >> FOURTY)); // udd*(4^sfd)=d
       // offset
       b = int16(uint16(magnitude)) + int16(-MIN_INT_16);
-      b *= int256(MULTIPLIER ** uint8(magnitude >> SIXTEEN)); // b*(2^sfn)*s=b
+      b *= int256(MULTIPLIER ** uint8(magnitude >> SIXTEEN)); // b*(2^sfn)=b
     }
   }
   /**
