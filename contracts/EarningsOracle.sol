@@ -189,8 +189,22 @@ contract EarningsOracle is Utils {
    * @param untilDay the day to stop storing day information. Until day is inclusive
    */
   function storeDays(uint256 startDay, uint256 untilDay) external returns(Total memory total, uint256 day) {
-    if (totals.length != startDay) {
-      revert NotAllowed();
+    uint256 size = totals.length;
+    if (startDay != size) {
+      startDay = size;
+    }
+    if (untilDay <= size) {
+      return (Total(totals[untilDay].payout, totals[untilDay].shares), untilDay);
+    }
+    return _storeDays({
+      startDay: startDay,
+      untilDay: untilDay
+    });
+  }
+  function storeDaysUntil(uint256 untilDay) external returns(Total memory total, uint256 day) {
+    uint256 startDay = totals.length;
+    if (untilDay <= startDay) {
+      return (Total(totals[untilDay].payout, totals[untilDay].shares), untilDay);
     }
     return _storeDays({
       startDay: startDay,
@@ -203,19 +217,18 @@ contract EarningsOracle is Utils {
    */
   function catchUpDays(uint256 iterations) external returns(Total memory total, uint256 day) {
     // constrain by gas costs
-    iterations = iterations > MAX_CATCH_UP_DAYS ? MAX_CATCH_UP_DAYS : iterations;
-    uint256 size = totals.length;
-    // add startDay to range size
-    iterations += size;
+    iterations = iterations == 0 || iterations > MAX_CATCH_UP_DAYS ? MAX_CATCH_UP_DAYS : iterations;
+    uint256 startDay = totals.length;
     // constrain by size
     uint256 limit = IHEX(TARGET).currentDay();
-    if (iterations == size || iterations > limit) {
-      iterations = limit;
+    uint256 untilDay = startDay + iterations;
+    if (untilDay > limit) {
+      untilDay = limit;
     }
     return _storeDays({
-      startDay: size,
+      startDay: startDay,
       // iterations is used as untilDay to reduce number of variables in stack
-      untilDay: iterations
+      untilDay: untilDay
     });
   }
 }

@@ -166,9 +166,46 @@ describe('EarningsOracle.sol', () => {
         const startDay = previousSize.toBigInt()
         const rangeSize = 10n
         await x.oracle.storeDays(startDay, startDay + rangeSize)
-        const size = await x.oracle.totalsCount()
         await expect(x.oracle.totalsCount())
           .eventually.to.equal(startDay + rangeSize)
+      })
+      it('if start day does not match, failure', async () => {
+        const previousSize = await x.oracle.totalsCount()
+        const startDay = previousSize.toBigInt()
+        const rangeSize = 10n
+        await x.oracle.storeDays(startDay, startDay + rangeSize)
+        await expect(x.oracle.totalsCount())
+          .eventually.to.equal(startDay + rangeSize)
+      })
+      it('if start day does not match, failure', async () => {
+        const previousSize = await x.oracle.totalsCount()
+        const startDay = previousSize.toBigInt()
+        const rangeSize = 10n
+        await x.oracle.storeDays(startDay + 1n, startDay + rangeSize)
+        await expect(x.oracle.totalsCount())
+          .eventually.to.equal(startDay + rangeSize)
+      })
+      it('if size is greater than until day, collect no data', async () => {
+        await x.oracle.storeDays(3, 8)
+        await expect(x.oracle.totalsCount())
+          .eventually.to.equal(10)
+      })
+    })
+    describe('storeDaysUntil', () => {
+      it('collects until the provided day', async () => {
+        const previousSize = await x.oracle.totalsCount()
+        const startDay = previousSize.toBigInt()
+        const rangeSize = 10n
+        await x.oracle.storeDaysUntil(startDay + rangeSize)
+        await expect(x.oracle.totalsCount())
+          .eventually.to.equal(startDay + rangeSize)
+      })
+      it('does not collect if the requisite day has passed', async () => {
+        await expect(x.oracle.totalsCount())
+          .eventually.to.equal(10)
+        await x.oracle.storeDaysUntil(8)
+        await expect(x.oracle.totalsCount())
+          .eventually.to.equal(10)
       })
     })
     describe('catchUpDays', () => {
@@ -184,6 +221,14 @@ describe('EarningsOracle.sol', () => {
         const max = await x.oracle.MAX_CATCH_UP_DAYS()
         const previousSize = await x.oracle.totalsCount()
         await x.oracle.catchUpDays(max.toBigInt() + 100n)
+        await expect(x.oracle.totalsCount())
+          .eventually.to.equal(previousSize.toBigInt() + max.toBigInt())
+      })
+      it('uses the max days if zero is provided', async function () {
+        this.timeout(100_000_000)
+        const max = await x.oracle.MAX_CATCH_UP_DAYS()
+        const previousSize = await x.oracle.totalsCount()
+        await x.oracle.catchUpDays(0)
         await expect(x.oracle.totalsCount())
           .eventually.to.equal(previousSize.toBigInt() + max.toBigInt())
       })
