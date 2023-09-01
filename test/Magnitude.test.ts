@@ -24,8 +24,18 @@ describe('Magnitude.sol', () => {
   describe('computeDayMagnitude', () => {
     it('limited by first arg', async () => {
       const x = await loadFixture(utils.deployFixture)
-      await expect(x.stakeManager.computeMagnitude(100, 1, 1001, 1002, principle))
+      await expect(x.stakeManager.computeDayMagnitude(100, 1, 1001, 1002, stake.lockedDay, stake.stakedDays))
         .eventually.to.equal(100)
+    })
+    it('returns zero if limit is zero', async () => {
+      const x = await loadFixture(utils.deployFixture)
+      await expect(x.stakeManager.computeDayMagnitude(0, 1, 1001, 1002, stake.lockedDay, stake.stakedDays))
+        .eventually.to.equal(0)
+    })
+    it('returns zero if method is zero', async () => {
+      const x = await loadFixture(utils.deployFixture)
+      await expect(x.stakeManager.computeDayMagnitude(100, 0, 1001, 1002, stake.lockedDay, stake.stakedDays))
+        .eventually.to.equal(0)
     })
     it('0: always returns zero', async () => {
       const x = await loadFixture(utils.deployFixture)
@@ -69,6 +79,16 @@ describe('Magnitude.sol', () => {
     })
   })
   describe('computeMagnitude', () => {
+    it('returns zero if limit is zero', async () => {
+      const x = await loadFixture(utils.deployFixture)
+      await expect(x.stakeManager.computeMagnitude(0, 1, 1001, 1002, principle))
+        .eventually.to.equal(0)
+    })
+    it('returns zero if method is zero', async () => {
+      const x = await loadFixture(utils.deployFixture)
+      await expect(x.stakeManager.computeMagnitude(100, 0, 1001, 1002, principle))
+        .eventually.to.equal(0)
+    })
     it('limited by first arg', async () => {
       const x = await loadFixture(utils.deployFixture)
       await expect(x.stakeManager.computeMagnitude(100, 1, 1001, 1002, principle))

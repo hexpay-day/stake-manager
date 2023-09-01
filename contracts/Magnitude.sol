@@ -223,8 +223,8 @@ contract Magnitude is Utils {
    */
   function computeDayMagnitude(
     uint256 limit, uint256 method, uint256 x,
-    uint256 today, // today
-    uint256 lockedDay, // lockedDay
+    uint256 today,
+    uint256 lockedDay,
     uint256 stakedDays
   ) external pure returns(uint256 result) {
     if (limit == ZERO || method == ZERO) {
