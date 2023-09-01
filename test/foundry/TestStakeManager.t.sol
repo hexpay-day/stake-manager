@@ -26,7 +26,7 @@ contract TestStakeManager is Test {
     startingBalance = 1_000_000 * decimalShift;
     address impersonate = pulsexSacrifice;
     uint256 balanceOfWhale = IERC20(hx).balanceOf(impersonate);
-    if (balanceOfWhale == 0) {
+    if (balanceOfWhale < 1_000_000 * 100_000_000) {
       impersonate = pulsexSacrificeMainnet;
     }
     vm.startPrank(impersonate);

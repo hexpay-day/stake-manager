@@ -39,8 +39,6 @@ export const hexAddress = hre.ethers.utils.getAddress('0x2b591e99afe9f32eaa6214f
 
 export const hedronAddress = hre.ethers.utils.getAddress('0x3819f64f282bf135d62168C1e513280dAF905e06')
 
-export const pulsexSacrificeAddress = hre.ethers.utils.getAddress('0x075e72a5edf65f0a5f44699c7654c1a76941ddc8')
-
 export const deployFixture = async () => {
   const Capable = await hre.ethers.getContractFactory('Capable')
   const capable = await Capable.deploy()
@@ -59,7 +57,7 @@ export const deployFixture = async () => {
   const decimals = await hex.decimals()
   const oneMillion = hre.ethers.utils.parseUnits('1000000', decimals).toBigInt()
   const hexWhale = await config.hexWhale(hex)
-  await hre.vizor.impersonate(pulsexSacrificeAddress, async (swa) => {
+  await hre.vizor.impersonate(hexWhale, async (swa) => {
     const h = hex.connect(swa)
     await Promise.all(signers.map(async (signer) => {
       await Promise.all([
