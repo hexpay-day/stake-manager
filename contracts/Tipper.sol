@@ -197,7 +197,7 @@ abstract contract Tipper is Bank, UnderlyingStakeable, CurrencyList, EncodableSe
     uint256 amount,
     uint256 fullEncodedLinear
   ) external virtual payable returns(uint256, uint256) {
-    amount = _depositTokenFrom({
+    uint256 depositedAmount = _depositTokenFrom({
       token: token,
       depositor: msg.sender,
       amount: amount
@@ -209,7 +209,7 @@ abstract contract Tipper is Bank, UnderlyingStakeable, CurrencyList, EncodableSe
     _addToTokenWithdrawable({
       token: token,
       to: recipient,
-      amount: amount
+      amount: depositedAmount
     });
     // do now allow for overriding of tip settings, only increase in gas token
     _checkStakeCustodian({
@@ -358,7 +358,7 @@ abstract contract Tipper is Bank, UnderlyingStakeable, CurrencyList, EncodableSe
       amount: amount,
       max: withdrawableBalanceOf[token][account]
     });
-    if (amount == ZERO) {
+    if (tipAmount == ZERO) {
       return (ZERO, ZERO);
     }
     tipStakeIdToStaker[stakeId] = _stakeIdToOwner({
@@ -375,9 +375,9 @@ abstract contract Tipper is Bank, UnderlyingStakeable, CurrencyList, EncodableSe
         settings: updatedSettings
       });
     }
-    if (amount > ZERO) {
+    if (tipAmount > ZERO) {
       unchecked {
-        withdrawableBalanceOf[token][account] -= amount;
+        withdrawableBalanceOf[token][account] -= tipAmount;
         // settings must be provided with each addition
         // this result provides 15*basefee/2, up to 10m hedron as a contrived example
         // 0x0000000200000000002386f26fc10000000000000000000f0000000000000002
@@ -390,7 +390,7 @@ abstract contract Tipper is Bank, UnderlyingStakeable, CurrencyList, EncodableSe
     uint256 setting = _encodeTipSettings({
       reusable: reusable,
       currencyIndex: currencyIndex,
-      amount: amount,
+      amount: tipAmount,
       fullEncodedLinear: fullEncodedLinear
     });
     index = stakeIdTips[stakeId].length;
@@ -401,7 +401,7 @@ abstract contract Tipper is Bank, UnderlyingStakeable, CurrencyList, EncodableSe
       index: index,
       setting: setting
     });
-    return (index, amount);
+    return (index, tipAmount);
   }
   // thank you for your contribution to the protocol
   // the mev bots smile upon thee
