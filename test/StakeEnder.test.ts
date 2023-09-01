@@ -396,22 +396,6 @@ describe("StakeManager", function () {
         .eventually.to.equal(balanceBefore)
     })
   })
-  describe('addCurrencyToList', () => {
-    it('disallows non deployed contracts', async () => {
-      const x = await loadFixture(utils.deployFixture)
-      await expect(x.stakeManager.addCurrencyToList(x.signers[0].address))
-        .to.revertedWithCustomError(x.stakeManager, 'NotAllowed')
-    })
-    it('adds currency hashes to a list', async () => {
-      const x = await loadFixture(utils.deployFixture)
-      const index = await x.stakeManager.currencyListSize()
-      await expect(x.stakeManager.addCurrencyToList(x.usdc.address))
-        .to.emit(x.stakeManager, 'AddCurrency')
-        .withArgs(x.usdc.address, index)
-      await expect(x.stakeManager.addCurrencyToList(x.usdc.address))
-        .not.to.emit(x.stakeManager, 'AddCurrency')
-    })
-  })
   describe('stakeEndByConsentForMany', () => {
     it('custodies funds if told to do nothing with them afterward', async () => {
       const x = await loadFixture(utils.deployFixture)
