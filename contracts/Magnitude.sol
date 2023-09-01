@@ -4,8 +4,6 @@ pragma solidity =0.8.18;
 import { Utils } from "./Utils.sol";
 import { UnderlyingStakeable } from "./UnderlyingStakeable.sol";
 
-import "hardhat/console.sol";
-
 contract Magnitude is Utils {
   uint256 constant internal MULTIPLIER = TWO;
   function _computeDayMagnitude(
