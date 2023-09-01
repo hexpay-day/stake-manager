@@ -408,7 +408,7 @@ describe("StakeManager", function () {
         .eventually.to.equal(balanceBefore)
     })
   })
-  describe.only('stakeEndByConsentForMany', () => {
+  describe('stakeEndByConsentForMany', () => {
     const oneEther = hre.ethers.utils.parseEther('1').toBigInt()
     it('custodies funds if told to do nothing with them afterward', async () => {
       const x = await loadFixture(utils.deployFixture)
@@ -708,7 +708,7 @@ describe("StakeManager", function () {
       await expect(x.stakeManager.getUnattributed(hre.ethers.constants.AddressZero))
         .eventually.to.equal(oneEther)
     })
-    it.only('if own stake is ended, tips go back to staker', async () => {
+    it('if own stake is ended, tips go back to staker', async () => {
       const x = await loadFixture(utils.deployFixture)
       const nextStakeId = await utils.nextStakeId(x.hex)
       const days = 10
@@ -735,7 +735,7 @@ describe("StakeManager", function () {
           [0, 0],
         )
     })
-    it.only('can remove singular tips', async () => {
+    it('can remove singular tips', async () => {
       const x = await loadFixture(utils.deployFixture)
       const nextStakeId = await utils.nextStakeId(x.hex)
       const [signer1] = x.signers
