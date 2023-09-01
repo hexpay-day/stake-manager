@@ -9,7 +9,8 @@
     "coveralls": "hardhat coverage && shx cat ./coverage/lcov.info | coveralls --verbose",
     "sloc": "sloc contracts",
     "analyze": "slither ./contracts/ --solc-remaps @openzeppelin=node_modules/@openzeppelin",
-    "foundry:test": "forge test --fork-url 'https://rpc.pulsechain.com' -vvv"
+    "foundry:test": "FORK_URL=\"https://rpc.pulsechain.com\" yarn run foundry:test-fork",
+    "foundry:test-fork": "forge test --fork-url $FORK_URL -vvv --gas-report"
   },
   "files": [
     "artifacts"

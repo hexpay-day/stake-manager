@@ -30,11 +30,13 @@ contract TestStakeManager is Test {
       impersonate = pulsexSacrificeMainnet;
     }
     vm.startPrank(impersonate);
-    for (uint256 i = 1; i <= 100; ++i) {
+    uint256 i = 1;
+    for (; i <= 100; ++i) {
       IERC20(hx).transfer(vm.addr(i), startingBalance);
     }
     vm.stopPrank();
-    for (uint256 i = 1; i <= 100; ++i) {
+    i = 1;
+    for (; i <= 100; ++i) {
       vm.startPrank(vm.addr(i));
       IERC20(hx).approve(address(stkMngr), type(uint256).max);
       vm.stopPrank();

@@ -7,7 +7,8 @@ import { Utils } from './Utils.sol';
 contract EarningsOracle is Utils {
   uint256 public immutable lastZeroDay;
   /**
-   * @dev this max constraint is very generous given that the sstore opcode costs ~20k gas at the time of writing
+   * @dev this max constraint is very generous given that
+   * the sstore opcode costs ~20k gas at the time of writing
    */
   uint256 public constant MAX_CATCH_UP_DAYS = 1_000;
   uint256 public constant MAX_UINT_128 = type(uint128).max;
@@ -194,16 +195,6 @@ contract EarningsOracle is Utils {
       startDay = size;
     }
     if (untilDay <= size) {
-      return (Total(totals[untilDay].payout, totals[untilDay].shares), untilDay);
-    }
-    return _storeDays({
-      startDay: startDay,
-      untilDay: untilDay
-    });
-  }
-  function storeDaysUntil(uint256 untilDay) external returns(Total memory total, uint256 day) {
-    uint256 startDay = totals.length;
-    if (untilDay <= startDay) {
       return (Total(totals[untilDay].payout, totals[untilDay].shares), untilDay);
     }
     return _storeDays({

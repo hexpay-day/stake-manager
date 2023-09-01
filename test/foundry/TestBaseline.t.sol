@@ -31,6 +31,9 @@ contract TestBaselineEnd1 is TestStakeManager {
   function _days() internal virtual pure returns(uint256) {
     return 1;
   }
+  function testBaselineManagedStart() public virtual {
+    _managedStakeStart(vm.addr(1), startingBalance / 10, _days());
+  }
   function testBaselineDirectEnd() public virtual {
     _directStakeEnd(vm.addr(1), 0, nextStakeId);
   }

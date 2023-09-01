@@ -4,6 +4,7 @@ import type {
   HardhatNetworkAccountsConfig,
   HardhatNetworkUserConfig,
   NetworkUserConfig,
+  SolcUserConfig,
 } from "hardhat/types";
 import * as fs from 'fs'
 import * as path from 'path'
@@ -139,10 +140,17 @@ const networks: Record<string, NetworkUserConfig> = {
     ...ethereum,
   },
 }
-const settings = {
+const settings: SolcUserConfig["settings"] = {
   optimizer: {
     enabled: true,
     runs: 200,
+    details: {
+      yul: true,
+      yulDetails: {
+        stackAllocation: true,
+        optimizerSteps: 'dhfoDgvulfnTUtnIf',
+      },
+    },
   },
 }
 

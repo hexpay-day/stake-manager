@@ -190,20 +190,18 @@ describe('EarningsOracle.sol', () => {
         await expect(x.oracle.totalsCount())
           .eventually.to.equal(10)
       })
-    })
-    describe('storeDaysUntil', () => {
       it('collects until the provided day', async () => {
         const previousSize = await x.oracle.totalsCount()
         const startDay = previousSize.toBigInt()
         const rangeSize = 10n
-        await x.oracle.storeDaysUntil(startDay + rangeSize)
+        await x.oracle.storeDays(0, startDay + rangeSize)
         await expect(x.oracle.totalsCount())
           .eventually.to.equal(startDay + rangeSize)
       })
       it('does not collect if the requisite day has passed', async () => {
         await expect(x.oracle.totalsCount())
           .eventually.to.equal(10)
-        await x.oracle.storeDaysUntil(8)
+        await x.oracle.storeDays(0, 8)
         await expect(x.oracle.totalsCount())
           .eventually.to.equal(10)
       })
