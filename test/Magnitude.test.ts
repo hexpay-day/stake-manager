@@ -22,6 +22,11 @@ describe('Magnitude.sol', () => {
     isAutoStake: false,
   }
   describe('computeDayMagnitude', () => {
+    it('limited by first arg', async () => {
+      const x = await loadFixture(utils.deployFixture)
+      await expect(x.stakeManager.computeMagnitude(100, 1, 1001, 1002, principle))
+        .eventually.to.equal(100)
+    })
     it('0: always returns zero', async () => {
       const x = await loadFixture(utils.deployFixture)
       await expect(x.stakeManager.computeDayMagnitude(noLimit, 0, 100, 100, stake.lockedDay, stake.stakedDays))
@@ -64,6 +69,11 @@ describe('Magnitude.sol', () => {
     })
   })
   describe('computeMagnitude', () => {
+    it('limited by first arg', async () => {
+      const x = await loadFixture(utils.deployFixture)
+      await expect(x.stakeManager.computeMagnitude(100, 1, 1001, 1002, principle))
+        .eventually.to.equal(100)
+    })
     it('handles inverted y\'s', async () => {
       const x = await loadFixture(utils.deployFixture)
       // because y2 < y1, only offset remains
