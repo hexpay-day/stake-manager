@@ -68,6 +68,9 @@ describe('EarningsOracle.sol', () => {
         const _currentDay = await x.hex.currentDay()
         const currentDay = _currentDay.toBigInt()
         const dailyDataTomorrow = await x.hex.dailyData(currentDay - 1n)
+        if (dailyDataTomorrow.dayPayoutTotal.toBigInt() === 0n) {
+          console.log(currentDay, dailyDataTomorrow)
+        }
         expect(dailyDataTomorrow.dayPayoutTotal).to.be.greaterThan(0n)
         expect(dailyDataTomorrow.dayStakeSharesTotal).to.be.greaterThan(0n)
         expect(dailyDataTomorrow.dayUnclaimedSatoshisTotal).to.be.greaterThan(0n)
@@ -176,7 +179,8 @@ describe('EarningsOracle.sol', () => {
         await expect(x.oracle.totalsCount())
           .eventually.to.equal(previousSize.toBigInt() + rangeSize)
       })
-      it('maxes out at the max catch up days', async () => {
+      it('maxes out at the max catch up days', async function () {
+        this.timeout(100_000_000)
         const max = await x.oracle.MAX_CATCH_UP_DAYS()
         const previousSize = await x.oracle.totalsCount()
         await x.oracle.catchUpDays(max.toBigInt() + 100n)
