@@ -87,9 +87,6 @@ contract EarningsOracle is Utils {
    * @dev the _total arg must be handled internally - cannot be passed from external
    */
   function _storeDay(uint256 day, Total memory _total) internal returns(Total memory total) {
-    if (totals.length != day) {
-      revert NotAllowed();
-    }
     (
       uint256 dayPayoutTotal,
       uint256 dayStakeSharesTotal,
@@ -104,7 +101,7 @@ contract EarningsOracle is Utils {
     (uint256 payout, uint256 shares) = _readTotals(day, _total);
     return _saveDay(dayPayoutTotal + payout, dayStakeSharesTotal + shares);
   }
-  function _readTotals(uint256 day, Total memory _total) internal returns(uint256 payout, uint256 shares) {
+  function _readTotals(uint256 day, Total memory _total) internal view returns(uint256 payout, uint256 shares) {
     (payout, shares) = (_total.payout, _total.shares);
     if (payout == ZERO && shares == ZERO && day > ZERO) {
       TotalStore memory prev = totals[day - ONE];
@@ -139,6 +136,9 @@ contract EarningsOracle is Utils {
    * @param day the day to store
    */
   function storeDay(uint256 day) external returns(Total memory total) {
+    if (totals.length != day) {
+      revert NotAllowed();
+    }
     return _storeDay({
       day: day,
       _total: Total(0, 0)
@@ -164,29 +164,19 @@ contract EarningsOracle is Utils {
    * @param untilDay the day to stop storing day information
    */
   function _storeDays(uint256 startDay, uint256 untilDay) internal returns(Total memory total, uint256 day) {
-    // uint256[] memory range = IHEX(TARGET).dailyDataRange(startDay, untilDay);
-    // uint256 len = range.length;
-    // uint256 i;
-    // do {
-    //   (dayPayoutTotal, dayStakeSharesTotal) = _readTotals(startDay, total);
-    //   total = _saveDay(
-    //     dayPayoutTotal + uint72(range[i] << ONE_44),
-    //     dayStakeSharesTotal + uint72(range[i] << SEVENTY_TWO)
-    //   );
-    //   unchecked { ++i; ++startDay; }
-    // } while (i < len);
-    if (startDay < untilDay) {
-      do {
-        total = _storeDay({
-          day: startDay,
-          _total: total
-        });
-        unchecked {
-          ++startDay;
-        }
-      } while (startDay < untilDay);
-    }
-    return (total, startDay);
+    uint256[] memory range = IHEX(TARGET).dailyDataRange(startDay, untilDay);
+    uint256 len = range.length;
+    uint256 payout;
+    uint256 shares;
+    uint256 i;
+    do {
+      (payout, shares) = _readTotals(startDay, total);
+      payout += uint72(range[i]);
+      shares += uint72(range[i] >> SEVENTY_TWO);
+      total = _saveDay(payout, shares);
+      unchecked { ++i; ++startDay; }
+    } while (i < len);
+    return (Total(payout, shares), startDay);
   }
   /**
    * store a range of day payout information. range is not constrained by max catch up days constant
@@ -196,6 +186,9 @@ contract EarningsOracle is Utils {
    * @param untilDay the day to stop storing day information. Until day is inclusive
    */
   function storeDays(uint256 startDay, uint256 untilDay) external returns(Total memory total, uint256 day) {
+    if (totals.length != startDay) {
+      revert NotAllowed();
+    }
     return _storeDays({
       startDay: startDay,
       untilDay: untilDay
@@ -208,16 +201,16 @@ contract EarningsOracle is Utils {
   function catchUpDays(uint256 iterations) external returns(Total memory total, uint256 day) {
     // constrain by gas costs
     iterations = iterations > MAX_CATCH_UP_DAYS ? MAX_CATCH_UP_DAYS : iterations;
-    uint256 startDay = totals.length;
+    uint256 size = totals.length;
     // add startDay to range size
-    iterations += startDay;
-    // constrain by startDay
+    iterations += size;
+    // constrain by size
     uint256 limit = IHEX(TARGET).currentDay();
-    if (iterations == startDay || iterations > limit) {
+    if (iterations == size || iterations > limit) {
       iterations = limit;
     }
     return _storeDays({
-      startDay: startDay,
+      startDay: size,
       // iterations is used as untilDay to reduce number of variables in stack
       untilDay: iterations
     });

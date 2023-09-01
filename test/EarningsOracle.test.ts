@@ -69,7 +69,6 @@ describe('EarningsOracle.sol', () => {
         const currentDay = _currentDay.toBigInt()
         const dailyDataTomorrow = await x.hex.dailyData(currentDay - 1n)
         if (dailyDataTomorrow.dayPayoutTotal.toBigInt() === 0n) {
-          console.log(currentDay, dailyDataTomorrow)
         }
         expect(dailyDataTomorrow.dayPayoutTotal).to.be.greaterThan(0n)
         expect(dailyDataTomorrow.dayStakeSharesTotal).to.be.greaterThan(0n)
@@ -167,6 +166,7 @@ describe('EarningsOracle.sol', () => {
         const startDay = previousSize.toBigInt()
         const rangeSize = 10n
         await x.oracle.storeDays(startDay, startDay + rangeSize)
+        const size = await x.oracle.totalsCount()
         await expect(x.oracle.totalsCount())
           .eventually.to.equal(startDay + rangeSize)
       })
