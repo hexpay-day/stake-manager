@@ -51,6 +51,42 @@ describe('EncodableSettings.sol', () => {
         .eventually.to.equal(1)
     })
   })
+  describe('encode/decodeConsentAbilities', () => {
+    it('can encode and decode consent abilities', async () => {
+      const x = await loadFixture(utils.deployFixture)
+      const abilities = {
+        hasExternalTips: false,
+        copyExternalTips: true,
+        stakeIsTransferrable: false,
+        shouldSendTokensToStaker: true,
+        canMintHedronAtEnd: false,
+        canMintHedron: true,
+        canEarlyStakeEnd: false,
+        canStakeEnd: true,
+      }
+      const encoded = await x.stakeManager.encodeConsentAbilities(abilities)
+      await expect(x.stakeManager.isCapable(encoded, 7)).eventually.to.equal(false)
+      await expect(x.stakeManager.isCapable(encoded, 6)).eventually.to.equal(true)
+      await expect(x.stakeManager.isCapable(encoded, 5)).eventually.to.equal(false)
+      await expect(x.stakeManager.isCapable(encoded, 4)).eventually.to.equal(true)
+      await expect(x.stakeManager.isCapable(encoded, 3)).eventually.to.equal(false)
+      await expect(x.stakeManager.isCapable(encoded, 2)).eventually.to.equal(true)
+      await expect(x.stakeManager.isCapable(encoded, 1)).eventually.to.equal(false)
+      await expect(x.stakeManager.isCapable(encoded, 0)).eventually.to.equal(true)
+      const decodedAbilitiesResult = Object.assign([
+        abilities.canStakeEnd,
+        abilities.canEarlyStakeEnd,
+        abilities.canMintHedron,
+        abilities.canMintHedronAtEnd,
+        abilities.shouldSendTokensToStaker,
+        abilities.stakeIsTransferrable,
+        abilities.copyExternalTips,
+        abilities.hasExternalTips,
+      ], abilities)
+      await expect(x.stakeManager.decodeConsentAbilities(encoded))
+        .eventually.to.deep.equal(decodedAbilitiesResult)
+    })
+  })
   describe('updateSettingsEncoded', () => {
     it('can update settings', async () => {
       const x = await loadFixture(utils.deployFixture)

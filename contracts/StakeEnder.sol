@@ -192,8 +192,6 @@ contract StakeEnder is Magnitude, SingletonHedronManager {
         amount: delta
       });
     }
-    // execute tips after we know that the stake can be ended
-    // but before hedron is added to the withdrawable mapping
     if (_isCapable({
       setting: setting,
       index: INDEX_HAS_EXTERNAL_TIPS
