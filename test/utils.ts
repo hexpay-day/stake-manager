@@ -115,11 +115,15 @@ export const nextStakeId = async (x: Awaited<ReturnType<typeof deployFixture>>) 
 }
 
 export const endOfBaseFixture = async () => {
+  return await endOfBaseFixtureOffset()()
+}
+
+export const endOfBaseFixtureOffset = (offset = 0) => async function a() {
   const x = await loadFixture(deployFixture)
   const currentDay = await x.hex.currentDay()
   const stake = await x.hex.stakeLists(x.base, 0)
   const endDay = stake.stakedDays + stake.lockedDay
-  const daysToEnd = endDay - currentDay.toNumber()
+  const daysToEnd = endDay - currentDay.toNumber() - offset
   await moveForwardDays(daysToEnd, x, 14)
   const GasReimberser = await hre.ethers.getContractFactory('GasReimberser')
   const gasReimberser = await GasReimberser.deploy(x.base)

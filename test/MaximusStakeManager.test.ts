@@ -15,6 +15,13 @@ describe('MaximusStakeManager.sol', () => {
         .to.emit(x.hex, 'StakeEnd')
         .withArgs(anyUint, anyUint, x.base, stake.stakeId)
     })
+    it('canot end early', async () => {
+      const x = await loadFixture(utils.endOfBaseFixtureOffset(1))
+      const [, signerB] = x.signers
+      const stake = await x.hex.stakeLists(x.base, 0)
+      await expect(x.maximusStakeManager.stakeEndAs(signerB.address, x.base, stake.stakeId))
+        .not.to.emit(x.hex, 'StakeEnd')
+    })
     it('can only end perpetuals', async () => {
       const x = await loadFixture(utils.endOfBaseFixture)
       const [, signerB, signerC] = x.signers
