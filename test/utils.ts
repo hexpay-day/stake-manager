@@ -6,6 +6,7 @@ import * as hre from 'hardhat'
 import _ from "lodash"
 import * as ethers from 'ethers'
 import * as Chai from "chai"
+import * as config from '../src/config'
 
 Chai.Assertion.addMethod('printGasUsage', function (this: any) {
   let subject = this._obj
@@ -57,6 +58,7 @@ export const deployFixture = async () => {
   const maximusStakeManager = hsiStakeManager
   const decimals = await hex.decimals()
   const oneMillion = hre.ethers.utils.parseUnits('1000000', decimals).toBigInt()
+  const hexWhale = await config.hexWhale(hex)
   await hre.vizor.impersonate(pulsexSacrificeAddress, async (swa) => {
     const h = hex.connect(swa)
     await Promise.all(signers.map(async (signer) => {
@@ -87,6 +89,7 @@ export const deployFixture = async () => {
     usdcAddress,
     whales: {
       usdc: '0x55FE002aefF02F77364de339a1292923A15844B8',
+      hex: hexWhale,
     },
     stakedAmount,
     nextStakeId: stakeIdBN.toBigInt() + 1n,

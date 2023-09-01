@@ -2,6 +2,7 @@ import dotenv from 'dotenv'
 import { ethers } from 'ethers'
 dotenv.config()
 import * as yargs from 'yargs'
+import { IHEX } from '../artifacts/types'
 
 Error.stackTraceLimit = Infinity
 
@@ -44,9 +45,11 @@ export const args = yargs.options({
   },
 }).env().parseSync()
 
-export const hexWhale = (chainId: number) => {
-  return chainId === 369
-    ? ethers.utils.getAddress('0x5280aa3cF5D6246B8a17dFA3D75Db26617B73937')
-    // works for #1+#943
-    : ethers.utils.getAddress('0x075e72a5edf65f0a5f44699c7654c1a76941ddc8')
+export const hexWhale = async (hex: IHEX) => {
+  const pulsechainMainnetHexWhale = ethers.utils.getAddress('0x5280aa3cF5D6246B8a17dFA3D75Db26617B73937')
+  const ethereumMainnetHexWhale = ethers.utils.getAddress('0x075e72a5edf65f0a5f44699c7654c1a76941ddc8')
+  const whaleBalanceOf = await hex.balanceOf(pulsechainMainnetHexWhale)
+  return whaleBalanceOf.toBigInt() > ethers.utils.parseUnits('1000000', 8).toBigInt()
+    ? pulsechainMainnetHexWhale
+    : ethereumMainnetHexWhale
 }
