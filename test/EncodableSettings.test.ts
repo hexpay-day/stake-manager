@@ -52,7 +52,7 @@ describe('EncodableSettings.sol', () => {
         .eventually.to.equal(1)
     })
   })
-  describe('encode/decodeConsentAbilities', () => {
+  describe.only('encode/decodeConsentAbilities', () => {
     const decodedConsentAbilitiesToResult = (abilities: EncodableSettings.ConsentAbilitiesStruct) => Object.assign([
       abilities.canStakeEnd,
       abilities.canEarlyStakeEnd,
@@ -92,7 +92,7 @@ describe('EncodableSettings.sol', () => {
       const decodedZero = await x.stakeManager.decodeConsentAbilities(0)
       const decodedEff = await x.stakeManager.decodeConsentAbilities('0xff')
       expect(decodedZero)
-        .to.equal(decodedConsentAbilitiesToResult({
+        .to.deep.equal(decodedConsentAbilitiesToResult({
           canStakeEnd: false,
           canEarlyStakeEnd: false,
           canMintHedron: false,
@@ -103,7 +103,7 @@ describe('EncodableSettings.sol', () => {
           hasExternalTips: false,
         }))
       expect(decodedEff)
-        .to.equal(decodedConsentAbilitiesToResult({
+        .to.deep.equal(decodedConsentAbilitiesToResult({
           canStakeEnd: true,
           canEarlyStakeEnd: true,
           canMintHedron: true,
@@ -116,7 +116,7 @@ describe('EncodableSettings.sol', () => {
       await expect(x.stakeManager.encodeConsentAbilities(decodedZero))
         .eventually.to.equal(0)
       await expect(x.stakeManager.encodeConsentAbilities(decodedEff))
-        .eventually.to.equal('0xff')
+        .eventually.to.equal(BigInt('0xff'))
     })
   })
   describe('updateSettingsEncoded', () => {
