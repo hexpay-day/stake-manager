@@ -176,6 +176,13 @@ describe('EarningsOracle.sol', () => {
         await expect(x.oracle.totalsCount())
           .eventually.to.equal(previousSize.toBigInt() + rangeSize)
       })
+      it('maxes out at the max catch up days', async () => {
+        const max = await x.oracle.MAX_CATCH_UP_DAYS()
+        const previousSize = await x.oracle.totalsCount()
+        await x.oracle.catchUpDays(max.toBigInt() + 100n)
+        await expect(x.oracle.totalsCount())
+          .eventually.to.equal(previousSize.toBigInt() + max.toBigInt())
+      })
     })
     describe('payoutDeltaTrucated', () => {
       it('gives a minimum value that should have been claimable by the range for a given magnitude', async function () {

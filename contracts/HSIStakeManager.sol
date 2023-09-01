@@ -59,7 +59,7 @@ contract HSIStakeManager is StakeEnder {
   function _hsiAddressToId(address hsiAddress) internal view returns(uint256) {
     return _getStake({
       custodian: hsiAddress,
-      index: 0
+      index: ZERO
     }).stakeId;
   }
   function withdrawHsi(address hsiAddress) external returns(uint256 tokenId) {
@@ -74,7 +74,7 @@ contract HSIStakeManager is StakeEnder {
     uint256 tipCount = _stakeIdTipSize({
       stakeId: stakeId
     });
-    if (tipCount > 0) {
+    if (tipCount > ZERO) {
       uint256 i;
       uint256[] memory indexes = new uint256[](tipCount);
       do {
@@ -121,10 +121,10 @@ contract HSIStakeManager is StakeEnder {
     // we are only testing existance because we do not have
     // the underlying stake index
     address hsiAddress = address(uint160(stakeId));
-    if (_stakeCount({ staker: hsiAddress }) == 1) {
+    if (_stakeCount({ staker: hsiAddress }) == ONE) {
       stake = _getStake({
         custodian: hsiAddress,
-        index: 0
+        index: ZERO
       });
     }
   }
@@ -147,7 +147,6 @@ contract HSIStakeManager is StakeEnder {
         owner: movedOwner
       });
     }
-    stakeIdInfo[stakeId] = 0;
   }
   function _stakeStartFor(
     address staker,

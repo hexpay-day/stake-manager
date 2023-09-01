@@ -188,9 +188,6 @@ contract StakeEnder is Magnitude, SingletonHedronManager {
         amount: delta
       });
     }
-    // skip logging because it will be zero forever
-    // use stake end event as means of determining zeroing out
-    stakeIdToSettings[stakeId] = ZERO;
     // execute tips after we know that the stake can be ended
     // but before hedron is added to the withdrawable mapping
     if (_isCapable({
@@ -231,5 +228,13 @@ contract StakeEnder is Magnitude, SingletonHedronManager {
         ++i;
       }
     } while(i < len);
+  }
+  function _stakeEnd(
+    uint256 stakeIndex, uint256 stakeId, uint256 stakeCountAfter
+  ) internal virtual override returns(uint256) {
+    if (stakeIdToSettings[stakeId] > ZERO) {
+      stakeIdToSettings[stakeId] = ZERO;
+    }
+    return super._stakeEnd(stakeIndex, stakeId, stakeCountAfter);
   }
 }
