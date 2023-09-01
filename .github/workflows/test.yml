@@ -42,13 +42,13 @@ jobs:
       - name: Run build (+lint)
         run: yarn run build
 
-      - name: Cache Hardhat
-        uses: actions/cache@v3
-        with:
-          path: ./cache_hardhat
-          key: ${{ runner.OS }}-${{ matrix.node }}-hardhat-cache-${{ env.CHAIN }}-${{ env.BLOCK_NUMBER }}
-          restore-keys: |
-            ${{ runner.OS }}-${{ matrix.node }}-hardhat-cache-${{ env.CHAIN }}-${{ env.BLOCK_NUMBER }}
+      # - name: Cache Hardhat
+      #   uses: actions/cache@v3
+      #   with:
+      #     path: ./cache_hardhat
+      #     key: ${{ runner.OS }}-${{ matrix.node }}-hardhat-cache-${{ env.CHAIN }}-${{ env.BLOCK_NUMBER }}
+      #     restore-keys: |
+      #       ${{ runner.OS }}-${{ matrix.node }}-hardhat-cache-${{ env.CHAIN }}-${{ env.BLOCK_NUMBER }}
 
       # - uses: 721labs/hardhat-session-action@main
       #   id: start-session
