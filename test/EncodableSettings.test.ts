@@ -52,7 +52,7 @@ describe('EncodableSettings.sol', () => {
         .eventually.to.equal(1)
     })
   })
-  describe.only('encode/decodeConsentAbilities', () => {
+  describe('encode/decodeConsentAbilities', () => {
     const decodedConsentAbilitiesToResult = (abilities: EncodableSettings.ConsentAbilitiesStruct) => Object.assign([
       abilities.canStakeEnd,
       abilities.canEarlyStakeEnd,
