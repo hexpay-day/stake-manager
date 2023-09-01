@@ -44,15 +44,31 @@ describe('HSIStakeManager.sol', () => {
         .to.emit(x.hsim, 'HSIDetokenize')
       const currencyIndex = await x.stakeManager.currencyListSize()
       const amount = hre.ethers.utils.parseUnits('10', await x.usdc.decimals()).toBigInt()
-      const tipSettings = await x.hsiStakeManager.encodeTipSettings(currencyIndex, amount, 1, 1)
+      const encodedLinear = await x.hsiStakeManager.encodedLinearWithMethod(
+        0,
+        0, 1,
+        0, 1,
+        0, 0
+      )
+      const tipSettings = await x.hsiStakeManager.encodeTipSettings(false, currencyIndex, amount, encodedLinear)
       const stakeId = await x.hsiStakeManager.hsiAddressToId(x.hsiTargets[0].hsiAddress)
       await x.hsiStakeManager.addCurrencyToList(x.usdc.address)
       await utils.leechUsdc(amount, x.signers[0].address, x)
       await x.usdc.approve(x.hsiStakeManager.address, amount)
-      await expect(x.hsiStakeManager.depositAndAddTipToStake(x.usdc.address, stakeId, amount, 1, 1))
+      await expect(x.hsiStakeManager.depositAndAddTipToStake(false, x.usdc.address, stakeId, amount, encodedLinear))
         .to.revertedWithCustomError(x.hsiStakeManager, 'StakeNotCustodied')
         .withArgs(stakeId)
-      await x.hsiStakeManager.depositAndAddTipToStake(x.usdc.address, x.hsiTargets[0].hsiAddress, amount, 1, 1)
+      const encodedTip = await x.hsiStakeManager.encodeTipSettings(
+        false, currencyIndex,
+        amount, encodedLinear
+      )
+      await expect(x.hsiStakeManager.depositAndAddTipToStake(
+        false, x.usdc.address,
+        x.hsiTargets[0].hsiAddress, amount,
+        encodedLinear,
+      ))
+        .to.emit(x.hsiStakeManager, 'AddTip')
+        .withArgs(x.hsiTargets[0].hsiAddress, x.usdc.address, 0, encodedTip)
       const tx = await x.hsiStakeManager.withdrawHsi(x.hsiTargets[0].hsiAddress)
       await expect(tx)
         .to.emit(x.hsiStakeManager, 'RemoveTip')
@@ -259,7 +275,7 @@ describe('HSIStakeManager.sol', () => {
         .to.emit(x.hsim, 'Transfer')
         .to.emit(x.hsim, 'HSIDetokenize')
       await utils.moveForwardDays(30, x)
-      const nextStakeId = await utils.nextStakeId(x)
+      const nextStakeId = await utils.nextStakeId(x.hex)
       await expect(x.hsiStakeManager.connect(signer2).hsiStakeEndMany([x.hsiTargets[0].hsiAddress]))
         .to.emit(x.hex, 'StakeEnd')
         .withArgs(anyUint, anyUint, x.hsiTargets[0].hsiAddress, x.hsiTargets[0].stakeId)

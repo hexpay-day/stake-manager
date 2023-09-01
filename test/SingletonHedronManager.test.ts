@@ -74,7 +74,7 @@ describe('SingletonHedronManager.sol', () => {
         consentAbilities: await x.stakeManager.decodeConsentAbilities(parseInt('1101', 2)),
       }
       const [signerA, signerB] = x.signers
-      const nextStakeId = await utils.nextStakeId(x)
+      const nextStakeId = await utils.nextStakeId(x.hex)
       await x.stakeManager.connect(signerB).stakeStart(x.stakedAmount, 30)
       const stakeIds = x.stakeIds.concat(nextStakeId)
       const signerAUpdateSettings = await Promise.all(x.stakeIds.map(async (stakeId) => (

@@ -7,6 +7,7 @@ import _ from "lodash"
 import * as ethers from 'ethers'
 import * as Chai from "chai"
 import * as config from '../src/config'
+import { IERC20, IERC20Metadata } from "../artifacts/types"
 
 Chai.Assertion.addMethod('printGasUsage', function (this: any) {
   let subject = this._obj
@@ -81,7 +82,7 @@ export const deployFixture = async () => {
   const base = '0xe9f84d418B008888A992Ff8c6D22389C2C3504e0'
   const stakedAmount = oneMillion / 10n
   const usdcAddress = '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48'
-  const usdc = await hre.ethers.getContractAt('@openzeppelin/contracts/token/ERC20/ERC20.sol:ERC20', usdcAddress)
+  const usdc = await hre.ethers.getContractAt('@openzeppelin/contracts/token/ERC20/ERC20.sol:ERC20', usdcAddress) as IERC20Metadata
   return {
     usdc,
     usdcAddress,
@@ -109,8 +110,8 @@ export const deployFixture = async () => {
   }
 }
 
-export const nextStakeId = async (x: Awaited<ReturnType<typeof deployFixture>>) => {
-  const [, , , , , , stakeIdBN] = await x.hex.globalInfo()
+export const nextStakeId = async (hex: IHEX) => {
+  const [, , , , , , stakeIdBN] = await hex.globalInfo()
   return stakeIdBN.toBigInt() + 1n
 }
 
@@ -176,7 +177,7 @@ export const stakeSingletonBagAndWait = async () => {
 export const deployAndProcureHSIFixture = async () => {
   const x = await loadFixture(deployFixture)
   const [signerA] = x.signers
-  const nxtStkId = await nextStakeId(x)
+  const nxtStkId = await nextStakeId(x.hex)
 
   await x.hsim.hexStakeStart(x.stakedAmount, 29)
   await x.hsim.hexStakeStart(x.stakedAmount, 59)
@@ -216,7 +217,10 @@ export const deployAndProcureHSIFixture = async () => {
   }
 }
 
-type X = Awaited<ReturnType<typeof deployFixture>>
+interface X {
+  hex: IHEX;
+  signers: SignerWithAddress[];
+}
 
 export const moveForwardDays = async (
   limit: number,
@@ -248,7 +252,14 @@ export const toBytes32 = (addr: string) => hre.ethers.utils.hexZeroPad(addr.toLo
 
 export const deadline = () => Math.floor(_.now() / 1000) + 100
 
-export const leechUsdc = async (amount: bigint, to: string, x: X) => {
+type LeechUSDC = {
+  whales: {
+    usdc: string;
+  }
+  usdc: IERC20;
+}
+
+export const leechUsdc = async (amount: bigint, to: string, x: LeechUSDC) => {
   await hre.vizor.impersonate(x.whales.usdc, async (swa) => {
     await x.usdc.connect(swa).transfer(to, amount)
   })

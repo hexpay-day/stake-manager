@@ -9,7 +9,7 @@ describe('Multicall.sol', () => {
   describe('multicallWithDeadline', () => {
     it('runs multiple external functions in 1 tx but not after deadline', async () => {
       const x = await loadFixture(utils.deployFixture)
-      const nextStakeId = await utils.nextStakeId(x)
+      const nextStakeId = await utils.nextStakeId(x.hex)
       const latestTime = await time.latest()
       const stakeStartData = [
         x.stakeManager.interface.encodeFunctionData('stakeStart', [x.stakedAmount, 30]),
@@ -32,7 +32,7 @@ describe('Multicall.sol', () => {
   describe('multicallWithPreviousBlockHash', () => {
     it('runs multiple external functions in 1 tx but only after provided block hash', async () => {
       const x = await loadFixture(utils.deployFixture)
-      const nextStakeId = await utils.nextStakeId(x)
+      const nextStakeId = await utils.nextStakeId(x.hex)
       const stakeStartData = [
         x.stakeManager.interface.encodeFunctionData('stakeStart', [x.stakedAmount, 30]),
         x.stakeManager.interface.encodeFunctionData('stakeStart', [x.stakedAmount, 60]),

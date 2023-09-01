@@ -144,13 +144,13 @@ const settings: SolcUserConfig["settings"] = {
   optimizer: {
     enabled: true,
     runs: 200,
-    details: {
-      yul: true,
-      yulDetails: {
-        stackAllocation: true,
-        optimizerSteps: 'dhfoDgvulfnTUtnIf',
-      },
-    },
+    // details: {
+    //   yul: true,
+    //   yulDetails: {
+    //     stackAllocation: true,
+    //     optimizerSteps: 'dhfoDgvulfnTUtnIf',
+    //   },
+    // },
   },
 }
 

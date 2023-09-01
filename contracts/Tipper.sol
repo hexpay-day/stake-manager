@@ -1,17 +1,22 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity =0.8.18;
 
-import "./UnderlyingStakeable.sol";
-import "./Bank.sol";
-import "./CurrencyList.sol";
-import "./EncodableSettings.sol";
+import { UnderlyingStakeable } from "./UnderlyingStakeable.sol";
+import { Bank } from "./Bank.sol";
+import { CurrencyList } from "./CurrencyList.sol";
+import { EncodableSettings } from "./EncodableSettings.sol";
+import { Magnitude } from "./Magnitude.sol";
 
-abstract contract Tipper is Bank, UnderlyingStakeable, CurrencyList, EncodableSettings {
+abstract contract Tipper is Bank, UnderlyingStakeable, CurrencyList, EncodableSettings, Magnitude {
+
+  uint256 internal constant INDEX_EXTERNAL_TIP_CURRENCY = 200;
+  uint256 internal constant INDEX_EXTERNAL_TIP_CURRENCY_ONLY = INDEX_EXTERNAL_TIP_CURRENCY + ONE;
+  uint256 internal constant INDEX_EXTERNAL_TIP_LIMIT = SEVENTY_TWO; // 128 bits long
+  uint256 internal constant INDEX_EXTERNAL_TIP_METHOD = 64;
   constructor()
     Bank()
     UnderlyingStakeable()
     CurrencyList()
-    StakeInfo()
     EncodableSettings()
   {
     _addCurrencyToList(address(0));
@@ -55,28 +60,6 @@ abstract contract Tipper is Bank, UnderlyingStakeable, CurrencyList, EncodableSe
   function _stakeIdTipSize(uint256 stakeId) internal view returns(uint256) {
     return stakeIdTips[stakeId].length;
   }
-  function _checkAndExecTip(
-    uint256 stakeId,
-    address staker,
-    address token,
-    uint256 amount,
-    uint256 delta
-  ) internal returns(uint256) {
-    // because we do not set a var for you
-    // to collect unattributed tokens
-    // it must be done at the end
-    amount = amount > delta ? delta : amount;
-    unchecked {
-      delta = delta - amount;
-    }
-    emit Tip({
-      stakeId: stakeId,
-      staker: staker,
-      token: token,
-      amount: amount
-    });
-    return delta;
-  }
   function _executeTipList(uint256 stakeId, address staker, uint256 nextStakeId) internal {
     uint256 i;
     uint256 len = stakeIdTips[stakeId].length;
@@ -85,31 +68,35 @@ abstract contract Tipper is Bank, UnderlyingStakeable, CurrencyList, EncodableSe
     do {
       // tips get executed in reverse order so that the contract
       // can clean itself up (gas refund) as it goes along
-      tip = stakeIdTips[stakeId][len - 1 - i];
+      tip = stakeIdTips[stakeId][len - ONE - i];
       cachedTip = tip;
       stakeIdTips[stakeId].pop();
-      address token = indexToToken[tip >> 224];
-      uint256 limit;
+      uint256 idx = tip << ONE >> INDEX_EXTERNAL_TIP_CURRENCY_ONLY;
+      address token = indexToToken[idx];
+      bool reusable = (tip >> MAX_UINT8) == ONE;
       uint256 withdrawableBalance = withdrawableBalanceOf[token][staker];
-      if (uint128(tip) == 0) {
-        tip = uint96(tip >> 128);
-        limit = tip;
+      uint256 cachedWithdrawableBalance = withdrawableBalance;
+      uint256 limit = uint128(tip >> INDEX_EXTERNAL_TIP_LIMIT);
+      if (uint72(tip) == ZERO) {
+        // existance of a tip number allows us to use ZERO as simplest pathway
+        tip = limit;
       } else {
-        if (_isCapable({
-          setting: tip,
-          index: 127
-        })) {
-          // wants to use magnitude
+        uint256 method = uint8(tip >> INDEX_EXTERNAL_TIP_METHOD);
+        if (method > ZERO) { // requirement by computeMagnitude
+          tip = _computeMagnitude({
+            limit: limit,
+            method: uint8(tip >> INDEX_EXTERNAL_TIP_METHOD),
+            x: uint64(tip), // magnitude
+            y2: block.basefee,
+            y1: ZERO
+          });
         }
-        limit = uint96(tip >> 128);
-        tip = (uint64(tip >> 64) * block.basefee) / uint64(tip);
-        tip = _clamp(tip, limit);
         // this is a refund
         unchecked {
           withdrawableBalance += (limit - tip);
         }
       }
-      if (tip > 0) {
+      if (tip > ZERO) {
         emit Tip({
           stakeId: stakeId,
           staker: staker,
@@ -122,27 +109,31 @@ abstract contract Tipper is Bank, UnderlyingStakeable, CurrencyList, EncodableSe
           attributed[token] -= tip;
         }
       }
-      if (nextStakeId > 0) {
+      if (reusable && nextStakeId > ZERO) {
         limit = _clamp({
           amount: limit,
           max: withdrawableBalance
         });
         if (limit > 0) {
-          cachedTip = ((cachedTip >> 224) << 224) | (limit << 128) | uint128(cachedTip);
+          cachedTip = _encodeTipSettings(reusable, idx, limit, cachedTip);
           unchecked {
             withdrawableBalance -= limit;
           }
-          uint256 index = stakeIdTips[nextStakeId].length;
+          // we no longer need currency idx
+          // so this line takes it over / reuses it
+          idx = stakeIdTips[nextStakeId].length;
           stakeIdTips[nextStakeId].push(cachedTip);
           emit AddTip({
             stakeId: nextStakeId,
             token: token,
-            index: index,
+            index: idx,
             setting: cachedTip
           });
         }
       }
-      withdrawableBalanceOf[token][staker] = withdrawableBalance;
+      if (withdrawableBalance != cachedWithdrawableBalance) {
+        withdrawableBalanceOf[token][staker] = withdrawableBalance;
+      }
       unchecked {
         ++i;
       }
@@ -153,42 +144,58 @@ abstract contract Tipper is Bank, UnderlyingStakeable, CurrencyList, EncodableSe
    * how a tip should be executed
    * @param currencyIndex the index of the currency on the list
    * @param amount the number of tokens to delineate as tips
-   * @param numerator the numerator for ratio
-   * @param denominator the denominator of the ratio
+   * @param fullEncodedLinear the method+xyb function to use
    */
   function encodeTipSettings(
+    bool reusable,
     uint256 currencyIndex,
     uint256 amount,
-    uint256 numerator,
-    uint256 denominator
+    uint256 fullEncodedLinear
   ) external pure returns(uint256) {
     return _encodeTipSettings({
+      reusable: reusable,
       currencyIndex: currencyIndex,
       amount: amount,
-      numerator: numerator,
-      denominator: denominator
+      fullEncodedLinear: fullEncodedLinear
     });
   }
+  function encodedLinearWithMethod(
+    uint256 method,
+    uint256 xFactor,
+    int256 x,
+    uint256 yFactor,
+    uint256 y,
+    uint256 bFactor,
+    int256 b
+  ) external pure returns(uint256) {
+    (uint256 encodedMethod, uint256 magnitude) = _encodeLinear(
+      method,
+      xFactor, x,
+      yFactor, y,
+      bFactor, b
+    );
+    return (encodedMethod << INDEX_EXTERNAL_TIP_METHOD) | magnitude;
+  }
   function _encodeTipSettings(
+    bool reusable,
     uint256 currencyIndex,
     uint256 amount,
-    uint256 numerator,
-    uint256 denominator
+    uint256 fullEncodedLinear
   ) internal pure returns(uint256) {
-    if (numerator > 0 && denominator == 0) {
+    if (uint8(fullEncodedLinear >> INDEX_EXTERNAL_TIP_METHOD) == ZERO && fullEncodedLinear != ZERO) {
       revert NotAllowed();
     }
-    return (currencyIndex << 224)
-      | (amount << 128)
-      | (uint256(uint64(numerator)) << 64)
-      | uint256(uint64(denominator));
+    return uint256(reusable ? ONE : ZERO) << MAX_UINT8
+      | (uint256(currencyIndex) << INDEX_EXTERNAL_TIP_CURRENCY)
+      | (uint256(uint128(amount)) << INDEX_EXTERNAL_TIP_LIMIT)
+      | uint256(uint72(fullEncodedLinear));
   }
   function depositAndAddTipToStake(
+    bool reusable,
     address token,
     uint256 stakeId,
     uint256 amount,
-    uint256 numerator,
-    uint256 denominator
+    uint256 fullEncodedLinear
   ) external virtual payable returns(uint256, uint256) {
     amount = _depositTokenFrom({
       token: token,
@@ -209,12 +216,12 @@ abstract contract Tipper is Bank, UnderlyingStakeable, CurrencyList, EncodableSe
       stakeId: stakeId
     });
     return _addTipToStake({
+      reusable: reusable,
       token: token,
       account: recipient,
       stakeId: stakeId,
       amount: amount,
-      numerator: numerator,
-      denominator: denominator
+      fullEncodedLinear: fullEncodedLinear
     });
   }
   function removeTipFromStake(
@@ -252,16 +259,16 @@ abstract contract Tipper is Bank, UnderlyingStakeable, CurrencyList, EncodableSe
     do {
       uint256 index = indexes[i];
       uint256 tip = tips[index];
-      if (tipsLast > 0) {
+      if (tipsLast > ZERO) {
         tips[index] = tips[tipsLast];
       }
       tips.pop();
       // now do something with the tip
-      address token = address(indexToToken[tip >> 224]);
+      address token = address(indexToToken[tip >> INDEX_EXTERNAL_TIP_CURRENCY]);
       _addToTokenWithdrawable({
         token: token,
         to: staker,
-        amount: uint96(tip >> 128)
+        amount: uint96(tip >> INDEX_EXTERNAL_TIP_LIMIT)
       });
       emit RemoveTip({
         stakeId: stakeId,
@@ -286,17 +293,17 @@ abstract contract Tipper is Bank, UnderlyingStakeable, CurrencyList, EncodableSe
           // not whether or not to copy said list in subsequent stakes
           // should it exist again
           // in other words, copying remains in the hands of the staker
-          | (uint8(setting << ONE) >> ONE)
+          | (uint8(setting << TWO) >> TWO)
         )
       });
     }
   }
   function addTipToStake(
+    bool reusable,
     address token,
     uint256 stakeId,
     uint256 amount,
-    uint256 numerator,
-    uint256 denominator
+    uint256 fullEncodedLinear
   ) external virtual payable returns(uint256, uint256) {
     _verifyTipAmountAllowed({
       stakeId: stakeId,
@@ -307,17 +314,17 @@ abstract contract Tipper is Bank, UnderlyingStakeable, CurrencyList, EncodableSe
     });
     // deduct from sender account
     return _addTipToStake({
+      reusable: reusable,
       token: token,
       account: msg.sender,
       stakeId: stakeId,
       amount: amount,
-      numerator: numerator,
-      denominator: denominator
+      fullEncodedLinear: fullEncodedLinear
     });
   }
   function _verifyTipAmountAllowed(uint256 stakeId, uint256 amount) internal view returns(address recipient) {
     (, recipient) = _stakeIdToInfo(stakeId);
-    if (amount == 0 && msg.sender != recipient) {
+    if (amount == ZERO && msg.sender != recipient) {
       // cannot allow other people to take staker deposits
       revert NotAllowed();
     }
@@ -325,7 +332,7 @@ abstract contract Tipper is Bank, UnderlyingStakeable, CurrencyList, EncodableSe
   function _checkStakeCustodian(uint256 stakeId) internal virtual view {
     if (_stakeCount({
       staker: address(this)
-    }) == 0) {
+    }) == ZERO) {
       revert NotAllowed();
     }
     // cannot add a tip to a stake that has already ended
@@ -340,19 +347,19 @@ abstract contract Tipper is Bank, UnderlyingStakeable, CurrencyList, EncodableSe
     }
   }
   function _addTipToStake(
+    bool reusable,
     address token,
     address account,
     uint256 stakeId,
     uint256 amount,
-    uint256 numerator,
-    uint256 denominator
-  ) internal returns(uint256 encodedSettings, uint256) {
-    amount = _clamp({
+    uint256 fullEncodedLinear
+  ) internal returns(uint256 index, uint256 tipAmount) {
+    tipAmount = _clamp({
       amount: amount,
       max: withdrawableBalanceOf[token][account]
     });
-    if (amount < 1) {
-      return (0, 0);
+    if (amount == ZERO) {
+      return (ZERO, ZERO);
     }
     tipStakeIdToStaker[stakeId] = _stakeIdToOwner({
       stakeId: stakeId
@@ -361,14 +368,14 @@ abstract contract Tipper is Bank, UnderlyingStakeable, CurrencyList, EncodableSe
     // 0b00000001 | 0b10000000 => 0b10000001
     // 0b10000001 | 0b10000000 => 0b10000001
     uint256 currentSettings = stakeIdToSettings[stakeId];
-    uint256 updatedSettings = currentSettings | (1 << INDEX_HAS_EXTERNAL_TIPS);
+    uint256 updatedSettings = currentSettings | (ONE << INDEX_HAS_EXTERNAL_TIPS);
     if (updatedSettings != currentSettings) {
       _logSettingsUpdate({
         stakeId: stakeId,
         settings: updatedSettings
       });
     }
-    if (amount > 0) {
+    if (amount > ZERO) {
       unchecked {
         withdrawableBalanceOf[token][account] -= amount;
         // settings must be provided with each addition
@@ -377,16 +384,16 @@ abstract contract Tipper is Bank, UnderlyingStakeable, CurrencyList, EncodableSe
       }
     }
     uint256 currencyIndex = currencyToIndex[token];
-    if (currencyIndex == 0 && token != address(0)) {
+    if (currencyIndex == ZERO && token != address(0)) {
       revert NotAllowed();
     }
     uint256 setting = _encodeTipSettings({
+      reusable: reusable,
       currencyIndex: currencyIndex,
       amount: amount,
-      numerator: numerator,
-      denominator: denominator
+      fullEncodedLinear: fullEncodedLinear
     });
-    uint256 index = stakeIdTips[stakeId].length;
+    index = stakeIdTips[stakeId].length;
     stakeIdTips[stakeId].push(setting);
     emit AddTip({
       stakeId: stakeId,

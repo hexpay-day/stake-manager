@@ -85,12 +85,14 @@ contract StakeEnder is Magnitude, SingletonHedronManager {
           y1: ZERO
         });
         if (hedronTip > ZERO) {
-          hedronAmount = _checkAndExecTip({
+          unchecked {
+            hedronAmount = hedronAmount - hedronTip;
+          }
+          emit Tip({
             stakeId: stakeId,
             staker: staker,
             token: HEDRON,
-            amount: hedronTip,
-            delta: hedronAmount
+            amount: hedronTip
           });
         }
       }
@@ -123,12 +125,14 @@ contract StakeEnder is Magnitude, SingletonHedronManager {
           y1: stake.stakedHearts
         });
         if (targetTip > 0) {
-          delta = _checkAndExecTip({
+          unchecked {
+            delta = delta - targetTip;
+          }
+          emit Tip({
             stakeId: stakeId,
             staker: staker,
             token: TARGET,
-            amount: targetTip,
-            delta: delta
+            amount: targetTip
           });
         }
       }

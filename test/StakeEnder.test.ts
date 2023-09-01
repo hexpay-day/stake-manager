@@ -33,17 +33,29 @@ describe("StakeManager", function () {
   describe('encodeTipSettings/decodeTipSettings', () => {
     it('fails if 0 is provided as a denominator and numerator is non zero', async () => {
       const x = await loadFixture(utils.deployFixture)
+      const encodedLinear = await x.stakeManager.encodedLinearWithMethod(
+        0,
+        0, 1,
+        0, 1,
+        0, 0
+      )
       await expect(x.stakeManager.encodeTipSettings(
+        false,
         0,
         x.oneEther,
-        1,
-        1
+        encodedLinear
       )).not.to.reverted
+      const encodedLinearFailure = await x.stakeManager.encodedLinearWithMethod(
+        0,
+        0, 1,
+        0, 0,
+        0, 0
+      )
       await expect(x.stakeManager.encodeTipSettings(
+        false,
         0,
         x.oneEther,
-        1,
-        0
+        BigInt.asUintN(64, encodedLinearFailure.toBigInt())
       )).to.revertedWithCustomError(x.stakeManager, 'NotAllowed')
     })
   })
@@ -439,14 +451,14 @@ describe("StakeManager", function () {
       await x.stakeManager.updateSettings(x.nextStakeId, updatedSettings)
       await utils.moveForwardDays(4, x)
       let lastStakeId = x.nextStakeId
-      let nextStakeId = await utils.nextStakeId(x)
+      let nextStakeId = await utils.nextStakeId(x.hex)
       await expect(x.stakeManager.connect(signer2).stakeEndByConsentForMany([lastStakeId]))
         .to.emit(x.hex, 'StakeStart')
       await expect(x.stakeManager.withdrawableBalanceOf(x.hex.address, signer1.address))
         .eventually.to.be.equal(0)
       await utils.moveForwardDays(4, x)
       lastStakeId = nextStakeId
-      nextStakeId = await utils.nextStakeId(x)
+      nextStakeId = await utils.nextStakeId(x.hex)
       await expect(x.stakeManager.connect(signer2).stakeEndByConsentForMany([lastStakeId]))
         .to.emit(x.hex, 'StakeStart')
       await expect(x.stakeManager.withdrawableBalanceOf(x.hex.address, signer1.address))
@@ -462,7 +474,7 @@ describe("StakeManager", function () {
     })
     it('cannot update settings unless signer is staker', async () => {
       const x = await loadFixture(utils.deployFixture)
-      const nextStakeId = await utils.nextStakeId(x)
+      const nextStakeId = await utils.nextStakeId(x.hex)
       const days = 10
       const [signer1, signer2] = x.signers
       await x.stakeManager.stakeStartFromBalanceFor(signer1.address, x.stakedAmount, days, 0)
@@ -480,7 +492,7 @@ describe("StakeManager", function () {
     })
     it('allows staker to leave a tip', async () => {
       const x = await loadFixture(utils.deployFixture)
-      const nextStakeId = await utils.nextStakeId(x)
+      const nextStakeId = await utils.nextStakeId(x.hex)
       const days = 10
       const [signer1, signer2] = x.signers
       const defaultSettings = await x.stakeManager.defaultEncodedSettings()
@@ -518,7 +530,7 @@ describe("StakeManager", function () {
     })
     it('can leave the tip in the withdrawable mapping', async () => {
       const x = await loadFixture(utils.deployFixture)
-      const nextStakeId = await utils.nextStakeId(x)
+      const nextStakeId = await utils.nextStakeId(x.hex)
       const days = 10
       const [signer1, signer2] = x.signers
       const defaultSettings = await x.stakeManager.defaultEncodedSettings()
@@ -559,7 +571,7 @@ describe("StakeManager", function () {
     })
     it('leaves a tip for the ender', async () => {
       const x = await loadFixture(utils.deployFixture)
-      const nextStakeId = await utils.nextStakeId(x)
+      const nextStakeId = await utils.nextStakeId(x.hex)
       const days = 10
       const [signer1, signer2] = x.signers
       const defaultSettings = await x.stakeManager.defaultEncodedSettings()
@@ -567,7 +579,7 @@ describe("StakeManager", function () {
       await utils.moveForwardDays(days + 1, x)
       const oneEther = hre.ethers.utils.parseEther('1').toBigInt()
       const tipAmount = oneEther / 100n
-      await expect(x.stakeManager.depositAndAddTipToStake(hre.ethers.constants.AddressZero, nextStakeId, tipAmount, 0, 0, {
+      await expect(x.stakeManager.depositAndAddTipToStake(false, hre.ethers.constants.AddressZero, nextStakeId, tipAmount, 0, {
         value: tipAmount,
       }))
         .to.changeEtherBalances(
@@ -579,7 +591,7 @@ describe("StakeManager", function () {
       await expect(x.stakeManager.withdrawableBalanceOf(hre.ethers.constants.AddressZero, signer1.address))
         .eventually.to.equal(0)
       await expect(x.stakeManager.stakeIdTips(nextStakeId, 0))
-        .eventually.to.equal(tipAmount << 128n)
+        .eventually.to.equal(BigInt.asUintN(128, tipAmount << 72n))
       await expect(x.stakeManager.connect(signer2).multicall([
         x.stakeManager.interface.encodeFunctionData('stakeEndByConsent', [nextStakeId]),
         x.stakeManager.interface.encodeFunctionData('collectUnattributed', [
@@ -595,7 +607,7 @@ describe("StakeManager", function () {
     })
     it('allows for a basefee multiplier to be applied', async () => {
       const x = await loadFixture(utils.deployFixture)
-      const nextStakeId = await utils.nextStakeId(x)
+      const nextStakeId = await utils.nextStakeId(x.hex)
       const days = 10
       const [signer1, signer2] = x.signers
       const defaultSettings = await x.stakeManager.defaultEncodedSettings()
@@ -603,8 +615,14 @@ describe("StakeManager", function () {
       await utils.moveForwardDays(days + 1, x)
       const oneEther = hre.ethers.utils.parseEther('1').toBigInt()
       const tipAmount = oneEther / 100n
-      const encodedSettings = await x.stakeManager.encodeTipSettings(0, tipAmount, 360, 7)
-      await expect(x.stakeManager.depositAndAddTipToStake(hre.ethers.constants.AddressZero,nextStakeId, tipAmount, 360, 7, {
+      const encodedLinear = await x.stakeManager.encodedLinearWithMethod(
+        0, // method
+        0, 360, // x
+        0, 7, // y
+        0, 0 // b
+      )
+      const encodedSettings = await x.stakeManager.encodeTipSettings(false, 0, tipAmount, encodedLinear)
+      await expect(x.stakeManager.depositAndAddTipToStake(false, hre.ethers.constants.AddressZero,nextStakeId, tipAmount, encodedLinear, {
         value: tipAmount,
       }))
         .to.changeEtherBalances(
@@ -643,7 +661,7 @@ describe("StakeManager", function () {
     })
     it('unattributed can be withdrawn', async () => {
       const x = await loadFixture(utils.deployFixture)
-      const nextStakeId = await utils.nextStakeId(x)
+      const nextStakeId = await utils.nextStakeId(x.hex)
       const days = 10
       const [signer1, signer2] = x.signers
       const defaultSettings = await x.stakeManager.defaultEncodedSettings()
@@ -651,7 +669,7 @@ describe("StakeManager", function () {
       await utils.moveForwardDays(days + 1, x)
       const oneEther = hre.ethers.utils.parseEther('1').toBigInt()
       const tipAmount = oneEther / 100n
-      await expect(x.stakeManager.depositAndAddTipToStake(hre.ethers.constants.AddressZero, nextStakeId, tipAmount, 0, 0, {
+      await expect(x.stakeManager.depositAndAddTipToStake(false, hre.ethers.constants.AddressZero, nextStakeId, tipAmount, 0, {
         value: tipAmount,
       }))
         .to.changeEtherBalances(
@@ -663,7 +681,7 @@ describe("StakeManager", function () {
       await expect(x.stakeManager.withdrawableBalanceOf(hre.ethers.constants.AddressZero, signer1.address))
         .eventually.to.equal(0)
       await expect(x.stakeManager.stakeIdTips(nextStakeId, 0))
-        .eventually.to.equal(tipAmount << 128n)
+        .eventually.to.equal(BigInt.asUintN(128, tipAmount << 72n))
       await expect(x.stakeManager.connect(signer2).multicall([
         x.stakeManager.interface.encodeFunctionData('stakeEndByConsent', [nextStakeId]),
         x.stakeManager.interface.encodeFunctionData('collectUnattributed', [
@@ -695,14 +713,14 @@ describe("StakeManager", function () {
     })
     it('if own stake is ended, can claw back tip', async () => {
       const x = await loadFixture(utils.deployFixture)
-      const nextStakeId = await utils.nextStakeId(x)
+      const nextStakeId = await utils.nextStakeId(x.hex)
       const days = 10
       const [signer1] = x.signers
       await x.stakeManager.stakeStartFromBalanceFor(signer1.address, x.stakedAmount, days, 0)
       await utils.moveForwardDays(days + 1, x)
       const oneEther = hre.ethers.utils.parseEther('1').toBigInt()
       const tipAmount = oneEther / 100n
-      await expect(x.stakeManager.depositAndAddTipToStake(hre.ethers.constants.AddressZero, nextStakeId, tipAmount, 0, 0, {
+      await expect(x.stakeManager.depositAndAddTipToStake(false, hre.ethers.constants.AddressZero, nextStakeId, tipAmount, 0, {
         value: oneEther,
       }))
         .to.changeEtherBalances(
@@ -721,7 +739,7 @@ describe("StakeManager", function () {
     })
     it('if own stake is ended, cannot add to tip', async () => {
       const x = await loadFixture(utils.deployFixture)
-      const nextStakeId = await utils.nextStakeId(x)
+      const nextStakeId = await utils.nextStakeId(x.hex)
       const days = 10
       const [signer1, signer2] = x.signers
       await x.stakeManager.stakeStartFromBalanceFor(signer1.address, x.stakedAmount, days, 0)
@@ -729,20 +747,26 @@ describe("StakeManager", function () {
       await utils.moveForwardDays(days + 1, x)
       const oneEther = hre.ethers.utils.parseEther('1').toBigInt()
       const tipAmount = oneEther / 100n
-      await expect(x.stakeManager.depositAndAddTipToStake(hre.ethers.constants.AddressZero, nextStakeId, tipAmount, 0, 0, {
+      await expect(x.stakeManager.depositAndAddTipToStake(false, hre.ethers.constants.AddressZero, nextStakeId, tipAmount, 0, {
         value: tipAmount,
       }))
         .to.changeEtherBalances(
           [signer1, x.stakeManager],
           [tipAmount * -1n, tipAmount],
         )
-      await expect(x.stakeManager.connect(signer2).depositAndAddTipToStake(hre.ethers.constants.AddressZero, nextStakeId, 0, 1, 1))
+      const encodedLinear = await x.stakeManager.encodedLinearWithMethod(
+        0, // method
+        0, 1, // x
+        0, 1, // y
+        0, 0 // b
+      )
+      await expect(x.stakeManager.connect(signer2).depositAndAddTipToStake(false, hre.ethers.constants.AddressZero, nextStakeId, 0, encodedLinear))
         .to.revertedWithCustomError(x.stakeManager, 'NotAllowed')
       await expect(x.stakeManager.withdrawableBalanceOf(hre.ethers.constants.AddressZero, signer1.address))
         .eventually.to.equal(0)
       await expect(x.stakeManager.stakeIdTipSize(nextStakeId))
         .eventually.to.equal(1)
-      await expect(x.stakeManager.depositAndAddTipToStake(hre.ethers.constants.AddressZero, nextStakeId, 0, 1, 1))
+      await expect(x.stakeManager.depositAndAddTipToStake(false, hre.ethers.constants.AddressZero, nextStakeId, 0, encodedLinear))
         .not.to.emit(x.stakeManager, 'AddTip')
       await expect(x.stakeManager.stakeIdTipSize(nextStakeId))
         .eventually.to.equal(1)
@@ -757,12 +781,12 @@ describe("StakeManager", function () {
       await x.stakeManager.removeTipFromStake(nextStakeId, [0])
       await expect(x.stakeManager.withdrawableBalanceOf(hre.ethers.constants.AddressZero, signer1.address))
         .eventually.to.equal(tipAmount)
-      await expect(x.stakeManager.addTipToStake(hre.ethers.constants.AddressZero, nextStakeId, tipAmount, 0, 0))
+      await expect(x.stakeManager.addTipToStake(false, hre.ethers.constants.AddressZero, nextStakeId, tipAmount, 0))
         .to.revertedWithCustomError(x.stakeManager, 'NotAllowed')
     })
     it('can withdraw from balance at any time', async () => {
       const x = await loadFixture(utils.deployFixture)
-      const nextStakeId = await utils.nextStakeId(x)
+      const nextStakeId = await utils.nextStakeId(x.hex)
       const days = 10
       const [signer1, signer2] = x.signers
       await x.stakeManager.stakeStartFromBalanceFor(signer1.address, x.stakedAmount, days, 0)
@@ -778,6 +802,8 @@ describe("StakeManager", function () {
           [(oneEther - 2n) * -1n, (oneEther - 2n)],
         )
       let expectedBalance = oneEther - 2n // 99999999999999998
+      await expect(x.stakeManager.withdrawableBalanceOf(hre.ethers.constants.AddressZero, signer1.address))
+        .eventually.to.equal(expectedBalance)
       await expect(x.stakeManager.connect(signer2).depositTokenTo(hre.ethers.constants.AddressZero, signer1.address, 1, {
         value: 1n,
       }))
@@ -786,7 +812,7 @@ describe("StakeManager", function () {
         [-1n, 1n],
       )
       expectedBalance += 1n // 99999999999999999
-      await expect(x.stakeManager.depositAndAddTipToStake(hre.ethers.constants.AddressZero, nextStakeId, tipAmount, 0, 0, {
+      await expect(x.stakeManager.depositAndAddTipToStake(false, hre.ethers.constants.AddressZero, nextStakeId, tipAmount, 0, {
         value: tipAmount - 1n,
       }))
         .to.changeEtherBalances(
@@ -805,6 +831,8 @@ describe("StakeManager", function () {
           [x.stakeManager, signer1],
           [0, 0],
         )
+      await expect(x.stakeManager.withdrawableBalanceOf(hre.ethers.constants.AddressZero, signer1.address))
+        .eventually.to.equal(expectedBalance)
       await expect(x.stakeManager.withdrawTokenTo(hre.ethers.constants.AddressZero, signer1.address, tenthEther / 2n))
         .to.changeEtherBalances(
           [signer1, x.stakeManager],
@@ -818,11 +846,11 @@ describe("StakeManager", function () {
       expectedBalance -= tenthEther // 89999999999999999
       await expect(x.stakeManager.withdrawableBalanceOf(hre.ethers.constants.AddressZero, signer1.address))
         .eventually.to.equal(expectedBalance)
-      await expect(x.stakeManager.addTipToStake(hre.ethers.constants.AddressZero, nextStakeId, tenthEther, 0, 0))
+      await expect(x.stakeManager.addTipToStake(false, hre.ethers.constants.AddressZero, nextStakeId, tenthEther, 0))
         .to.revertedWithCustomError(x.stakeManager, 'NotAllowed')
       await expect(x.stakeManager.withdrawableBalanceOf(hre.ethers.constants.AddressZero, signer1.address))
         .eventually.to.equal(expectedBalance)
-      const encodedTip = await x.stakeManager.encodeTipSettings(0, tipAmount - 1n, 0, 0)
+      const encodedTip = await x.stakeManager.encodeTipSettings(false, 0, tipAmount - 1n, 0)
       await expect(x.stakeManager.removeTipFromStake(nextStakeId, [0]))
         .to.emit(x.stakeManager, 'RemoveTip')
         .withArgs(nextStakeId, hre.ethers.constants.AddressZero, 0, encodedTip)
@@ -840,7 +868,7 @@ describe("StakeManager", function () {
     })
     it('leaves unattributed hedron tokens until they are utilized', async () => {
       const x = await loadFixture(utils.deployFixture)
-      const nextStakeId = await utils.nextStakeId(x)
+      const nextStakeId = await utils.nextStakeId(x.hex)
       const days = 10
       const [signer1, signer2] = x.signers
       const defaultSettings = await x.stakeManager.defaultEncodedSettings()
@@ -869,7 +897,7 @@ describe("StakeManager", function () {
     })
     it('leaves unattributed tokens until they are utilized', async () => {
       const x = await loadFixture(utils.deployFixture)
-      const nextStakeId = await utils.nextStakeId(x)
+      const nextStakeId = await utils.nextStakeId(x.hex)
       const days = 10
       const [signer1, signer2] = x.signers
       const defaultSettings = await x.stakeManager.defaultEncodedSettings()
@@ -900,7 +928,7 @@ describe("StakeManager", function () {
     })
     it('can also start a stake with withdrawable mapping', async () => {
       const x = await loadFixture(utils.deployFixture)
-      const nextStakeId = await utils.nextStakeId(x)
+      const nextStakeId = await utils.nextStakeId(x.hex)
       const days = 10
       const [signer1, signer2] = x.signers
       const oneHundredHex = hre.ethers.utils.parseUnits('100', 8).toBigInt()
@@ -923,7 +951,7 @@ describe("StakeManager", function () {
     })
     it('allows settings to be passed at the same time', async () => {
       const x = await loadFixture(utils.deployFixture)
-      const nextStakeId = await utils.nextStakeId(x)
+      const nextStakeId = await utils.nextStakeId(x.hex)
       const days = 10
       const [signer1] = x.signers
       const settings = await x.stakeManager.defaultSettings()
@@ -944,7 +972,7 @@ describe("StakeManager", function () {
     })
     it('can disallow end stakes by anyone', async () => {
       const x = await loadFixture(utils.deployFixture)
-      const nextStakeId = await utils.nextStakeId(x)
+      const nextStakeId = await utils.nextStakeId(x.hex)
       const days = 10
       const [signer1, signer2] = x.signers
       const settings = await x.stakeManager.defaultSettings()
@@ -979,7 +1007,7 @@ describe("StakeManager", function () {
       const x = await loadFixture(utils.deployFixture)
       const days = 10
       const [signer1, signer2] = x.signers
-      const stakeId = await utils.nextStakeId(x)
+      const stakeId = await utils.nextStakeId(x.hex)
       const defaultSettings = await x.stakeManager.defaultEncodedSettings()
       await x.stakeManager.stakeStartFromBalanceFor(signer1.address, x.stakedAmount, days, defaultSettings)
       const decimals = await x.usdc.decimals()
@@ -987,7 +1015,7 @@ describe("StakeManager", function () {
       const usdcCurrencyIndex = await x.stakeManager.currencyListSize()
       await utils.leechUsdc(hre.ethers.utils.parseUnits('1000', decimals).toBigInt(), signer1.address, x)
       await x.usdc.approve(x.stakeManager.address, tipAmount) // allow stake manager to pull in tip currency
-      await expect(x.stakeManager.depositAndAddTipToStake(x.usdc.address, stakeId, tipAmount, 0, 0))
+      await expect(x.stakeManager.depositAndAddTipToStake(false, x.usdc.address, stakeId, tipAmount, 0))
         .to.revertedWithCustomError(x.stakeManager, 'NotAllowed')
       await expect(x.stakeManager.addCurrencyToList(x.usdc.address))
         .to.emit(x.stakeManager, 'AddCurrency')
@@ -995,8 +1023,8 @@ describe("StakeManager", function () {
       await expect(x.stakeManager.depositTokenTo(x.usdc.address, signer1.address, tipAmount))
         .to.emit(x.usdc, 'Transfer')
         .withArgs(signer1.address, x.stakeManager.address, tipAmount)
-      const encodedTip = await x.stakeManager.encodeTipSettings(usdcCurrencyIndex, tipAmount, 0, 0)
-      await expect(x.stakeManager.addTipToStake(x.usdc.address, stakeId, tipAmount, 0, 0))
+      const encodedTip = await x.stakeManager.encodeTipSettings(false, usdcCurrencyIndex, tipAmount, 0)
+      await expect(x.stakeManager.addTipToStake(false, x.usdc.address, stakeId, tipAmount, 0))
         .to.emit(x.stakeManager, 'AddTip')
         .withArgs(stakeId, x.usdc.address, 0, encodedTip)
       await utils.moveForwardDays(days + 1, x)
@@ -1016,7 +1044,7 @@ describe("StakeManager", function () {
     })
     it('cannot end early by default', async () => {
       const x = await loadFixture(utils.deployFixture)
-      const nextStakeId = await utils.nextStakeId(x)
+      const nextStakeId = await utils.nextStakeId(x.hex)
       const days = 10
       const [signer1, signer2] = x.signers
       const defaultSettings = await x.stakeManager.defaultEncodedSettings()
@@ -1038,7 +1066,7 @@ describe("StakeManager", function () {
     })
     it('null ends result in no failure', async () => {
       const x = await loadFixture(utils.deployFixture)
-      const nextStakeId = await utils.nextStakeId(x)
+      const nextStakeId = await utils.nextStakeId(x.hex)
       const days = 10
       const [signer1, signer2] = x.signers
       const defaultSettings = await x.stakeManager.defaultEncodedSettings()
@@ -1070,7 +1098,7 @@ describe("StakeManager", function () {
       await utils.moveForwardDays(16, x)
     })
     it('can check if a stake is good accountable', async () => {
-      const nextStakeId = await utils.nextStakeId(x)
+      const nextStakeId = await utils.nextStakeId(x.hex)
       await x.stakeManager.stakeStartFromBalanceFor(x.signers[0].address, x.stakedAmount, 15, 0) // nextStakeId + 1
       await expect(x.stakeManager.isGoodAccountable(x.stakeManager.address, 2, nextStakeId))
         .eventually.to.equal(4)

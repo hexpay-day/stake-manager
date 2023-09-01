@@ -3,6 +3,7 @@ import type { ethers } from 'ethers'
 import * as hre from 'hardhat'
 import { expect } from "chai"
 import * as utils from './utils'
+import * as config from '../src/config'
 import _ from 'lodash'
 
 describe('EarningsOracle.sol', () => {
