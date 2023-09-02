@@ -282,5 +282,39 @@ describe('HSIStakeManager.sol', () => {
         .to.emit(x.hex, 'StakeStart')
         .withArgs(anyUint, anyValue, nextStakeId)
     })
+    it('will ignore hsis that do not exist', async () => {
+      const x = await loadFixture(utils.deployAndProcureHSIFixture)
+      const [signer1, signer2] = x.signers
+      const settings = {
+        hedronTipMethod: 0,
+        hedronTipMagnitude: 0,
+        tipMethod: 0,
+        tipMagnitude: 0,
+        consentAbilities: await x.stakeManager.decodeConsentAbilities(parseInt('001101', 2)),
+        // unused on hsi
+        newStakeDaysMethod: 2,
+        newStakeDaysMagnitude: 0,
+        newStakeMethod: 2,
+        newStakeMagnitude: 0,
+        copyIterations: 0,
+      }
+      const encodedSettings = await x.stakeManager.encodeSettings(settings)
+      const deposits = _.flatMap(x.hsiTargets, (target) => ([
+        x.hsiStakeManager.interface.encodeFunctionData('depositHsi', [target.tokenId, encodedSettings]),
+      ]))
+      await expect(x.hsiStakeManager.multicall(deposits, false))
+        .to.emit(x.hsim, 'Transfer')
+        .to.emit(x.hsim, 'HSIDetokenize')
+      await utils.moveForwardDays(30, x)
+      const nextStakeId = await utils.nextStakeId(x.hex)
+      await expect(x.hsiStakeManager.connect(signer2).hsiStakeEndMany([
+        x.hsiTargets[0].hsiAddress,
+        signer1.address,
+      ]))
+        .to.emit(x.hex, 'StakeEnd')
+        .withArgs(anyUint, anyUint, x.hsiTargets[0].hsiAddress, x.hsiTargets[0].stakeId)
+        .to.emit(x.hex, 'StakeStart')
+        .withArgs(anyUint, anyValue, nextStakeId)
+    })
   })
 })
