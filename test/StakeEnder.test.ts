@@ -759,6 +759,8 @@ describe("StakeManager", function () {
       await x.stakeManager.addTipToStake(false, etherAddress, nextStakeId, tipAmount, 0)
       await x.stakeManager.addTipToStake(false, etherAddress, nextStakeId, tipAmount, 0)
       await x.stakeManager.addTipToStake(false, etherAddress, nextStakeId, tipAmount, 0)
+      await expect(x.stakeManager.addTipToStake(false, etherAddress, nextStakeId, 0, 0))
+        .not.to.reverted
       await expect(x.stakeManager.withdrawableBalanceOf(etherAddress, signer1.address))
         .eventually.to.equal(oneEther - (5n * tipAmount))
       // 5 tips, each with 0.01 ether
