@@ -574,6 +574,36 @@ describe("StakeManager", function () {
         .to.emit(x.hex, 'Transfer')
         .withArgs(x.stakeManager.address, hre.ethers.constants.AddressZero, withArgs.anyUint)
     })
+    it('can handle a curve that results in zero new stake amount', async () => {
+      const x = await loadFixture(utils.deployFixture)
+      const nextStakeId = await utils.nextStakeId(x.hex)
+      const days = 10
+      const [signer1, signer2] = x.signers
+      const defaultSettings = await x.stakeManager.defaultSettings()
+      const updatedSettings: EncodableSettings.SettingsStruct = {
+        ...defaultSettings,
+        newStakeMethod: 5,
+        // 0 scale, use linear (>2)
+        // for every 1 hearts, remove 1
+        newStakeMagnitude: ((utils.absMinInt16 + -1n) << 48n) | (1n << 24n) | (utils.absMinInt16 + 10_000n),
+      }
+      const encodedSettings = await x.stakeManager.encodeSettings(updatedSettings)
+      await x.stakeManager.stakeStartFromBalanceFor(signer1.address, x.stakedAmount, days, encodedSettings)
+      await utils.moveForwardDays(11, x)
+      // this is an underestimation since yield is also a factor in this case
+      const endStakeAndCollect = x.stakeManager.connect(signer2).multicall([
+        x.stakeManager.interface.encodeFunctionData('stakeEndByConsent', [nextStakeId]),
+        x.stakeManager.interface.encodeFunctionData('collectUnattributed', [
+          x.hex.address,
+          true,
+          signer2.address,
+          0,
+        ]),
+      ], false)
+      await expect(endStakeAndCollect)
+        .to.emit(x.hex, 'Transfer')
+        .withArgs(hre.ethers.constants.AddressZero, x.stakeManager.address, withArgs.anyUint)
+    })
     it('can leave the tip in the withdrawable mapping', async () => {
       const x = await loadFixture(utils.deployFixture)
       const nextStakeId = await utils.nextStakeId(x.hex)
