@@ -247,6 +247,8 @@ describe('IsolatedStakeManager.sol', () => {
         .withArgs(signerA.address, x.isolatedStakeManager.address, x.stakedAmount)
       await expect(x.isolatedStakeManager.connect(signerB).stakeStartWithAuthorization(100))
         .to.revertedWithCustomError(x.isolatedStakeManager, 'NotAllowed')
+      await expect(x.isolatedStakeManager.connect(signerB).setStartAuthorization(signerB.address, 100, 1))
+        .to.revertedWith('Ownable: caller is not the owner')
 
       await expect(x.isolatedStakeManager.setStartAuthorization(signerB.address, 100, 1))
         .to.emit(x.isolatedStakeManager, 'UpdateAuthorization')
@@ -256,6 +258,9 @@ describe('IsolatedStakeManager.sol', () => {
       await expect(x.isolatedStakeManager.connect(signerB).stakeStartWithAuthorization(100))
         .to.emit(x.hex, 'StakeStart')
         .withArgs(anyUint, x.isolatedStakeManager.address, x.nextStakeId)
+      // what happens when you have no hex to start a stake with
+      await expect(x.isolatedStakeManager.connect(signerB).stakeStartWithAuthorization(100))
+        .not.to.reverted
     })
   })
 })
