@@ -33,19 +33,13 @@ contract MaximusStakeManager is HSIStakeManager {
     perpetualWhitelist[0xF55cD1e399e1cc3D95303048897a680be3313308] = true; // trio
     perpetualWhitelist[0xe9f84d418B008888A992Ff8c6D22389C2C3504e0] = true; // base
   }
-  /** check if the target address is a known perpetual */
-  modifier onlyPerpetual(address perpetual) {
-    if (!perpetualWhitelist[perpetual]) {
-      revert NotAllowed();
-    }
-    _;
-  }
   /**
    * end a stake on a known perpetual
    * @param perpetual the perpetual to end a stake on
    * @param stakeId the stake id to end
    */
-  function stakeEndAs(address rewarded, address perpetual, uint256 stakeId) external onlyPerpetual(perpetual) {
+  function stakeEndAs(address rewarded, address perpetual, uint256 stakeId) external {
+    if (!perpetualWhitelist[perpetual]) revert NotAllowed();
     IPublicEndStakeable endable = IPublicEndStakeable(perpetual);
     // STAKE_END_DAY is locked + staked days - 1 so > is correct in this case
     if (_currentDay() > endable.STAKE_END_DAY() && endable.STAKE_IS_ACTIVE()) {
@@ -75,10 +69,8 @@ contract MaximusStakeManager is HSIStakeManager {
     address perpetual,
     uint256 period,
     address[] calldata tokens
-  )
-    external
-    onlyPerpetual(perpetual)
-  {
+  ) external {
+    if (!perpetualWhitelist[perpetual]) revert NotAllowed();
     if (IPublicEndStakeable(perpetual).getCurrentPeriod() != period) {
       return;
     }
