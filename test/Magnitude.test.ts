@@ -121,12 +121,15 @@ describe('Magnitude.sol', () => {
           .eventually.to.equal(((yieldFromPrinciple * 3n * (2n**xFactor)) / 40n) - 500n)
       })
     })
-    it('can handle negative numbers resulting from an xyb curve', async () => {
+    it('can only handle non zero y', async () => {
       const negXOverYPlusB = ( (utils.absMinInt16 + -3n) << 48n ) | ( 40n << 24n ) | (utils.absMinInt16 + 500n);
-      let y2 = 1n
+      const y2 = 1n
       await expect(x.stakeManager.computeMagnitude(noLimit, 3n, negXOverYPlusB, 1n, 0))
         .eventually.to.equal(((y2 * -3n) / 40n) + 500n)
-      y2 = 150n
+    })
+    it('can handle negative numbers resulting from an xyb curve', async () => {
+      const negXOverYPlusB = ( (utils.absMinInt16 + -3n) << 48n ) | ( 40n << 24n ) | (utils.absMinInt16 + 500n);
+      let y2 = 150n
       await expect(x.stakeManager.computeMagnitude(noLimit, 3n, negXOverYPlusB, y2, 0))
         .eventually.to.equal(((y2 * -3n) / 40n) + 500n)
       y2 = 6_667n
