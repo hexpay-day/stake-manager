@@ -61,7 +61,6 @@ contract Magnitude is Utils {
           amount = y2; // 2
         }
       } else {
-        // shift range from 0-4 iterative 3 to 0-2 iterative 3
         uint256 y = _yDeltas(method % THREE, y2, y1);
         if (y == ZERO) return ZERO;
         // even with uint16 (max: 65535), we can still get down to 0.01% increments

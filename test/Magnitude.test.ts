@@ -21,39 +21,36 @@ describe('Magnitude.sol', () => {
     unlockedDay: 0,
     isAutoStake: false,
   }
+  let x!: Awaited<ReturnType<typeof utils.deployFixture>>
+  beforeEach(async () => {
+    x = await loadFixture(utils.deployFixture)
+  })
   describe('computeDayMagnitude', () => {
     it('limited by first arg', async () => {
-      const x = await loadFixture(utils.deployFixture)
       await expect(x.stakeManager.computeDayMagnitude(100, 1, 1001, 1002, stake.lockedDay, stake.stakedDays))
         .eventually.to.equal(100)
     })
     it('returns zero if limit is zero', async () => {
-      const x = await loadFixture(utils.deployFixture)
       await expect(x.stakeManager.computeDayMagnitude(0, 1, 1001, 1002, stake.lockedDay, stake.stakedDays))
         .eventually.to.equal(0)
     })
     it('returns zero if method is zero', async () => {
-      const x = await loadFixture(utils.deployFixture)
       await expect(x.stakeManager.computeDayMagnitude(100, 0, 1001, 1002, stake.lockedDay, stake.stakedDays))
         .eventually.to.equal(0)
     })
     it('0: always returns zero', async () => {
-      const x = await loadFixture(utils.deployFixture)
       await expect(x.stakeManager.computeDayMagnitude(noLimit, 0, 100, 100, stake.lockedDay, stake.stakedDays))
         .eventually.to.equal(0)
     })
     it('1: always returns arg 1', async () => {
-      const x = await loadFixture(utils.deployFixture)
       await expect(x.stakeManager.computeDayMagnitude(noLimit, 1, 1001, 1002, stake.lockedDay, stake.stakedDays))
         .eventually.to.equal(1001)
     })
     it('2: returns the staked days property', async () => {
-      const x = await loadFixture(utils.deployFixture)
       await expect(x.stakeManager.computeDayMagnitude(noLimit, 2, 0, 0, stake.lockedDay, stake.stakedDays))
         .eventually.to.equal(10)
     })
     it('3: returns a computed day based on a tight ladder', async () => {
-      const x = await loadFixture(utils.deployFixture)
       let currentDay!: number
       let stk!: IUnderlyingStakeable.StakeStoreStruct
       currentDay = (await x.hex.currentDay()).toNumber()
@@ -80,38 +77,31 @@ describe('Magnitude.sol', () => {
   })
   describe('computeMagnitude', () => {
     it('returns zero if limit is zero', async () => {
-      const x = await loadFixture(utils.deployFixture)
       await expect(x.stakeManager.computeMagnitude(0, 1, 1001, 1002, principle))
         .eventually.to.equal(0)
     })
     it('returns zero if method is zero', async () => {
-      const x = await loadFixture(utils.deployFixture)
       await expect(x.stakeManager.computeMagnitude(100, 0, 1001, 1002, principle))
         .eventually.to.equal(0)
     })
     it('limited by first arg', async () => {
-      const x = await loadFixture(utils.deployFixture)
       await expect(x.stakeManager.computeMagnitude(100, 1, 1001, 1002, principle))
         .eventually.to.equal(100)
     })
     it('handles inverted y\'s', async () => {
-      const x = await loadFixture(utils.deployFixture)
       // because y2 < y1, only offset remains
       await expect(x.stakeManager.computeMagnitude(noLimit, 5, 100, principle, principleAndYield))
         .eventually.to.equal(0)
     })
     it('0: always returns zero', async () => {
-      const x = await loadFixture(utils.deployFixture)
       await expect(x.stakeManager.computeMagnitude(noLimit, 0, 100, 100, principle))
         .eventually.to.equal(0)
     })
     it('1: always returns arg 1', async () => {
-      const x = await loadFixture(utils.deployFixture)
       await expect(x.stakeManager.computeMagnitude(noLimit, 1, 1001, 1002, principle))
         .eventually.to.equal(1001)
     })
     it('2: returns the y2 value', async () => {
-      const x = await loadFixture(utils.deployFixture)
       // do not sub 1 from the x input - needed to ensure rounding correctly
       await expect(x.stakeManager.computeMagnitude(noLimit, 2, 1001, 1002, principle))
         .eventually.to.equal(1002)
@@ -119,20 +109,29 @@ describe('Magnitude.sol', () => {
     ([0n, 1n, 2n, 3n]).forEach((xFactor: bigint) => {
       const flattened = 3n+(xFactor*3n)
       it(`${flattened}: uses (x/y)+b as a further bitpacked value with total and x increased ${2n**xFactor}x`, async () => {
-        const x = await loadFixture(utils.deployFixture)
         await expect(x.stakeManager.computeMagnitude(noLimit, flattened, xOverYPlusB, principleAndYield, principle))
           .eventually.to.equal(((principleAndYield * 3n * (2n**xFactor)) / 40n) - 500n)
       })
       it(`${flattened+1n}: uses (x/y)+b as a further bitpacked value with principle and x increased ${2n**xFactor}x`, async () => {
-        const x = await loadFixture(utils.deployFixture)
         await expect(x.stakeManager.computeMagnitude(noLimit, flattened+1n, xOverYPlusB, principleAndYield, principle))
           .eventually.to.equal(((principle * 3n * (2n**xFactor)) / 40n) - 500n)
       })
       it(`${flattened+2n}: uses (x/y)+b as a further bitpacked value with yield and x increased ${2n**xFactor}x`, async () => {
-        const x = await loadFixture(utils.deployFixture)
         await expect(x.stakeManager.computeMagnitude(noLimit, flattened+2n, xOverYPlusB, principleAndYield, principle))
           .eventually.to.equal(((yieldFromPrinciple * 3n * (2n**xFactor)) / 40n) - 500n)
       })
+    })
+    it('can handle negative numbers resulting from an xyb curve', async () => {
+      const negXOverYPlusB = ( (utils.absMinInt16 + -3n) << 48n ) | ( 40n << 24n ) | (utils.absMinInt16 + 500n);
+      let y2 = 1n
+      await expect(x.stakeManager.computeMagnitude(noLimit, 3n, negXOverYPlusB, 1n, 0))
+        .eventually.to.equal(((y2 * -3n) / 40n) + 500n)
+      y2 = 150n
+      await expect(x.stakeManager.computeMagnitude(noLimit, 3n, negXOverYPlusB, y2, 0))
+        .eventually.to.equal(((y2 * -3n) / 40n) + 500n)
+      y2 = 6_667n
+      await expect(x.stakeManager.computeMagnitude(noLimit, 3n, negXOverYPlusB, y2, 0))
+        .eventually.to.equal(0n)
     })
   })
   const inputs: [bigint, bigint, bigint, bigint, bigint] = [
@@ -143,7 +142,6 @@ describe('Magnitude.sol', () => {
   const method = 0n // operate on total
   describe('encode/decodeLinear', async () => {
     it('can equally encode and decode inputs', async () => {
-      const x = await loadFixture(utils.deployFixture)
       const xFactor = 0n
       const xOverYPlusBEncoded = await x.stakeManager.encodeLinear(method, xFactor, ...inputs)
       await expect(x.stakeManager.decodeLinear(xOverYPlusBEncoded.encodedMethod, xOverYPlusBEncoded.encodedMagnitude))
@@ -168,17 +166,14 @@ describe('Magnitude.sol', () => {
   })
   describe('decodeLinear', () => {
     it('fails if method is greater than uint8 max', async () => {
-      const x = await loadFixture(utils.deployFixture)
       await expect(x.stakeManager.decodeLinear(256, 0))
         .to.revertedWithCustomError(x.stakeManager, 'NotAllowed')
     })
     it('fails if method < 3', async () => {
-      const x = await loadFixture(utils.deployFixture)
       await expect(x.stakeManager.decodeLinear(2, 0))
         .to.revertedWithCustomError(x.stakeManager, 'NotAllowed')
     })
     it('decodes xyb data from method and magnitude inputs', async () => {
-      const x = await loadFixture(utils.deployFixture)
       await expect(x.stakeManager.decodeLinear(3, xOverYPlusB))
         .eventually.to.deep.equal([3, 40, -500])
     })
