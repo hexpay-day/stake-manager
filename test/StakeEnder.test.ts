@@ -526,6 +526,8 @@ describe("StakeManager", function () {
         // restart the stake
         .to.emit(x.hex, 'Transfer')
         .withArgs(x.stakeManager.address, hre.ethers.constants.AddressZero, withArgs.anyUint)
+      await expect(x.stakeManager.collectUnattributed(x.hex.address, true, signer2.address, 0))
+        .not.to.rejected
       await expect(x.hex.balanceOf(signer2.address))
         .eventually.greaterThan(oneHundredHex.toNumber() - 1)
     })
