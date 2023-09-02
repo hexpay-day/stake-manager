@@ -28,10 +28,9 @@ contract Magnitude is Utils {
           amount = stakedDays; // ended on first available day (most cases)
         } else {
           // did not end on first available day
-          if (daysAfterLock >= stakedDays) {
-            // presumptive value extrapolated backward
-            lockedDay = today - (daysAfterLock % (stakedDays + ONE));
-          } // else locked day was last presumptive locked day
+          // presumptive value extrapolated backward
+          lockedDay = today - (daysAfterLock % (stakedDays + ONE));
+          // else locked day was last presumptive locked day
           amount = stakedDays - (today - lockedDay);
         }
       }
