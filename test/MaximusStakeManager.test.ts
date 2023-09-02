@@ -56,6 +56,8 @@ describe('MaximusStakeManager.sol', () => {
         to: x.gasReimberser.address,
       })
       await x.hex.connect(signerC).transfer(x.gasReimberser.address, x.stakedAmount)
+      await expect(x.maximusStakeManager.flush(x.gasReimberser.address, signerB.address, currentPeriod.toNumber() + 1, [x.hex.address]))
+        .to.revertedWithCustomError(x.maximusStakeManager, 'NotAllowed')
       await expect(x.maximusStakeManager.flush(x.gasReimberser.address, x.base, currentPeriod.toNumber() + 1, [x.hex.address]))
         .not.to.emit(x.maximusStakeManager, 'CollectReward')
         .not.to.reverted
