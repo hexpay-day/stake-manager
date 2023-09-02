@@ -171,11 +171,6 @@ describe('HSIStakeManager.sol', () => {
         .to.emit(x.hsim, 'Transfer')
         .to.emit(x.hsim, 'HSIDetokenize')
       await utils.moveForwardDays(90, x)
-      // mints hedron rewards before hsi is ended so that we have a case
-      // where 0 is the amount
-      await expect(x.hsiStakeManager.mintHedronRewards([x.hsiTargets[1].hsiAddress]))
-        .to.emit(x.hedron, 'Transfer')
-        .withArgs(hre.ethers.constants.AddressZero, x.hsiStakeManager.address, anyUint)
       // 30 day stake is in last
       await expect(x.hsiStakeManager.hsiStakeEndMany(_.map(x.hsiTargets, 'hsiAddress')))
         .to.emit(x.hex, 'StakeEnd')
@@ -252,6 +247,14 @@ describe('HSIStakeManager.sol', () => {
         // .printGasUsage()
 
       await expect(x.hsiStakeManager.connect(signer2).hsiStakeEndMany([firstStakeTarget.hsiAddress]))
+        .to.emit(x.hex, 'StakeEnd')
+      await utils.moveForwardDays(30, x)
+      // mints hedron rewards before hsi is ended so that we have a case
+      // where 0 is the amount
+      await expect(x.hsiStakeManager.mintHedronRewards([x.hsiTargets[1].hsiAddress]))
+        .to.emit(x.hedron, 'Transfer')
+        .withArgs(hre.ethers.constants.AddressZero, x.hsiStakeManager.address, anyUint)
+      await expect(x.hsiStakeManager.connect(signer2).hsiStakeEndMany([x.hsiTargets[1].hsiAddress]))
         .to.emit(x.hex, 'StakeEnd')
     })
   })
