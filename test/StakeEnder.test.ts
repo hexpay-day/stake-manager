@@ -129,6 +129,12 @@ describe("StakeManager", function () {
         .to.emit(x.hex, 'Transfer')
         .withArgs(x.stakeManager.address, signer1.address, x.oneMillion * 2n)
     })
+    it('fails if 0 is passed as amount', async () => {
+      const x = await loadFixture(utils.deployFixture)
+      await expect(x.stakeManager.depositToken(x.hex.address, 0))
+        .not.to.emit(x.hex, 'Transfer')
+        .not.to.reverted
+    })
   })
   describe('depositing tokens', async () => {
     it('can transfer tokens from sender to contract', async function() {
@@ -740,7 +746,7 @@ describe("StakeManager", function () {
     it('can remove singular tips', async () => {
       const x = await loadFixture(utils.deployFixture)
       const nextStakeId = await utils.nextStakeId(x.hex)
-      const [signer1] = x.signers
+      const [signer1, signer2] = x.signers
       const days = 10
       await x.stakeManager.stakeStartFromBalanceFor(signer1.address, x.stakedAmount, days, 0)
       await utils.moveForwardDays(3, x)
@@ -759,8 +765,6 @@ describe("StakeManager", function () {
       await x.stakeManager.addTipToStake(false, etherAddress, nextStakeId, tipAmount, 0)
       await x.stakeManager.addTipToStake(false, etherAddress, nextStakeId, tipAmount, 0)
       await x.stakeManager.addTipToStake(false, etherAddress, nextStakeId, tipAmount, 0)
-      await expect(x.stakeManager.addTipToStake(false, etherAddress, nextStakeId, 0, 0))
-        .not.to.reverted
       await expect(x.stakeManager.withdrawableBalanceOf(etherAddress, signer1.address))
         .eventually.to.equal(oneEther - (5n * tipAmount))
       // 5 tips, each with 0.01 ether

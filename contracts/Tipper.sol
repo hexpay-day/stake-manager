@@ -7,6 +7,8 @@ import { CurrencyList } from "./CurrencyList.sol";
 import { EncodableSettings } from "./EncodableSettings.sol";
 import { Magnitude } from "./Magnitude.sol";
 
+import "hardhat/console.sol";
+
 abstract contract Tipper is Bank, UnderlyingStakeable, CurrencyList, EncodableSettings, Magnitude {
   uint256 internal constant INDEX_EXTERNAL_TIP_CURRENCY = 200;
   uint256 internal constant INDEX_EXTERNAL_TIP_CURRENCY_ONLY = INDEX_EXTERNAL_TIP_CURRENCY + ONE;
