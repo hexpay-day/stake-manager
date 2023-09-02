@@ -132,6 +132,9 @@ describe('Magnitude.sol', () => {
       y2 = 6_667n
       await expect(x.stakeManager.computeMagnitude(noLimit, 3n, negXOverYPlusB, y2, 0))
         .eventually.to.equal(0n)
+      y2 = 10_000n
+      await expect(x.stakeManager.computeMagnitude(noLimit, 3n, negXOverYPlusB, y2, 0))
+        .eventually.to.equal(0n)
     })
   })
   const inputs: [bigint, bigint, bigint, bigint, bigint] = [
