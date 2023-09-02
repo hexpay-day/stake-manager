@@ -8,7 +8,6 @@ import { EncodableSettings } from "./EncodableSettings.sol";
 import { Magnitude } from "./Magnitude.sol";
 
 abstract contract Tipper is Bank, UnderlyingStakeable, CurrencyList, EncodableSettings, Magnitude {
-
   uint256 internal constant INDEX_EXTERNAL_TIP_CURRENCY = 200;
   uint256 internal constant INDEX_EXTERNAL_TIP_CURRENCY_ONLY = INDEX_EXTERNAL_TIP_CURRENCY + ONE;
   uint256 internal constant INDEX_EXTERNAL_TIP_LIMIT = SEVENTY_TWO; // 128 bits long
@@ -375,13 +374,11 @@ abstract contract Tipper is Bank, UnderlyingStakeable, CurrencyList, EncodableSe
         settings: updatedSettings
       });
     }
-    if (tipAmount > ZERO) {
-      unchecked {
-        withdrawableBalanceOf[token][account] -= tipAmount;
-        // settings must be provided with each addition
-        // this result provides 15*basefee/2, up to 10m hedron as a contrived example
-        // 0x0000000200000000002386f26fc10000000000000000000f0000000000000002
-      }
+    unchecked {
+      withdrawableBalanceOf[token][account] -= tipAmount;
+      // settings must be provided with each addition
+      // this result provides 15*basefee/2, up to 10m hedron as a contrived example
+      // 0x0000000200000000002386f26fc10000000000000000000f0000000000000002
     }
     uint256 currencyIndex = currencyToIndex[token];
     if (currencyIndex == ZERO && token != address(0)) {
