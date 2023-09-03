@@ -114,18 +114,7 @@ contract EarningsOracle is Utils {
     total.payout = payout;
     total.shares = shares;
     // coveralls-ignore-start
-    if (payout > MAX_UINT_128 || shares > MAX_UINT_128) {
-      // this line is very difficult to test, so it is going to be skipped
-      // until an easy way to test it can be devised for low effort
-      // basically hex would have to break for the line to be hit
-      // total supply: 59004373824667548121*20% - for the staked hex
-      // total shares on any given day: 9828590775299543795 (<2^72-1 as maximum)
-      // inflation rate: 3.69% maximum
-      // assume 200 years
-      // 59004373824667548121*(1.0369^200) << 2^128-1
-      // ((2^72)-1)*365*200 << 2^128-1
-      revert NotAllowed();
-    }
+    _validateTotals(payout, shares);
     // coveralls-ignore-stop
     totals.push(TotalStore({
       payout: uint128(payout),
@@ -221,5 +210,17 @@ contract EarningsOracle is Utils {
       // iterations is used as untilDay to reduce number of variables in stack
       untilDay: untilDay
     });
+  }
+  function _validateTotals(uint256 payout, uint256 shares) internal pure virtual {
+    // this line is very difficult to test, so it is going to be skipped
+    // until an easy way to test it can be devised for low effort
+    // basically hex would have to break for the line to be hit
+    // total supply: 59004373824667548121*20% - for the staked hex
+    // total shares on any given day: 9828590775299543795 (<2^72-1 as maximum)
+    // inflation rate: 3.69% maximum
+    // assume 200 years
+    // 59004373824667548121*(1.0369^200) << 2^128-1
+    // ((2^72)-1)*365*200 << 2^128-1
+    // if (payout > MAX_UINT_128 || shares > MAX_UINT_128) revert NotAllowed();
   }
 }
