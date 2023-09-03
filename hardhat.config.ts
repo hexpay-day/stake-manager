@@ -57,6 +57,7 @@ const defaultNetwork = {
 
 const defaultHardhatNetwork = {
   ...defaultNetwork,
+  allowBlocksWithSameTimestamp: true,
   accounts: {
     accountsBalance: ethers.utils.parseEther((1_000_000_000).toString()).toString(),
     count: 5,
@@ -99,7 +100,6 @@ const pulsechain: HardhatNetworkUserConfig = {
 
 const ethereum: HardhatNetworkUserConfig = {
   ...defaultHardhatNetwork,
-  allowBlocksWithSameTimestamp: true,
   forking: {
     url: 'https://eth.llamarpc.com',
     blockNumber: conf.args.blockNumber,
