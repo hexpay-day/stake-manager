@@ -14,3 +14,4 @@ bin
 cache_hardhat
 
 contracts/hardhat-dependency-compiler
+.vscode
