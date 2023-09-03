@@ -1208,9 +1208,13 @@ describe("StakeManager", function () {
       const defaultSettings = await x.stakeManager.defaultEncodedSettings()
       // tell the system to send tokens back to staker
       const settings = defaultSettings.toBigInt() | (1n << 4n)
+      await time.setNextBlockTimestamp(Math.ceil(_.now() / 1_000))
       await x.stakeManager.stakeStartFromBalanceFor(signer1.address, x.stakedAmount, days, settings) // nextStakeId
+      await time.setNextBlockTimestamp(Math.ceil(_.now() / 1_000) + 1)
       await x.stakeManager.stakeStartFromBalanceFor(signer1.address, x.stakedAmount, days, settings) // nextStakeId + 1n
+      await time.setNextBlockTimestamp(Math.ceil(_.now() / 1_000) + 2)
       await x.stakeManager.stakeStartFromBalanceFor(signer1.address, x.stakedAmount, days, settings) // nextStakeId + 2n
+      await time.setNextBlockTimestamp(Math.ceil(_.now() / 1_000) + 3)
       await x.stakeManager.stakeStartFromBalanceFor(signer1.address, x.stakedAmount, days, settings) // nextStakeId + 3n
       const now = Date.now()
       const DAY = 1000*60*60*24
@@ -1219,12 +1223,9 @@ describe("StakeManager", function () {
       const stakeEndBeforeDeadline = x.stakeManager.stakeEndById(nextStakeId)
       await expect(stakeEndBeforeDeadline)
         .to.emit(x.hex, 'Transfer')
-        .withArgs(hre.ethers.constants.AddressZero, x.stakeManager.address, withArgs.anyUint)
+        .withArgs(hre.ethers.constants.AddressZero, x.stakeManager.address, x.stakedAmount)
         .to.emit(x.hex, 'Transfer')
-        .withArgs(x.stakeManager.address, signer1.address, withArgs.anyUint)
-
-      const block = await hre.ethers.provider.getBlock('latest')
-      expect(block.timestamp).to.equal(deadline)
+        .withArgs(x.stakeManager.address, signer1.address, x.stakedAmount)
 
       await time.setNextBlockTimestamp(deadline)
       await expect(x.stakeManager.multicallWithDeadline(deadline, [
@@ -1233,9 +1234,9 @@ describe("StakeManager", function () {
         ]),
       ], false))
         .to.emit(x.hex, 'Transfer')
-        .withArgs(hre.ethers.constants.AddressZero, x.stakeManager.address, withArgs.anyUint)
+        .withArgs(hre.ethers.constants.AddressZero, x.stakeManager.address, x.stakedAmount)
         .to.emit(x.hex, 'Transfer')
-        .withArgs(x.stakeManager.address, signer1.address, withArgs.anyUint)
+        .withArgs(x.stakeManager.address, signer1.address, x.stakedAmount)
 
       const currentTime = deadline + 1
       await time.setNextBlockTimestamp(deadline + 1)
