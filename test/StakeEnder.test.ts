@@ -1217,8 +1217,7 @@ describe("StakeManager", function () {
       await time.setNextBlockTimestamp(Math.ceil(_.now() / 1_000) + 3)
       await x.stakeManager.stakeStartFromBalanceFor(signer1.address, x.stakedAmount, days, settings) // nextStakeId + 3n
       const now = Date.now()
-      const DAY = 1000*60*60*24
-      const deadline = Math.floor((now - (now % DAY) + DAY) / 1_000) - 1
+      const deadline = Math.floor((now - (now % utils.DAY) + utils.DAY) / 1_000) - 1
       await time.setNextBlockTimestamp(deadline)
       const stakeEndBeforeDeadline = x.stakeManager.stakeEndById(nextStakeId)
       await expect(stakeEndBeforeDeadline)

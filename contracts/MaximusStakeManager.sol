@@ -42,7 +42,7 @@ contract MaximusStakeManager is HSIStakeManager {
     if (!perpetualWhitelist[perpetual]) revert NotAllowed();
     IPublicEndStakeable endable = IPublicEndStakeable(perpetual);
     // STAKE_END_DAY is locked + staked days - 1 so > is correct in this case
-    if (_currentDay() > endable.STAKE_END_DAY() && endable.STAKE_IS_ACTIVE()) {
+    if (_isEndable(endable)) {
       endable.mintHedron(ZERO, uint40(stakeId));
       endable.endStakeHEX(ZERO, uint40(stakeId));
       // by now we have incremented by 1 since the start of this function
@@ -52,6 +52,12 @@ contract MaximusStakeManager is HSIStakeManager {
       // so this contract should also recognize that range until the end
       rewardsTo[perpetual][currentPeriod + 1] = rewarded;
     }
+  }
+  function _isEndable(IPublicEndStakeable endable) internal view returns(bool) {
+    return _currentDay() > endable.STAKE_END_DAY() && endable.STAKE_IS_ACTIVE();
+  }
+  function isEndable(address endable) external view returns(bool) {
+    return _isEndable(IPublicEndStakeable(endable));
   }
   /**
    * flush erc20 tokens into this contract

@@ -65,11 +65,13 @@ const defaultHardhatNetwork = {
   } as HardhatNetworkAccountsConfig,
 }
 
+const blockNumber = conf.args.blockNumber || 18057421
+
 const pulsechainV4: HardhatNetworkUserConfig = {
   ...defaultHardhatNetwork,
   forking: {
     url: 'https://rpc.v4.testnet.pulsechain.com',
-    blockNumber: conf.args.blockNumber,
+    blockNumber,
   },
   chains: {
     943: {
@@ -85,7 +87,7 @@ const pulsechain: HardhatNetworkUserConfig = {
   ...defaultHardhatNetwork,
   forking: {
     url: 'https://rpc.pulsechain.com',
-    blockNumber: conf.args.blockNumber,
+    blockNumber,
   },
   gasPrice: 'auto',
   chains: {
@@ -102,7 +104,7 @@ const ethereum: HardhatNetworkUserConfig = {
   ...defaultHardhatNetwork,
   forking: {
     url: 'https://eth.llamarpc.com',
-    blockNumber: conf.args.blockNumber,
+    blockNumber,
   },
 }
 

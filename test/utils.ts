@@ -266,3 +266,5 @@ export const leechUsdc = async (amount: bigint, to: string, x: LeechUSDC) => {
 }
 
 export const absMinInt16 = 2n**15n // zero point for int16
+
+export const DAY = 1000*60*60*24
