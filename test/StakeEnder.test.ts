@@ -1,4 +1,4 @@
-import { loadFixture, setNextBlockBaseFeePerGas } from "@nomicfoundation/hardhat-network-helpers"
+import { loadFixture, setNextBlockBaseFeePerGas, time } from "@nomicfoundation/hardhat-network-helpers"
 import { expect } from "chai"
 import * as hre from "hardhat"
 import _ from 'lodash'
@@ -1199,6 +1199,59 @@ describe("StakeManager", function () {
         .withArgs(hre.ethers.constants.AddressZero, x.stakeManager.address, x.stakedAmount)
         .to.emit(x.hex, 'Transfer')
         .withArgs(x.stakeManager.address, signer1.address, x.stakedAmount)
+    })
+    it('can shield transaction behind a deadline', async () => {
+      const x = await loadFixture(utils.deployFixture)
+      const nextStakeId = await utils.nextStakeId(x.hex)
+      const days = 10
+      const [signer1] = x.signers
+      const defaultSettings = await x.stakeManager.defaultEncodedSettings()
+      // tell the system to send tokens back to staker
+      const settings = defaultSettings.toBigInt() | (1n << 4n)
+      await x.stakeManager.stakeStartFromBalanceFor(signer1.address, x.stakedAmount, days, settings) // nextStakeId
+      await x.stakeManager.stakeStartFromBalanceFor(signer1.address, x.stakedAmount, days, settings) // nextStakeId + 1n
+      await x.stakeManager.stakeStartFromBalanceFor(signer1.address, x.stakedAmount, days, settings) // nextStakeId + 2n
+      await x.stakeManager.stakeStartFromBalanceFor(signer1.address, x.stakedAmount, days, settings) // nextStakeId + 3n
+      const now = Date.now()
+      const DAY = 1000*60*60*24
+      const deadline = Math.floor((now - (now % DAY) + DAY) / 1_000) - 1
+      await time.setNextBlockTimestamp(deadline)
+      const stakeEndBeforeDeadline = x.stakeManager.stakeEndById(nextStakeId)
+      await expect(stakeEndBeforeDeadline)
+        .to.emit(x.hex, 'Transfer')
+        .withArgs(hre.ethers.constants.AddressZero, x.stakeManager.address, withArgs.anyUint)
+        .to.emit(x.hex, 'Transfer')
+        .withArgs(x.stakeManager.address, signer1.address, withArgs.anyUint)
+
+      const block = await hre.ethers.provider.getBlock('latest')
+      expect(block.timestamp).to.equal(deadline)
+
+      await time.setNextBlockTimestamp(deadline)
+      await expect(x.stakeManager.multicallWithDeadline(deadline, [
+        x.stakeManager.interface.encodeFunctionData('stakeEndById', [
+          nextStakeId + 1n,
+        ]),
+      ], false))
+        .to.emit(x.hex, 'Transfer')
+        .withArgs(hre.ethers.constants.AddressZero, x.stakeManager.address, withArgs.anyUint)
+        .to.emit(x.hex, 'Transfer')
+        .withArgs(x.stakeManager.address, signer1.address, withArgs.anyUint)
+
+      const currentTime = deadline + 1
+      await time.setNextBlockTimestamp(deadline + 1)
+      await expect(x.stakeManager.stakeEndById(nextStakeId + 2n))
+        .to.emit(x.hex, 'Transfer')
+        .withArgs(hre.ethers.constants.AddressZero, x.stakeManager.address, withArgs.anyUint)
+        .to.emit(x.hex, 'Transfer')
+        .withArgs(x.stakeManager.address, signer1.address, withArgs.anyUint)
+      await time.setNextBlockTimestamp(deadline + 1)
+      await expect(x.stakeManager.multicallWithDeadline(deadline, [
+        x.stakeManager.interface.encodeFunctionData('stakeEndById', [
+          nextStakeId + 3n,
+        ]),
+      ], false))
+        .to.revertedWithCustomError(x.stakeManager, 'Deadline')
+        .withArgs(deadline, currentTime)
     })
     it('null ends result in no failure', async () => {
       const x = await loadFixture(utils.deployFixture)

@@ -99,6 +99,7 @@ const pulsechain: HardhatNetworkUserConfig = {
 
 const ethereum: HardhatNetworkUserConfig = {
   ...defaultHardhatNetwork,
+  allowBlocksWithSameTimestamp: true,
   forking: {
     url: 'https://eth.llamarpc.com',
     blockNumber: conf.args.blockNumber,
