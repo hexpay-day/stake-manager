@@ -47,7 +47,7 @@ describe("2023-10-03 utc", function () {
       const stake = await x.hex.stakeLists(x.base, 0)
       await time.setNextBlockTimestamp(endTime)
       const cDay = await x.hex.currentDay()
-      console.log(cDay.toBigInt())
+      console.log('current day', cDay.toBigInt())
       console.log(new Date(endTime * 1_000))
       await expect(execStakeManager.isEndable(x.base))
         .eventually.to.equal(true)
