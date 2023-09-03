@@ -95,4 +95,8 @@ contract TestSingletonStakeManager is TestStakeManager {
     list[1] = nextStakeId;
     _stakeEndByConsentForMany(vm.addr(1), list);
   }
+  function testFuzz_stakeStart(uint256 input) public {
+    (address staker, uint256 amount, uint256 stakeDays) = _stakeInfo(input);
+    _managedStakeStart(staker, amount, stakeDays);
+  }
 }

@@ -141,4 +141,9 @@ contract TestStakeManager is Test {
     stkMngr.updateSettings(stakeId, settings);
     vm.stopPrank();
   }
+  function _stakeInfo(uint256 input) internal view returns(address staker, uint256 amount, uint256 stakeDays) {
+    staker = vm.addr(1);
+    amount = bound(input, 1_000_000_000, IERC20(hx).balanceOf(staker) / 10);
+    stakeDays = bound(input, 1, 5_555);
+  }
 }

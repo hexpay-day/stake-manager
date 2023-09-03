@@ -260,6 +260,7 @@ describe('IsolatedStakeManager.sol', () => {
         .withArgs(anyUint, x.isolatedStakeManager.address, x.nextStakeId)
       // what happens when you have no hex to start a stake with
       await expect(x.isolatedStakeManager.connect(signerB).stakeStartWithAuthorization(100))
+        .not.to.emit(x.hex, 'StakeStart')
         .not.to.reverted
     })
   })

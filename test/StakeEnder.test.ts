@@ -1167,6 +1167,19 @@ describe("StakeManager", function () {
         .to.emit(x.hex, 'Transfer')
         .withArgs(hre.ethers.constants.AddressZero, x.stakeManager.address, withArgs.anyUint)
     })
+    it('can end early if owned by tx signer', async () => {
+      const x = await loadFixture(utils.deployFixture)
+      const nextStakeId = await utils.nextStakeId(x.hex)
+      const days = 10
+      const [signer1] = x.signers
+      const defaultSettings = await x.stakeManager.defaultEncodedSettings()
+      await x.stakeManager.stakeStartFromBalanceFor(signer1.address, x.stakedAmount, days, defaultSettings)
+      await utils.moveForwardDays(days, x)
+      await expect(x.stakeManager.stakeEndById(nextStakeId))
+        .to.emit(x.hex, 'Transfer')
+        .withArgs(hre.ethers.constants.AddressZero, x.stakeManager.address, withArgs.anyUint)
+        .to.emit(x.hex, 'StakeEnd')
+    })
     it('null ends result in no failure', async () => {
       const x = await loadFixture(utils.deployFixture)
       const nextStakeId = await utils.nextStakeId(x.hex)
