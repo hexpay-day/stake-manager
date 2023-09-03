@@ -1180,6 +1180,26 @@ describe("StakeManager", function () {
         .withArgs(hre.ethers.constants.AddressZero, x.stakeManager.address, withArgs.anyUint)
         .to.emit(x.hex, 'StakeEnd')
     })
+    it('can end on same day and returns all hex', async () => {
+      const x = await loadFixture(utils.deployFixture)
+      const nextStakeId = await utils.nextStakeId(x.hex)
+      const days = 10
+      const [signer1] = x.signers
+      const defaultSettings = await x.stakeManager.defaultEncodedSettings()
+      // tell the system to send tokens back to staker
+      const settings = defaultSettings.toBigInt() | (1n << 4n)
+      await expect(x.stakeManager.stakeStartFromBalanceFor(signer1.address, x.stakedAmount, days, settings))
+        .to.emit(x.hex, 'Transfer')
+        .withArgs(signer1.address, x.stakeManager.address, x.stakedAmount)
+        .to.emit(x.hex, 'Transfer')
+        .withArgs(x.stakeManager.address, hre.ethers.constants.AddressZero, x.stakedAmount)
+      // sometimes people change their mind and should be able to get their funds back
+      await expect(x.stakeManager.stakeEndById(nextStakeId))
+        .to.emit(x.hex, 'Transfer')
+        .withArgs(hre.ethers.constants.AddressZero, x.stakeManager.address, x.stakedAmount)
+        .to.emit(x.hex, 'Transfer')
+        .withArgs(x.stakeManager.address, signer1.address, x.stakedAmount)
+    })
     it('null ends result in no failure', async () => {
       const x = await loadFixture(utils.deployFixture)
       const nextStakeId = await utils.nextStakeId(x.hex)
