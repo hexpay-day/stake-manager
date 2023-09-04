@@ -28,54 +28,12 @@ jobs:
 
       - uses: c-hive/gha-yarn-cache@v2
         name: Cache dependencies
-      # - name: Cache NPM dependencies
-      #   uses: actions/cache@v3
-      #   with:
-      #     path: ~/.npm
-      #     key: ${{ runner.OS }}-${{ matrix.node }}-npm-cache-${{ hashFiles('**/package-lock.json') }}
-      #     restore-keys: |
-      #       ${{ runner.OS }}-${{ matrix.node }}-npm-cache-
 
       - name: Install dependencies
         run: yarn # switch to `npm ci` when Node.js 6 support is dropped
 
       - name: Run build (+lint)
         run: yarn run build
-
-      # - name: Cache Hardhat
-      #   uses: actions/cache@v3
-      #   with:
-      #     path: ./cache_hardhat
-      #     key: ${{ runner.OS }}-${{ matrix.node }}-hardhat-cache-${{ env.CHAIN }}-${{ env.BLOCK_NUMBER }}
-      #     restore-keys: |
-      #       ${{ runner.OS }}-${{ matrix.node }}-hardhat-cache-${{ env.CHAIN }}-${{ env.BLOCK_NUMBER }}
-
-      # - uses: 721labs/hardhat-session-action@main
-      #   id: start-session
-      #   with:
-      #     # The Hardhat command, including flags, you wish to run within the session container.
-      #     # For example:
-      #     # $ npx hardhat <cmd>
-      #     # $ npx hardhat run test --show-stack-traces --verbose
-      #     #
-      #     # Note that some commands such as `node` as well as the
-      #     # `--network` flag are unnecessary.
-      #     #
-      #     # Type: String
-      #     # Required: True
-      #     cmd: "npm run coveralls"
-      #     # # ID of session to resume; acquired through a previous output.
-      #     # # e.g. Started in same job, previous step: `${{ steps.previously-started-session.outputs.session-id }}`
-      #     # # e.g. Started in previous job: `${{ needs.test-action-new-session.outputs.session-id }}`
-      #     # # Type: String
-      #     # # Required: False
-      #     # session-id: ""
-      #     # # Directory containing your Hardhat project if it's not contained within root.
-      #     # # Note that the action does not read job.defaults.run.working_directory.
-      #     # # If `hardhat-directory` is set, it's unnecessary to pass `--config` within `cmd`.
-      #     # # Type: String
-      #     # # Required: False
-      #     # hardhat-directory: ""
 
       - name: Run tests
         run: yarn run coverage
