@@ -9,7 +9,7 @@ Error.stackTraceLimit = Infinity
 export const args = yargs.options({
   chain: {
     type: 'string',
-    default: 'pulsechain',
+    default: 'ethereum',
     describe: 'the chain configuration to utilize',
   },
   coinmarketcap: {
