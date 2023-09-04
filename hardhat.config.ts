@@ -15,7 +15,6 @@ import 'solidity-coverage'
 import 'hardhat-vizor'
 import 'hardhat-gas-reporter'
 import 'hardhat-dependency-compiler'
-import 'hardhat-slither'
 import * as ethers from "ethers";
 
 import * as conf from './src/config'

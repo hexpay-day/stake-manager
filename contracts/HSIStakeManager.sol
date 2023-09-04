@@ -1,14 +1,13 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity =0.8.18;
+pragma solidity >=0.8.18;
 
-import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "./interfaces/IHedron.sol";
-import "./interfaces/IHEXStakeInstanceManager.sol";
-import "./interfaces/IHEX.sol";
-import "./StakeEnder.sol";
-import "./Tipper.sol";
-import "./Magnitude.sol";
+import { IERC721 } from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
+import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import { IHedron } from "./interfaces/IHedron.sol";
+import { IHEXStakeInstanceManager } from "./interfaces/IHEXStakeInstanceManager.sol";
+import { IHEX } from "./interfaces/IHEX.sol";
+import { IUnderlyingStakeable } from "./interfaces/IUnderlyingStakeable.sol";
+import { StakeEnder } from "./StakeEnder.sol";
 
 contract HSIStakeManager is StakeEnder {
   /**

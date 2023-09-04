@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity =0.8.18;
+pragma solidity >=0.8.18;
 
 /**
  * this multicall extension is useful for chaining permissioned calls
@@ -88,8 +88,14 @@ contract MulticallExtension {
             result: result
           });
         } else {
-          assembly {
-            revert(add(result, 0x20), mload(result))
+          // assembly {
+          //   revert(add(result, 0x20), mload(result))
+          // }
+          // solhint-disable-line no-inline-assembly
+          assembly ("memory-safe") {
+            let ptr := mload(0x40)
+            returndatacopy(ptr, 0, returndatasize())
+            revert(ptr, returndatasize())
           }
         }
       }

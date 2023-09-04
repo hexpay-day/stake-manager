@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity =0.8.18;
+pragma solidity >=0.8.18;
 
 import "./SingletonHedronManager.sol";
 import "./Magnitude.sol";
@@ -49,8 +49,8 @@ contract StakeEnder is Magnitude, SingletonHedronManager {
       index: idx,
       stakeId: stakeId
     });
-    if (stake.stakeId == 0) {
-      return (0, count);
+    if (stake.stakeId == ZERO) {
+      return (ZERO, count);
     }
     uint256 setting = stakeIdToSettings[stakeId];
     if (!_isCapable({

@@ -1,10 +1,9 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity =0.8.18;
+pragma solidity >=0.8.18;
 
-import "./Capable.sol";
-import "./UnderlyingStakeable.sol";
+import { UnderlyingStakeable } from "./UnderlyingStakeable.sol";
 
-abstract contract AuthorizationManager is UnderlyingStakeable, Capable {
+abstract contract AuthorizationManager is UnderlyingStakeable {
   /**
    * tracks which keys are provided which authorization permissions
    * @dev most of the time the keys will be addresses

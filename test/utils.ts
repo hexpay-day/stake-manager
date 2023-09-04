@@ -41,8 +41,8 @@ export const hexAddress = hre.ethers.utils.getAddress('0x2b591e99afe9f32eaa6214f
 export const hedronAddress = hre.ethers.utils.getAddress('0x3819f64f282bf135d62168C1e513280dAF905e06')
 
 export const deployFixture = async () => {
-  const Capable = await hre.ethers.getContractFactory('Capable')
-  const capable = await Capable.deploy()
+  const Utils = await hre.ethers.getContractFactory('Utils')
+  const utils = await Utils.deploy()
   const StakeManager = await hre.ethers.getContractFactory('StakeManager')
   const stakeManager = await StakeManager.deploy()
   await stakeManager.deployed()
@@ -83,7 +83,9 @@ export const deployFixture = async () => {
   const stakedAmount = oneMillion / 10n
   const usdcAddress = '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48'
   const usdc = await hre.ethers.getContractAt('@openzeppelin/contracts/token/ERC20/ERC20.sol:ERC20', usdcAddress) as IERC20Metadata
+  const multicall = await hre.ethers.getContractAt('IMulticall3', '0xcA11bde05977b3631167028862bE2a173976CA11')
   return {
+    multicall,
     usdc,
     usdcAddress,
     whales: {
@@ -101,7 +103,7 @@ export const deployFixture = async () => {
     StakeManager,
     isolatedStakeManagerFactory,
     isolatedStakeManager,
-    capable,
+    utils,
     maximusStakeManager,
     base,
     hedron,

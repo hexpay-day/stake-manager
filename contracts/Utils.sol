@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity =0.8.18;
+pragma solidity >=0.8.18;
 
 contract Utils {
   error NotAllowed();
@@ -25,4 +25,21 @@ contract Utils {
   uint256 internal constant SEVENTY_TWO = uint256(72);
   address public constant HEDRON = 0x3819f64f282bf135d62168C1e513280dAF905e06;
   address public constant HSIM = 0x8BD3d1472A656e312E94fB1BbdD599B8C51D18e3;
+  /**
+   * check if the number, in binary form, has a 1 at the provided index
+   * @param setting the setting number that holds up to 256 flags as 1/0
+   * @param index the index to check for a 1
+   */
+  function isCapable(uint256 setting, uint256 index) external pure returns(bool) {
+    return _isCapable({
+      setting: setting,
+      index: index
+    });
+  }
+  function _isCapable(uint256 setting, uint256 index) internal pure returns(bool) {
+    // in binary checks:
+    // take the setting and shift it some number of bits left (leaving space for 1)
+    // then go the opposite direction, once again leaving only space for 1
+    return 1 == (setting << (MAX_UINT8 - index) >> MAX_UINT8);
+  }
 }
