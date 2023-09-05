@@ -158,15 +158,4 @@ describe('EncodableSettings.sol', () => {
         .eventually.to.equal(123n << 16n | 253n << 8n)
     })
   })
-  describe('encodeNewStakeDaysMethod', () => {
-    it('returns a modulated value depending on its size', async () => {
-      const x = await loadFixture(utils.deployFixture)
-      await expect(x.stakeManager.encodeNewStakeDaysMethod(0, 4))
-        .eventually.to.equal(0)
-      await expect(x.stakeManager.encodeNewStakeDaysMethod(0, 3))
-        .eventually.to.equal(3)
-      await expect(x.stakeManager.encodeNewStakeDaysMethod(3, 3))
-        .eventually.to.equal(15)
-    })
-  })
 })

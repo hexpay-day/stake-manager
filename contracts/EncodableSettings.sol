@@ -44,18 +44,18 @@ abstract contract EncodableSettings is StakeInfo {
   }
   // 1 word;
   struct Settings {
-    uint8 hedronTipMethod;
-    uint64 hedronTipMagnitude;
+    uint256 hedronTipMethod;
+    uint256 hedronTipMagnitude;
     // starts with full amount of end stake
-    uint8 tipMethod;
-    uint64 tipMagnitude;
+    uint256 tipMethod;
+    uint256 tipMagnitude;
     // the rest goes into a new stake if the number of days are set
-    uint8 newStakeMethod; // being non 0 signals approval
-    uint64 newStakeMagnitude;
+    uint256 newStakeMethod; // being non 0 signals approval
+    uint256 newStakeMagnitude;
     // useful to use methods 6+7 for stake days
-    uint8 newStakeDaysMethod;
-    uint16 newStakeDaysMagnitude;
-    uint8 copyIterations; // 0 for do not restart, 1-254 as countdown, 255 as restart indefinitely
+    uint256 newStakeDaysMethod;
+    uint256 newStakeDaysMagnitude;
+    uint256 copyIterations; // 0 for do not restart, 1-254 as countdown, 255 as restart indefinitely
     /**
      * 00000001(0): can stake end
      * 00000010(1): can early stake end
@@ -217,6 +217,10 @@ abstract contract EncodableSettings is StakeInfo {
       encoded: encoded
     });
   }
+  /**
+   * decode a settings struct (2 words minimum) from a single uint256
+   * @param encoded a number that represents all data needed for an encoded settings struct
+   */
   function _decodeSettings(uint256 encoded) internal pure returns(Settings memory settings) {
     return Settings(
       uint8( encoded >> INDEX_HEDRON_TIP_METHOD),
@@ -233,11 +237,21 @@ abstract contract EncodableSettings is StakeInfo {
       })
     );
   }
+  /**
+   * encode a ConsentAbilities struct to fit in 1 byte
+   * @param consentAbilities the consent abilities struct to encode as a uint
+   * @return the encoded list of consetn abilities as a uint
+   */
   function encodeConsentAbilities(ConsentAbilities calldata consentAbilities) external pure returns(uint256) {
     return _encodeConsentAbilities({
       consentAbilities: consentAbilities
     });
   }
+  /**
+   * encode a struct of consent abilities to fit in 1 byte
+   * @param consentAbilities encodes a struct of 8 booleans as a uint to fit in 1 byte
+   * @return the encoded list of consent abilities as a uint
+   */
   function _encodeConsentAbilities(ConsentAbilities memory consentAbilities) internal pure returns(uint256) {
     return (
       (consentAbilities.hasExternalTips ? ONE : ZERO) << INDEX_HAS_EXTERNAL_TIPS |
@@ -250,6 +264,10 @@ abstract contract EncodableSettings is StakeInfo {
       (consentAbilities.canStakeEnd ? ONE : ZERO)
     );
   }
+  /**
+   * gets default settings struct
+   * @return settings struct with default settings
+   */
   function _defaultSettings() internal virtual pure returns(Settings memory settings) {
     // 0x00000000000000000000000000000000000000000000020000000000000000020000ff01
     return Settings(
@@ -306,37 +324,40 @@ abstract contract EncodableSettings is StakeInfo {
       })
     );
   }
-  function encodeNewStakeDaysMethod(uint256 next, uint256 current) external pure returns(uint256) {
-    return _encodeNewStakeDaysMethod(next, current);
-  }
-  function _encodeNewStakeDaysMethod(uint256 next, uint256 current) internal pure returns(uint256) {
-    unchecked {
-      // ((0-3 -> 1-4) * 4) + current(<3) = result
-      return (next * 4) + (current % 4);
-    }
-  }
+  /**
+   * modify the second byteword from the right to appropriately decrement
+   * the number of times that these settings should be copied
+   * @param setting the setting to start with - only the 2nd byte from the right is modified
+   */
   function decrementCopyIterations(uint256 setting) external pure returns(uint256) {
     return _decrementCopyIterations({
       setting: setting
     });
   }
+  /**
+   * decrement the 2nd byte from the right if the value is < 255
+   * @param setting the setting to start with - only the 2nd byte from the right is modified
+   * @return updated encoded setting with appropriately decremented value
+   */
   function _decrementCopyIterations(uint256 setting) internal pure returns(uint256) {
     uint256 copyIterations = uint8(setting >> INDEX_COPY_ITERATIONS);
-    if (copyIterations == 0) {
+    if (copyIterations == ZERO) {
       return uint8(setting);
     }
-    if (copyIterations >= MAX_UINT8) {
+    if (copyIterations == MAX_UINT8) {
       return setting;
     }
-    --copyIterations;
-    return (
-      (setting >> INDEX_NEW_STAKE_DAYS_MAGNITUDE << INDEX_NEW_STAKE_DAYS_MAGNITUDE)
-      | (copyIterations << INDEX_COPY_ITERATIONS)
-      | uint8(setting)
-    );
+    unchecked {
+      --copyIterations;
+      return (
+        (setting >> INDEX_NEW_STAKE_DAYS_MAGNITUDE << INDEX_NEW_STAKE_DAYS_MAGNITUDE)
+        | (copyIterations << INDEX_COPY_ITERATIONS)
+        | uint8(setting)
+      );
+    }
   }
   /**
-   * exposes the default settings to external
+   * exposes the default settings to external for ease of access
    */
   function defaultSettings() external virtual pure returns(Settings memory) {
     return _defaultSettings();

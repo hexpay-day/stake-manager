@@ -6,6 +6,10 @@ import { IERC20 } from  "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import { Utils } from "./Utils.sol";
 
+/**
+ * @title A subcontract to track balances of deposited tokens
+ * @notice this contract should never owe more than the withdrawableBalanceOf's it has in erc20 terms
+ */
 contract Bank is Utils {
   using Address for address payable;
   using SafeERC20 for IERC20;
@@ -14,6 +18,9 @@ contract Bank is Utils {
   mapping(address => mapping(address => uint256)) public withdrawableBalanceOf;
   /**
    * gets unattributed tokens floating in the contract
+   * @param token the address of the token that you wish to get the unattributed value of
+   * @return a uint representing the amount of tokens that have been
+   * deposited into the contract, which are not attributed to any address
    */
   function _getUnattributed(address token) internal view returns(uint256) {
     return _getBalance({
@@ -21,11 +28,18 @@ contract Bank is Utils {
       owner: address(this)
     }) - attributed[token];
   }
+  /**
+   * get the balance and ownership of any token
+   * @param token the token address that you wish to get the balance of (including native)
+   * @param owner the owner address to get the balance of
+   */
   function _getBalance(address token, address owner) internal view returns(uint256) {
     return token == address(0) ? owner.balance : IERC20(token).balanceOf(owner);
   }
   /**
    * gets the amount of unattributed tokens
+   * @param token the token to get the unattributed balance of
+   * @return the amount of a token that can be withdrawn
    */
   function getUnattributed(address token) external view returns(uint256) {
     return _getUnattributed({

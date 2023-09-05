@@ -3,6 +3,12 @@ pragma solidity >=0.8.18;
 
 import { UnderlyingStakeable } from "./UnderlyingStakeable.sol";
 
+/**
+ * @title A module for managing access control using hashed inputs
+ * @notice This module is used to hash inputs pertaining to access control around various
+ * aspects that a developer may care about. For instance, access on a global scope
+ * vs a scope that has a reuired input may have different permission
+ */
 abstract contract AuthorizationManager is UnderlyingStakeable {
   /**
    * tracks which keys are provided which authorization permissions
@@ -23,6 +29,12 @@ abstract contract AuthorizationManager is UnderlyingStakeable {
    * could be set elsewhere if the contract decides to
    */
   uint256 public immutable MAX_AUTHORIZATION;
+  /**
+   * Sets up the contract by accepting a value limit during construction.
+   * Usually this is type(uint8).max or other derived value
+   * @param maxAuthorization the maximum uint that can be set
+   * on the authorization manager as a value.
+   */
   constructor(uint256 maxAuthorization) {
     MAX_AUTHORIZATION = maxAuthorization;
   }
@@ -41,6 +53,11 @@ abstract contract AuthorizationManager is UnderlyingStakeable {
       settings: settings
     });
   }
+  /**
+   * sets an authorization level for an address
+   * @param account the address to scope an authorization value
+   * @param settings the settings configuration in uint256 form
+   */
   function _setAddressAuthorization(address account, uint256 settings) internal {
     _setAuthorization({
       key: bytes32(uint256(uint160(account))),
@@ -53,6 +70,7 @@ abstract contract AuthorizationManager is UnderlyingStakeable {
    * @param account the address to verify is authorized to do an action
    * @param index the index of the bit to check
    * @dev the index is an index of the bits as in binary (1/0)
+   * @return whether or not the address authorization value has a 1/0 at the provided index
    */
   function isAddressAuthorized(address account, uint256 index) view external returns(bool) {
     return _isAddressAuthorized({
@@ -64,6 +82,7 @@ abstract contract AuthorizationManager is UnderlyingStakeable {
    * check if the provided address is authorized to perform an action
    * @param account the address to check authorization against
    * @param index the index of the setting boolean to check
+   * @return whether or not the address authorization value has a 1/0 at the provided index
    */
   function _isAddressAuthorized(address account, uint256 index) view internal returns(bool) {
     return _isAuthorized({
@@ -76,6 +95,7 @@ abstract contract AuthorizationManager is UnderlyingStakeable {
    * return true if flag is true
    * @param key the key to check against the authorization mapping
    * @param index the index of the setting flag to check
+   * @return whether or not the authorization value has a 1 or a 0 at the provided index
    */
   function _isAuthorized(bytes32 key, uint256 index) view internal returns(bool) {
     return _isCapable({
@@ -83,6 +103,11 @@ abstract contract AuthorizationManager is UnderlyingStakeable {
       index: index
     });
   }
+  /**
+   * access setting scoped under an account (address) only
+   * @param account the account whose settings you wish to access
+   * @return arbitrary authorization value
+   */
   function _getAddressSetting(address account) view internal returns(uint256) {
     return authorization[bytes32(uint256(uint160(account)))];
   }
