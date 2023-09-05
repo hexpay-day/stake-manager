@@ -57,13 +57,13 @@ describe("2023-10-02 utc", function () {
       )
       // invalid timestamp - stakes will not end
       console.log('multicall', new Date((await x.multicall.getCurrentBlockTimestamp()).toNumber() * 1_000))
-      console.log('ending failure', new Date((endTime - 1) * 1_000))
       await time.setNextBlockTimestamp(endTime - 1)
+      console.log('ending', new Date((endTime - 1) * 1_000), await x.hsiStakeManager.isEndable(x.base))
       await expect(doCalls())
         .not.to.emit(x.hex, 'StakeEnd')
       // valid timestamp - stakes will end
-      console.log('ending success', new Date(endTime * 1_000))
       await time.setNextBlockTimestamp(endTime)
+      console.log('ending', new Date(endTime * 1_000), await x.hsiStakeManager.isEndable(x.base))
       const doingCalls = doCalls()
 
       await expect(doingCalls)
