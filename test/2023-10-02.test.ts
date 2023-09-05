@@ -5,7 +5,7 @@ import * as hre from "hardhat"
 import * as utils from './utils'
 import { anyUint } from '@nomicfoundation/hardhat-chai-matchers/withArgs'
 
-describe("2023-10-02 utc", function () {
+describe.only("2023-10-02 utc", function () {
   it('can end base and hsi', async () => {
     const depositDate = new Date('2023-09-15T00:00:00Z')
     const endDate = new Date('2023-10-02T00:00:00Z')
@@ -56,19 +56,26 @@ describe("2023-10-02 utc", function () {
         false,
       )
       // invalid timestamp - stakes will not end
-      console.log('multicall', new Date((await x.multicall.getCurrentBlockTimestamp()).toNumber() * 1_000))
+      let lastBlockTime!: Date
+      const getLastBlockTime = async () => new Date((await x.multicall.getCurrentBlockTimestamp()).toNumber() * 1_000)
+      lastBlockTime = await getLastBlockTime()
+      console.log('multicall', lastBlockTime)
       await time.setNextBlockTimestamp(endTime - 1)
-      console.log('ending', new Date((endTime - 1) * 1_000), await x.hsiStakeManager.isEndable(x.base))
+      lastBlockTime = await getLastBlockTime()
+      console.log('ending', lastBlockTime, new Date((endTime - 1) * 1_000), await x.hsiStakeManager.isEndable(x.base))
       await expect(doCalls())
         .not.to.emit(x.hex, 'StakeEnd')
       // valid timestamp - stakes will end
       await time.setNextBlockTimestamp(endTime)
-      console.log('ending', new Date(endTime * 1_000), await x.hsiStakeManager.isEndable(x.base))
+      lastBlockTime = await getLastBlockTime()
+      console.log('ending', lastBlockTime, new Date(endTime * 1_000), await x.hsiStakeManager.isEndable(x.base))
       const doingCalls = doCalls()
 
       await expect(doingCalls)
         .to.emit(x.hex, 'StakeEnd')
         .withArgs(anyUint, anyUint, x.base, stake.stakeId)
+      lastBlockTime = await getLastBlockTime()
+      console.log('ending', lastBlockTime, new Date(endTime * 1_000), await x.hsiStakeManager.isEndable(x.base))
         // .printGasUsage()
       for (let hsi of hsis) {
         await expect(doingCalls)
