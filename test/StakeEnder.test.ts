@@ -247,7 +247,6 @@ describe("StakeManager", function () {
   })
   describe('stakeEndByConsent', () => {
     it('can start stakes and end them - all managed by a single contract', async function () {
-      this.timeout(100_000_000)
       const x = await loadFixture(utils.deployFixture)
       const [signer1, signer2, signer3, signer4] = x.signers
       const days = 369

@@ -216,7 +216,6 @@ describe('EarningsOracle.sol', () => {
           .eventually.to.equal(previousSize.toBigInt() + rangeSize)
       })
       it('maxes out at the max catch up days', async function () {
-        this.timeout(100_000_000)
         const max = await x.oracle.MAX_CATCH_UP_DAYS()
         const previousSize = await x.oracle.totalsCount()
         await x.oracle.catchUpDays(max.toBigInt() + 100n)
@@ -224,7 +223,6 @@ describe('EarningsOracle.sol', () => {
           .eventually.to.equal(previousSize.toBigInt() + max.toBigInt())
       })
       it('uses the max days if zero is provided', async function () {
-        this.timeout(100_000_000)
         const max = await x.oracle.MAX_CATCH_UP_DAYS()
         const previousSize = await x.oracle.totalsCount()
         await x.oracle.catchUpDays(0)
@@ -234,7 +232,6 @@ describe('EarningsOracle.sol', () => {
     })
     describe('payoutDeltaTrucated', () => {
       it('gives a minimum value that should have been claimable by the range for a given magnitude', async function () {
-        this.timeout(100_000_000)
         const rangeSize = 700n
         await x.oracle.catchUpDays(rangeSize)
         // day 2 did not really exist for anyone
@@ -252,7 +249,6 @@ describe('EarningsOracle.sol', () => {
   describe('has almost all current data pulled over', () => {
     let x!: Awaited<ReturnType<typeof launchCurrentSub1>>
     beforeEach(async function () {
-      this.timeout(120_000)
       x = await loadFixture(launchCurrentSub1)
     })
     describe('catchUpDays', () => {
