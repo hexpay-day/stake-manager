@@ -2,13 +2,13 @@
   "license": "UNLICENSED",
   "name": "@hexpayday/stake-manager",
   "scripts": {
-    "build": "yarn run lint && hardhat compile && yarn run metrics",
+    "build": "yarn run lint && hardhat compile && yarn run metrics && yarn run cloc",
     "metrics": "solidity-code-metrics ./contracts/*.sol > metrics.md",
+    "cloc": "cloc",
     "lint": "solhint 'contracts/**/*.sol'",
     "test": "hardhat test",
     "coverage": "hardhat coverage",
     "coveralls": "hardhat coverage && shx cat ./coverage/lcov.info | coveralls --verbose",
-    "sloc": "sloc contracts",
     "analyze": "slither ./contracts/ --solc-remaps @openzeppelin=node_modules/@openzeppelin --hardhat-ignore-compile --exclude-dependencies --hardhat-cache-directory ./cache_hardhat",
     "foundry:test": "FORK_URL=\"https://rpc.pulsechain.com\" yarn run foundry:test-fork",
     "foundry:test-fork": "forge test --fork-url $FORK_URL -vvv --gas-report"
@@ -39,6 +39,7 @@
     "@types/node": "^20.5.0",
     "@types/yargs": "^17.0.24",
     "chai": "^4.2.0",
+    "cloc": "^1.98.0-cloc",
     "coveralls": "^3.1.1",
     "debug": "^4.3.4",
     "dotenv": "^16.0.3",
