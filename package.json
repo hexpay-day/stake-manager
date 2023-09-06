@@ -4,7 +4,7 @@
   "scripts": {
     "build": "yarn run lint && hardhat compile && yarn run metrics && yarn run cloc",
     "metrics": "solidity-code-metrics ./contracts/*.sol > metrics.md",
-    "cloc": "cloc",
+    "cloc": "cloc --by-file --out=./cloc.md ./contracts/*.sol",
     "lint": "solhint 'contracts/**/*.sol'",
     "test": "hardhat test",
     "coverage": "hardhat coverage",
