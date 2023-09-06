@@ -42,6 +42,7 @@ contract UnderlyingStakeManager is GoodAccounting {
     });
     // end the stake - attributed to contract or through the managed stake
     UnderlyingStakeable(TARGET).stakeEnd(stakeIndex, uint40(stakeId));
+    // for the last stake in this list, this branch will not be hit
     if (stakeCountAfter > stakeIndex) {
       uint256 shiftingStakeId = _getStake({
         custodian: address(this),
@@ -128,6 +129,13 @@ contract UnderlyingStakeManager is GoodAccounting {
     });
     return _stakeEndByIndexAndId(stakeIndex, stakeId);
   }
+  /**
+   * given ownership over a stake, end the stake
+   * and restart all of the proceeds
+   * @param stakeId the stake id to restart
+   * @return amount the amount ended and re-staked
+   * @return newStakeId the newly recreated stake id
+   */
   function _stakeRestartById(uint256 stakeId) internal returns(uint256 amount, uint256 newStakeId) {
     _verifyStakeOwnership({
       owner: msg.sender,
@@ -135,26 +143,37 @@ contract UnderlyingStakeManager is GoodAccounting {
     });
     (uint256 stakeIndex, address staker) = _stakeIdToInfo(stakeId);
     UnderlyingStakeable.StakeStore memory stake = _getStake(address(this), stakeIndex);
-    uint256 count = _stakeCount({
+    uint256 stakeCountAfter = _stakeCount({
       staker: address(this)
     }) - 1;
+    // at this point, we can guarantee that we own the stake
     amount = _stakeEnd({
       stakeIndex: stakeIndex,
       stakeId: stakeId,
-      stakeCountAfter: count
+      stakeCountAfter: stakeCountAfter
     });
     newStakeId = _stakeStartFor({
       owner: staker,
       amount: amount,
       newStakedDays: stake.stakedDays,
-      index: count
+      index: stakeCountAfter
     });
   }
+  /**
+   * given ownership over a stake, stop and restart a stake with all proceeds
+   * @param stakeId the stake id to restart
+   * @return amount the number of tokens that were ended and added to new stake
+   * @return newStakeId the newly created stake id
+   */
   function stakeRestartById(uint256 stakeId) external returns(uint256 amount, uint256 newStakeId) {
     return _stakeRestartById({
       stakeId: stakeId
     });
   }
+  /**
+   * given ownership over a list of ids of stakes, restart a list of stakes
+   * @param stakeIds the list of stake ids to iterate over and restart
+   */
   function stakeRestartManyById(uint256[] calldata stakeIds) external {
     uint256 i;
     uint256 len = stakeIds.length;

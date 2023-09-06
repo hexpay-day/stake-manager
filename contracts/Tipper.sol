@@ -5,9 +5,8 @@ import { UnderlyingStakeable } from "./UnderlyingStakeable.sol";
 import { Bank } from "./Bank.sol";
 import { CurrencyList } from "./CurrencyList.sol";
 import { EncodableSettings } from "./EncodableSettings.sol";
-import { Magnitude } from "./Magnitude.sol";
 
-abstract contract Tipper is Bank, UnderlyingStakeable, CurrencyList, EncodableSettings, Magnitude {
+abstract contract Tipper is Bank, UnderlyingStakeable, CurrencyList, EncodableSettings {
   uint256 internal constant INDEX_EXTERNAL_TIP_CURRENCY = 200;
   uint256 internal constant INDEX_EXTERNAL_TIP_CURRENCY_ONLY = INDEX_EXTERNAL_TIP_CURRENCY + ONE;
   uint256 internal constant INDEX_EXTERNAL_TIP_LIMIT = SEVENTY_TWO; // 128 bits long

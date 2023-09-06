@@ -32,6 +32,10 @@ abstract contract EncodableSettings is StakeInfo {
   uint256 internal constant INDEX_CAN_EARLY_STAKE_END = ONE;
   uint256 internal constant INDEX_CAN_STAKE_END = ZERO;
 
+  /**
+   * @notice this struct holds a series of flags to allow clients
+   * to easily access and understand 1/0 mappings
+   */
   struct ConsentAbilities {
     bool canStakeEnd;
     bool canEarlyStakeEnd;
@@ -42,7 +46,9 @@ abstract contract EncodableSettings is StakeInfo {
     bool copyExternalTips;
     bool hasExternalTips;
   }
-  // 1 word;
+  /**
+   * @notice this struct holds information that can be encoded into a uint256
+   */
   struct Settings {
     uint256 hedronTipMethod;
     uint256 hedronTipMagnitude;
@@ -78,19 +84,37 @@ abstract contract EncodableSettings is StakeInfo {
   event UpdateSettings(uint256 indexed stakeId, uint256 settings);
   uint256 private constant DEFAULT_ENCODED_SETTINGS
     = uint256(0x000000000000000000000000000000000000020000000000000000020000ff01);
+  /**
+   * @return the default encoded settings used by end stakers to tip and end stakes
+   */
   function defaultEncodedSettings() external virtual pure returns(uint256) {
     return DEFAULT_ENCODED_SETTINGS;
   }
+  /**
+   * access settings of a stake id and decode it, returning the decoded settings struct
+   * @param stakeId the stake id to access and decode
+   * @return decoded settings struct that holds all configuration by owner
+   */
   function stakeIdSettings(uint256 stakeId) external view returns (Settings memory) {
     return _decodeSettings({
       encoded: stakeIdToSettings[stakeId]
     });
   }
+  /**
+   * decode a uint's first byte as consent abilities struct
+   * @param abilities encoded consent abilities to decode
+   * @return a ConsentAbilities struct with flags appropriately set
+   */
   function decodeConsentAbilities(uint256 abilities) external pure returns(ConsentAbilities memory) {
     return _decodeConsentAbilities({
       abilities: abilities
     });
   }
+  /**
+   * decode a uint's first byte as consent abilities struct
+   * @param abilities encoded consent abilities to decode
+   * @return a ConsentAbilities struct with flags appropriately set
+   */
   function _decodeConsentAbilities(uint256 abilities) internal pure returns(ConsentAbilities memory) {
     return ConsentAbilities({
       hasExternalTips: (abilities >> INDEX_HAS_EXTERNAL_TIPS) % TWO == ONE,
@@ -107,20 +131,33 @@ abstract contract EncodableSettings is StakeInfo {
    * updates settings under a stake id to the provided settings struct
    * @param stakeId the stake id to update
    * @param settings the settings to update the stake id to
+   * @notice payable is only available to reduce costs, any native token
+   * sent to this method will be unattributed and claimable by anyone
    */
   function updateSettings(uint256 stakeId, Settings calldata settings) external virtual payable {
-    _updateEncodedSettings({
+    _updateSettingsEncoded({
       stakeId: stakeId,
       settings: _encodeSettings(settings)
     });
   }
+  /**
+   * update a stake's settings by providing a new, encoded value
+   * @param stakeId the stake id to update settings for
+   * @param settings the settings value to update settings for
+   */
   function updateSettingsEncoded(uint256 stakeId, uint256 settings) external virtual payable {
-    _updateEncodedSettings({
+    _updateSettingsEncoded({
       stakeId: stakeId,
       settings: settings
     });
   }
-  function _updateEncodedSettings(uint256 stakeId, uint256 settings) internal {
+  /**
+   * update a stake's setting by providing a uint256 encoded settings
+   * @param stakeId the stake id to update settings for
+   * @param settings the encoded settings to update to (7th index is maintained)
+   * @notice This method will validate that the msg.sender owns the stake
+   */
+  function _updateSettingsEncoded(uint256 stakeId, uint256 settings) internal {
     _verifyStakeOwnership({
       owner: msg.sender,
       stakeId: stakeId
@@ -130,6 +167,12 @@ abstract contract EncodableSettings is StakeInfo {
       settings: settings
     });
   }
+  /**
+   * updates a stake id's settings
+   * @param stakeId the stake id to update settings for
+   * @param settings the settings to update against a provided stakeId.
+   * 7th index will be ignored as it is controlled by the contract
+   */
   function _logPreservedSettingsUpdate(
     uint256 stakeId,
     uint256 settings
@@ -140,7 +183,7 @@ abstract contract EncodableSettings is StakeInfo {
       settings: (
         (settings >> INDEX_COPY_ITERATIONS << INDEX_COPY_ITERATIONS)
         | uint8(stakeIdToSettings[stakeId] >> INDEX_HAS_EXTERNAL_TIPS << INDEX_HAS_EXTERNAL_TIPS)
-        | (uint8(settings << ONE) >> ONE)
+        | uint256(uint8(settings << ONE) >> ONE)
       )
     });
   }
@@ -179,6 +222,14 @@ abstract contract EncodableSettings is StakeInfo {
       length: length
     });
   }
+  /**
+   * parse out a single value from an encoded settings uint Only useful
+   * if you do not want the whole settings struct to be decoded
+   * @param settings the settings value to parse out
+   * @param fromEnd the index (from left) to start at. Left most is 0
+   * @param length the number of bits to retain after the fromEnd param
+   * @return the uint retained by the fromEnd and length arguments of settings
+   */
   function _readEncodedSettings(
     uint256 settings,
     uint256 fromEnd,
@@ -189,23 +240,29 @@ abstract contract EncodableSettings is StakeInfo {
   /**
    * encode a settings struct into it's number
    * @param settings the settings struct to be encoded into a number
+   * @return encoded a uint256 expression of settings struct
    */
   function encodeSettings(Settings memory settings) external pure returns(uint256 encoded) {
     return _encodeSettings({
       settings: settings
     });
   }
+  /**
+   * encode a settings struct as a uint value to fit it within 1 word
+   * @param settings the settings struct to encode as a uint
+   * @return encoded a uint256 expression of settings struct
+   */
   function _encodeSettings(Settings memory settings) internal pure returns(uint256 encoded) {
-    return uint256(settings.hedronTipMethod) << INDEX_HEDRON_TIP_METHOD
-      | uint256(settings.hedronTipMagnitude) << INDEX_HEDRON_TIP_MAGNITUDE
-      | uint256(settings.tipMethod) << INDEX_TIP_METHOD
-      | uint256(settings.tipMagnitude) << INDEX_TIP_MAGNITUDE
-      | uint256(settings.newStakeMethod) << INDEX_NEW_STAKE_METHOD
-      | uint256(settings.newStakeMagnitude) << INDEX_NEW_STAKE_MAGNITUDE
-      | uint256(settings.newStakeDaysMethod) << INDEX_NEW_STAKE_DAYS_METHOD
-      | uint256(settings.newStakeDaysMagnitude) << INDEX_NEW_STAKE_DAYS_MAGNITUDE
-      | uint256(settings.copyIterations) << INDEX_COPY_ITERATIONS
-      | uint256(_encodeConsentAbilities(settings.consentAbilities));
+    return uint256(uint8(settings.hedronTipMethod)) << INDEX_HEDRON_TIP_METHOD
+      | uint256(uint64(settings.hedronTipMagnitude)) << INDEX_HEDRON_TIP_MAGNITUDE
+      | uint256(uint8(settings.tipMethod)) << INDEX_TIP_METHOD
+      | uint256(uint64(settings.tipMagnitude)) << INDEX_TIP_MAGNITUDE
+      | uint256(uint8(settings.newStakeMethod)) << INDEX_NEW_STAKE_METHOD
+      | uint256(uint64(settings.newStakeMagnitude)) << INDEX_NEW_STAKE_MAGNITUDE
+      | uint256(uint8(settings.newStakeDaysMethod)) << INDEX_NEW_STAKE_DAYS_METHOD
+      | uint256(uint16(settings.newStakeDaysMagnitude)) << INDEX_NEW_STAKE_DAYS_MAGNITUDE
+      | uint256(uint8(settings.copyIterations)) << INDEX_COPY_ITERATIONS
+      | _encodeConsentAbilities(settings.consentAbilities);
   }
   /**
    * decode an encoded setting into it's settings struct
@@ -358,6 +415,7 @@ abstract contract EncodableSettings is StakeInfo {
   }
   /**
    * exposes the default settings to external for ease of access
+   * @return a settings struct with default values
    */
   function defaultSettings() external virtual pure returns(Settings memory) {
     return _defaultSettings();

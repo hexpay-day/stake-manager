@@ -6,6 +6,7 @@ import { UnderlyingStakeable } from "./UnderlyingStakeable.sol";
 
 contract Magnitude is Utils {
   uint256 constant internal MULTIPLIER = TWO;
+  uint256 constant internal X_OPTIONS = THREE;
   function _computeDayMagnitude(
     uint256 limit, uint256 method, uint256 x,
     uint256 today, // today
@@ -53,14 +54,14 @@ contract Magnitude is Utils {
     // we can use unchecked here because all minuses (-)
     // are checked before they are run
     unchecked {
-      if (method < THREE) {
+      if (method < X_OPTIONS) {
         if (method == ONE) {
           amount = x; // 1
         } else {
           amount = y2; // 2
         }
       } else {
-        uint256 y = _yDeltas(method % THREE, y2, y1);
+        uint256 y = _yDeltas(method % X_OPTIONS, y2, y1);
         if (y == ZERO) return ZERO;
         // even with uint16 (max: 65535), we can still get down to 0.01% increments
         // with scaling we can go even further (though it is choppier)
@@ -127,7 +128,7 @@ contract Magnitude is Utils {
     uint256 bFactor,
     int256 b
   ) internal pure returns(uint256 encodedMethod, uint256 encodedMagnitude) {
-    encodedMethod = ((xFactor + 1) * 3) + method;
+    encodedMethod = ((xFactor + ONE) * X_OPTIONS) + method;
     unchecked {
       encodedMagnitude = uint256(
         (uint256(uint16(int16(x)) - uint16(int16(MIN_INT_16))) << FOURTY_EIGHT)
@@ -149,7 +150,7 @@ contract Magnitude is Utils {
    */
   function decodeLinear(uint256 method, uint256 magnitude) external pure returns (int256 x, uint256 y, int256 b) {
     if (method > MAX_UINT8) revert NotAllowed();
-    if (method < THREE) revert NotAllowed(); // under 3 must be handled by client
+    if (method < X_OPTIONS) revert NotAllowed(); // under 3 must be handled by client
     return _decodeLinear({
       method: method,
       magnitude: magnitude
@@ -178,7 +179,7 @@ contract Magnitude is Utils {
       // in order of location on the series of bits
       // numerator
       x = int16(uint16(magnitude >> FOURTY_EIGHT)) + int16(-MIN_INT_16);
-      x *= int256(MULTIPLIER ** ((method - THREE) / THREE)); // udn*(2^sfn)=n
+      x *= int256(MULTIPLIER ** ((method - X_OPTIONS) / X_OPTIONS)); // udn*(2^sfn)=n
       // denominator - uint
       y = uint16(magnitude >> TWENTY_FOUR);
       y *= (MULTIPLIER ** uint8(magnitude >> FOURTY)); // udd*(4^sfd)=d
