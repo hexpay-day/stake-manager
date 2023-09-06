@@ -17,7 +17,7 @@
     "artifacts"
   ],
   "engines": {
-    "node": ">=16.19",
+    "node": ">=20.6",
     "yarn": ">=1.22"
   },
   "devDependencies": {
