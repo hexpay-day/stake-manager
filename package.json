@@ -2,8 +2,9 @@
   "license": "UNLICENSED",
   "name": "@hexpayday/stake-manager",
   "scripts": {
-    "build": "yarn run lint && hardhat compile && yarn run metrics && yarn run cloc",
+    "build": "yarn run lint && yarn run docgen && yarn run metrics && yarn run cloc",
     "metrics": "solidity-code-metrics ./contracts/*.sol > metrics.md",
+    "docgen": "hardhat docgen",
     "cloc": "cloc --by-file --out=./cloc.md ./contracts/*.sol",
     "lint": "solhint 'contracts/**/*.sol'",
     "test": "hardhat test",
@@ -56,6 +57,7 @@
     "solhint": "^3.4.1",
     "solidity-code-metrics": "^0.0.23",
     "solidity-coverage": "^0.8.4",
+    "solidity-docgen": "^0.6.0-beta.36",
     "ts-node": "^10.9.1",
     "typechain": "^8.1.0",
     "typescript": "^5.0.4",

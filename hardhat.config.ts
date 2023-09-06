@@ -15,6 +15,7 @@ import 'solidity-coverage'
 import 'hardhat-vizor'
 import 'hardhat-gas-reporter'
 import 'hardhat-dependency-compiler'
+import 'solidity-docgen'
 import * as ethers from "ethers";
 
 import * as conf from './src/config'
@@ -264,6 +265,11 @@ const config: HardhatUserConfig = {
   },
   mocha: {
     timeout: 100_000_000,
+  },
+  docgen: {
+    exclude: ['reference'],
+    pages: 'files',
+    // output:
   },
 };
 
