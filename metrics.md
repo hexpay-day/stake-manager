@@ -273,7 +273,7 @@ This section lists functions that are explicitly declared public or payable. Ple
 | ./contracts/IsolatedStakeManager.sol | 66f215ebe1bbcddb637852d2fed7aec3b546f50e |
 | ./contracts/IsolatedStakeManagerFactory.sol | e273ea4a137a3d45059858b70f91780443a02301 |
 | ./contracts/Magnitude.sol | 225a15379ec1938b0276474e9c9afc86bdc20205 |
-| ./contracts/MaximusStakeManager.sol | a76494bc77a4fac29d7d10c9b0c938617df40221 |
+| ./contracts/MaximusStakeManager.sol | 5944edc34f34df7531cb910368bd84b82ce25af5 |
 | ./contracts/MulticallExtension.sol | e2db7a46eb0cbcd94d13da5f9656cbe29a85ec93 |
 | ./contracts/SingletonHedronManager.sol | 2ad39540ef54eead5053192a77249882fbf95149 |
 | ./contracts/StakeEnder.sol | 105737c53b1118bf6c5ac1dabdfde17f884eb32b |
