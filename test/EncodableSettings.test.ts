@@ -6,9 +6,12 @@ import _ from 'lodash'
 import { EncodableSettings } from "../artifacts/types"
 
 describe('EncodableSettings.sol', () => {
+  let x!: Awaited<ReturnType<typeof utils.deployFixture>>
+  beforeEach(async () => {
+    x = await loadFixture(utils.deployFixture)
+  })
   describe('default methods', () => {
     it('should match', async () => {
-      const x = await loadFixture(utils.deployFixture)
       const defaultEncodedSettings = await x.stakeManager.defaultEncodedSettings()
       const decodedSettings = await x.stakeManager.decodeSettings(defaultEncodedSettings)
       await expect(x.stakeManager.defaultSettings())
@@ -17,7 +20,6 @@ describe('EncodableSettings.sol', () => {
   })
   describe('stakeIdSettings', () => {
     it('provides decoded settings', async () => {
-      const x = await loadFixture(utils.deployFixture)
       let settings
       settings = await x.stakeManager.stakeIdSettings(0);
       expect(settings.newStakeMagnitude).to.equal(0)
@@ -34,7 +36,6 @@ describe('EncodableSettings.sol', () => {
   })
   describe('parsing values', () => {
     it('has a method for that', async () => {
-      const x = await loadFixture(utils.deployFixture)
       const defaultEncodedSettings = await x.stakeManager.defaultEncodedSettings()
       const defaultSettings = await x.stakeManager.defaultSettings()
       await expect(x.stakeManager.readEncodedSettings(defaultEncodedSettings, 144, 8))
@@ -64,7 +65,6 @@ describe('EncodableSettings.sol', () => {
       abilities.hasExternalTips,
     ], abilities)
     it('can encode and decode consent abilities', async () => {
-      const x = await loadFixture(utils.deployFixture)
       const abilities = {
         hasExternalTips: false,
         copyExternalTips: true,
@@ -88,7 +88,6 @@ describe('EncodableSettings.sol', () => {
         .eventually.to.deep.equal(decodedConsentAbilitiesToResult(abilities))
     })
     it('can be all true or false', async () => {
-      const x = await loadFixture(utils.deployFixture)
       const decodedZero = await x.stakeManager.decodeConsentAbilities(0)
       const decodedEff = await x.stakeManager.decodeConsentAbilities('0xff')
       expect(decodedZero)
@@ -121,7 +120,6 @@ describe('EncodableSettings.sol', () => {
   })
   describe('updateSettingsEncoded', () => {
     it('can update settings', async () => {
-      const x = await loadFixture(utils.deployFixture)
       const [signer1] = x.signers
       await x.stakeManager.stakeStartFromBalanceFor(signer1.address, x.stakedAmount, 1, 0)
       await expect(x.stakeManager.updateSettingsEncoded(x.nextStakeId, hre.ethers.constants.MaxUint256))
@@ -131,29 +129,24 @@ describe('EncodableSettings.sol', () => {
   })
   describe('decrementCopyIterations', () => {
     it('returns 0 if 0 is passed (in the second byte)', async () => {
-      const x = await loadFixture(utils.deployFixture)
       // settings (uint256) is provided to decrement copy iterations
       await expect(x.stakeManager.decrementCopyIterations(0))
         .eventually.to.equal(0)
     })
     it('preserves number in first byte', async () => {
-      const x = await loadFixture(utils.deployFixture)
       // settings (uint256) is provided to decrement copy iterations
       await expect(x.stakeManager.decrementCopyIterations(240n))
         .eventually.to.equal(240n)
     })
     it('returns 255 if 255 is passed (in the second byte)', async () => {
-      const x = await loadFixture(utils.deployFixture)
       await expect(x.stakeManager.decrementCopyIterations(255n << 8n))
         .eventually.to.equal(255n << 8n)
     })
     it('any number less than 255 in the second byte is decremented', async () => {
-      const x = await loadFixture(utils.deployFixture)
       await expect(x.stakeManager.decrementCopyIterations(254n << 8n))
         .eventually.to.equal(253n << 8n)
     })
     it('preserves numbers above the second byte', async () => {
-      const x = await loadFixture(utils.deployFixture)
       await expect(x.stakeManager.decrementCopyIterations(123n << 16n | 254n << 8n))
         .eventually.to.equal(123n << 16n | 253n << 8n)
     })
