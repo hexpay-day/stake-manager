@@ -53,8 +53,8 @@ export const deployFixture = async () => {
   const hedron = await hre.ethers.getContractAt('IHedron', hedronAddress)
   const hsim = await hre.ethers.getContractAt('IHEXStakeInstanceManager', await hedron.hsim())
   const ExistingStakeManager = await hre.ethers.getContractFactory('ExistingStakeManager')
-  const hsiStakeManager = await ExistingStakeManager.deploy()
-  const maximusStakeManager = hsiStakeManager
+  const existingStakeManager = await ExistingStakeManager.deploy()
+  const maximusStakeManager = existingStakeManager
   const decimals = await hex.decimals()
   const oneMillion = hre.ethers.utils.parseUnits('1000000', decimals).toBigInt()
   const hexWhale = await config.hexWhale(hex)
@@ -70,7 +70,6 @@ export const deployFixture = async () => {
       ])
     }))
   })
-  const [, , , , , , stakeIdBN] = await hex.globalInfo()
   const IsolatedStakeManagerFactory = await hre.ethers.getContractFactory('IsolatedStakeManagerFactory')
   const isolatedStakeManagerFactory = await IsolatedStakeManagerFactory.deploy()
   await isolatedStakeManagerFactory.deployed()
@@ -84,7 +83,16 @@ export const deployFixture = async () => {
   const usdcAddress = '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48'
   const usdc = await hre.ethers.getContractAt('@openzeppelin/contracts/token/ERC20/ERC20.sol:ERC20', usdcAddress) as IERC20Metadata
   const multicall = await hre.ethers.getContractAt('IMulticall3', '0xcA11bde05977b3631167028862bE2a173976CA11')
+  const MockExternalPerpetualFilter = await hre.ethers.getContractFactory('MockExternalPerpetualFilter')
+  const externalPerpetualFilter = await MockExternalPerpetualFilter.deploy()
+  await externalPerpetualFilter.deployed()
+  const MockPerpetual = await hre.ethers.getContractFactory('MockPerpetual')
+  const mockPerpetual = await MockPerpetual.deploy()
+  await mockPerpetual.deployed()
+  const [, , , , , , stakeIdBN] = await hex.globalInfo()
   return {
+    mockPerpetual,
+    externalPerpetualFilter,
     multicall,
     usdc,
     usdcAddress,
@@ -108,7 +116,7 @@ export const deployFixture = async () => {
     base,
     hedron,
     hsim,
-    hsiStakeManager,
+    existingStakeManager,
   }
 }
 
@@ -212,7 +220,7 @@ export const deployAndProcureHSIFixture = async () => {
       hsiIndex: addrToId.get(target.hsiAddress) as bigint,
     }
   }))
-  await x.hsim.setApprovalForAll(x.hsiStakeManager.address, true)
+  await x.hsim.setApprovalForAll(x.existingStakeManager.address, true)
   return {
     ...x,
     hsiTargets: hsiTargets.reverse(),

@@ -78,12 +78,12 @@ describe('MaximusStakeManager.sol', () => {
       const balanceToken = await x.hex.balanceOf(x.maximusStakeManager.address)
       const balToken = balanceToken.toBigInt()
       await expect(x.maximusStakeManager.multicall([
-        x.hsiStakeManager.interface.encodeFunctionData('withdrawTokenTo', [
+        x.existingStakeManager.interface.encodeFunctionData('withdrawTokenTo', [
           hre.ethers.constants.AddressZero,
           signerA.address,
           0,
         ]),
-        x.hsiStakeManager.interface.encodeFunctionData('withdrawTokenTo', [
+        x.existingStakeManager.interface.encodeFunctionData('withdrawTokenTo', [
           x.hex.address,
           signerA.address,
           0,
@@ -97,6 +97,44 @@ describe('MaximusStakeManager.sol', () => {
           [x.maximusStakeManager, signerA],
           [balToken * -1n, balToken],
         )
+    })
+  })
+  describe('setExternalPerpetualFilter', () => {
+    it('sets the externalPerpetualFilter property', async () => {
+      const x = await loadFixture(utils.endOfBaseFixture)
+      await expect(x.existingStakeManager.externalPerpetualFilter())
+        .eventually.to.equal(hre.ethers.constants.AddressZero)
+      await x.existingStakeManager.setExternalPerpetualFilter(x.externalPerpetualFilter.address)
+      await expect(x.existingStakeManager.externalPerpetualFilter())
+        .eventually.to.equal(x.externalPerpetualFilter.address)
+    })
+    describe('after calling, perpetual whitelist can be updated by said contract', () => {
+      it('allows the whitelist to be set which calls endStakeHEX', async () => {
+        const x = await loadFixture(utils.deployFixture)
+        const [signer1] = x.signers
+        await x.hex.transfer(x.mockPerpetual.address, x.oneMillion / 10n)
+        await x.mockPerpetual.startStakeHEX();
+        await utils.moveForwardDays(2, x) // we can now end the stake
+        const args = [signer1.address, x.mockPerpetual.address, x.nextStakeId] as const
+        await expect(x.existingStakeManager.callStatic.checkPerpetual(x.mockPerpetual.address))
+          .eventually.to.equal(false)
+        await expect(x.existingStakeManager.stakeEndAs(...args))
+          .to.revertedWithCustomError(x.existingStakeManager, 'NotAllowed')
+        await expect(x.maximusStakeManager.setExternalPerpetualFilter(x.externalPerpetualFilter.address))
+          .not.to.reverted
+        await expect(x.existingStakeManager.callStatic.checkPerpetual(x.mockPerpetual.address))
+          .eventually.to.equal(false)
+        await expect(x.existingStakeManager.stakeEndAs(...args))
+          .to.revertedWithCustomError(x.existingStakeManager, 'NotAllowed')
+        await x.externalPerpetualFilter.setVerifyPerpetualResult(true)
+        await expect(x.existingStakeManager.callStatic.checkPerpetual(x.mockPerpetual.address))
+          .eventually.to.equal(true)
+        await expect(x.existingStakeManager.stakeEndAs(...args))
+          .to.emit(x.hex, 'StakeEnd')
+        await x.externalPerpetualFilter.setVerifyPerpetualResult(false)
+        await expect(x.existingStakeManager.stakeEndAs(...args))
+          .not.to.reverted
+      })
     })
   })
 })

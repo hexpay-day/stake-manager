@@ -31,6 +31,8 @@ contract UnderlyingStakeManager is GoodAccounting {
    * ends a stake for someone else
    * @param stakeIndex the stake index on the underlying contract to end
    * @param stakeId the stake id on the underlying contract to end
+   * @param stakeCountAfter the stake count after the stake is ended (current length - 1)
+   * @return delta the number of tokens that have been received from ending the stake
    */
   function _stakeEnd(
     uint256 stakeIndex, uint256 stakeId, uint256 stakeCountAfter

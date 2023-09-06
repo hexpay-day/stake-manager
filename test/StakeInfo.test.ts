@@ -50,10 +50,10 @@ describe('StakeInfo.sol', () => {
     })
     it('also is true if hsi is owned (registered by address)', async () => {
       const x = await loadFixture(utils.deployAndProcureHSIFixture)
-      await x.hsiStakeManager.multicall(_.flatMap(x.hsiTargets, (target) => ([
-        x.hsiStakeManager.interface.encodeFunctionData('depositHsi', [target.tokenId, 0]),
+      await x.existingStakeManager.multicall(_.flatMap(x.hsiTargets, (target) => ([
+        x.existingStakeManager.interface.encodeFunctionData('depositHsi', [target.tokenId, 0]),
       ])), false)
-      await expect(x.hsiStakeManager.verifyCustodian(x.hsiTargets[0].hsiAddress))
+      await expect(x.existingStakeManager.verifyCustodian(x.hsiTargets[0].hsiAddress))
         .not.to.reverted
     })
   })
@@ -70,17 +70,17 @@ describe('StakeInfo.sol', () => {
     it('stake info is registered under hsi address', async () => {
       const x = await loadFixture(utils.deployAndProcureHSIFixture)
       const [signer1] = x.signers
-      await x.hsiStakeManager.multicall(_.flatMap(x.hsiTargets, (target) => ([
-        x.hsiStakeManager.interface.encodeFunctionData('depositHsi', [target.tokenId, 0]),
+      await x.existingStakeManager.multicall(_.flatMap(x.hsiTargets, (target) => ([
+        x.existingStakeManager.interface.encodeFunctionData('depositHsi', [target.tokenId, 0]),
       ])), false)
       expect(x.hsiTargets[0].hsiIndex).to.equal(0n)
       expect(x.hsiTargets[1].hsiIndex).to.equal(1n)
       expect(x.hsiTargets[2].hsiIndex).to.equal(2n)
-      await expect(x.hsiStakeManager.stakeIdToInfo(x.hsiTargets[0].hsiAddress))
+      await expect(x.existingStakeManager.stakeIdToInfo(x.hsiTargets[0].hsiAddress))
         .eventually.to.be.deep.equal([x.hsiTargets[0].hsiIndex, signer1.address])
-      await expect(x.hsiStakeManager.stakeIdToInfo(x.hsiTargets[1].hsiAddress))
+      await expect(x.existingStakeManager.stakeIdToInfo(x.hsiTargets[1].hsiAddress))
         .eventually.to.be.deep.equal([x.hsiTargets[1].hsiIndex, signer1.address])
-      await expect(x.hsiStakeManager.stakeIdToInfo(x.hsiTargets[2].hsiAddress))
+      await expect(x.existingStakeManager.stakeIdToInfo(x.hsiTargets[2].hsiAddress))
         .eventually.to.be.deep.equal([x.hsiTargets[2].hsiIndex, signer1.address])
     })
   })

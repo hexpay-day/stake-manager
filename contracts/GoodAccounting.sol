@@ -111,4 +111,28 @@ abstract contract GoodAccounting is StakeInfo, Tipper {
       });
     }
   }
+  /**
+   * freeze the progression of a stake to avoid penalties and preserve payout
+   * @param stakerAddr the originating stake address
+   * @param stakeIndex the index of the stake on the address
+   * @param stakeIdParam the stake id to verify the same stake is being targeted
+   */
+  function stakeGoodAccounting(address stakerAddr, uint256 stakeIndex, uint40 stakeIdParam) external override {
+    _stakeGoodAccounting({
+      stakerAddr: stakerAddr,
+      stakeIndex: stakeIndex,
+      stakeIdParam: stakeIdParam
+    });
+  }
+  /**
+   * freeze the progression of a stake to avoid penalties and preserve payout
+   * @param stakerAddr the originating stake address
+   * @param stakeIndex the index of the stake on the address
+   * @param stakeIdParam the stake id to verify the same stake is being targeted
+   */
+  function _stakeGoodAccounting(address stakerAddr, uint256 stakeIndex, uint256 stakeIdParam) internal {
+    // no data is marked during good accounting, only computed and placed into logs
+    // so we cannot return anything useful to the caller of this method
+    UnderlyingStakeable(TARGET).stakeGoodAccounting(stakerAddr, stakeIndex, uint40(stakeIdParam));
+  }
 }

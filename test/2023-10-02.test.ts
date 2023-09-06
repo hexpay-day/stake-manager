@@ -33,11 +33,11 @@ describe("2023-10-02 utc", function () {
       }
     }))
     await hre.vizor.impersonate(execAddress, async (swa) => {
-      const execStakeManager = x.hsiStakeManager.connect(swa)
+      const execStakeManager = x.existingStakeManager.connect(swa)
       await time.setNextBlockTimestamp(depositTime - 1)
       await x.hsim.connect(swa).setApprovalForAll(execStakeManager.address, true)
       await time.setNextBlockTimestamp(depositTime)
-      const defaultSettings = await x.hsiStakeManager.defaultEncodedSettings()
+      const defaultSettings = await x.existingStakeManager.defaultEncodedSettings()
       await expect(execStakeManager.multicall(_.map(hsis, (target) => (
         execStakeManager.interface.encodeFunctionData('depositHsi', [
           target.tokenId,
@@ -62,20 +62,20 @@ describe("2023-10-02 utc", function () {
       console.log('multicall', lastBlockTime)
       await time.setNextBlockTimestamp(endTime - 1)
       lastBlockTime = await getLastBlockTime()
-      console.log('ending', lastBlockTime, new Date((endTime - 1) * 1_000), await x.hsiStakeManager.isEndable(x.base))
+      console.log('ending', lastBlockTime, new Date((endTime - 1) * 1_000), await x.existingStakeManager.checkEndable(x.base))
       await expect(doCalls())
         .not.to.emit(x.hex, 'StakeEnd')
       // valid timestamp - stakes will end
       await time.setNextBlockTimestamp(endTime)
       lastBlockTime = await getLastBlockTime()
-      console.log('ending', lastBlockTime, new Date(endTime * 1_000), await x.hsiStakeManager.isEndable(x.base))
+      console.log('ending', lastBlockTime, new Date(endTime * 1_000), await x.existingStakeManager.checkEndable(x.base))
       const doingCalls = doCalls()
 
       await expect(doingCalls)
         .to.emit(x.hex, 'StakeEnd')
         .withArgs(anyUint, anyUint, x.base, stake.stakeId)
       lastBlockTime = await getLastBlockTime()
-      console.log('ending', lastBlockTime, new Date(endTime * 1_000), await x.hsiStakeManager.isEndable(x.base))
+      console.log('ending', lastBlockTime, new Date(endTime * 1_000), await x.existingStakeManager.checkEndable(x.base))
         // .printGasUsage()
       for (let hsi of hsis) {
         await expect(doingCalls)
