@@ -111,7 +111,7 @@ describe('MaximusStakeManager.sol', () => {
     describe('after calling, perpetual whitelist can be updated by said contract', () => {
       it('allows the whitelist to be set which calls endStakeHEX', async () => {
         const x = await loadFixture(utils.deployFixture)
-        const [signer1] = x.signers
+        const [signer1, signer2] = x.signers
         await x.hex.transfer(x.mockPerpetual.address, x.oneMillion / 10n)
         await x.mockPerpetual.startStakeHEX();
         await utils.moveForwardDays(2, x) // we can now end the stake
@@ -120,6 +120,8 @@ describe('MaximusStakeManager.sol', () => {
           .eventually.to.equal(false)
         await expect(x.existingStakeManager.stakeEndAs(...args))
           .to.revertedWithCustomError(x.existingStakeManager, 'NotAllowed')
+        await expect(x.maximusStakeManager.connect(signer2).setExternalPerpetualFilter(x.externalPerpetualFilter.address))
+          .to.revertedWithCustomError(x.maximusStakeManager, 'NotAllowed')
         await expect(x.maximusStakeManager.setExternalPerpetualFilter(x.externalPerpetualFilter.address))
           .not.to.reverted
         await expect(x.existingStakeManager.callStatic.checkPerpetual(x.mockPerpetual.address))
