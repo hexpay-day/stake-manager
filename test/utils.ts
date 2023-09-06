@@ -50,7 +50,7 @@ export const deployFixture = async () => {
   const signers = _signers.slice(0, 20)
   const [signer] = signers
   const hex = await hre.ethers.getContractAt('contracts/interfaces/IHEX.sol:IHEX', hexAddress) as IHEX
-  const hedron = await hre.ethers.getContractAt('IHedron', hedronAddress)
+  const hedron = await hre.ethers.getContractAt('contracts/interfaces/IHedron.sol:IHedron', hedronAddress)
   const hsim = await hre.ethers.getContractAt('IHEXStakeInstanceManager', await hedron.hsim())
   const ExistingStakeManager = await hre.ethers.getContractFactory('ExistingStakeManager')
   const existingStakeManager = await ExistingStakeManager.deploy()
