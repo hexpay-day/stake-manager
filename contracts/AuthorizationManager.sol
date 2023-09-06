@@ -98,7 +98,7 @@ abstract contract AuthorizationManager is UnderlyingStakeable {
    * @return whether or not the authorization value has a 1 or a 0 at the provided index
    */
   function _isAuthorized(bytes32 key, uint256 index) view internal returns(bool) {
-    return _isCapable({
+    return _isOneAtIndex({
       setting: authorization[key],
       index: index
     });

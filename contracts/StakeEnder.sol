@@ -53,7 +53,7 @@ contract StakeEnder is Magnitude, SingletonHedronManager {
       return (ZERO, count);
     }
     uint256 setting = stakeIdToSettings[stakeId];
-    if (!_isCapable({
+    if (!_isOneAtIndex({
       setting: setting,
       index: INDEX_CAN_STAKE_END
     })) {
@@ -63,13 +63,13 @@ contract StakeEnder is Magnitude, SingletonHedronManager {
       lockedDay: stake.lockedDay,
       stakedDays: stake.stakedDays,
       targetDay: count >> INDEX_TODAY
-    }) && !_isCapable({
+    }) && !_isOneAtIndex({
       setting: setting,
       index: INDEX_CAN_EARLY_STAKE_END
     })) {
       return (ZERO, count);
     }
-    if (_isCapable({
+    if (_isOneAtIndex({
       setting: setting,
       index: INDEX_CAN_MINT_HEDRON_AT_END
     })) {
@@ -192,14 +192,14 @@ contract StakeEnder is Magnitude, SingletonHedronManager {
         amount: delta
       });
     }
-    if (_isCapable({
+    if (_isOneAtIndex({
       setting: setting,
       index: INDEX_HAS_EXTERNAL_TIPS
     })) {
       _executeTipList({
         stakeId: stakeId,
         staker: staker,
-        nextStakeId: nextStakeId > ZERO && _isCapable({
+        nextStakeId: nextStakeId > ZERO && _isOneAtIndex({
           setting: setting,
           index: INDEX_COPY_EXTERNAL_TIPS
         }) ? nextStakeId : ZERO

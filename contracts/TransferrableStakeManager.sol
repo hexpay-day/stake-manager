@@ -37,7 +37,7 @@ contract TransferrableStakeManager is StakeStarter {
     });
   }
   function _canTransfer(uint256 stakeId) internal view returns(bool) {
-    return _isCapable({
+    return _isOneAtIndex({
       setting: stakeIdToSettings[stakeId],
       index: INDEX_STAKE_IS_TRANSFERRABLE
     });

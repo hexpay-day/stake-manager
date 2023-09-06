@@ -253,7 +253,7 @@ contract Bank is Utils {
     return amount;
   }
   function _attributeFunds(uint256 setting, uint256 index, address token, address staker, uint256 amount) internal {
-    if (_isCapable({
+    if (_isOneAtIndex({
       setting: setting,
       index: index
     })) {

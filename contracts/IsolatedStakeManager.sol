@@ -76,7 +76,7 @@ contract IsolatedStakeManager is Ownable2Step, AuthorizationManager {
       account: msg.sender
     });
     // blanket start authorization
-    if (!_isCapable({
+    if (!_isOneAtIndex({
       setting: setting,
       index: ZERO
     })) {
@@ -97,7 +97,7 @@ contract IsolatedStakeManager is Ownable2Step, AuthorizationManager {
    */
   function stakeStartWithAuthorization(uint256 newStakedDays) external {
     // scoped authorization - to keep non-permitted contracts from griefing users
-    if (!_isCapable({
+    if (!_isOneAtIndex({
       setting: authorization[_startAuthorizationKey(msg.sender, newStakedDays)],
       index: ZERO
     })) {
@@ -184,7 +184,7 @@ contract IsolatedStakeManager is Ownable2Step, AuthorizationManager {
    * transfer balance to the owner of this contract
    */
   function _transferToOwner() internal {
-    if (!_isCapable({
+    if (!_isOneAtIndex({
       setting: _getAddressSetting(msg.sender),
       index: THREE
     })) {
@@ -202,13 +202,13 @@ contract IsolatedStakeManager is Ownable2Step, AuthorizationManager {
     uint256 setting = _getAddressSetting(msg.sender);
     if (_isEarlyEnding(stake.lockedDay, stake.stakedDays, _currentDay())) {
       // can early end stake
-      return _isCapable({
+      return _isOneAtIndex({
         setting: setting,
         index: TWO
       });
     } else {
       // can end stake
-      return _isCapable({
+      return _isOneAtIndex({
         setting: setting,
         index: ONE
       });
@@ -242,7 +242,7 @@ contract IsolatedStakeManager is Ownable2Step, AuthorizationManager {
    * @param amount number of hearts to transfer from owner
    */
   function _transferFromOwner(uint256 amount) internal {
-    if (!_isCapable({
+    if (!_isOneAtIndex({
       setting: _getAddressSetting(msg.sender),
       index: FOUR
     })) {

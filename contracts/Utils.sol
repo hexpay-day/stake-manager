@@ -30,13 +30,13 @@ contract Utils {
    * @param setting the setting number that holds up to 256 flags as 1/0
    * @param index the index to check for a 1
    */
-  function isCapable(uint256 setting, uint256 index) external pure returns(bool) {
-    return _isCapable({
+  function isOneAtIndex(uint256 setting, uint256 index) external pure returns(bool) {
+    return _isOneAtIndex({
       setting: setting,
       index: index
     });
   }
-  function _isCapable(uint256 setting, uint256 index) internal pure returns(bool) {
+  function _isOneAtIndex(uint256 setting, uint256 index) internal pure returns(bool) {
     // in binary checks:
     // take the setting and shift it some number of bits left (leaving space for 1)
     // then go the opposite direction, once again leaving only space for 1

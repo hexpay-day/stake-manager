@@ -29,12 +29,12 @@
 
 ## <span id=t-scope>Scope</span>
 
-This section lists files that are in scope for the metrics report. 
+This section lists files that are in scope for the metrics report.
 
 - **Project:** `'CLI'`
-- **Included Files:** 
+- **Included Files:**
     - ``
-- **Excluded Paths:** 
+- **Excluded Paths:**
     - ``
 - **File Limit:** `undefined`
     - **Exclude File list Limit:** `undefined`
@@ -47,7 +47,7 @@ Source Units Analyzed: **`23`**<br>
 Source Units in Scope: **`23`** (**100%**)
 
 | Type | File   | Logic Contracts | Interfaces | Lines | nLines | nSLOC | Comment Lines | Complex. Score | Capabilities |
-| ---- | ------ | --------------- | ---------- | ----- | ------ | ----- | ------------- | -------------- | ------------ | 
+| ---- | ------ | --------------- | ---------- | ----- | ------ | ----- | ------------- | -------------- | ------------ |
 | 🎨 | ./contracts/AuthorizationManager.sol | 1 | **** | 114 | 114 | 47 | 65 | 23 | **** |
 | 📝 | ./contracts/Bank.sol | 1 | **** | 273 | 263 | 170 | 89 | 81 | **<abbr title='Payable Functions'>💰</abbr><abbr title='Unchecked Blocks'>Σ</abbr>** |
 | 📝 | ./contracts/CurrencyList.sol | 1 | **** | 50 | 50 | 34 | 12 | 17 | **** |
@@ -106,7 +106,7 @@ Source Units Excluded: **`0`**
 
 ##### <span id=t-out-of-scope-duplicate-source-units>Duplicate Source Units</span>
 
-Duplicate Source Units Excluded: **`0`** 
+Duplicate Source Units Excluded: **`0`**
 
 <a onclick="toggleVisibility('duplicate-files', this)">[➕]</a>
 <div id="duplicate-files" style="display:none">
@@ -118,11 +118,11 @@ Duplicate Source Units Excluded: **`0`**
 
 ##### <span id=t-out-of-scope-doppelganger-contracts>Doppelganger Contracts</span>
 
-Doppelganger Contracts: **`0`** 
+Doppelganger Contracts: **`0`**
 
 <a onclick="toggleVisibility('doppelganger-contracts', this)">[➕]</a>
 <div id="doppelganger-contracts" style="display:none">
-| File   | Contract | Doppelganger | 
+| File   | Contract | Doppelganger |
 | ------ | -------- | ------------ |
 
 
@@ -154,7 +154,7 @@ The analysis finished with **`0`** errors and **`0`** duplicate files.
 #### <span id=t-inline-documentation>Inline Documentation</span>
 
 - **Comment-to-Source Ratio:** On average there are`2.39` code lines per comment (lower=better).
-- **ToDo's:** `0` 
+- **ToDo's:** `0`
 
 #### <span id=t-components>Components</span>
 
@@ -164,11 +164,11 @@ The analysis finished with **`0`** errors and **`0`** duplicate files.
 
 #### <span id=t-exposed-functions>Exposed Functions</span>
 
-This section lists functions that are explicitly declared public or payable. Please note that getter methods for public stateVars are not included.  
+This section lists functions that are explicitly declared public or payable. Please note that getter methods for public stateVars are not included.
 
 | 🌐Public   | 💰Payable |
 | ---------- | --------- |
-| 96 | 18  | 
+| 96 | 18  |
 
 | External   | Internal | Private | Pure | View |
 | ---------- | -------- | ------- | ---- | ---- |
@@ -182,13 +182,13 @@ This section lists functions that are explicitly declared public or payable. Ple
 
 #### <span id=t-capabilities>Capabilities</span>
 
-| Solidity Versions observed | 🧪 Experimental Features | 💰 Can Receive Funds | 🖥 Uses Assembly | 💣 Has Destroyable Contracts | 
+| Solidity Versions observed | 🧪 Experimental Features | 💰 Can Receive Funds | 🖥 Uses Assembly | 💣 Has Destroyable Contracts |
 | -------------------------- | ------------------------ | -------------------- | ---------------- | ---------------------------- |
-| `>=0.8.18` |  | `yes` | `yes` <br/>(1 asm blocks) | **** | 
+| `>=0.8.18` |  | `yes` | `yes` <br/>(1 asm blocks) | **** |
 
 | 📤 Transfers ETH | ⚡ Low-Level Calls | 👥 DelegateCall | 🧮 Uses Hash Functions | 🔖 ECRecover | 🌀 New/Create/Create2 |
 | ---------------- | ----------------- | --------------- | ---------------------- | ------------ | --------------------- |
-| **** | **** | `yes` | `yes` | **** | **** | 
+| **** | **** | `yes` | `yes` | **** | **** |
 
 | ♻️ TryCatch | Σ Unchecked |
 | ---------- | ----------- |
@@ -196,7 +196,7 @@ This section lists functions that are explicitly declared public or payable. Ple
 
 #### <span id=t-package-imports>Dependencies / External Imports</span>
 
-| Dependency / Import Path | Count  | 
+| Dependency / Import Path | Count  |
 | ------------------------ | ------ |
 | @openzeppelin/contracts/access/Ownable2Step.sol | 1 |
 | @openzeppelin/contracts/token/ERC20/ERC20.sol | 1 |
@@ -238,7 +238,7 @@ This section lists functions that are explicitly declared public or payable. Ple
 <a onclick="toggleVisibility('surya-inherit', this)">[➕]</a>
 <div id="surya-inherit" style="display:none">
 <div class="wrapper" style="max-width: 512px; margin: auto">
-    <div id="surya-inheritance" style="text-align: center;"></div> 
+    <div id="surya-inheritance" style="text-align: center;"></div>
 </div>
 </div>
 
@@ -528,8 +528,8 @@ This section lists functions that are explicitly declared public or payable. Ple
 | └ | stakeEnd | External ❗️ | 🛑  |NO❗️ |
 ||||||
 | **Utils** | Implementation |  |||
-| └ | isCapable | External ❗️ |   |NO❗️ |
-| └ | _isCapable | Internal 🔒 |   | |
+| └ | isOneAtIndex | External ❗️ |   |NO❗️ |
+| └ | _isOneAtIndex | Internal 🔒 |   | |
 
 
  Legend
@@ -538,7 +538,7 @@ This section lists functions that are explicitly declared public or payable. Ple
 |:--------:|-----------|
 |    🛑    | Function can modify state |
 |    💵    | Function is payable |
- 
+
 
 </div>
 ____
