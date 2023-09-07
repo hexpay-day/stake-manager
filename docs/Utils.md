@@ -122,12 +122,6 @@ uint256 FOURTY
 uint256 FOURTY_EIGHT
 ```
 
-### FIFTY_SIX
-
-```solidity
-uint256 FIFTY_SIX
-```
-
 ### SEVENTY_TWO
 
 ```solidity

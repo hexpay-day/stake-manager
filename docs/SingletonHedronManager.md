@@ -35,15 +35,3 @@ any combination of owners can be passed, however, it is most efficient to order 
 function _mintHedron(uint256 index, uint256 stakeId) internal virtual returns (uint256 amount)
 ```
 
-### _mintNativeHedron
-
-```solidity
-function _mintNativeHedron(uint256 index, uint256 stakeId) internal returns (uint256 amount)
-```
-
-### _mintInstancedHedron
-
-```solidity
-function _mintInstancedHedron(uint256 index, address hsiAddress) internal returns (uint256 amount)
-```
-

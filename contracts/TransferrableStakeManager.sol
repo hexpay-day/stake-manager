@@ -20,14 +20,20 @@ contract TransferrableStakeManager is StakeStarter {
       stakeId: stakeId
     });
     settings = stakeIdToSettings[stakeId];
-    settings = (
-      (settings >> INDEX_COPY_EXTERNAL_TIPS << INDEX_COPY_EXTERNAL_TIPS)
-      | (settings << INDEX_LEFT_STAKE_IS_TRANSFERRABLE >> INDEX_LEFT_STAKE_IS_TRANSFERRABLE) // wipe transferrable
-    );
+    settings = _removeTransferrabilityFromEncodedSettings(settings);
     _logSettingsUpdate({
       stakeId: stakeId,
       settings: settings
     });
+  }
+  function removeTransferrabilityFromEncodedSettings(uint256 settings) external pure returns(uint256) {
+    return _removeTransferrabilityFromEncodedSettings(settings);
+  }
+  function _removeTransferrabilityFromEncodedSettings(uint256 settings) internal pure returns(uint256) {
+    return (
+      (settings >> INDEX_COPY_EXTERNAL_TIPS << INDEX_COPY_EXTERNAL_TIPS)
+      | (settings << INDEX_LEFT_STAKE_IS_TRANSFERRABLE >> INDEX_LEFT_STAKE_IS_TRANSFERRABLE) // wipe transferrable
+    );
   }
   function canTransfer(uint256 stakeId) external view returns(bool) {
     return _canTransfer({

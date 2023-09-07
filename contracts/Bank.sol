@@ -221,7 +221,7 @@ contract Bank is Utils {
       if (amount > ZERO) {
         amnt = IERC20(token).balanceOf(address(this));
         IERC20(token).safeTransferFrom(depositor, address(this), amount);
-        amnt -= IERC20(token).balanceOf(address(this));
+        amnt = IERC20(token).balanceOf(address(this)) - amnt;
       }
     } else {
       // transfer in already occurred

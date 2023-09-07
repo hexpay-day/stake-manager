@@ -22,10 +22,22 @@ removes transfer abilities from a stake
 | ---- | ---- | ----------- |
 | stakeId | uint256 | the stake that the sender owns and wishes to remove transfer abilities from |
 
-### _updateTransferrability
+### _removeTransferrability
 
 ```solidity
-function _updateTransferrability(uint256 stakeId, uint256 encoded) internal returns (uint256 settings)
+function _removeTransferrability(uint256 stakeId) internal returns (uint256 settings)
+```
+
+### removeTransferrabilityFromEncodedSettings
+
+```solidity
+function removeTransferrabilityFromEncodedSettings(uint256 settings) external pure returns (uint256)
+```
+
+### _removeTransferrabilityFromEncodedSettings
+
+```solidity
+function _removeTransferrabilityFromEncodedSettings(uint256 settings) internal pure returns (uint256)
 ```
 
 ### canTransfer
