@@ -69,10 +69,43 @@ describe('HSIStakeManager.sol', () => {
       ))
         .to.emit(x.existingStakeManager, 'AddTip')
         .withArgs(x.hsiTargets[0].hsiAddress, x.usdc.address, 0, encodedTip)
-      const tx = await x.existingStakeManager.withdrawHsi(x.hsiTargets[0].hsiAddress)
-      await expect(tx)
+
+      await expect(x.existingStakeManager.withdrawHsi(x.hsiTargets[0].hsiAddress))
         .to.emit(x.existingStakeManager, 'RemoveTip')
         .withArgs(x.hsiTargets[0].hsiAddress, x.usdc.address, 0, tipSettings)
+        // .printGasUsage()
+    })
+  })
+  describe('hsiCount', () => {
+    it('returns the count of hsis deposited in the hsi stake manager', async () => {
+      const x = await loadFixture(utils.deployAndProcureHSIFixture)
+      await expect(x.existingStakeManager.hsiCount())
+        .eventually.to.equal(0)
+
+      await expect(x.existingStakeManager.multicall(_.flatMap(x.hsiTargets, (target) => ([
+        x.existingStakeManager.interface.encodeFunctionData('depositHsi', [target.tokenId, 0]),
+      ])), false))
+        .to.emit(x.hsim, 'Transfer')
+        .to.emit(x.hsim, 'HSIDetokenize')
+      await expect(x.existingStakeManager.hsiCount())
+        .eventually.to.equal(x.hsiTargets.length)
+    })
+  })
+  describe('removeAllTips', () => {
+    it('fails if not called by owner', async () => {
+      // this test can also be done on regular stake manager
+      const x = await loadFixture(utils.deployAndProcureHSIFixture)
+      const [signer1, signer2] = x.signers
+      await expect(x.existingStakeManager.multicall(_.flatMap(x.hsiTargets, (target) => ([
+        x.existingStakeManager.interface.encodeFunctionData('depositHsi', [target.tokenId, 0]),
+      ])), false))
+        .to.emit(x.hsim, 'Transfer')
+        .to.emit(x.hsim, 'HSIDetokenize')
+      await expect(x.existingStakeManager.connect(signer2).removeAllTips(x.hsiTargets[0].hsiAddress))
+        .to.revertedWithCustomError(x.existingStakeManager, 'StakeNotOwned')
+        .withArgs(signer2.address, signer1.address)
+      await expect(x.existingStakeManager.removeAllTips(x.hsiTargets[0].hsiAddress))
+        .not.to.reverted
     })
   })
   describe('createTo', () => {

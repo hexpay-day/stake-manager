@@ -33,7 +33,7 @@ contract HSIStakeManager is StakeEnder {
       token: HSIM,
       tokenId: tokenId
     });
-    uint256 index = IHEXStakeInstanceManager(HSIM).hsiCount(address(this));
+    uint256 index = _hsiCount();
     hsiAddress = IHEXStakeInstanceManager(HSIM).hexStakeDetokenize(tokenId);
     uint256 stakeId = uint256(uint160(hsiAddress));
     // erc721 is burned - no owner - only hsi address remains
@@ -46,21 +46,39 @@ contract HSIStakeManager is StakeEnder {
       settings: encodedSettings
     });
   }
+  /**
+   * deposit a tokenized hsi into this contract
+   * @param token the address of the token (HEDRON)
+   * @param tokenId the token id to deposit into this contract
+   */
   function _deposit721(address token, uint256 tokenId) internal returns(address owner) {
     owner = IERC721(token).ownerOf(tokenId);
     IERC721(token).transferFrom(msg.sender, address(this), tokenId);
   }
+  /**
+   * a convenience method to retrieve a stake id from an hsi address
+   * @param hsiAddress the hsi address to target
+   */
   function hsiAddressToId(address hsiAddress) external view returns(uint256) {
     return _hsiAddressToId({
       hsiAddress: hsiAddress
     });
   }
+  /**
+   * an internal convenience method to retreive a stake id from an hsi address
+   * @param hsiAddress the hsi address to target
+   */
   function _hsiAddressToId(address hsiAddress) internal view returns(uint256) {
     return _getStake({
       custodian: hsiAddress,
       index: ZERO
     }).stakeId;
   }
+  /**
+   * withdraw an hsi from this contract's custody
+   * @param hsiAddress the hsi address to withdraw from this contract
+   * @dev caller must be logged as owner of hsi
+   */
   function withdrawHsi(address hsiAddress) external returns(uint256 tokenId) {
     uint256 stakeId = uint256(uint160(hsiAddress));
     _verifyStakeOwnership({
@@ -70,40 +88,60 @@ contract HSIStakeManager is StakeEnder {
     (uint256 index, address owner) = _stakeIdToInfo({
       stakeId: stakeId
     });
-    uint256 tipCount = _stakeIdTipSize({
-      stakeId: stakeId
-    });
-    if (tipCount > ZERO) {
-      uint256 i;
-      uint256[] memory indexes = new uint256[](tipCount);
-      do {
-        indexes[i] = i;
-        unchecked { ++i; }
-      } while (i < tipCount);
-      _removeTipFromStake({
-        stakeId: stakeId,
-        indexes: indexes
-      });
-    }
-    stakeIdInfo[stakeId] = 0;
+    stakeIdInfo[stakeId] = ZERO;
+    // this will be used later to determine whether or not to send tips back to staker
+    uint256 settings = stakeIdToSettings[stakeId];
     _logSettingsUpdate({
       stakeId: stakeId,
-      settings: 0
+      settings: ZERO
     });
+    if (_hsiCount() - ONE > index) {
+      _rewriteIndex({
+        index: index
+      });
+    }
     tokenId = _withdraw721({
       index: index,
       owner: owner,
       hsiAddress: hsiAddress
     });
+    // because an unbounded range of tokens can exist in the tips list,
+    // we send those back last
+    _removeAllTips({
+      stakeId: stakeId,
+      settings: settings
+    });
   }
+  /**
+   * the count or length of hsi's attributed to this contract
+   */
+  function _hsiCount() internal view returns(uint256) {
+    return IHEXStakeInstanceManager(HSIM).hsiCount(address(this));
+  }
+  /**
+   * the count or length of hsi's attributed to this contract
+   */
+  function hsiCount() external view returns(uint256) {
+    return _hsiCount();
+  }
+  /**
+   * tokenize/mint a stake's erc721 token to transfer ownership of it
+   * @param index the index of the stake to tokenize
+   * @param owner the owner of the stake
+   * @param hsiAddress the hsi address (contract) that the stake is being custodied by
+   */
   function _withdraw721(uint256 index, address owner, address hsiAddress) internal returns(uint256 tokenId) {
     tokenId = IHEXStakeInstanceManager(HSIM).hexStakeTokenize(index, hsiAddress);
     IERC721(HSIM).transferFrom(address(this), owner, tokenId);
   }
+  /**
+   * provide a list of hsi addresses to end the stake of
+   * @param hsiAddresses a list of hsi addresses (known in this contract as stake ids)
+   */
   function hsiStakeEndMany(address[] calldata hsiAddresses) external {
     uint256 len = hsiAddresses.length;
     uint256 i;
-    uint256 count = (_currentDay() << INDEX_TODAY) | IHEXStakeInstanceManager(HSIM).hsiCount(address(this));
+    uint256 count = (_currentDay() << INDEX_TODAY) | _hsiCount();
     do {
       (, count) = _stakeEndByConsent({
         stakeId: uint160(hsiAddresses[i]),
@@ -114,11 +152,15 @@ contract HSIStakeManager is StakeEnder {
       }
     } while (i < len);
   }
+  /**
+   * retrieve a stake id's (hsi address's) singular stake
+   * @param stakeId the stake id or hsi address to retrieve a stake from its list
+   */
   function _verifyStakeMatchesIndex(uint256, uint256 stakeId) internal view override returns(
     IUnderlyingStakeable.StakeStore memory stake
   ) {
-    // we are only testing existance because we do not have
-    // the underlying stake index
+    // we are only testing existance because the index
+    // is always 0 for the custodian
     address hsiAddress = address(uint160(stakeId));
     if (_stakeCount({ staker: hsiAddress }) == ONE) {
       stake = _getStake({
@@ -127,6 +169,14 @@ contract HSIStakeManager is StakeEnder {
       });
     }
   }
+  /**
+   * end a hsi's stake and return the amount of
+   * unattributed tokens sent to this contract
+   * @param index the hsim index of the stake to end
+   * @param stakeId the stake id or hsi address
+   * @param stakeCountAfter the length of stakes that will exist
+   * under the hsim after this end operation is complete
+   */
   function _stakeEnd(
     uint256 index,
     uint256 stakeId,
@@ -136,17 +186,29 @@ contract HSIStakeManager is StakeEnder {
       .hexStakeEnd(index, address(uint160(stakeId)));
     // move around the indexes for future stake ends
     if (stakeCountAfter > index) {
-      address movedHsiAddress = IHEXStakeInstanceManager(HSIM)
-        .hsiLists(address(this), index);
-      (, address movedOwner) = _stakeIdToInfo({
-        stakeId: uint256(uint160(movedHsiAddress))
-      });
-      stakeIdInfo[uint256(uint160(movedHsiAddress))] = _encodeInfo({
-        index: index,
-        owner: movedOwner
+      _rewriteIndex({
+        index: index
       });
     }
   }
+  function _rewriteIndex(uint256 index) internal {
+    address movedHsiAddress = IHEXStakeInstanceManager(HSIM)
+      .hsiLists(address(this), index);
+    (, address movedOwner) = _stakeIdToInfo({
+      stakeId: uint256(uint160(movedHsiAddress))
+    });
+    stakeIdInfo[uint256(uint160(movedHsiAddress))] = _encodeInfo({
+      index: index,
+      owner: movedOwner
+    });
+  }
+  /**
+   * starts an hsi for the provided staker and saves its data appropriately
+   * @param staker the staker that will own this stake
+   * @param newStakeAmount the number of tokens to add to the newly formed stake
+   * @param newStakeDays the number of days to stake said tokens for
+   * @param index the index of the stake in the list of all stakes
+   */
   function _stakeStartFor(
     address staker,
     uint256 newStakeAmount,
@@ -154,13 +216,19 @@ contract HSIStakeManager is StakeEnder {
     uint256 index
   ) internal override returns(uint256 stakeId) {
     IERC20(TARGET).approve(HSIM, newStakeAmount);
-    address hsiAddress = IHEXStakeInstanceManager(HSIM).hexStakeStart(newStakeAmount, newStakeDays);
+    address hsiAddress = IHEXStakeInstanceManager(HSIM)
+      .hexStakeStart(newStakeAmount, newStakeDays);
     stakeId = uint160(hsiAddress);
     stakeIdInfo[stakeId] = _encodeInfo({
       index: index,
       owner: staker
     });
   }
+  /**
+   * mint hedron from an hsi
+   * @param index the index of the stake on hsim to mint
+   * @param stakeId the stake id or in this case, hsi address
+   */
   function _mintHedron(uint256 index, uint256 stakeId) internal override returns(uint256) {
     return IHedron(HEDRON).mintInstanced(index, address(uint160(stakeId)));
   }

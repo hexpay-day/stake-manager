@@ -23,6 +23,18 @@ abstract contract Tipper is Bank, UnderlyingStakeable, CurrencyList, EncodableSe
     _addCurrencyToList(TARGET);
     _addCurrencyToList(HEDRON);
   }
+  /**
+   * @dev this mapping is needed for the case where a tip is added to a stake
+   * but the staker ends the stake on a lower level which never checks for tips
+   * this mapping slightly increases the cost of initializing tips as well as transferring them
+   * but that is ok, because we generally do not want people to be trading stakes at this level
+   * of anyone wants to be swapping ownership over stakes then they can create
+   * an erc721 and trade at a higher level
+   * also end stakers get a larger refund due to more information being zero'd out
+   * it is set to internal because, generally, the stake id should be going
+   * to the lower level `stakeIdInfo` mapping and individuals who do not wish to tip
+   * should not be charged 2k gas for checking if this mapping exists
+   */
   mapping(uint256 => address) internal tipStakeIdToStaker;
   event AddTip(
     uint256 indexed stakeId,
@@ -227,17 +239,52 @@ abstract contract Tipper is Bank, UnderlyingStakeable, CurrencyList, EncodableSe
       fullEncodedLinear: fullEncodedLinear
     });
   }
-  function removeTipFromStake(
+  function removeAllTips(uint256 stakeId) external {
+    _verifyStakeOwnership({
+      owner: msg.sender,
+      stakeId: stakeId
+    });
+    _removeAllTips({
+      stakeId: stakeId,
+      settings: stakeIdToSettings[stakeId]
+    });
+  }
+  function _removeAllTips(uint256 stakeId, uint256 settings) internal {
+    uint256 tipCount = _stakeIdTipSize({
+      stakeId: stakeId
+    });
+    if (tipCount > ZERO) {
+      uint256 i;
+      uint256[] memory indexes = new uint256[](tipCount);
+      unchecked {
+        --tipCount;
+      }
+      do {
+        unchecked {
+          indexes[i] = tipCount - i;
+          ++i;
+        }
+      } while (i <= tipCount);
+      _removeTipsFromStake({
+        stakeId: stakeId,
+        settings: settings,
+        indexes: indexes
+      });
+    }
+  }
+  function removeTipsFromStake(
     uint256 stakeId,
     uint256[] calldata indexes
   ) external payable {
-    _removeTipFromStake({
+    _removeTipsFromStake({
       stakeId: stakeId,
+      settings: stakeIdToSettings[stakeId],
       indexes: indexes
     });
   }
-  function _removeTipFromStake(
+  function _removeTipsFromStake(
     uint256 stakeId,
+    uint256 settings,
     uint256[] memory indexes
   ) internal {
     // if the stake has already ended, we don't care
@@ -266,16 +313,20 @@ abstract contract Tipper is Bank, UnderlyingStakeable, CurrencyList, EncodableSe
     do {
       uint256 index = indexes[i];
       uint256 tip = tips[index];
-      if (tipsLast > ZERO) {
+      if (tipsLast > index) {
+        // if we are not currently targeting the last in the tips array
+        // then we have to move tips around to prevent gaps in list
         tips[index] = tips[tipsLast];
       }
       tips.pop();
       // now do something with the tip
       address token = address(indexToToken[tip >> INDEX_EXTERNAL_TIP_CURRENCY]);
-      _addToTokenWithdrawable({
+      _attributeFunds({
         token: token,
-        to: staker,
-        amount: uint96(tip >> INDEX_EXTERNAL_TIP_LIMIT)
+        index: INDEX_SHOULD_SEND_TOKENS_TO_STAKER,
+        setting: settings,
+        staker: staker,
+        amount: uint128(tip >> INDEX_EXTERNAL_TIP_LIMIT)
       });
       emit RemoveTip({
         stakeId: stakeId,

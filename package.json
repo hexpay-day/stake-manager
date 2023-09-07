@@ -11,6 +11,7 @@
     "coverage": "hardhat coverage",
     "coveralls": "hardhat coverage && shx cat ./coverage/lcov.info | coveralls --verbose",
     "analyze": "slither ./contracts/ --solc-remaps @openzeppelin=node_modules/@openzeppelin --hardhat-ignore-compile --exclude-dependencies --hardhat-cache-directory ./cache_hardhat",
+    "analyze:minimal": "yarn run analyze --exclude unused-state-variable,incorrect-versions-of-solidity,variable-names-too-similar,uninitialized-state-variables,different-pragma-directives-are-used,incorrect-versions-of-solidity",
     "foundry:test": "FORK_URL=\"https://rpc.pulsechain.com\" yarn run foundry:test-fork",
     "foundry:test-fork": "forge test --fork-url $FORK_URL -vvv --gas-report"
   },
