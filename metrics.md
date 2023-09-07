@@ -66,12 +66,12 @@ Source Units in Scope: **`23`** (**100%**)
 | 📝 | ./contracts/StakeInfo.sol | 1 | **** | 137 | 137 | 51 | 84 | 35 | **** |
 | 📝 | ./contracts/StakeManager.sol | 1 | **** | 9 | 9 | 6 | 1 | 6 | **** |
 | 📝 | ./contracts/StakeStarter.sol | 1 | **** | 89 | 74 | 51 | 21 | 34 | **<abbr title='Payable Functions'>💰</abbr>** |
-| 🎨 | ./contracts/Tipper.sol | 1 | **** | 405 | 362 | 311 | 52 | 128 | **<abbr title='Payable Functions'>💰</abbr><abbr title='Unchecked Blocks'>Σ</abbr>** |
-| 📝 | ./contracts/TransferrableStakeManager.sol | 1 | **** | 65 | 65 | 58 | 5 | 27 | **<abbr title='Payable Functions'>💰</abbr>** |
+| 🎨 | ./contracts/Tipper.sol | 1 | **** | 422 | 379 | 325 | 55 | 135 | **<abbr title='Payable Functions'>💰</abbr><abbr title='Unchecked Blocks'>Σ</abbr>** |
+| 📝 | ./contracts/TransferrableStakeManager.sol | 1 | **** | 66 | 66 | 59 | 5 | 28 | **<abbr title='Payable Functions'>💰</abbr>** |
 | 📝 | ./contracts/UnderlyingStakeManager.sol | 1 | **** | 191 | 184 | 115 | 67 | 56 | **<abbr title='Unchecked Blocks'>Σ</abbr>** |
 | 🎨 | ./contracts/UnderlyingStakeable.sol | 1 | **** | 139 | 122 | 55 | 75 | 40 | **<abbr title='Unchecked Blocks'>Σ</abbr>** |
-| 📝 | ./contracts/Utils.sol | 1 | **** | 45 | 45 | 35 | 9 | 68 | **** |
-| 📝🎨 | **Totals** | **23** | **** | **3645**  | **3464** | **2305** | **1145** | **1244** | **<abbr title='Uses Assembly'>🖥</abbr><abbr title='Payable Functions'>💰</abbr><abbr title='DelegateCall'>👥</abbr><abbr title='Uses Hash-Functions'>🧮</abbr><abbr title='Unchecked Blocks'>Σ</abbr>** |
+| 📝 | ./contracts/Utils.sol | 1 | **** | 46 | 46 | 36 | 9 | 71 | **** |
+| 📝🎨 | **Totals** | **23** | **** | **3664**  | **3483** | **2321** | **1148** | **1255** | **<abbr title='Uses Assembly'>🖥</abbr><abbr title='Payable Functions'>💰</abbr><abbr title='DelegateCall'>👥</abbr><abbr title='Uses Hash-Functions'>🧮</abbr><abbr title='Unchecked Blocks'>Σ</abbr>** |
 
 <sub>
 Legend: <a onclick="toggleVisibility('table-legend', this)">[➕]</a>
@@ -153,7 +153,7 @@ The analysis finished with **`0`** errors and **`0`** duplicate files.
 
 #### <span id=t-inline-documentation>Inline Documentation</span>
 
-- **Comment-to-Source Ratio:** On average there are`2.16` code lines per comment (lower=better).
+- **Comment-to-Source Ratio:** On average there are`2.17` code lines per comment (lower=better).
 - **ToDo's:** `0` 
 
 #### <span id=t-components>Components</span>
@@ -172,7 +172,7 @@ This section lists functions that are explicitly declared public or payable. Ple
 
 | External   | Internal | Private | Pure | View |
 | ---------- | -------- | ------- | ---- | ---- |
-| 99 | 177  | 0 | 42 | 50 |
+| 99 | 179  | 0 | 42 | 50 |
 
 #### <span id=t-statevariables>StateVariables</span>
 
@@ -280,11 +280,11 @@ This section lists functions that are explicitly declared public or payable. Ple
 | ./contracts/StakeInfo.sol | eaa02c41fa02bbcaa3514a25d251a193396ba57d |
 | ./contracts/StakeManager.sol | 1677faef1eae4b192bf7a48ceebe84a14fd60fd6 |
 | ./contracts/StakeStarter.sol | 7d4a2a122fbfd0a4c9bf08a797df4134a03d269f |
-| ./contracts/Tipper.sol | 1494e6e81691fbb7bffe65649aacb34d27de7b72 |
-| ./contracts/TransferrableStakeManager.sol | 010a1dca18fc6f55cde5d7e8c7b42a7b147e9c9c |
+| ./contracts/Tipper.sol | 421457f2604365c489a64bee0169f47ee28f1554 |
+| ./contracts/TransferrableStakeManager.sol | b4731f29b88c4e7ca8c0ebcff2c5eb745d540fb2 |
 | ./contracts/UnderlyingStakeManager.sol | 88d7cad07404d6e87f313a69ebe4ed28de641677 |
 | ./contracts/UnderlyingStakeable.sol | a5efb4ba5afc84d415e362de5f20252865cc7569 |
-| ./contracts/Utils.sol | 0ab739aeca27ea5c90676c4d15f334f89f5ffb79 |
+| ./contracts/Utils.sol | f0f120c5539d47eae6c4a22ee709e5a8d18a3e65 |
 
 
  Contracts Description Table
@@ -495,6 +495,7 @@ This section lists functions that are explicitly declared public or payable. Ple
 | └ | addTipToStake | External ❗️ |  💵 |NO❗️ |
 | └ | _verifyTipAmountAllowed | Internal 🔒 |   | |
 | └ | _checkStakeCustodian | Internal 🔒 |   | |
+| └ | _transferTipLock | Internal 🔒 | 🛑  | |
 | └ | _addTipToStake | Internal 🔒 | 🛑  | |
 | └ | <Receive Ether> | External ❗️ |  💵 |NO❗️ |
 ||||||

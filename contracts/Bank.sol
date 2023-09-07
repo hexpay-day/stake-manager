@@ -219,8 +219,9 @@ contract Bank is Utils {
   function _depositTokenFrom(address token, address depositor, uint256 amount) internal returns(uint256 amnt) {
     if (token != address(0)) {
       if (amount > ZERO) {
+        amnt = IERC20(token).balanceOf(address(this));
         IERC20(token).safeTransferFrom(depositor, address(this), amount);
-        amnt = amount;
+        amnt -= IERC20(token).balanceOf(address(this));
       }
     } else {
       // transfer in already occurred

@@ -25,7 +25,7 @@ abstract contract EncodableSettings is StakeInfo {
   uint256 internal constant INDEX_HAS_EXTERNAL_TIPS = 7;
   uint256 internal constant INDEX_COPY_EXTERNAL_TIPS = 6;
   uint256 internal constant INDEX_STAKE_IS_TRANSFERRABLE = 5;
-  uint256 internal constant UNUSED_SPACE_STAKE_IS_TRANSFERRABLE = 251;
+  uint256 internal constant INDEX_LEFT_STAKE_IS_TRANSFERRABLE = 251;
   uint256 internal constant INDEX_SHOULD_SEND_TOKENS_TO_STAKER = FOUR;
   uint256 internal constant INDEX_CAN_MINT_HEDRON_AT_END = THREE;
   uint256 internal constant INDEX_CAN_MINT_HEDRON = TWO;

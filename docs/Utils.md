@@ -20,6 +20,12 @@ address TARGET
 uint256 MAX_DAYS
 ```
 
+### MAX_256
+
+```solidity
+uint256 MAX_256
+```
+
 ### SLOTS
 
 ```solidity

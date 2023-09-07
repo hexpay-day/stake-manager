@@ -162,10 +162,7 @@ contract HSIStakeManager is StakeEnder {
     });
   }
   function _mintHedron(uint256 index, uint256 stakeId) internal override returns(uint256) {
-    return _mintInstancedHedron({
-      index: index,
-      hsiAddress: address(uint160(stakeId))
-    });
+    return IHedron(HEDRON).mintInstanced(index, address(uint160(stakeId)));
   }
   /**
    * check that this contract is the custodian of this hsi (nft was depostied and detokenized)

@@ -7,6 +7,7 @@ import { CurrencyList } from "./CurrencyList.sol";
 import { EncodableSettings } from "./EncodableSettings.sol";
 
 abstract contract Tipper is Bank, UnderlyingStakeable, CurrencyList, EncodableSettings {
+  // 2^56 is a lot harder to grief than 2^32
   uint256 internal constant INDEX_EXTERNAL_TIP_CURRENCY = 200;
   uint256 internal constant INDEX_EXTERNAL_TIP_CURRENCY_ONLY = INDEX_EXTERNAL_TIP_CURRENCY + ONE;
   uint256 internal constant INDEX_EXTERNAL_TIP_LIMIT = SEVENTY_TWO; // 128 bits long
@@ -22,7 +23,6 @@ abstract contract Tipper is Bank, UnderlyingStakeable, CurrencyList, EncodableSe
     _addCurrencyToList(TARGET);
     _addCurrencyToList(HEDRON);
   }
-  uint256 public constant MAX_256 = type(uint256).max;
   mapping(uint256 => address) internal tipStakeIdToStaker;
   event AddTip(
     uint256 indexed stakeId,
@@ -63,6 +63,8 @@ abstract contract Tipper is Bank, UnderlyingStakeable, CurrencyList, EncodableSe
     uint256 len = stakeIdTips[stakeId].length;
     uint256 tip;
     uint256 cachedTip;
+    // this line disallows reentrancy to mutate the tips list
+    tipStakeIdToStaker[stakeId] = address(0);
     do {
       // tips get executed in reverse order so that the contract
       // can clean itself up (gas refund) as it goes along
@@ -112,7 +114,7 @@ abstract contract Tipper is Bank, UnderlyingStakeable, CurrencyList, EncodableSe
           amount: limit,
           max: withdrawableBalance
         });
-        if (limit > 0) {
+        if (limit > ZERO) {
           cachedTip = _encodeTipSettings(reusable, idx, limit, cachedTip);
           unchecked {
             withdrawableBalance -= limit;
@@ -121,6 +123,9 @@ abstract contract Tipper is Bank, UnderlyingStakeable, CurrencyList, EncodableSe
           // so this line takes it over / reuses it
           idx = stakeIdTips[nextStakeId].length;
           stakeIdTips[nextStakeId].push(cachedTip);
+          if (idx == ZERO) {
+            _transferTipLock(stakeId, false);
+          }
           emit AddTip({
             stakeId: nextStakeId,
             token: token,
@@ -240,7 +245,7 @@ abstract contract Tipper is Bank, UnderlyingStakeable, CurrencyList, EncodableSe
     // only one who is incensed to unwind tips is the staker
     // but realistically, anyone can if they wish
     address staker;
-    if (stakeIdInfo[stakeId] != 0) {
+    if (stakeIdInfo[stakeId] != ZERO) {
       _verifyStakeOwnership({
         owner: msg.sender,
         stakeId: stakeId
@@ -248,6 +253,10 @@ abstract contract Tipper is Bank, UnderlyingStakeable, CurrencyList, EncodableSe
       staker = msg.sender;
     } else {
       staker = tipStakeIdToStaker[stakeId];
+    }
+    // disallows reentrancy
+    if (staker == address(0)) {
+      return;
     }
     uint256[] storage tips = stakeIdTips[stakeId];
     // this will fail if no tips exist
@@ -344,6 +353,16 @@ abstract contract Tipper is Bank, UnderlyingStakeable, CurrencyList, EncodableSe
       revert NotAllowed();
     }
   }
+  function _transferTipLock(uint256 stakeId, bool force) internal {
+    if (tipStakeIdToStaker[stakeId] == address(0) || force) {
+      address owner = _stakeIdToOwner({
+        stakeId: stakeId
+      });
+      if (owner != address(0)) {
+        tipStakeIdToStaker[stakeId] = owner;
+      }
+    }
+  }
   function _addTipToStake(
     bool reusable,
     address token,
@@ -359,9 +378,7 @@ abstract contract Tipper is Bank, UnderlyingStakeable, CurrencyList, EncodableSe
     if (tipAmount == ZERO) {
       return (ZERO, ZERO);
     }
-    tipStakeIdToStaker[stakeId] = _stakeIdToOwner({
-      stakeId: stakeId
-    });
+    _transferTipLock(stakeId, false);
     // set the tip flag to 1
     // 0b00000001 | 0b10000000 => 0b10000001
     // 0b10000001 | 0b10000000 => 0b10000001

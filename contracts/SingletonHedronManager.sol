@@ -77,15 +77,6 @@ contract SingletonHedronManager is UnderlyingStakeManager {
     }
   }
   function _mintHedron(uint256 index, uint256 stakeId) internal virtual returns(uint256 amount) {
-    return _mintNativeHedron({
-      index: index,
-      stakeId: stakeId
-    });
-  }
-  function _mintNativeHedron(uint256 index, uint256 stakeId) internal returns(uint256 amount) {
     return IHedron(HEDRON).mintNative(index, uint40(stakeId));
-  }
-  function _mintInstancedHedron(uint256 index, address hsiAddress) internal returns(uint256 amount) {
-    return IHedron(HEDRON).mintInstanced(index, hsiAddress);
   }
 }

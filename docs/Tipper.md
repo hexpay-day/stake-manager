@@ -32,12 +32,6 @@ uint256 INDEX_EXTERNAL_TIP_METHOD
 constructor() internal
 ```
 
-### MAX_256
-
-```solidity
-uint256 MAX_256
-```
-
 ### tipStakeIdToStaker
 
 ```solidity
@@ -161,6 +155,12 @@ function _verifyTipAmountAllowed(uint256 stakeId, uint256 amount) internal view 
 
 ```solidity
 function _checkStakeCustodian(uint256 stakeId) internal view virtual
+```
+
+### _transferTipLock
+
+```solidity
+function _transferTipLock(uint256 stakeId, bool force) internal
 ```
 
 ### _addTipToStake

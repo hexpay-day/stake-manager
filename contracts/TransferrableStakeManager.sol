@@ -10,12 +10,11 @@ contract TransferrableStakeManager is StakeStarter {
    * @param stakeId the stake that the sender owns and wishes to remove transfer abilities from
    */
   function removeTransferrability(uint256 stakeId) external payable returns(uint256 settings) {
-    return _updateTransferrability({
-      stakeId: stakeId,
-      encoded: ZERO
+    return _removeTransferrability({
+      stakeId: stakeId
     });
   }
-  function _updateTransferrability(uint256 stakeId, uint256 encoded) internal returns(uint256 settings) {
+  function _removeTransferrability(uint256 stakeId) internal returns(uint256 settings) {
     _verifyStakeOwnership({
       owner: msg.sender,
       stakeId: stakeId
@@ -23,8 +22,7 @@ contract TransferrableStakeManager is StakeStarter {
     settings = stakeIdToSettings[stakeId];
     settings = (
       (settings >> INDEX_COPY_EXTERNAL_TIPS << INDEX_COPY_EXTERNAL_TIPS)
-      | (settings << UNUSED_SPACE_STAKE_IS_TRANSFERRABLE >> UNUSED_SPACE_STAKE_IS_TRANSFERRABLE)
-      | encoded << INDEX_STAKE_IS_TRANSFERRABLE
+      | (settings << INDEX_LEFT_STAKE_IS_TRANSFERRABLE >> INDEX_LEFT_STAKE_IS_TRANSFERRABLE) // wipe transferrable
     );
     _logSettingsUpdate({
       stakeId: stakeId,
@@ -57,6 +55,7 @@ contract TransferrableStakeManager is StakeStarter {
       index: index,
       owner: to
     });
+    _transferTipLock(stakeId, true);
     emit TransferStake({
       stakeId: stakeId,
       owner: to
