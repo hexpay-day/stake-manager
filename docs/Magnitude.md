@@ -2,12 +2,6 @@
 
 ## Magnitude
 
-### MULTIPLIER
-
-```solidity
-uint256 MULTIPLIER
-```
-
 ### X_OPTIONS
 
 ```solidity

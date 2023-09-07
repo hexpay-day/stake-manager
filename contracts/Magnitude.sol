@@ -5,7 +5,6 @@ import { Utils } from "./Utils.sol";
 import { UnderlyingStakeable } from "./UnderlyingStakeable.sol";
 
 contract Magnitude is Utils {
-  uint256 constant internal MULTIPLIER = TWO;
   uint256 constant internal X_OPTIONS = THREE;
   function _computeDayMagnitude(
     uint256 limit, uint256 method, uint256 x,
@@ -179,13 +178,13 @@ contract Magnitude is Utils {
       // in order of location on the series of bits
       // numerator
       x = int16(uint16(magnitude >> FOURTY_EIGHT)) + int16(-MIN_INT_16);
-      x *= int256(MULTIPLIER ** ((method - X_OPTIONS) / X_OPTIONS)); // udn*(2^sfn)=n
+      x = x << uint256(((method - X_OPTIONS) / X_OPTIONS)); // udn*(2^sfn)=n
       // denominator - uint
       y = uint16(magnitude >> TWENTY_FOUR);
-      y *= (MULTIPLIER ** uint8(magnitude >> FOURTY)); // udd*(4^sfd)=d
+      y = y << uint256(uint8(magnitude >> FOURTY)); // udd*(4^sfd)=d
       // offset
       b = int16(uint16(magnitude)) + int16(-MIN_INT_16);
-      b *= int256(MULTIPLIER ** uint8(magnitude >> SIXTEEN)); // b*(2^sfn)=b
+      b = b << uint256(uint8(magnitude >> SIXTEEN)); // b*(2^sfn)=b
     }
   }
   /**

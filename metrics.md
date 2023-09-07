@@ -58,7 +58,7 @@ Source Units in Scope: **`23`** (**100%**)
 | 📝 | ./contracts/HSIStakeManager.sol | 1 | **** | 179 | 168 | 149 | 17 | 94 | **<abbr title='Unchecked Blocks'>Σ</abbr>** |
 | 📝 | ./contracts/IsolatedStakeManager.sol | 1 | **** | 254 | 254 | 155 | 97 | 96 | **<abbr title='Payable Functions'>💰</abbr>** |
 | 📝 | ./contracts/IsolatedStakeManagerFactory.sol | 1 | **** | 27 | 27 | 18 | 7 | 21 | **<abbr title='Uses Hash-Functions'>🧮</abbr>** |
-| 📝 | ./contracts/Magnitude.sol | 1 | **** | 241 | 209 | 125 | 93 | 68 | **<abbr title='Unchecked Blocks'>Σ</abbr>** |
+| 📝 | ./contracts/Magnitude.sol | 1 | **** | 240 | 208 | 124 | 93 | 68 | **<abbr title='Unchecked Blocks'>Σ</abbr>** |
 | 📝 | ./contracts/MaximusStakeManager.sol | 1 | **** | 194 | 189 | 108 | 84 | 67 | **<abbr title='Unchecked Blocks'>Σ</abbr>** |
 | 📝 | ./contracts/MulticallExtension.sol | 1 | **** | 107 | 96 | 62 | 33 | 38 | **<abbr title='Uses Assembly'>🖥</abbr><abbr title='DelegateCall'>👥</abbr><abbr title='Unchecked Blocks'>Σ</abbr>** |
 | 📝 | ./contracts/SingletonHedronManager.sol | 1 | **** | 91 | 91 | 83 | 6 | 33 | **<abbr title='Unchecked Blocks'>Σ</abbr>** |
@@ -71,7 +71,7 @@ Source Units in Scope: **`23`** (**100%**)
 | 📝 | ./contracts/UnderlyingStakeManager.sol | 1 | **** | 191 | 184 | 115 | 67 | 56 | **<abbr title='Unchecked Blocks'>Σ</abbr>** |
 | 🎨 | ./contracts/UnderlyingStakeable.sol | 1 | **** | 139 | 122 | 55 | 75 | 40 | **<abbr title='Unchecked Blocks'>Σ</abbr>** |
 | 📝 | ./contracts/Utils.sol | 1 | **** | 45 | 45 | 35 | 9 | 68 | **** |
-| 📝🎨 | **Totals** | **23** | **** | **3646**  | **3465** | **2306** | **1145** | **1244** | **<abbr title='Uses Assembly'>🖥</abbr><abbr title='Payable Functions'>💰</abbr><abbr title='DelegateCall'>👥</abbr><abbr title='Uses Hash-Functions'>🧮</abbr><abbr title='Unchecked Blocks'>Σ</abbr>** |
+| 📝🎨 | **Totals** | **23** | **** | **3645**  | **3464** | **2305** | **1145** | **1244** | **<abbr title='Uses Assembly'>🖥</abbr><abbr title='Payable Functions'>💰</abbr><abbr title='DelegateCall'>👥</abbr><abbr title='Uses Hash-Functions'>🧮</abbr><abbr title='Unchecked Blocks'>Σ</abbr>** |
 
 <sub>
 Legend: <a onclick="toggleVisibility('table-legend', this)">[➕]</a>
@@ -178,7 +178,7 @@ This section lists functions that are explicitly declared public or payable. Ple
 
 | Total      | 🌐Public  |
 | ---------- | --------- |
-| 78  | 25 |
+| 77  | 25 |
 
 #### <span id=t-capabilities>Capabilities</span>
 
@@ -272,7 +272,7 @@ This section lists functions that are explicitly declared public or payable. Ple
 | ./contracts/HSIStakeManager.sol | 08f76f6de05dd1b698bbdaf6074b2ff4a1aa1c35 |
 | ./contracts/IsolatedStakeManager.sol | 66f215ebe1bbcddb637852d2fed7aec3b546f50e |
 | ./contracts/IsolatedStakeManagerFactory.sol | e273ea4a137a3d45059858b70f91780443a02301 |
-| ./contracts/Magnitude.sol | 225a15379ec1938b0276474e9c9afc86bdc20205 |
+| ./contracts/Magnitude.sol | 148ff6a036ec0a6c957a62531a5805b988c295c0 |
 | ./contracts/MaximusStakeManager.sol | 5944edc34f34df7531cb910368bd84b82ce25af5 |
 | ./contracts/MulticallExtension.sol | e2db7a46eb0cbcd94d13da5f9656cbe29a85ec93 |
 | ./contracts/SingletonHedronManager.sol | 2ad39540ef54eead5053192a77249882fbf95149 |
