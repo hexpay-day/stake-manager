@@ -29,6 +29,7 @@ contract CurrencyList is Utils {
     if (!token.isContract()) {
       revert NotAllowed();
     }
+
     return _addCurrencyToList({
       token: token
     });

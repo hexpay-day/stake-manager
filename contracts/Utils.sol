@@ -42,6 +42,10 @@ contract Utils {
     // then go the opposite direction, once again leaving only space for 1
     return 1 == (setting << (MAX_UINT8 - index) >> MAX_UINT8);
   }
+  /**
+   * after an error is caught, it can be reverted again
+   * @param data the data to repackage and revert with
+   */
   function _bubbleRevert(bytes memory data) internal pure {
     if (data.length == ZERO) revert();
     assembly {

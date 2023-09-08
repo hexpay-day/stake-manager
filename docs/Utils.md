@@ -167,3 +167,11 @@ function _isOneAtIndex(uint256 setting, uint256 index) internal pure returns (bo
 function _bubbleRevert(bytes data) internal pure
 ```
 
+after an error is caught, it can be reverted again
+
+#### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| data | bytes | the data to repackage and revert with |
+

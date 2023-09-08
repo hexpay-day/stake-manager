@@ -98,6 +98,11 @@ contract UnderlyingStakeManager is GoodAccounting {
   function stakeEnd(uint256 stakeIndex, uint40 stakeId) external override virtual {
     _stakeEndByIndexAndId(stakeIndex, stakeId);
   }
+  /**
+   * end a stake given its index and id
+   * @param stakeIndex the index of the stake to end
+   * @param stakeId the stake id to end
+   */
   function _stakeEndByIndexAndId(uint256 stakeIndex, uint256 stakeId) internal virtual returns(uint256 amount) {
     _verifyStakeOwnership({
       owner: msg.sender,

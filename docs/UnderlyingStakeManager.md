@@ -84,6 +84,15 @@ or requires that the staker send start and end methods (0)
 function _stakeEndByIndexAndId(uint256 stakeIndex, uint256 stakeId) internal virtual returns (uint256 amount)
 ```
 
+end a stake given its index and id
+
+#### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| stakeIndex | uint256 | the index of the stake to end |
+| stakeId | uint256 | the stake id to end |
+
 ### stakeEndById
 
 ```solidity

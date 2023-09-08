@@ -193,6 +193,16 @@ abstract contract Tipper is Bank, UnderlyingStakeable, CurrencyList, EncodableSe
       fullEncodedLinear: fullEncodedLinear
     });
   }
+  /**
+   * encode a series of numbers into a uint72 sized value result=(x*(2^xFactor)/y*(2^yFactor))+(b*(2^bFactor))
+   * @param method a number to designate which y relationship to choose
+   * @param xFactor the number of bitshifts to shift the x value (2^xFactor)
+   * @param x the value to multiply against the input value
+   * @param yFactor the number of bitshifts to shift the y value (2^yFactor)
+   * @param y the value to divide into the input value multiplied by the final x value
+   * @param bFactor the number of bitshifts to shift the b value (2^bFactor)
+   * @param b the value to offset the input value
+   */
   function encodedLinearWithMethod(
     uint256 method,
     uint256 xFactor,
@@ -210,6 +220,13 @@ abstract contract Tipper is Bank, UnderlyingStakeable, CurrencyList, EncodableSe
     );
     return (encodedMethod << INDEX_EXTERNAL_TIP_METHOD) | magnitude;
   }
+  /**
+   * encodes tip settings into a uint256
+   * @param reusable the tip can be reused if there is amount left over
+   * @param currencyIndex the index of the currency on the list
+   * @param amount the number of tokens deposited into the contract
+   * @param fullEncodedLinear an (x/y)+b equation inside of uint72
+   */
   function _encodeTipSettings(
     bool reusable,
     uint256 currencyIndex,
@@ -224,6 +241,16 @@ abstract contract Tipper is Bank, UnderlyingStakeable, CurrencyList, EncodableSe
       | (uint256(uint128(amount)) << INDEX_EXTERNAL_TIP_LIMIT)
       | uint256(uint72(fullEncodedLinear));
   }
+  /**
+   * create a tip and back it with a token, to be executed by the stake ender
+   * @param reusable the tip can be reused if value is still present after it has been executed
+   * @param token the token to fund the tip
+   * @param stakeId the stake id that the tip belongs to
+   * @param amount the number of tokens to back the tip with use zero to move all withdrawableBalanceOf value
+   * @param fullEncodedLinear the (x/y)+b equation to define how much of the tip to spend
+   * @return index of the tip in the list
+   * @return tipAmount the final backing value of the tip
+   */
   function depositAndAddTipToStake(
     bool reusable,
     address token,
@@ -258,6 +285,12 @@ abstract contract Tipper is Bank, UnderlyingStakeable, CurrencyList, EncodableSe
       fullEncodedLinear: fullEncodedLinear
     });
   }
+  /**
+   * remove all tips from a stake id and moves them to the
+   * withdrawableBalanceOf the owner of the stake
+   * @param stakeId the stake id to remove all tips from
+   * @dev if the sender does not own the stake id, the call will fail
+   */
   function removeAllTips(uint256 stakeId) external {
     _verifyStakeOwnership({
       owner: msg.sender,
@@ -268,6 +301,13 @@ abstract contract Tipper is Bank, UnderlyingStakeable, CurrencyList, EncodableSe
       settings: stakeIdToSettings[stakeId]
     });
   }
+  /**
+   * remove all tips from a stake id and moves them to the
+   * withdrawableBalanceOf the owner of the stake
+   * @param stakeId the stake id to remove all tips from
+   * @param settings the settings of the stake used for
+   * determining whether or not to send funds back to staker
+   */
   function _removeAllTips(uint256 stakeId, uint256 settings) internal {
     uint256 tipCount = _stakeIdTipSize({
       stakeId: stakeId
@@ -291,6 +331,14 @@ abstract contract Tipper is Bank, UnderlyingStakeable, CurrencyList, EncodableSe
       });
     }
   }
+  /**
+   * remove a list of tip indexes from a given stake
+   * @param stakeId the stake id to remove tips from
+   * @param indexes the list of indexes of tips to be removed from the list
+   * @dev notice that the list of stakes will be mutated as each tip is removed
+   * so you will have to calculate off chain where tips will move to or provide a list
+   * such as [0, 0, 0] or decrementing [5,4,3,2,1,0] that will not be affected by the list mutating
+   */
   function removeTipsFromStake(
     uint256 stakeId,
     uint256[] calldata indexes
@@ -371,6 +419,16 @@ abstract contract Tipper is Bank, UnderlyingStakeable, CurrencyList, EncodableSe
       });
     }
   }
+  /**
+   * create and back a tip with a given number of tokens
+   * @param reusable the tip is reusable
+   * @param token the token to use in the tip
+   * @param stakeId the stake id to attribute the tip to
+   * @param amount the number of tokens to tip
+   * @param fullEncodedLinear the (x/y)+b equation to use for determining the magnitude of the tip
+   * @return the index of the tip in the list
+   * @return the final tip amount
+   */
   function addTipToStake(
     bool reusable,
     address token,
@@ -395,6 +453,15 @@ abstract contract Tipper is Bank, UnderlyingStakeable, CurrencyList, EncodableSe
       fullEncodedLinear: fullEncodedLinear
     });
   }
+  /**
+   * verify that the inputs of the tip are allowed and will
+   * not conflict with downstream requirements
+   * @param stakeId the stake id to verify
+   * @param amount the amount to verify. notice that zero cannot
+   * be used unless the sender owns the stake. this is to prevent addresses
+   * from taking other accounts funding
+   * @return recipient who will be the effective owner of the tip
+   */
   function _verifyTipAmountAllowed(uint256 stakeId, uint256 amount) internal view returns(address recipient) {
     (, recipient) = _stakeIdToInfo(stakeId);
     if (amount == ZERO && msg.sender != recipient) {
@@ -402,6 +469,10 @@ abstract contract Tipper is Bank, UnderlyingStakeable, CurrencyList, EncodableSe
       revert NotAllowed();
     }
   }
+  /**
+   * check that this contract is custodian of the given stake id
+   * @param stakeId the stake id to check that this address is the custodian
+   */
   function _checkStakeCustodian(uint256 stakeId) internal virtual view {
     if (_stakeCount({
       staker: address(this)
@@ -419,6 +490,17 @@ abstract contract Tipper is Bank, UnderlyingStakeable, CurrencyList, EncodableSe
       revert NotAllowed();
     }
   }
+  /**
+   * create a tip and back it with given tokens
+   * @param reusable the tip should be reused if it is not consumed during execution
+   * @param token the token that is backing the tips value
+   * @param account the account that is providing the tokens
+   * @param stakeId the stake id to point the tip to
+   * @param amount the number of tokens to back the tip
+   * @param fullEncodedLinear the (x/y)+b equation
+   * @return index the index of the tip in the tips list
+   * @return tipAmount the amount of tokens added to the tip
+   */
   function _addTipToStake(
     bool reusable,
     address token,
