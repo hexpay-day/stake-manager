@@ -15,6 +15,7 @@ abstract contract EncodableSettings is StakeInfo {
   uint256 internal constant UNUSED_SPACE_TIP_METHOD = 72;
   uint256 internal constant INDEX_TIP_MAGNITUDE = 112;
   uint256 internal constant INDEX_NEW_STAKE_METHOD = 104;
+  uint256 internal constant INDEX_LEFT_NEW_STAKE_METHOD = 152;
   uint256 internal constant UNUSED_SPACE_NEW_STAKE_METHOD = 144;
   uint256 internal constant INDEX_NEW_STAKE_MAGNITUDE = 40;
   uint256 internal constant INDEX_NEW_STAKE_DAYS_METHOD = THIRTY_TWO;

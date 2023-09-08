@@ -1,10 +1,11 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity >=0.8.18;
 
-import "./StakeStarter.sol";
+import { StakeStarter } from "./StakeStarter.sol";
+import { IStakeReceiver } from "./interfaces/IStakeReceiver.sol";
 
 contract TransferrableStakeManager is StakeStarter {
-  event TransferStake(uint256 stakeId, address owner);
+  event TransferStake(address from, address to, uint256 stakeId);
   /**
    * removes transfer abilities from a stake
    * @param stakeId the stake that the sender owns and wishes to remove transfer abilities from
@@ -14,6 +15,10 @@ contract TransferrableStakeManager is StakeStarter {
       stakeId: stakeId
     });
   }
+  /**
+   * removes transfer abilities from a stake
+   * @param stakeId the stake that the sender owns and wishes to remove transfer abilities from
+   */
   function _removeTransferrability(uint256 stakeId) internal returns(uint256 settings) {
     _verifyStakeOwnership({
       owner: msg.sender,
@@ -26,26 +31,49 @@ contract TransferrableStakeManager is StakeStarter {
       settings: settings
     });
   }
+  /**
+   * rewrite encoded settings to remove the transferrable flag and leave all other settings in tact
+   * @param settings encoded settings to rewrite without a transferrable flag
+   */
   function removeTransferrabilityFromEncodedSettings(uint256 settings) external pure returns(uint256) {
     return _removeTransferrabilityFromEncodedSettings(settings);
   }
+  /**
+   * rewrite encoded settings to remove the transferrable flag and leave all other settings in tact
+   * @param settings encoded settings to rewrite without a transferrable flag
+   */
   function _removeTransferrabilityFromEncodedSettings(uint256 settings) internal pure returns(uint256) {
     return (
       (settings >> INDEX_COPY_EXTERNAL_TIPS << INDEX_COPY_EXTERNAL_TIPS)
       | (settings << INDEX_LEFT_STAKE_IS_TRANSFERRABLE >> INDEX_LEFT_STAKE_IS_TRANSFERRABLE) // wipe transferrable
     );
   }
+  /**
+   * check if a given stake under a stake id can be transferred
+   * @param stakeId the stake id to check transferrability setting
+   */
   function canTransfer(uint256 stakeId) external view returns(bool) {
     return _canTransfer({
       stakeId: stakeId
     });
   }
+  /**
+   * check if a given stake under a stake id can be transferred
+   * @param stakeId the stake id to check transferrability setting
+   */
   function _canTransfer(uint256 stakeId) internal view returns(bool) {
     return _isOneAtIndex({
       setting: stakeIdToSettings[stakeId],
       index: INDEX_STAKE_IS_TRANSFERRABLE
     });
   }
+  /**
+   * transfer a stake from one owner to another
+   * @param stakeId the stake id to transfer
+   * @param to the account to receive the stake
+   * @dev this method is only payable to reduce gas costs.
+   * Any value sent to this method will be unattributed
+   */
   function stakeTransfer(uint256 stakeId, address to) external payable {
     _verifyStakeOwnership({
       owner: msg.sender,
@@ -62,9 +90,16 @@ contract TransferrableStakeManager is StakeStarter {
       owner: to
     });
     _transferTipLock(stakeId, true);
+    (bool success, bytes memory data) = to.call(
+      abi.encodeWithSelector(IStakeReceiver.onStakeReceived.selector, msg.sender, stakeId)
+    );
+    if (!success) {
+      _bubbleRevert(data);
+    }
     emit TransferStake({
-      stakeId: stakeId,
-      owner: to
+      from: msg.sender,
+      to: to,
+      stakeId: stakeId
     });
   }
 }

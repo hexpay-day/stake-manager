@@ -12,8 +12,25 @@ contract StakeEnder is Magnitude, SingletonHedronManager {
    * @param stakeId the stake id on the underlying contract to end
    */
   function stakeEndByConsent(uint256 stakeId) external payable returns(uint256 delta, uint256 count) {
+    return _stakeEndByConsentWithTipTo({
+      stakeId: stakeId,
+      tipTo: address(0)
+    });
+  }
+  function stakeEndByConsentWithTipTo(
+    uint256 stakeId, address tipTo
+  ) external payable returns(uint256 delta, uint256 count) {
+    return _stakeEndByConsentWithTipTo({
+      stakeId: stakeId,
+      tipTo: tipTo
+    });
+  }
+  function _stakeEndByConsentWithTipTo(
+    uint256 stakeId, address tipTo
+  ) internal returns(uint256 delta, uint256 count) {
     return _stakeEndByConsent({
       stakeId: stakeId,
+      tipTo: tipTo,
       _count: (_currentDay() << INDEX_TODAY) | _stakeCount({
         staker: address(this)
       })
@@ -40,7 +57,9 @@ contract StakeEnder is Magnitude, SingletonHedronManager {
    * @dev the stake count is today | stake count because
    * if there were 2 variables, the contract ended up too large
    */
-  function _stakeEndByConsent(uint256 stakeId, uint256 _count) internal returns(uint256 delta, uint256 count) {
+  function _stakeEndByConsent(
+    uint256 stakeId, address tipTo, uint256 _count
+  ) internal returns(uint256 delta, uint256 count) {
     count = _count;
     (uint256 idx, address staker) = _stakeIdToInfo({
       stakeId: stakeId
@@ -86,12 +105,20 @@ contract StakeEnder is Magnitude, SingletonHedronManager {
         });
         if (hedronTip > ZERO) {
           unchecked {
+            // limited by _computeMagnitude
             hedronAmount = hedronAmount - hedronTip;
+          }
+          if (tipTo != address(0)) {
+            _addToTokenWithdrawable({
+              token: HEDRON,
+              to: tipTo,
+              amount: hedronTip
+            });
           }
           emit Tip({
             stakeId: stakeId,
-            staker: staker,
             token: HEDRON,
+            to: tipTo,
             amount: hedronTip
           });
         }
@@ -128,10 +155,17 @@ contract StakeEnder is Magnitude, SingletonHedronManager {
           unchecked {
             delta = delta - targetTip;
           }
+          if (tipTo != address(0)) {
+            _addToTokenWithdrawable({
+              token: TARGET,
+              to: tipTo,
+              amount: targetTip
+            });
+          }
           emit Tip({
             stakeId: stakeId,
-            staker: staker,
             token: TARGET,
+            to: tipTo,
             amount: targetTip
           });
         }
@@ -143,7 +177,7 @@ contract StakeEnder is Magnitude, SingletonHedronManager {
       uint256 newStakeAmount = _computeMagnitude({
         limit: delta,
         method: newStakeMethod,
-        x: setting << 152 >> UNUSED_SPACE_RIGHT_UINT64,
+        x: setting << INDEX_LEFT_NEW_STAKE_METHOD >> UNUSED_SPACE_RIGHT_UINT64,
         y2: delta,
         y1: stake.stakedHearts
       });
@@ -199,6 +233,7 @@ contract StakeEnder is Magnitude, SingletonHedronManager {
       _executeTipList({
         stakeId: stakeId,
         staker: staker,
+        tipTo: tipTo,
         nextStakeId: nextStakeId > ZERO && _isOneAtIndex({
           setting: setting,
           index: INDEX_COPY_EXTERNAL_TIPS
@@ -206,6 +241,18 @@ contract StakeEnder is Magnitude, SingletonHedronManager {
       });
     }
     return (delta, count);
+  }
+  function stakeEndByConsentForMany(uint256[] calldata stakeIds) external payable {
+    _stakeEndByConsentForManyWithTipTo({
+      stakeIds: stakeIds,
+      tipTo: address(0)
+    });
+  }
+  function stakeEndByConsentForManyWithTipTo(uint256[] calldata stakeIds, address tipTo) external payable {
+    _stakeEndByConsentForManyWithTipTo({
+      stakeIds: stakeIds,
+      tipTo: tipTo
+    });
   }
   /**
    * end many stakes at the same time
@@ -215,7 +262,7 @@ contract StakeEnder is Magnitude, SingletonHedronManager {
    * @notice this method should, generally, only be called when multiple enders
    * are attempting to end stake the same stakes
    */
-  function stakeEndByConsentForMany(uint256[] calldata stakeIds) external payable {
+  function _stakeEndByConsentForManyWithTipTo(uint256[] calldata stakeIds, address tipTo) internal {
     uint256 i;
     uint256 len = stakeIds.length;
     uint256 count = (_currentDay() << INDEX_TODAY) | _stakeCount({
@@ -224,6 +271,7 @@ contract StakeEnder is Magnitude, SingletonHedronManager {
     do {
       (, count) = _stakeEndByConsent({
         stakeId: stakeIds[i],
+        tipTo: tipTo,
         _count: count
       });
       unchecked {

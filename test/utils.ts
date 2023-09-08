@@ -52,6 +52,8 @@ export const deployFixture = async () => {
   const hex = await hre.ethers.getContractAt('contracts/interfaces/IHEX.sol:IHEX', hexAddress) as IHEX
   const hedron = await hre.ethers.getContractAt('contracts/interfaces/IHedron.sol:IHedron', hedronAddress)
   const hsim = await hre.ethers.getContractAt('IHEXStakeInstanceManager', await hedron.hsim())
+  const TransferReceiver = await hre.ethers.getContractFactory('TransferReceiver')
+  const transferReceiver = await TransferReceiver.deploy()
   const ExistingStakeManager = await hre.ethers.getContractFactory('ExistingStakeManager')
   const existingStakeManager = await ExistingStakeManager.deploy()
   const maximusStakeManager = existingStakeManager
@@ -91,6 +93,7 @@ export const deployFixture = async () => {
   await mockPerpetual.deployed()
   const [, , , , , , stakeIdBN] = await hex.globalInfo()
   return {
+    transferReceiver,
     mockPerpetual,
     externalPerpetualFilter,
     multicall,

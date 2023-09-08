@@ -8,7 +8,7 @@ import { IHEX } from  "./interfaces/IHEX.sol";
 import { MulticallExtension } from "./MulticallExtension.sol";
 import { Utils } from "./Utils.sol";
 
-abstract contract UnderlyingStakeable is MulticallExtension, Utils, IUnderlyingStakeable {
+abstract contract UnderlyingStakeable is MulticallExtension, IUnderlyingStakeable {
   /**
    * gets the stake store at the provided index
    * @param custodian the custodian (usually this) whose list to check

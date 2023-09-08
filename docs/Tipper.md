@@ -38,6 +38,23 @@ constructor() internal
 mapping(uint256 => address) tipStakeIdToStaker
 ```
 
+_this mapping is needed for the case where a tip is added to a stake
+but the staker ends the stake on a lower level which never checks for tips
+this mapping slightly increases the cost of initializing tips as well as transferring them
+but that is ok, because we generally do not want people to be trading stakes at this level
+of anyone wants to be swapping ownership over stakes then they can create
+an erc721 and trade at a higher level
+also end stakers get a larger refund due to more information being zero'd out
+it is set to internal because, generally, the stake id should be going
+to the lower level `stakeIdInfo` mapping and individuals who do not wish to tip
+should not be charged 2k gas for checking if this mapping exists_
+
+### stakeIdTips
+
+```solidity
+mapping(uint256 => uint256[]) stakeIdTips
+```
+
 ### AddTip
 
 ```solidity
@@ -53,7 +70,7 @@ event RemoveTip(uint256 stakeId, address token, uint256 index, uint256 setting)
 ### Tip
 
 ```solidity
-event Tip(uint256 stakeId, address staker, address token, uint256 amount)
+event Tip(uint256 stakeId, address token, address to, uint256 amount)
 ```
 
 tip an address a defined amount and token
@@ -63,15 +80,9 @@ tip an address a defined amount and token
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | stakeId | uint256 | the stake id being targeted |
-| staker | address | the staker |
 | token | address | the token being accounted |
+| to | address | the address to attribute rewards to |
 | amount | uint256 | the amount of the token |
-
-### stakeIdTips
-
-```solidity
-mapping(uint256 => uint256[]) stakeIdTips
-```
 
 ### stakeIdTipSize
 
@@ -79,17 +90,44 @@ mapping(uint256 => uint256[]) stakeIdTips
 function stakeIdTipSize(uint256 stakeId) external view returns (uint256)
 ```
 
+check the count of a list of tips provided by the staker
+
+#### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| stakeId | uint256 | the stake id to check the list of tips |
+
 ### _stakeIdTipSize
 
 ```solidity
 function _stakeIdTipSize(uint256 stakeId) internal view returns (uint256)
 ```
 
+check the count of a list of tips provided by the staker
+
+#### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| stakeId | uint256 | the stake id to check the list of tips |
+
 ### _executeTipList
 
 ```solidity
-function _executeTipList(uint256 stakeId, address staker, uint256 nextStakeId) internal
+function _executeTipList(uint256 stakeId, address staker, uint256 nextStakeId, address tipTo) internal
 ```
+
+execute a list of tips and leave them in the unattributed space
+
+#### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| stakeId | uint256 | the stake id whose tips should be executed |
+| staker | address | the staker that owns the stake id |
+| nextStakeId | uint256 | the next stake id if tips are to be copied / rolled over |
+| tipTo | address |  |
 
 ### encodeTipSettings
 
@@ -127,16 +165,28 @@ function _encodeTipSettings(bool reusable, uint256 currencyIndex, uint256 amount
 function depositAndAddTipToStake(bool reusable, address token, uint256 stakeId, uint256 amount, uint256 fullEncodedLinear) external payable virtual returns (uint256, uint256)
 ```
 
-### removeTipFromStake
+### removeAllTips
 
 ```solidity
-function removeTipFromStake(uint256 stakeId, uint256[] indexes) external payable
+function removeAllTips(uint256 stakeId) external
 ```
 
-### _removeTipFromStake
+### _removeAllTips
 
 ```solidity
-function _removeTipFromStake(uint256 stakeId, uint256[] indexes) internal
+function _removeAllTips(uint256 stakeId, uint256 settings) internal
+```
+
+### removeTipsFromStake
+
+```solidity
+function removeTipsFromStake(uint256 stakeId, uint256[] indexes) external payable
+```
+
+### _removeTipsFromStake
+
+```solidity
+function _removeTipsFromStake(uint256 stakeId, uint256 settings, uint256[] indexes) internal
 ```
 
 ### addTipToStake

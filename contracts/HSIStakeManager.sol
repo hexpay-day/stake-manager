@@ -134,17 +134,30 @@ contract HSIStakeManager is StakeEnder {
     tokenId = IHEXStakeInstanceManager(HSIM).hexStakeTokenize(index, hsiAddress);
     IERC721(HSIM).transferFrom(address(this), owner, tokenId);
   }
+  function hsiStakeEndMany(address[] calldata hsiAddresses) external payable {
+    _hsiStakeEndMany({
+      hsiAddresses: hsiAddresses,
+      tipTo: address(0)
+    });
+  }
+  function hsiStakeEndManyWithTipTo(address[] calldata hsiAddresses, address tipTo) external payable {
+    _hsiStakeEndMany({
+      hsiAddresses: hsiAddresses,
+      tipTo: tipTo
+    });
+  }
   /**
    * provide a list of hsi addresses to end the stake of
    * @param hsiAddresses a list of hsi addresses (known in this contract as stake ids)
    */
-  function hsiStakeEndMany(address[] calldata hsiAddresses) external {
+  function _hsiStakeEndMany(address[] calldata hsiAddresses, address tipTo) internal {
     uint256 len = hsiAddresses.length;
     uint256 i;
     uint256 count = (_currentDay() << INDEX_TODAY) | _hsiCount();
     do {
       (, count) = _stakeEndByConsent({
         stakeId: uint160(hsiAddresses[i]),
+        tipTo: tipTo,
         _count: count
       });
       unchecked {

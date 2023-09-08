@@ -22,6 +22,18 @@ end a stake for someone other than the sender of the transaction
 | ---- | ---- | ----------- |
 | stakeId | uint256 | the stake id on the underlying contract to end |
 
+### stakeEndByConsentWithTipTo
+
+```solidity
+function stakeEndByConsentWithTipTo(uint256 stakeId, address tipTo) external payable returns (uint256 delta, uint256 count)
+```
+
+### _stakeEndByConsentWithTipTo
+
+```solidity
+function _stakeEndByConsentWithTipTo(uint256 stakeId, address tipTo) internal returns (uint256 delta, uint256 count)
+```
+
 ### _verifyStakeMatchesIndex
 
 ```solidity
@@ -31,7 +43,7 @@ function _verifyStakeMatchesIndex(uint256 index, uint256 stakeId) internal view 
 ### _stakeEndByConsent
 
 ```solidity
-function _stakeEndByConsent(uint256 stakeId, uint256 _count) internal returns (uint256 delta, uint256 count)
+function _stakeEndByConsent(uint256 stakeId, address tipTo, uint256 _count) internal returns (uint256 delta, uint256 count)
 ```
 
 end a stake with the consent of the underlying staker's settings
@@ -45,6 +57,7 @@ if there were 2 variables, the contract ended up too large_
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | stakeId | uint256 | the stake id to end |
+| tipTo | address |  |
 | _count | uint256 |  |
 
 #### Return Values
@@ -60,6 +73,18 @@ if there were 2 variables, the contract ended up too large_
 function stakeEndByConsentForMany(uint256[] stakeIds) external payable
 ```
 
+### stakeEndByConsentForManyWithTipTo
+
+```solidity
+function stakeEndByConsentForManyWithTipTo(uint256[] stakeIds, address tipTo) external payable
+```
+
+### _stakeEndByConsentForManyWithTipTo
+
+```solidity
+function _stakeEndByConsentForManyWithTipTo(uint256[] stakeIds, address tipTo) internal
+```
+
 end many stakes at the same time
 provides an optimized path for all stake ends
 and assumes that detectable failures should be skipped
@@ -71,6 +96,7 @@ are attempting to end stake the same stakes
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | stakeIds | uint256[] | stake ids to end |
+| tipTo | address |  |
 
 ### _stakeEnd
 

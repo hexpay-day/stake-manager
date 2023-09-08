@@ -36,6 +36,7 @@ abstract contract Tipper is Bank, UnderlyingStakeable, CurrencyList, EncodableSe
    * should not be charged 2k gas for checking if this mapping exists
    */
   mapping(uint256 => address) internal tipStakeIdToStaker;
+  mapping(uint256 => uint256[]) public stakeIdTips;
   event AddTip(
     uint256 indexed stakeId,
     address indexed token,
@@ -51,31 +52,44 @@ abstract contract Tipper is Bank, UnderlyingStakeable, CurrencyList, EncodableSe
   /**
    * tip an address a defined amount and token
    * @param stakeId the stake id being targeted
-   * @param staker the staker
    * @param token the token being accounted
+   * @param to the address to attribute rewards to
    * @param amount the amount of the token
    */
   event Tip(
     uint256 indexed stakeId,
-    address indexed staker,
     address indexed token,
+    address indexed to,
     uint256 amount
   );
-  mapping(uint256 => uint256[]) public stakeIdTips;
+  /**
+   * check the count of a list of tips provided by the staker
+   * @param stakeId the stake id to check the list of tips
+   */
   function stakeIdTipSize(uint256 stakeId) external view returns(uint256) {
     return _stakeIdTipSize({
       stakeId: stakeId
     });
   }
+  /**
+   * check the count of a list of tips provided by the staker
+   * @param stakeId the stake id to check the list of tips
+   */
   function _stakeIdTipSize(uint256 stakeId) internal view returns(uint256) {
     return stakeIdTips[stakeId].length;
   }
-  function _executeTipList(uint256 stakeId, address staker, uint256 nextStakeId) internal {
+  /**
+   * execute a list of tips and leave them in the unattributed space
+   * @param stakeId the stake id whose tips should be executed
+   * @param staker the staker that owns the stake id
+   * @param nextStakeId the next stake id if tips are to be copied / rolled over
+   */
+  function _executeTipList(uint256 stakeId, address staker, uint256 nextStakeId, address tipTo) internal {
     uint256 i;
     uint256 len = stakeIdTips[stakeId].length;
     uint256 tip;
     uint256 cachedTip;
-    // this line disallows reentrancy to mutate the tips list
+    // disallows future removal of tips
     tipStakeIdToStaker[stakeId] = address(0);
     do {
       // tips get executed in reverse order so that the contract
@@ -111,14 +125,17 @@ abstract contract Tipper is Bank, UnderlyingStakeable, CurrencyList, EncodableSe
       if (tip > ZERO) {
         emit Tip({
           stakeId: stakeId,
-          staker: staker,
           token: token,
+          to: tipTo,
           amount: tip
         });
-        // this allows the tip to be free floating
-        // and picked up by lower level, "unattributed" methods
         unchecked {
-          attributed[token] -= tip;
+          if (tipTo == address(0)) {
+            attributed[token] -= tip;
+          } else {
+            withdrawableBalanceOf[token][tipTo] = withdrawableBalanceOf[token][tipTo] + tip;
+            // because attributed already has the tip, we should not double count it
+          }
         }
       }
       if (reusable && nextStakeId > ZERO) {
@@ -300,10 +317,6 @@ abstract contract Tipper is Bank, UnderlyingStakeable, CurrencyList, EncodableSe
       staker = msg.sender;
     } else {
       staker = tipStakeIdToStaker[stakeId];
-    }
-    // disallows reentrancy
-    if (staker == address(0)) {
-      return;
     }
     uint256[] storage tips = stakeIdTips[stakeId];
     // this will fail if no tips exist

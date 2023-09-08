@@ -4,7 +4,7 @@
 
 // SPDX-License-Identifier: UNLICENSED
 
-pragma solidity 0.8.9;
+pragma solidity >=0.8.9;
 
 /* Hedron is a collection of Ethereum / PulseChain smart contracts that  *
  * build upon the HEX smart contract to provide additional functionality */
@@ -1741,7 +1741,8 @@ interface IHEX {
         address indexed referrerAddr
     );
 
-    fallback() external payable;
+    fallback() external;
+    receive() external payable;
 
     function allocatedSupply() external view returns (uint256);
 

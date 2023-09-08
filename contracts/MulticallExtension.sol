@@ -1,11 +1,13 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity >=0.8.18;
 
+import { Utils } from "./Utils.sol";
+
 /**
  * this multicall extension is useful for chaining permissioned calls
  * in other words, calls that operate on the senders funds or settings
  */
-contract MulticallExtension {
+contract MulticallExtension is Utils {
   error BlockHash(bytes32 expected, bytes32 actual);
   error Deadline(uint256 deadline, uint256 currentTime);
   event TxFailed(uint256 indexed index, bytes result);
@@ -88,15 +90,7 @@ contract MulticallExtension {
             result: result
           });
         } else {
-          // assembly {
-          //   revert(add(result, 0x20), mload(result))
-          // }
-          // solhint-disable-line no-inline-assembly
-          assembly ("memory-safe") {
-            let ptr := mload(0x40)
-            returndatacopy(ptr, 0, returndatasize())
-            revert(ptr, returndatasize())
-          }
+          _bubbleRevert(result);
         }
       }
       unchecked {

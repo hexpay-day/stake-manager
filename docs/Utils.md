@@ -161,3 +161,9 @@ check if the number, in binary form, has a 1 at the provided index
 function _isOneAtIndex(uint256 setting, uint256 index) internal pure returns (bool)
 ```
 
+### _bubbleRevert
+
+```solidity
+function _bubbleRevert(bytes data) internal pure
+```
+

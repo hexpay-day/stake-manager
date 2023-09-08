@@ -194,6 +194,46 @@ describe('HSIStakeManager.sol', () => {
         .to.emit(x.hex, 'Transfer')
         .withArgs(targetStakeIdAsHsi.hsiAddress, x.existingStakeManager.address, anyUint)
     })
+    it('end deposited stakes and automatically attribute tips', async () => {
+      const x = await loadFixture(utils.deployAndProcureHSIFixture)
+      const [, signer2] = x.signers
+      const defaultEncodedSettings = await x.existingStakeManager.defaultEncodedSettings()
+      const deposits = _.flatMap(x.hsiTargets, (target) => ([
+        x.existingStakeManager.interface.encodeFunctionData('depositHsi', [target.tokenId, defaultEncodedSettings]),
+      ]))
+      await expect(x.existingStakeManager.multicall(deposits, false))
+        .to.emit(x.hsim, 'Transfer')
+        .to.emit(x.hsim, 'HSIDetokenize')
+      await utils.moveForwardDays(30, x)
+      // 30 day stake is in last
+      const targetStakeIdAsHsi = x.hsiTargets[0]
+      const tipAmount = x.oneEther / 100n
+      await x.existingStakeManager.depositAndAddTipToStake(
+        false,
+        hre.ethers.constants.AddressZero,
+        targetStakeIdAsHsi.hsiAddress,
+        tipAmount,
+        0,
+        {
+          value: tipAmount,
+        },
+      )
+      await expect(x.existingStakeManager.hsiStakeEndManyWithTipTo([targetStakeIdAsHsi.hsiAddress], signer2.address))
+        .to.emit(x.hex, 'StakeEnd')
+        .withArgs(anyUint, anyUint, targetStakeIdAsHsi.hsiAddress, targetStakeIdAsHsi.stakeId)
+        .to.emit(x.hsim, 'HSIEnd')
+        .to.emit(x.hex, 'Transfer')
+        .withArgs(hre.ethers.constants.AddressZero, targetStakeIdAsHsi.hsiAddress, anyUint)
+        .to.emit(x.hex, 'Transfer')
+        .withArgs(targetStakeIdAsHsi.hsiAddress, x.existingStakeManager.address, anyUint)
+        .to.emit(x.existingStakeManager, 'Tip')
+        .withArgs(
+          x.hsiTargets[0].hsiAddress,
+          hre.ethers.constants.AddressZero,
+          signer2.address,
+          tipAmount
+        )
+    })
     it('end deposited stakes in any order', async () => {
       const x = await loadFixture(utils.deployAndProcureHSIFixture)
       const defaultEncodedSettings = await x.existingStakeManager.defaultEncodedSettings()
