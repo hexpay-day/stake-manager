@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity >=0.8.18;
 
-import "./SingletonHedronManager.sol";
-import "./Magnitude.sol";
+import { UnderlyingStakeable } from "./UnderlyingStakeable.sol";
+import { SingletonHedronManager } from "./SingletonHedronManager.sol";
+import { Magnitude } from "./Magnitude.sol";
 
 contract StakeEnder is Magnitude, SingletonHedronManager {
   uint8 public constant INDEX_TODAY = 128;

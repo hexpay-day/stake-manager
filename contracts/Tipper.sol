@@ -113,13 +113,15 @@ abstract contract Tipper is Bank, UnderlyingStakeable, CurrencyList, EncodableSe
             limit: limit,
             method: uint8(tip >> INDEX_EXTERNAL_TIP_METHOD),
             x: uint64(tip), // magnitude
-            y2: block.basefee,
-            y1: ZERO
+            y2: limit,
+            y1: block.basefee
           });
         }
         // this is a refund
-        unchecked {
-          withdrawableBalance += (limit - tip);
+        if (limit != tip) {
+          unchecked {
+            withdrawableBalance += (limit - tip);
+          }
         }
       }
       if (tip > ZERO) {

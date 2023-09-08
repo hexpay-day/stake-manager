@@ -723,7 +723,7 @@ describe("StakeManager", function () {
       await utils.moveForwardDays(days + 1, x)
       const tipAmount = oneEther / 100n
       const encodedLinear = await x.stakeManager.encodedLinearWithMethod(
-        0, // method
+        1, // method
         0, 360, // x
         0, 7, // y
         0, 0 // b
@@ -1031,6 +1031,60 @@ describe("StakeManager", function () {
       expectedBalance -= tenthEther // 81000000000000000
       await expect(x.stakeManager.withdrawableBalanceOf(hre.ethers.constants.AddressZero, signer1.address))
         .eventually.to.equal(expectedBalance)
+    })
+    it('can shift tips to next stake', async () => {
+      const x = await loadFixture(utils.deployFixture)
+      const settings = await x.stakeManager.defaultSettings()
+      const updatedEncodedSettings = await x.stakeManager.encodeSettings({
+        ...settings,
+        consentAbilities: {
+          ...settings.consentAbilities,
+          copyExternalTips: true,
+        },
+      })
+      const [signer1, signer2, signer3] = x.signers
+      await expect(x.stakeManager.stakeStartFromBalanceFor(signer1.address, x.stakedAmount, 10, updatedEncodedSettings))
+        .to.emit(x.hex, 'StakeStart')
+      const linearEncoded = await x.stakeManager.encodedLinearWithMethod(
+        0,
+        0, 1,
+        0, 10,
+        0, 0,
+      )
+      await x.stakeManager.depositAndAddTipToStake(
+        true,
+        hre.ethers.constants.AddressZero,
+        x.nextStakeId,
+        x.oneEther / 100n,
+        linearEncoded,
+        {
+          value: x.oneEther / 100n,
+        }
+      )
+      await utils.moveForwardDays(11, x)
+      const nextStakeId = await utils.nextStakeId(x.hex)
+      const encodedNextTip = await x.stakeManager.encodeTipSettings(
+        true,
+        0,
+        (x.oneEther / 100n) - (x.oneEther / 1_000n),
+        linearEncoded,
+      )
+      await expect(x.stakeManager.connect(signer2).stakeEndByConsentWithTipTo(x.nextStakeId, signer3.address))
+        .to.emit(x.hex, 'StakeEnd')
+        .to.emit(x.stakeManager, 'Tip')
+        .withArgs(
+          x.nextStakeId,
+          hre.ethers.constants.AddressZero,
+          signer3.address,
+          x.oneEther / 1_000n,
+        )
+        .to.emit(x.stakeManager, 'AddTip')
+        .withArgs(
+          nextStakeId,
+          hre.ethers.constants.AddressZero,
+          0,
+          encodedNextTip,
+        )
     })
     it('leaves unattributed hedron tokens until they are utilized', async () => {
       const x = await loadFixture(utils.deployFixture)
