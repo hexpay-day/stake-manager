@@ -23,17 +23,30 @@ describe('HSIStakeManager.sol', () => {
   describe('withdrawHsi', () => {
     it('can withdraw an hsi', async () => {
       const x = await loadFixture(utils.deployAndProcureHSIFixture)
-      await expect(x.existingStakeManager.multicall(_.flatMap(x.hsiTargets, (target) => ([
-        x.existingStakeManager.interface.encodeFunctionData('depositHsi', [target.tokenId, 0]),
-      ])), false))
+      const [signer1, signer2] = x.signers
+      await expect(x.existingStakeManager.multicall(_.map(x.hsiTargets, (target) => (
+        x.existingStakeManager.interface.encodeFunctionData('depositHsi', [target.tokenId, 0])
+      )), false))
         .to.emit(x.hsim, 'Transfer')
         .to.emit(x.hsim, 'HSIDetokenize')
-      await expect(x.existingStakeManager.connect(x.signers[1]).withdrawHsi(x.hsiTargets[0].hsiAddress))
+      await expect(x.existingStakeManager.connect(signer2).withdrawHsi(x.hsiTargets[0].hsiAddress))
         .to.revertedWithCustomError(x.existingStakeManager, 'StakeNotOwned')
-        .withArgs(x.signers[1].address, x.signers[0].address)
+        .withArgs(signer2.address, signer1.address)
+      await expect(x.existingStakeManager.hsiCount())
+        .eventually.to.equal(3)
+      await expect(x.existingStakeManager.stakeIdInfo(x.hsiTargets[2].hsiAddress))
+        .eventually.to.equal((2n << 160n) | BigInt(signer1.address)) // index 0
       await expect(x.existingStakeManager.withdrawHsi(x.hsiTargets[0].hsiAddress))
         .to.emit(x.hsim, 'HSITokenize')
         .withArgs(anyUint, anyUint, x.hsiTargets[0].hsiAddress, x.existingStakeManager.address)
+      await expect(x.existingStakeManager.stakeIdInfo(x.hsiTargets[2].hsiAddress))
+        .eventually.to.equal(BigInt(signer1.address)) // index 0
+      await expect(x.existingStakeManager.withdrawHsi(x.hsiTargets[1].hsiAddress))
+        .to.emit(x.hsim, 'HSITokenize')
+        .withArgs(anyUint, anyUint, x.hsiTargets[1].hsiAddress, x.existingStakeManager.address)
+      await expect(x.existingStakeManager.withdrawHsi(x.hsiTargets[2].hsiAddress))
+        .to.emit(x.hsim, 'HSITokenize')
+        .withArgs(anyUint, anyUint, x.hsiTargets[2].hsiAddress, x.existingStakeManager.address)
     })
     it('can withdraw tips as well', async () => {
       const x = await loadFixture(utils.deployAndProcureHSIFixture)

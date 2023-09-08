@@ -95,16 +95,16 @@ contract HSIStakeManager is StakeEnder {
       stakeId: stakeId,
       settings: ZERO
     });
-    if (_hsiCount() - ONE > index) {
-      _rewriteIndex({
-        index: index
-      });
-    }
     tokenId = _withdraw721({
       index: index,
       owner: owner,
       hsiAddress: hsiAddress
     });
+    if (_hsiCount() > index) {
+      _rewriteIndex({
+        index: index
+      });
+    }
     // because an unbounded range of tokens can exist in the tips list,
     // we send those back last
     _removeAllTips({
