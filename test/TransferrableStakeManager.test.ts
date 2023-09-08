@@ -80,6 +80,39 @@ describe('TransferrableStakeManager.sol', () => {
       await expect(x.stakeManager.withdrawableBalanceOf(x.hex.address, signer2.address))
         .eventually.to.be.greaterThan(0)
     })
+    it('brings tips along', async () => {
+      const days = 3
+      const [signer1, signer2, signer3] = x.signers
+      const settings = await x.stakeManager.defaultSettings()
+      const decodedSettings: EncodableSettings.SettingsStructOutput = {
+        ...settings,
+        newStakeDaysMethod: hre.ethers.BigNumber.from(0),
+        consentAbilities: {
+          ...settings.consentAbilities,
+          stakeIsTransferrable: true,
+        },
+      }
+      const encodedSettings = await x.stakeManager.encodeSettings(decodedSettings)
+      await expect(x.stakeManager.stakeStartFromBalanceFor(signer1.address, x.stakedAmount, days, encodedSettings))
+        .to.emit(x.hex, 'StakeStart')
+      await expect(x.stakeManager.depositAndAddTipToStake(
+        true,
+        hre.ethers.constants.AddressZero,
+        x.nextStakeId,
+        x.stakedAmount / 100n,
+        0,
+        {
+          value: x.stakedAmount / 100n,
+        },
+      ))
+        .to.emit(x.stakeManager, 'AddTip')
+      await expect(x.stakeManager.stakeTransfer(x.nextStakeId, signer2.address))
+        .to.emit(x.stakeManager, 'TransferStake')
+      await expect(x.stakeManager.connect(signer2).removeAllTips(x.nextStakeId))
+        .to.emit(x.stakeManager, 'RemoveTip')
+      await expect(x.stakeManager.withdrawableBalanceOf(hre.ethers.constants.AddressZero, signer2.address))
+        .eventually.to.equal(x.stakedAmount / 100n)
+    })
   })
   describe('transfer receivership', () => {
     let transferrableSettings!: bigint

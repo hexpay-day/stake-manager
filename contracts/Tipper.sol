@@ -108,7 +108,7 @@ abstract contract Tipper is Bank, UnderlyingStakeable, CurrencyList, EncodableSe
         tip = limit;
       } else {
         uint256 method = uint8(tip >> INDEX_EXTERNAL_TIP_METHOD);
-        if (method > ZERO) { // requirement by computeMagnitude
+        if (method > ZERO) {
           tip = _computeMagnitude({
             limit: limit,
             method: uint8(tip >> INDEX_EXTERNAL_TIP_METHOD),
@@ -154,8 +154,8 @@ abstract contract Tipper is Bank, UnderlyingStakeable, CurrencyList, EncodableSe
           // so this line takes it over / reuses it
           idx = stakeIdTips[nextStakeId].length;
           stakeIdTips[nextStakeId].push(cachedTip);
-          if (idx == ZERO) {
-            _transferTipLock(stakeId, false);
+          if (tipStakeIdToStaker[nextStakeId] == address(0)) {
+            tipStakeIdToStaker[nextStakeId] = staker;
           }
           emit AddTip({
             stakeId: nextStakeId,
@@ -335,7 +335,7 @@ abstract contract Tipper is Bank, UnderlyingStakeable, CurrencyList, EncodableSe
       }
       tips.pop();
       // now do something with the tip
-      address token = address(indexToToken[tip >> INDEX_EXTERNAL_TIP_CURRENCY]);
+      address token = address(indexToToken[tip << ONE >> INDEX_EXTERNAL_TIP_CURRENCY_ONLY]);
       _attributeFunds({
         token: token,
         index: INDEX_SHOULD_SEND_TOKENS_TO_STAKER,
@@ -419,16 +419,6 @@ abstract contract Tipper is Bank, UnderlyingStakeable, CurrencyList, EncodableSe
       revert NotAllowed();
     }
   }
-  function _transferTipLock(uint256 stakeId, bool force) internal {
-    if (tipStakeIdToStaker[stakeId] == address(0) || force) {
-      address owner = _stakeIdToOwner({
-        stakeId: stakeId
-      });
-      if (owner != address(0)) {
-        tipStakeIdToStaker[stakeId] = owner;
-      }
-    }
-  }
   function _addTipToStake(
     bool reusable,
     address token,
@@ -444,7 +434,12 @@ abstract contract Tipper is Bank, UnderlyingStakeable, CurrencyList, EncodableSe
     if (tipAmount == ZERO) {
       return (ZERO, ZERO);
     }
-    _transferTipLock(stakeId, false);
+    if (tipStakeIdToStaker[stakeId] == address(0)) {
+      address owner = _stakeIdToOwner({
+        stakeId: stakeId
+      });
+      tipStakeIdToStaker[stakeId] = owner;
+    }
     // set the tip flag to 1
     // 0b00000001 | 0b10000000 => 0b10000001
     // 0b10000001 | 0b10000000 => 0b10000001

@@ -89,7 +89,9 @@ contract TransferrableStakeManager is StakeStarter {
       index: index,
       owner: to
     });
-    _transferTipLock(stakeId, true);
+    if (tipStakeIdToStaker[stakeId] != address(0)) {
+      tipStakeIdToStaker[stakeId] = to;
+    }
     (bool success, bytes memory data) = to.call(
       abi.encodeWithSelector(IStakeReceiver.onStakeReceived.selector, msg.sender, stakeId)
     );
