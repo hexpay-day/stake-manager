@@ -57,12 +57,15 @@ describe('HSIStakeManager.sol', () => {
         .to.emit(x.hsim, 'HSIDetokenize')
       const currencyIndex = await x.stakeManager.currencyListSize()
       const amount = hre.ethers.utils.parseUnits('10', await x.usdc.decimals()).toBigInt()
-      const encodedLinear = await x.existingStakeManager.encodedLinearWithMethod(
-        0,
-        0, 1,
-        0, 1,
-        0, 0
-      )
+      const encodedLinear = await x.existingStakeManager.encodeLinear({
+        method: 0,
+        xFactor: 1,
+        x: 1,
+        yFactor: 0,
+        y: 1,
+        bFactor: 0,
+        b: 0,
+      })
       const tipSettings = await x.existingStakeManager.encodeTipSettings(false, currencyIndex, amount, encodedLinear)
       const stakeId = await x.existingStakeManager.hsiAddressToId(x.hsiTargets[0].hsiAddress)
       await x.existingStakeManager.addCurrencyToList(x.usdc.address)
@@ -274,23 +277,38 @@ describe('HSIStakeManager.sol', () => {
         .withArgs(hre.ethers.constants.AddressZero, x.existingStakeManager.address, anyUint)
     })
   })
+  const tenPercent = {
+    // 5, 0, 1, 0, 10, 0, 0
+    method: 2,
+    xFactor: 1,
+    x: 1,
+    yFactor: 0,
+    y: 10,
+    bFactor: 0,
+    b: 0,
+  }
+  const zeroLinear = {
+    method: 0,
+    xFactor: 0,
+    x: 0,
+    yFactor: 0,
+    y: 0,
+    bFactor: 0,
+    b: 0,
+  }
   describe('setSettings', () => {
     it('sets settings', async function () {
       const x = await loadFixture(utils.deployAndProcureHSIFixture)
       const [signer1, signer2] = x.signers
       // give 10% of the yield to the end staker
-      const encoded10Percent = await x.stakeManager.encodeLinear(5, 0, 1, 0, 10, 0, 0)
       const settings = {
-        hedronTipMethod: encoded10Percent.encodedMethod,
-        hedronTipMagnitude: encoded10Percent.encodedMagnitude,
-        tipMethod: encoded10Percent.encodedMethod,
-        tipMagnitude: encoded10Percent.encodedMagnitude,
+        hedronTip: tenPercent,
+        targetTip: tenPercent,
+        newStake: zeroLinear,
         consentAbilities: await x.stakeManager.decodeConsentAbilities(parseInt('001111', 2)),
         // unused on hsi
         newStakeDaysMethod: 0,
         newStakeDaysMagnitude: 0,
-        newStakeMethod: 0,
-        newStakeMagnitude: 0,
         copyIterations: 0,
       }
       const encodedSettings = await x.existingStakeManager.encodeSettings(settings)
@@ -318,8 +336,7 @@ describe('HSIStakeManager.sol', () => {
       await utils.moveForwardDays(30, x)
       const updatedSettings: EncodableSettings.SettingsStruct = {
         ...settings,
-        tipMethod: 0,
-        tipMagnitude: 0,
+        targetTip: zeroLinear,
       }
       await expect(x.existingStakeManager.connect(signer2).updateSettings(firstStakeTarget.hsiAddress, updatedSettings))
         .to.revertedWithCustomError(x.existingStakeManager, 'StakeNotOwned')
@@ -349,16 +366,16 @@ describe('HSIStakeManager.sol', () => {
       const x = await loadFixture(utils.deployAndProcureHSIFixture)
       const [signer1, signer2] = x.signers
       const settings = {
-        hedronTipMethod: 0,
-        hedronTipMagnitude: 0,
-        tipMethod: 0,
-        tipMagnitude: 0,
+        hedronTip: zeroLinear,
+        targetTip: zeroLinear,
+        newStake: {
+          ...zeroLinear,
+          method: 2,
+        },
         consentAbilities: await x.stakeManager.decodeConsentAbilities(parseInt('001101', 2)),
         // unused on hsi
         newStakeDaysMethod: 2,
         newStakeDaysMagnitude: 0,
-        newStakeMethod: 2,
-        newStakeMagnitude: 0,
         copyIterations: 0,
       }
       const encodedSettings = await x.stakeManager.encodeSettings(settings)
@@ -380,16 +397,16 @@ describe('HSIStakeManager.sol', () => {
       const x = await loadFixture(utils.deployAndProcureHSIFixture)
       const [signer1, signer2] = x.signers
       const settings = {
-        hedronTipMethod: 0,
-        hedronTipMagnitude: 0,
-        tipMethod: 0,
-        tipMagnitude: 0,
+        hedronTip: zeroLinear,
+        targetTip: zeroLinear,
+        newStake: {
+          ...zeroLinear,
+          method: 2,
+        },
         consentAbilities: await x.stakeManager.decodeConsentAbilities(parseInt('001101', 2)),
         // unused on hsi
         newStakeDaysMethod: 2,
         newStakeDaysMagnitude: 0,
-        newStakeMethod: 2,
-        newStakeMagnitude: 0,
         copyIterations: 0,
       }
       const encodedSettings = await x.stakeManager.encodeSettings(settings)

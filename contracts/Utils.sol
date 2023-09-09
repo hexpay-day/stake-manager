@@ -22,6 +22,7 @@ contract Utils {
   uint256 internal constant THIRTY_TWO = uint256(32);
   uint256 internal constant FOURTY = uint256(40);
   uint256 internal constant FOURTY_EIGHT = uint256(48);
+  uint256 internal constant FIFTY_SIX = uint256(56);
   uint256 internal constant SEVENTY_TWO = uint256(72);
   address public constant HEDRON = 0x3819f64f282bf135d62168C1e513280dAF905e06;
   address public constant HSIM = 0x8BD3d1472A656e312E94fB1BbdD599B8C51D18e3;

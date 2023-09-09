@@ -33,24 +33,30 @@ describe("StakeManager", function () {
   describe('encodeTipSettings/decodeTipSettings', () => {
     it('fails if 0 is provided as a denominator and numerator is non zero', async () => {
       const x = await loadFixture(utils.deployFixture)
-      const encodedLinear = await x.stakeManager.encodedLinearWithMethod(
-        0,
-        0, 1,
-        0, 1,
-        0, 0
-      )
+      const encodedLinear = await x.stakeManager.encodeLinear({
+        method: 0,
+        xFactor: 1,
+        x: 1,
+        yFactor: 0,
+        y: 1,
+        bFactor: 0,
+        b: 0,
+      })
       await expect(x.stakeManager.encodeTipSettings(
         false,
         0,
         x.oneEther,
         encodedLinear
       )).not.to.reverted
-      const encodedLinearFailure = await x.stakeManager.encodedLinearWithMethod(
-        0,
-        0, 1,
-        0, 0,
-        0, 0
-      )
+      const encodedLinearFailure = await x.stakeManager.encodeLinear({
+        method: 0,
+        xFactor: 1,
+        x: 1,
+        yFactor: 0,
+        y: 0,
+        bFactor: 0,
+        b: 0,
+      })
       await expect(x.stakeManager.encodeTipSettings(
         false,
         0,
@@ -413,6 +419,15 @@ describe("StakeManager", function () {
         .eventually.to.equal(balanceBefore)
     })
   })
+  const zeroLinear = {
+    method: 0,
+    xFactor: 0,
+    x: 0,
+    yFactor: 0,
+    y: 0,
+    bFactor: 0,
+    b: 0,
+  }
   describe('stakeEndByConsentForMany', () => {
     const oneEther = hre.ethers.utils.parseEther('1').toBigInt()
     it('custodies funds if told to do nothing with them afterward', async () => {
@@ -429,7 +444,7 @@ describe("StakeManager", function () {
       const settings = await x.stakeManager.defaultSettings()
       const updatedSettings = {
         ...settings,
-        newStakeMethod: 0,
+        newStake: zeroLinear,
       }
       await x.stakeManager.updateSettings(x.nextStakeId, updatedSettings)
       await expect(x.stakeManager.withdrawableBalanceOf(x.hex.address, signer1.address))
@@ -449,13 +464,19 @@ describe("StakeManager", function () {
       const magnitudeB = hre.ethers.utils.parseUnits('100', 8).toBigInt()
       const updatedSettingsA = await x.stakeManager.encodeSettings({
         ...defaultSettings,
-        tipMethod: 1,
-        tipMagnitude: magnitudeA,
+        targetTip: {
+          ...zeroLinear,
+          method: 1,
+          y: magnitudeA,
+        },
       })
       const updatedSettingsB = await x.stakeManager.encodeSettings({
         ...defaultSettings,
-        tipMethod: 1,
-        tipMagnitude: magnitudeB,
+        targetTip: {
+          ...zeroLinear,
+          method: 1,
+          y: magnitudeB,
+        },
       })
       await expect(x.stakeManager.stakeStartFromBalanceFor(signer1.address, x.stakedAmount, days, updatedSettingsA))
         .to.emit(x.hex, 'StakeStart')
@@ -523,8 +544,11 @@ describe("StakeManager", function () {
       const oneHundredHex = hre.ethers.utils.parseUnits('100', 8)
       const updatedSettings: EncodableSettings.SettingsStruct = {
         ...settings,
-        tipMethod: 2,
-        tipMagnitude: oneHundredHex, // 100 hex
+        targetTip: {
+          ...zeroLinear,
+          method: 2,
+          y: oneHundredHex,
+        },
       }
       await expect(x.stakeManager.connect(signer2).updateSettings(nextStakeId, updatedSettings))
         .revertedWithCustomError(x.stakeManager, 'StakeNotOwned')
@@ -542,8 +566,11 @@ describe("StakeManager", function () {
       const oneHundredHex = hre.ethers.utils.parseUnits('100', 8)
       const updatedSettings: EncodableSettings.SettingsStruct = {
         ...settings,
-        tipMethod: 1,
-        tipMagnitude: oneHundredHex, // 100 hex
+        targetTip: {
+          ...zeroLinear,
+          method: 1,
+          y: oneHundredHex,
+        },
       }
       await expect(x.stakeManager.updateSettings(nextStakeId, updatedSettings))
         .to.emit(x.stakeManager, 'UpdateSettings')
@@ -582,10 +609,15 @@ describe("StakeManager", function () {
       const defaultSettings = await x.stakeManager.defaultSettings()
       const updatedSettings: EncodableSettings.SettingsStruct = {
         ...defaultSettings,
-        tipMethod: 5,
-        // 0 scale, use linear (>2)
-        // for every 1 hearts, remove 1
-        tipMagnitude: ((utils.absMinInt16 + -1n) << 48n) | (1n << 24n) | (utils.absMinInt16 + 10_000n),
+        targetTip: {
+          method: 2,
+          xFactor: 1,
+          x: -1n,
+          yFactor: 0,
+          y: 1n,
+          bFactor: 0,
+          b: 10_000n
+        },
       }
       const encodedSettings = await x.stakeManager.encodeSettings(updatedSettings)
       await x.stakeManager.stakeStartFromBalanceFor(signer1.address, x.stakedAmount, days, encodedSettings)
@@ -615,10 +647,15 @@ describe("StakeManager", function () {
       const defaultSettings = await x.stakeManager.defaultSettings()
       const updatedSettings: EncodableSettings.SettingsStruct = {
         ...defaultSettings,
-        newStakeMethod: 5,
-        // 0 scale, use linear (>2)
-        // for every 1 hearts, remove 1
-        newStakeMagnitude: ((utils.absMinInt16 + -1n) << 48n) | (1n << 24n) | (utils.absMinInt16 + 10_000n),
+        newStake: {
+          method: 2,
+          xFactor: 1,
+          x: -1n,
+          yFactor: 0,
+          y: 1,
+          bFactor: 0,
+          b: 10_000n,
+        },
       }
       const encodedSettings = await x.stakeManager.encodeSettings(updatedSettings)
       await x.stakeManager.stakeStartFromBalanceFor(signer1.address, x.stakedAmount, days, encodedSettings)
@@ -649,8 +686,11 @@ describe("StakeManager", function () {
       const oneHundredHex = hre.ethers.utils.parseUnits('100', 8)
       const updatedSettings: EncodableSettings.SettingsStruct = {
         ...settings,
-        tipMethod: 1,
-        tipMagnitude: oneHundredHex, // 100 hex
+        targetTip: {
+          ...zeroLinear,
+          method: 1,
+          y: oneHundredHex,
+        },
       }
       await expect(x.stakeManager.updateSettings(nextStakeId, updatedSettings))
         .to.emit(x.stakeManager, 'UpdateSettings')
@@ -722,12 +762,15 @@ describe("StakeManager", function () {
       await x.stakeManager.stakeStartFromBalanceFor(signer1.address, x.stakedAmount, days, defaultSettings)
       await utils.moveForwardDays(days + 1, x)
       const tipAmount = oneEther / 100n
-      const encodedLinear = await x.stakeManager.encodedLinearWithMethod(
-        1, // method
-        0, 360, // x
-        0, 7, // y
-        0, 0 // b
-      )
+      const encodedLinear = await x.stakeManager.encodeLinear({
+        method: 1,
+        xFactor: 1,
+        x: 360,
+        yFactor: 0,
+        y: 7,
+        bFactor: 0,
+        b: 0,
+      })
       const encodedSettings = await x.stakeManager.encodeTipSettings(false, 0, tipAmount, encodedLinear)
       await expect(x.stakeManager.depositAndAddTipToStake(false, hre.ethers.constants.AddressZero,nextStakeId, tipAmount, encodedLinear, {
         value: tipAmount,
@@ -920,12 +963,12 @@ describe("StakeManager", function () {
           [signer1, x.stakeManager],
           [tipAmount * -1n, tipAmount],
         )
-      const encodedLinear = await x.stakeManager.encodedLinearWithMethod(
-        0, // method
-        0, 1, // x
-        0, 1, // y
-        0, 0 // b
-      )
+      const encodedLinear = await x.stakeManager.encodeLinear({
+        ...zeroLinear,
+        xFactor: 1,
+        x: 1,
+        y: 1,
+      })
       await expect(x.stakeManager.connect(signer2).depositAndAddTipToStake(false, hre.ethers.constants.AddressZero, nextStakeId, 0, encodedLinear))
         .to.revertedWithCustomError(x.stakeManager, 'NotAllowed')
       await expect(x.stakeManager.withdrawableBalanceOf(hre.ethers.constants.AddressZero, signer1.address))
@@ -1045,12 +1088,12 @@ describe("StakeManager", function () {
       const [signer1, signer2, signer3] = x.signers
       await expect(x.stakeManager.stakeStartFromBalanceFor(signer1.address, x.stakedAmount, 10, updatedEncodedSettings))
         .to.emit(x.hex, 'StakeStart')
-      const linearEncoded = await x.stakeManager.encodedLinearWithMethod(
-        0,
-        0, 1,
-        0, 10,
-        0, 0,
-      )
+      const linearEncoded = await x.stakeManager.encodeLinear({
+        ...zeroLinear,
+        xFactor: 1,
+        x: 1,
+        y: 10,
+      })
       await x.stakeManager.depositAndAddTipToStake(
         true,
         hre.ethers.constants.AddressZero,
@@ -1098,8 +1141,11 @@ describe("StakeManager", function () {
       const oneHundredHedron = hre.ethers.utils.parseUnits('100', 12).toBigInt()
       const updatedSettings: EncodableSettings.SettingsStruct = {
         ...settings,
-        hedronTipMethod: 1,
-        hedronTipMagnitude: oneHundredHedron,
+        hedronTip: {
+          ...zeroLinear,
+          method: 1,
+          y: oneHundredHedron,
+        },
         consentAbilities: await x.stakeManager.decodeConsentAbilities(parseInt('00001101', 2)),
       }
       await expect(x.stakeManager.updateSettings(nextStakeId, updatedSettings))
@@ -1107,7 +1153,7 @@ describe("StakeManager", function () {
         .withArgs(nextStakeId, await x.stakeManager.encodeSettings(updatedSettings))
       const encodedStoredSettings = await x.stakeManager.stakeIdToSettings(nextStakeId)
       const storedSettings = await x.stakeManager.decodeSettings(encodedStoredSettings)
-      expect(storedSettings.hedronTipMagnitude).to.equal(oneHundredHedron)
+      expect(storedSettings.hedronTip.y).to.equal(oneHundredHedron)
       await expect(x.stakeManager.withdrawableBalanceOf(x.hedron.address, signer2.address))
         .eventually.to.equal(0)
       await expect(x.stakeManager.connect(signer2).stakeEndByConsent(nextStakeId))
@@ -1127,8 +1173,11 @@ describe("StakeManager", function () {
       const oneHundredHedron = hre.ethers.utils.parseUnits('100', 9).toBigInt()
       const updatedSettings: EncodableSettings.SettingsStruct = {
         ...settings,
-        hedronTipMethod: 1,
-        hedronTipMagnitude: oneHundredHedron,
+        hedronTip: {
+          ...zeroLinear,
+          method: 1,
+          y: oneHundredHedron,
+        },
         consentAbilities: await x.stakeManager.decodeConsentAbilities(parseInt('00001101', 2)),
       }
       await expect(x.stakeManager.updateSettings(nextStakeId, updatedSettings))
@@ -1136,7 +1185,7 @@ describe("StakeManager", function () {
         .withArgs(nextStakeId, await x.stakeManager.encodeSettings(updatedSettings))
       const encodedStoredSettings = await x.stakeManager.stakeIdToSettings(nextStakeId)
       const storedSettings = await x.stakeManager.decodeSettings(encodedStoredSettings)
-      expect(storedSettings.hedronTipMagnitude).to.equal(oneHundredHedron)
+      expect(storedSettings.hedronTip.y).to.equal(oneHundredHedron)
       await expect(x.stakeManager.withdrawableBalanceOf(x.hedron.address, signer2.address))
         .eventually.to.equal(0)
       await expect(x.stakeManager.connect(signer2).stakeEndByConsentWithTipTo(nextStakeId, signer2.address))
@@ -1165,8 +1214,11 @@ describe("StakeManager", function () {
       const oneHundredHex = hre.ethers.utils.parseUnits('100', 8).toBigInt()
       const updatedSettings: EncodableSettings.SettingsStruct = {
         ...settings,
-        tipMethod: 1,
-        tipMagnitude: oneHundredHex, // 100 hex
+        targetTip: {
+          ...zeroLinear,
+          method: 1,
+          y: oneHundredHex,
+        },
       }
       await expect(x.stakeManager.updateSettings(nextStakeId, updatedSettings))
         .to.emit(x.stakeManager, 'UpdateSettings')
@@ -1196,8 +1248,11 @@ describe("StakeManager", function () {
       const oneHundredHex = hre.ethers.utils.parseUnits('100', 8).toBigInt()
       const updatedSettings: EncodableSettings.SettingsStruct = {
         ...settings,
-        tipMethod: 1,
-        tipMagnitude: oneHundredHex, // 100 hex
+        targetTip: {
+          ...zeroLinear,
+          method: 1,
+          y: oneHundredHex,
+        },
       }
       await expect(x.stakeManager.updateSettings(nextStakeId, updatedSettings))
         .to.emit(x.stakeManager, 'UpdateSettings')

@@ -153,7 +153,7 @@ contract HSIStakeManager is StakeEnder {
   function _hsiStakeEndMany(address[] calldata hsiAddresses, address tipTo) internal {
     uint256 len = hsiAddresses.length;
     uint256 i;
-    uint256 count = (_currentDay() << INDEX_TODAY) | _hsiCount();
+    uint256 count = (_currentDay() << INDEX_RIGHT_TODAY) | _hsiCount();
     do {
       (, count) = _stakeEndByConsent({
         stakeId: uint160(hsiAddresses[i]),

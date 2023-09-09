@@ -44,7 +44,7 @@ contract TransferrableStakeManager is StakeStarter {
    */
   function _removeTransferrabilityFromEncodedSettings(uint256 settings) internal pure returns(uint256) {
     return (
-      (settings >> INDEX_COPY_EXTERNAL_TIPS << INDEX_COPY_EXTERNAL_TIPS)
+      (settings >> INDEX_RIGHT_COPY_EXTERNAL_TIPS << INDEX_RIGHT_COPY_EXTERNAL_TIPS)
       | (settings << INDEX_LEFT_STAKE_IS_TRANSFERRABLE >> INDEX_LEFT_STAKE_IS_TRANSFERRABLE) // wipe transferrable
     );
   }
@@ -64,7 +64,7 @@ contract TransferrableStakeManager is StakeStarter {
   function _canTransfer(uint256 stakeId) internal view returns(bool) {
     return _isOneAtIndex({
       setting: stakeIdToSettings[stakeId],
-      index: INDEX_STAKE_IS_TRANSFERRABLE
+      index: INDEX_RIGHT_STAKE_IS_TRANSFERRABLE
     });
   }
   /**

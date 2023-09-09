@@ -111,10 +111,9 @@ abstract contract Tipper is Bank, UnderlyingStakeable, CurrencyList, EncodableSe
         if (method > ZERO) {
           tip = _computeMagnitude({
             limit: limit,
-            method: uint8(tip >> INDEX_EXTERNAL_TIP_METHOD),
-            x: uint64(tip), // magnitude
-            y2: limit,
-            y1: block.basefee
+            linear: _decodeLinear(uint72(tip)),
+            v2: limit,
+            v1: block.basefee
           });
         }
         // this is a refund
@@ -178,68 +177,41 @@ abstract contract Tipper is Bank, UnderlyingStakeable, CurrencyList, EncodableSe
    * how a tip should be executed
    * @param currencyIndex the index of the currency on the list
    * @param amount the number of tokens to delineate as tips
-   * @param fullEncodedLinear the method+xyb function to use
+   * @param encodedLinear the method+xyb function to use
    */
   function encodeTipSettings(
     bool reusable,
     uint256 currencyIndex,
     uint256 amount,
-    uint256 fullEncodedLinear
+    uint256 encodedLinear
   ) external pure returns(uint256) {
     return _encodeTipSettings({
       reusable: reusable,
       currencyIndex: currencyIndex,
       amount: amount,
-      fullEncodedLinear: fullEncodedLinear
+      encodedLinear: encodedLinear
     });
-  }
-  /**
-   * encode a series of numbers into a uint72 sized value result=(x*(2^xFactor)/y*(2^yFactor))+(b*(2^bFactor))
-   * @param method a number to designate which y relationship to choose
-   * @param xFactor the number of bitshifts to shift the x value (2^xFactor)
-   * @param x the value to multiply against the input value
-   * @param yFactor the number of bitshifts to shift the y value (2^yFactor)
-   * @param y the value to divide into the input value multiplied by the final x value
-   * @param bFactor the number of bitshifts to shift the b value (2^bFactor)
-   * @param b the value to offset the input value
-   */
-  function encodedLinearWithMethod(
-    uint256 method,
-    uint256 xFactor,
-    int256 x,
-    uint256 yFactor,
-    uint256 y,
-    uint256 bFactor,
-    int256 b
-  ) external pure returns(uint256) {
-    (uint256 encodedMethod, uint256 magnitude) = _encodeLinear(
-      method,
-      xFactor, x,
-      yFactor, y,
-      bFactor, b
-    );
-    return (encodedMethod << INDEX_EXTERNAL_TIP_METHOD) | magnitude;
   }
   /**
    * encodes tip settings into a uint256
    * @param reusable the tip can be reused if there is amount left over
    * @param currencyIndex the index of the currency on the list
    * @param amount the number of tokens deposited into the contract
-   * @param fullEncodedLinear an (x/y)+b equation inside of uint72
+   * @param encodedLinear an (x/y)+b equation inside of uint72
    */
   function _encodeTipSettings(
     bool reusable,
     uint256 currencyIndex,
     uint256 amount,
-    uint256 fullEncodedLinear
+    uint256 encodedLinear
   ) internal pure returns(uint256) {
-    if (uint8(fullEncodedLinear >> INDEX_EXTERNAL_TIP_METHOD) == ZERO && fullEncodedLinear != ZERO) {
+    if (uint8(encodedLinear >> INDEX_EXTERNAL_TIP_METHOD) == ZERO && encodedLinear != ZERO) {
       revert NotAllowed();
     }
     return uint256(reusable ? ONE : ZERO) << MAX_UINT8
       | (uint256(currencyIndex) << INDEX_EXTERNAL_TIP_CURRENCY)
       | (uint256(uint128(amount)) << INDEX_EXTERNAL_TIP_LIMIT)
-      | uint256(uint72(fullEncodedLinear));
+      | uint256(uint72(encodedLinear));
   }
   /**
    * create a tip and back it with a token, to be executed by the stake ender
@@ -247,7 +219,7 @@ abstract contract Tipper is Bank, UnderlyingStakeable, CurrencyList, EncodableSe
    * @param token the token to fund the tip
    * @param stakeId the stake id that the tip belongs to
    * @param amount the number of tokens to back the tip with use zero to move all withdrawableBalanceOf value
-   * @param fullEncodedLinear the (x/y)+b equation to define how much of the tip to spend
+   * @param encodedLinear the (x/y)+b equation to define how much of the tip to spend
    * @return index of the tip in the list
    * @return tipAmount the final backing value of the tip
    */
@@ -256,7 +228,7 @@ abstract contract Tipper is Bank, UnderlyingStakeable, CurrencyList, EncodableSe
     address token,
     uint256 stakeId,
     uint256 amount,
-    uint256 fullEncodedLinear
+    uint256 encodedLinear
   ) external virtual payable returns(uint256, uint256) {
     uint256 depositedAmount = _depositTokenFrom({
       token: token,
@@ -282,7 +254,7 @@ abstract contract Tipper is Bank, UnderlyingStakeable, CurrencyList, EncodableSe
       account: recipient,
       stakeId: stakeId,
       amount: amount,
-      fullEncodedLinear: fullEncodedLinear
+      encodedLinear: encodedLinear
     });
   }
   /**
@@ -386,7 +358,7 @@ abstract contract Tipper is Bank, UnderlyingStakeable, CurrencyList, EncodableSe
       address token = address(indexToToken[tip << ONE >> INDEX_EXTERNAL_TIP_CURRENCY_ONLY]);
       _attributeFunds({
         token: token,
-        index: INDEX_SHOULD_SEND_TOKENS_TO_STAKER,
+        index: INDEX_RIGHT_SHOULD_SEND_TOKENS_TO_STAKER,
         setting: settings,
         staker: staker,
         amount: uint128(tip >> INDEX_EXTERNAL_TIP_LIMIT)
@@ -409,7 +381,7 @@ abstract contract Tipper is Bank, UnderlyingStakeable, CurrencyList, EncodableSe
       _logSettingsUpdate({
         stakeId: stakeId,
         settings: (
-          (setting >> INDEX_COPY_ITERATIONS << INDEX_COPY_ITERATIONS)
+          (setting >> INDEX_RIGHT_COPY_ITERATIONS << INDEX_RIGHT_COPY_ITERATIONS)
           // only remove information about the existance of a list
           // not whether or not to copy said list in subsequent stakes
           // should it exist again
@@ -425,7 +397,7 @@ abstract contract Tipper is Bank, UnderlyingStakeable, CurrencyList, EncodableSe
    * @param token the token to use in the tip
    * @param stakeId the stake id to attribute the tip to
    * @param amount the number of tokens to tip
-   * @param fullEncodedLinear the (x/y)+b equation to use for determining the magnitude of the tip
+   * @param encodedLinear the (x/y)+b equation to use for determining the magnitude of the tip
    * @return the index of the tip in the list
    * @return the final tip amount
    */
@@ -434,7 +406,7 @@ abstract contract Tipper is Bank, UnderlyingStakeable, CurrencyList, EncodableSe
     address token,
     uint256 stakeId,
     uint256 amount,
-    uint256 fullEncodedLinear
+    uint256 encodedLinear
   ) external virtual payable returns(uint256, uint256) {
     _verifyTipAmountAllowed({
       stakeId: stakeId,
@@ -450,7 +422,7 @@ abstract contract Tipper is Bank, UnderlyingStakeable, CurrencyList, EncodableSe
       account: msg.sender,
       stakeId: stakeId,
       amount: amount,
-      fullEncodedLinear: fullEncodedLinear
+      encodedLinear: encodedLinear
     });
   }
   /**
@@ -497,7 +469,7 @@ abstract contract Tipper is Bank, UnderlyingStakeable, CurrencyList, EncodableSe
    * @param account the account that is providing the tokens
    * @param stakeId the stake id to point the tip to
    * @param amount the number of tokens to back the tip
-   * @param fullEncodedLinear the (x/y)+b equation
+   * @param encodedLinear the (x/y)+b equation
    * @return index the index of the tip in the tips list
    * @return tipAmount the amount of tokens added to the tip
    */
@@ -507,7 +479,7 @@ abstract contract Tipper is Bank, UnderlyingStakeable, CurrencyList, EncodableSe
     address account,
     uint256 stakeId,
     uint256 amount,
-    uint256 fullEncodedLinear
+    uint256 encodedLinear
   ) internal returns(uint256 index, uint256 tipAmount) {
     tipAmount = _clamp({
       amount: amount,
@@ -526,7 +498,7 @@ abstract contract Tipper is Bank, UnderlyingStakeable, CurrencyList, EncodableSe
     // 0b00000001 | 0b10000000 => 0b10000001
     // 0b10000001 | 0b10000000 => 0b10000001
     uint256 currentSettings = stakeIdToSettings[stakeId];
-    uint256 updatedSettings = currentSettings | (ONE << INDEX_HAS_EXTERNAL_TIPS);
+    uint256 updatedSettings = currentSettings | (ONE << INDEX_RIGHT_HAS_EXTERNAL_TIPS);
     if (updatedSettings != currentSettings) {
       _logSettingsUpdate({
         stakeId: stakeId,
@@ -547,7 +519,7 @@ abstract contract Tipper is Bank, UnderlyingStakeable, CurrencyList, EncodableSe
       reusable: reusable,
       currencyIndex: currencyIndex,
       amount: tipAmount,
-      fullEncodedLinear: fullEncodedLinear
+      encodedLinear: encodedLinear
     });
     index = stakeIdTips[stakeId].length;
     stakeIdTips[stakeId].push(setting);

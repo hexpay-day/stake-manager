@@ -7,7 +7,23 @@ import { IUnderlyingStakeable } from '../artifacts/types/contracts/interfaces/IH
 
 describe('Magnitude.sol', () => {
   const principle = hre.ethers.utils.parseUnits('100', 8).toBigInt()
-  const xOverYPlusB = ( (utils.absMinInt16 + 3n) << 48n ) | ( 40n << 24n ) | utils.absMinInt16 + -500n;
+  const xOverYPlusB = {
+    xFactor: 1,
+    x: 3n,
+    yFactor: 0,
+    y: 40n,
+    bFactor: 0,
+    b: -500n,
+  }
+  const negXOverYPlusB = {
+    method: 0,
+    xFactor: 1,
+    x: -3n,
+    yFactor: 0,
+    y: 40n,
+    bFactor: 0,
+    b: 500n,
+  }
 
   const yieldFromPrinciple = principle/10n
   const principleAndYield = principle+yieldFromPrinciple
@@ -75,113 +91,107 @@ describe('Magnitude.sol', () => {
         .eventually.to.equal(6)
     })
   })
+  const l = {
+    method: 0,
+    xFactor: 0,
+    x: 0,
+    yFactor: 0,
+    y: 0,
+    bFactor: 0,
+    b: 0,
+  }
   describe('computeMagnitude', () => {
     it('returns zero if limit is zero', async () => {
-      await expect(x.stakeManager.computeMagnitude(0, 1, 1001, 1002, principle))
+      await expect(x.stakeManager.computeMagnitude(0, { ...l, method: 1, y: 1001, }, 1002, principle))
         .eventually.to.equal(0)
     })
     it('returns zero if method is zero', async () => {
-      await expect(x.stakeManager.computeMagnitude(100, 0, 1001, 1002, principle))
+      await expect(x.stakeManager.computeMagnitude(100, { ...l, method: 0, y: 1001, }, 1002, principle))
         .eventually.to.equal(0)
     })
     it('limited by first arg', async () => {
-      await expect(x.stakeManager.computeMagnitude(100, 1, 1001, 1002, principle))
+      await expect(x.stakeManager.computeMagnitude(100, { ...l, method: 1, y: 1001, }, 1002, principle))
         .eventually.to.equal(100)
     })
     it('handles inverted y\'s', async () => {
       // because y2 < y1, only offset remains
-      await expect(x.stakeManager.computeMagnitude(noLimit, 5, 100, principle, principleAndYield))
+      await expect(x.stakeManager.computeMagnitude(noLimit, { ...l, method: 2, xFactor: 1, y: 100, }, principle, principleAndYield))
         .eventually.to.equal(0)
     })
     it('0: always returns zero', async () => {
-      await expect(x.stakeManager.computeMagnitude(noLimit, 0, 100, 100, principle))
+      await expect(x.stakeManager.computeMagnitude(noLimit, { ...l, method: 0, y: 100, }, 100, principle))
         .eventually.to.equal(0)
     })
     it('1: always returns arg 1', async () => {
-      await expect(x.stakeManager.computeMagnitude(noLimit, 1, 1001, 1002, principle))
+      await expect(x.stakeManager.computeMagnitude(noLimit, { ...l, method: 1, y: 1001, }, 1002, principle))
         .eventually.to.equal(1001)
     })
     it('2: returns the y2 value', async () => {
       // do not sub 1 from the x input - needed to ensure rounding correctly
-      await expect(x.stakeManager.computeMagnitude(noLimit, 2, 1001, 1002, principle))
+      await expect(x.stakeManager.computeMagnitude(noLimit, { ...l, method: 2, y: 1001, }, 1002, principle))
         .eventually.to.equal(1002)
     });
     ([0n, 1n, 2n, 3n]).forEach((xFactor: bigint) => {
       const flattened = 3n+(xFactor*3n)
       it(`${flattened}: uses (x/y)+b as a further bitpacked value with total and x increased ${2n**xFactor}x`, async () => {
-        await expect(x.stakeManager.computeMagnitude(noLimit, flattened, xOverYPlusB, principleAndYield, principle))
+        await expect(x.stakeManager.computeMagnitude(noLimit, { ...xOverYPlusB, method: 0n, xFactor: xFactor + 1n, }, principleAndYield, principle))
           .eventually.to.equal(((principleAndYield * 3n * (2n**xFactor)) / 40n) - 500n)
       })
       it(`${flattened+1n}: uses (x/y)+b as a further bitpacked value with principle and x increased ${2n**xFactor}x`, async () => {
-        await expect(x.stakeManager.computeMagnitude(noLimit, flattened+1n, xOverYPlusB, principleAndYield, principle))
+        await expect(x.stakeManager.computeMagnitude(noLimit, { ...xOverYPlusB, method: 1n, xFactor: xFactor + 1n, }, principleAndYield, principle))
           .eventually.to.equal(((principle * 3n * (2n**xFactor)) / 40n) - 500n)
       })
       it(`${flattened+2n}: uses (x/y)+b as a further bitpacked value with yield and x increased ${2n**xFactor}x`, async () => {
-        await expect(x.stakeManager.computeMagnitude(noLimit, flattened+2n, xOverYPlusB, principleAndYield, principle))
+        await expect(x.stakeManager.computeMagnitude(noLimit, { ...xOverYPlusB, method: 2n, xFactor: xFactor + 1n, }, principleAndYield, principle))
           .eventually.to.equal(((yieldFromPrinciple * 3n * (2n**xFactor)) / 40n) - 500n)
       })
     })
     it('can only handle non zero y', async () => {
-      const negXOverYPlusB = ( (utils.absMinInt16 + -3n) << 48n ) | ( 40n << 24n ) | (utils.absMinInt16 + 500n);
       const y2 = 1n
-      await expect(x.stakeManager.computeMagnitude(noLimit, 3n, negXOverYPlusB, 1n, 0))
+      await expect(x.stakeManager.computeMagnitude(noLimit, negXOverYPlusB, 1n, 0))
         .eventually.to.equal(((y2 * -3n) / 40n) + 500n)
     })
     it('can handle negative numbers resulting from an xyb curve', async () => {
-      const negXOverYPlusB = ( (utils.absMinInt16 + -3n) << 48n ) | ( 40n << 24n ) | (utils.absMinInt16 + 500n);
       let y2 = 150n
-      await expect(x.stakeManager.computeMagnitude(noLimit, 3n, negXOverYPlusB, y2, 0))
+      await expect(x.stakeManager.computeMagnitude(noLimit, negXOverYPlusB, y2, 0))
         .eventually.to.equal(((y2 * -3n) / 40n) + 500n)
       y2 = 6_667n
-      await expect(x.stakeManager.computeMagnitude(noLimit, 3n, negXOverYPlusB, y2, 0))
+      await expect(x.stakeManager.computeMagnitude(noLimit, negXOverYPlusB, y2, 0))
         .eventually.to.equal(0n)
       y2 = 10_000n
-      await expect(x.stakeManager.computeMagnitude(noLimit, 3n, negXOverYPlusB, y2, 0))
+      await expect(x.stakeManager.computeMagnitude(noLimit, negXOverYPlusB, y2, 0))
         .eventually.to.equal(0n)
     })
   })
-  const inputs: [bigint, bigint, bigint, bigint, bigint] = [
-    3n,
-    0n, 40n,
-    0n, -500n
-  ]
-  const method = 0n // operate on total
+  const line = {
+    method: 0,
+    xFactor: 1,
+    x: 3n,
+    yFactor: 0,
+    y: 40n,
+    bFactor: 0,
+    b: -500n,
+  }
   describe('encode/decodeLinear', async () => {
     it('can equally encode and decode inputs', async () => {
-      const xFactor = 0n
-      const xOverYPlusBEncoded = await x.stakeManager.encodeLinear(method, xFactor, ...inputs)
-      await expect(x.stakeManager.decodeLinear(xOverYPlusBEncoded.encodedMethod, xOverYPlusBEncoded.encodedMagnitude))
-        .eventually.to.deep.equal([inputs[0], inputs[2], inputs[4]])
+      const xOverYPlusBEncoded = await x.stakeManager.encodeLinear(line)
+      await expect(x.stakeManager.decodeLinear(xOverYPlusBEncoded))
+        .eventually.to.be.deep.equal(Object.values(line))
     })
     it('adds a power factor with other inputs', async () => {
       const { stakeManager } = await loadFixture(utils.deployFixture)
-      const xFactor = 2n
-      const x = inputs[0]
-      const yFactor = 4n
-      const y = inputs[2]
-      const bFactor = 3n
-      const b = inputs[4]
-      const xOverYPlusBEncoded = await stakeManager.encodeLinear(method, xFactor, x, yFactor, y, bFactor, b)
-      await expect(stakeManager.decodeLinear(xOverYPlusBEncoded.encodedMethod, xOverYPlusBEncoded.encodedMagnitude))
-        .eventually.to.deep.equal([
-          x * (2n**xFactor),
-          y * (2n**yFactor),
-          b * (2n**bFactor),
-        ])
-    })
-  })
-  describe('decodeLinear', () => {
-    it('fails if method is greater than uint8 max', async () => {
-      await expect(x.stakeManager.decodeLinear(256, 0))
-        .to.revertedWithCustomError(x.stakeManager, 'NotAllowed')
-    })
-    it('fails if method < 3', async () => {
-      await expect(x.stakeManager.decodeLinear(2, 0))
-        .to.revertedWithCustomError(x.stakeManager, 'NotAllowed')
-    })
-    it('decodes xyb data from method and magnitude inputs', async () => {
-      await expect(x.stakeManager.decodeLinear(3, xOverYPlusB))
-        .eventually.to.deep.equal([3, 40, -500])
+      const skewedLine = {
+        method: 0,
+        xFactor: 3n,
+        x: 3n,
+        yFactor: 4n,
+        y: 40n,
+        bFactor: 3n,
+        b: -500n,
+      }
+      const xOverYPlusBEncoded = await stakeManager.encodeLinear(skewedLine)
+      await expect(stakeManager.decodeLinear(xOverYPlusBEncoded))
+        .eventually.to.deep.equal(Object.values(skewedLine))
     })
   })
 })

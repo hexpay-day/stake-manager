@@ -147,26 +147,6 @@ how a tip should be executed
 | amount | uint256 | the number of tokens to delineate as tips |
 | fullEncodedLinear | uint256 | the method+xyb function to use |
 
-### encodedLinearWithMethod
-
-```solidity
-function encodedLinearWithMethod(uint256 method, uint256 xFactor, int256 x, uint256 yFactor, uint256 y, uint256 bFactor, int256 b) external pure returns (uint256)
-```
-
-encode a series of numbers into a uint72 sized value result=(x*(2^xFactor)/y*(2^yFactor))+(b*(2^bFactor))
-
-#### Parameters
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| method | uint256 | a number to designate which y relationship to choose |
-| xFactor | uint256 | the number of bitshifts to shift the x value (2^xFactor) |
-| x | int256 | the value to multiply against the input value |
-| yFactor | uint256 | the number of bitshifts to shift the y value (2^yFactor) |
-| y | uint256 | the value to divide into the input value multiplied by the final x value |
-| bFactor | uint256 | the number of bitshifts to shift the b value (2^bFactor) |
-| b | int256 | the value to offset the input value |
-
 ### _encodeTipSettings
 
 ```solidity

@@ -20,10 +20,14 @@ describe('EncodableSettings.sol', () => {
   })
   describe('stakeIdSettings', () => {
     it('provides decoded settings', async () => {
-      let settings
-      settings = await x.stakeManager.stakeIdSettings(0);
-      expect(settings.newStakeMagnitude).to.equal(0)
-      expect(settings.newStakeMethod).to.equal(0)
+      let settings = await x.stakeManager.stakeIdSettings(0);
+      expect(settings.newStake.method).to.equal(0)
+      expect(settings.newStake.xFactor).to.equal(0)
+      expect(settings.newStake.x).to.equal(0)
+      expect(settings.newStake.yFactor).to.equal(0)
+      expect(settings.newStake.y).to.equal(0)
+      expect(settings.newStake.bFactor).to.equal(0)
+      expect(settings.newStake.b).to.equal(0)
       expect(settings.newStakeDaysMagnitude).to.equal(0)
       expect(settings.newStakeDaysMethod).to.equal(0)
       const [signer1] = x.signers
@@ -38,8 +42,8 @@ describe('EncodableSettings.sol', () => {
     it('has a method for that', async () => {
       const defaultEncodedSettings = await x.stakeManager.defaultEncodedSettings()
       const defaultSettings = await x.stakeManager.defaultSettings()
-      await expect(x.stakeManager.readEncodedSettings(defaultEncodedSettings, 144, 8))
-        .eventually.to.equal(defaultSettings.newStakeMethod)
+      await expect(x.stakeManager.readEncodedSettings(defaultEncodedSettings, 208, 8))
+        .eventually.to.equal(defaultSettings.newStake.method)
         .eventually.to.equal(2)
       await expect(x.stakeManager.readEncodedSettings(defaultEncodedSettings, 216, 8))
         .eventually.to.equal(defaultSettings.newStakeDaysMethod)

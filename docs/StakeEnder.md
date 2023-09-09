@@ -2,10 +2,10 @@
 
 ## StakeEnder
 
-### INDEX_TODAY
+### INDEX_RIGHT_TODAY
 
 ```solidity
-uint8 INDEX_TODAY
+uint8 INDEX_RIGHT_TODAY
 ```
 
 ### stakeEndByConsent

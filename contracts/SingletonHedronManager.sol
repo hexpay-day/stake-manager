@@ -14,7 +14,7 @@ contract SingletonHedronManager is UnderlyingStakeManager {
   function _createTo(uint256 setting, address owner) internal pure returns(uint256 to) {
     return ((_isOneAtIndex({
       setting: setting,
-      index: INDEX_SHOULD_SEND_TOKENS_TO_STAKER
+      index: INDEX_RIGHT_SHOULD_SEND_TOKENS_TO_STAKER
     }) ? ONE : ZERO) << ADDRESS_BIT_LENGTH) | uint160(owner);
   }
   /**
@@ -41,13 +41,13 @@ contract SingletonHedronManager is UnderlyingStakeManager {
       setting = stakeIdToSettings[stakeId];
       if (msg.sender == currentOwner || _isOneAtIndex({
         setting: setting,
-        index: INDEX_CAN_MINT_HEDRON
+        index: INDEX_RIGHT_CAN_MINT_HEDRON
       })) {
         uint256 currentTo = _createTo(setting, currentOwner);
         if (currentTo != to) {
           _attributeFunds({
             setting: setting,
-            index: INDEX_SHOULD_SEND_TOKENS_TO_STAKER,
+            index: INDEX_RIGHT_SHOULD_SEND_TOKENS_TO_STAKER,
             token: HEDRON,
             staker: address(uint160(to)),
             amount: hedronTokens
@@ -69,7 +69,7 @@ contract SingletonHedronManager is UnderlyingStakeManager {
     if (hedronTokens > ZERO) {
       _attributeFunds({
         setting: setting,
-        index: INDEX_SHOULD_SEND_TOKENS_TO_STAKER,
+        index: INDEX_RIGHT_SHOULD_SEND_TOKENS_TO_STAKER,
         token: HEDRON,
         staker: address(uint160(to)),
         amount: hedronTokens
