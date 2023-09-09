@@ -98,13 +98,12 @@ contract StakeEnder is Magnitude, SingletonHedronManager {
       if (uint8(setting >> INDEX_RIGHT_HEDRON_TIP) > ZERO) {
         uint256 hedronTip = _computeMagnitude({
           limit: hedronAmount,
-          linear: _decodeLinear(uint72(setting >> INDEX_RIGHT_HEDRON_TIP)),
+          linear: uint72(setting >> INDEX_RIGHT_HEDRON_TIP),
           v2: hedronAmount,
           v1: ZERO
         });
         if (hedronTip > ZERO) {
           unchecked {
-            // limited by _computeMagnitude
             hedronAmount = hedronAmount - hedronTip;
           }
           if (tipTo != address(0)) {
@@ -144,7 +143,7 @@ contract StakeEnder is Magnitude, SingletonHedronManager {
       if (uint8(setting >> INDEX_RIGHT_TARGET_TIP) > ZERO) {
         uint256 targetTip = _computeMagnitude({
           limit: delta,
-          linear: _decodeLinear(uint72(setting >> INDEX_RIGHT_TARGET_TIP)),
+          linear: uint72(setting >> INDEX_RIGHT_TARGET_TIP),
           v2: delta,
           v1: stake.stakedHearts
         });
@@ -172,7 +171,7 @@ contract StakeEnder is Magnitude, SingletonHedronManager {
     if (delta > ZERO && uint8(setting >> INDEX_RIGHT_NEW_STAKE) > ZERO) {
       uint256 newStakeAmount = _computeMagnitude({
         limit: delta,
-        linear: _decodeLinear(uint72(setting >> INDEX_RIGHT_NEW_STAKE)),
+        linear: uint72(setting >> INDEX_RIGHT_NEW_STAKE),
         v2: delta,
         v1: stake.stakedHearts
       });

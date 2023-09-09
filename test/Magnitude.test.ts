@@ -179,7 +179,6 @@ describe('Magnitude.sol', () => {
         .eventually.to.be.deep.equal(Object.values(line))
     })
     it('adds a power factor with other inputs', async () => {
-      const { stakeManager } = await loadFixture(utils.deployFixture)
       const skewedLine = {
         method: 0,
         xFactor: 3n,
@@ -189,9 +188,18 @@ describe('Magnitude.sol', () => {
         bFactor: 3n,
         b: -500n,
       }
-      const xOverYPlusBEncoded = await stakeManager.encodeLinear(skewedLine)
-      await expect(stakeManager.decodeLinear(xOverYPlusBEncoded))
+      const xOverYPlusBEncoded = await x.stakeManager.encodeLinear(skewedLine)
+      await expect(x.stakeManager.decodeLinear(xOverYPlusBEncoded))
         .eventually.to.deep.equal(Object.values(skewedLine))
+    })
+    describe('encodeLinear', () => {
+      it('disallows methods with value > 2', async () => {
+        await expect(x.stakeManager.encodeLinear({
+          ...negXOverYPlusB,
+          method: 3,
+        }))
+        .to.revertedWithCustomError(x.stakeManager, 'NotAllowed')
+      })
     })
   })
 })

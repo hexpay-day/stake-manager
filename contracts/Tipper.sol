@@ -111,7 +111,7 @@ abstract contract Tipper is Bank, UnderlyingStakeable, CurrencyList, EncodableSe
         if (method > ZERO) {
           tip = _computeMagnitude({
             limit: limit,
-            linear: _decodeLinear(uint72(tip)),
+            linear: uint72(tip),
             v2: limit,
             v1: block.basefee
           });

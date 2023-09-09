@@ -46,27 +46,29 @@ contract Magnitude is Utils {
    * an expression to tell us where to land on the plot. Result is never less than 0, nor greater than limit
    */
   function _computeMagnitude(
-    uint256 limit, Linear memory linear,
+    uint256 limit, uint256 linear,
     uint256 v2, uint256 v1
   ) internal pure returns(uint256 amount) {
     // we can use unchecked here because all minuses (-)
     // are checked before they are run
     unchecked {
-      if (linear.xFactor == ZERO) {
-        if (linear.method == ONE) {
-          amount = linear.y; // 1
+      uint256 method = uint8(linear);
+      if (method < X_OPTIONS) {
+        if (method == ONE) {
+          amount = uint64(linear >> EIGHT); // 1
         } else {
           amount = v2; // 2
         }
       } else {
-        uint256 delta = _getDelta(linear.method, v2, v1);
+        Linear memory line = _decodeLinear(linear);
+        uint256 delta = _getDelta(line.method, v2, v1);
         if (delta == ZERO) return ZERO;
         // even with uint16 (max: 65535), we can still get down to 0.01% increments
         // with scaling we can go even further (though it is choppier)
         // x has an embedded 1 offset from upper if statement
-        int256 x = linear.x << (linear.xFactor - ONE);
-        uint256 y = linear.y << linear.yFactor;
-        int256 b = linear.b << linear.bFactor;
+        int256 x = line.x << (line.xFactor - ONE);
+        uint256 y = line.y << line.yFactor;
+        int256 b = line.b << line.bFactor;
         int256 amnt = ((x * int256(delta)) / int256(y)) + b;
         amount = amnt < 0 ? ZERO : uint256(amnt);
       }
@@ -175,7 +177,7 @@ contract Magnitude is Utils {
     }
     return _computeMagnitude({
       limit: limit,
-      linear: linear,
+      linear: _encodeLinear(linear),
       v2: v2,
       v1: v1
     });
