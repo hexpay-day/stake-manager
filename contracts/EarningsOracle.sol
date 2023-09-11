@@ -72,9 +72,9 @@ contract EarningsOracle is Utils {
     uint256 multiplier
   ) external view returns(uint256 payout) {
     return ((
-      (totals[untilDay].payout - totals[startDay].payout) * multiplier * (untilDay - startDay)
+      (totals[untilDay].payout - totals[startDay + ONE].payout) * multiplier * (untilDay - startDay)
     ) / (
-      totals[untilDay].shares - totals[startDay].shares
+      totals[untilDay].shares - totals[startDay + ONE].shares
     )) - (
       // for a 1 day span, the amount is actually known
       (untilDay - startDay) - ONE

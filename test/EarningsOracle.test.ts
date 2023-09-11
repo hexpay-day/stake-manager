@@ -237,39 +237,54 @@ describe('EarningsOracle.sol', () => {
         x = await loadFixture(launchFull)
       })
       it('gives a minimum value that should have been claimable by the range for a given magnitude', async function () {
-        const logValues = async (startFrom: number, startTo: number, days: number) => {
+        const logValues = async (startFrom: number, startTo: number, days: bigint) => {
           const range = _.range(startFrom, startTo + 1)
           console.log(startFrom, 'to', startTo)
           for (let i = 0; i < range.length; i++) {
             const a = range[i]
-            const b = a + days
+            const b = a + Number(days)
             console.log(a, b, (await x.oracle.payoutDeltaTruncated(a, b, shares)).toBigInt())
           }
         }
+        const checkDay = async (txHash: string, lockedDay: bigint) => {
+          const tx = await hre.ethers.provider.getTransactionReceipt(txHash)
+          await expect(x.hex.callStatic.currentDay({
+            blockTag: `0x${tx.blockNumber.toString(16)}`
+          }))
+            .eventually.to.equal(lockedDay)
+        }
         let shares!: bigint
-        const lowerStart = 598
-        const upperStart = 604
+        let lockedDays!: bigint
+        const lowerStart = 597
+        const upperStart = 603
+        const lockedDay = 599n
         // #405414
-        // start day: 601
+        // start day: 601 (graph), 599 (rpc)
         // staked days: 8
         shares = 1_912_952_383_283n
-        await logValues(lowerStart, upperStart, 8)
-        await expect(x.oracle.payoutDeltaTruncated(601, 609, shares))
-          .eventually.to.be.approximately(8_984_138_117, 20_932_929) // <0.24% off - 9005071046n
+        lockedDays = 8n
+        await logValues(lowerStart, upperStart, lockedDays)
+        await checkDay('0x444c0ab9297db72e641bcec6cb83c08f5b1792a7c9b7636299bdb0e15dd5c428', lockedDay)
+        await expect(x.oracle.payoutDeltaTruncated(lockedDay, lockedDay + lockedDays, shares))
+          .eventually.to.be.approximately(8_984_138_117, 16_656_384) // <0.24% off - 9000794501n
         // #405391
-        // start day: 601
+        // start day: 601 (graph), 599 (rpc)
         // staked days: 38
         shares = 25_328_837_913_105n
-        await logValues(lowerStart, upperStart, 38)
-        await expect(x.oracle.payoutDeltaTruncated(601, 639, shares))
-          .eventually.to.be.approximately(563_159_925_937, 24_628_245) // <0.1% off - 563135297692n
+        lockedDays = 38n
+        await logValues(lowerStart, upperStart, lockedDays)
+        await checkDay('0x6118e367cd86946a016714494764f019233d299ee82119692baf8ee519b6ba93', lockedDay)
+        await expect(x.oracle.payoutDeltaTruncated(lockedDay, lockedDay + lockedDays, shares))
+          .eventually.to.be.approximately(563_159_925_937, 38_111_705) // <0.1% off - 563198037642n
         // #405076
-        // start day: 601
+        // start day: 601 (graph), 599 (rpc)
         // staked days: 368
         shares = 231_641_365_924n
-        await logValues(lowerStart, upperStart, 368)
-        await expect(x.oracle.payoutDeltaTruncated(601, 969, shares))
-          .eventually.to.be.approximately(52_076_390_371, 2_813_528) // <0.01% off - 52073576843n
+        lockedDays = 368n
+        await logValues(lowerStart, upperStart, lockedDays)
+        await checkDay('0xb0a8a10e708d49f30c3b3158fc89900e1720f4d6a7a389a17af1ba8eb5b0fad2', lockedDay)
+        await expect(x.oracle.payoutDeltaTruncated(lockedDay, lockedDay + lockedDays, shares))
+          .eventually.to.be.approximately(52_076_390_371, 12_803_929) // <0.01% off - 52063586442n
       })
       it('will give the same value if the total shares are passed and only 1 days is asked for', async () => {
         const day0 = await x.oracle.totals(998)
