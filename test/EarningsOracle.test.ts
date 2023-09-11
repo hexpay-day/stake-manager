@@ -236,7 +236,7 @@ describe('EarningsOracle.sol', () => {
       beforeEach(async () => {
         x = await loadFixture(launchFull)
       })
-      it.only('gives a minimum value that should have been claimable by the range for a given magnitude', async function () {
+      it('gives a minimum value that should have been claimable by the range for a given magnitude', async function () {
         const logValues = async (startFrom: number, startTo: number, days: number) => {
           const range = _.range(startFrom, startTo + 1)
           console.log(startFrom, 'to', startTo)
