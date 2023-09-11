@@ -132,7 +132,7 @@ execute a list of tips and leave them in the unattributed space
 ### encodeTipSettings
 
 ```solidity
-function encodeTipSettings(bool reusable, uint256 currencyIndex, uint256 amount, uint256 fullEncodedLinear) external pure returns (uint256)
+function encodeTipSettings(bool reusable, uint256 currencyIndex, uint256 amount, uint256 encodedLinear) external pure returns (uint256)
 ```
 
 encodes a series of data in 32+96+64+64 to fit into 256 bits to define
@@ -145,12 +145,12 @@ how a tip should be executed
 | reusable | bool |  |
 | currencyIndex | uint256 | the index of the currency on the list |
 | amount | uint256 | the number of tokens to delineate as tips |
-| fullEncodedLinear | uint256 | the method+xyb function to use |
+| encodedLinear | uint256 | the method+xyb function to use |
 
 ### _encodeTipSettings
 
 ```solidity
-function _encodeTipSettings(bool reusable, uint256 currencyIndex, uint256 amount, uint256 fullEncodedLinear) internal pure returns (uint256)
+function _encodeTipSettings(bool reusable, uint256 currencyIndex, uint256 amount, uint256 encodedLinear) internal pure returns (uint256)
 ```
 
 encodes tip settings into a uint256
@@ -162,12 +162,12 @@ encodes tip settings into a uint256
 | reusable | bool | the tip can be reused if there is amount left over |
 | currencyIndex | uint256 | the index of the currency on the list |
 | amount | uint256 | the number of tokens deposited into the contract |
-| fullEncodedLinear | uint256 | an (x/y)+b equation inside of uint72 |
+| encodedLinear | uint256 | an (x/y)+b equation inside of uint72 |
 
 ### depositAndAddTipToStake
 
 ```solidity
-function depositAndAddTipToStake(bool reusable, address token, uint256 stakeId, uint256 amount, uint256 fullEncodedLinear) external payable virtual returns (uint256, uint256)
+function depositAndAddTipToStake(bool reusable, address token, uint256 stakeId, uint256 amount, uint256 encodedLinear) external payable virtual returns (uint256, uint256)
 ```
 
 create a tip and back it with a token, to be executed by the stake ender
@@ -180,7 +180,7 @@ create a tip and back it with a token, to be executed by the stake ender
 | token | address | the token to fund the tip |
 | stakeId | uint256 | the stake id that the tip belongs to |
 | amount | uint256 | the number of tokens to back the tip with use zero to move all withdrawableBalanceOf value |
-| fullEncodedLinear | uint256 | the (x/y)+b equation to define how much of the tip to spend |
+| encodedLinear | uint256 | the (x/y)+b equation to define how much of the tip to spend |
 
 #### Return Values
 
@@ -250,7 +250,7 @@ function _removeTipsFromStake(uint256 stakeId, uint256 settings, uint256[] index
 ### addTipToStake
 
 ```solidity
-function addTipToStake(bool reusable, address token, uint256 stakeId, uint256 amount, uint256 fullEncodedLinear) external payable virtual returns (uint256, uint256)
+function addTipToStake(bool reusable, address token, uint256 stakeId, uint256 amount, uint256 encodedLinear) external payable virtual returns (uint256, uint256)
 ```
 
 create and back a tip with a given number of tokens
@@ -263,7 +263,7 @@ create and back a tip with a given number of tokens
 | token | address | the token to use in the tip |
 | stakeId | uint256 | the stake id to attribute the tip to |
 | amount | uint256 | the number of tokens to tip |
-| fullEncodedLinear | uint256 | the (x/y)+b equation to use for determining the magnitude of the tip |
+| encodedLinear | uint256 | the (x/y)+b equation to use for determining the magnitude of the tip |
 
 #### Return Values
 
@@ -311,7 +311,7 @@ check that this contract is custodian of the given stake id
 ### _addTipToStake
 
 ```solidity
-function _addTipToStake(bool reusable, address token, address account, uint256 stakeId, uint256 amount, uint256 fullEncodedLinear) internal returns (uint256 index, uint256 tipAmount)
+function _addTipToStake(bool reusable, address token, address account, uint256 stakeId, uint256 amount, uint256 encodedLinear) internal returns (uint256 index, uint256 tipAmount)
 ```
 
 create a tip and back it with given tokens
@@ -325,7 +325,7 @@ create a tip and back it with given tokens
 | account | address | the account that is providing the tokens |
 | stakeId | uint256 | the stake id to point the tip to |
 | amount | uint256 | the number of tokens to back the tip |
-| fullEncodedLinear | uint256 | the (x/y)+b equation |
+| encodedLinear | uint256 | the (x/y)+b equation |
 
 #### Return Values
 

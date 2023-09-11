@@ -5,13 +5,13 @@ import * as hre from 'hardhat'
 import { anyUint } from "@nomicfoundation/hardhat-chai-matchers/withArgs"
 import { EncodableSettings } from "../artifacts/types"
 
-describe('TransferrableStakeManager.sol', () => {
+describe('TransferableStakeManager.sol', () => {
   let x!: Awaited<ReturnType<typeof utils.deployFixture>>
   beforeEach(async () => {
     x = await loadFixture(utils.deployFixture)
   })
   describe('removeTransferrability', () => {
-    it('removes the transferrable flag', async () => {
+    it('removes the transferable flag', async () => {
       const days = 3
       const [signer1] = x.signers
       const settings = await x.stakeManager.defaultSettings()
@@ -24,7 +24,7 @@ describe('TransferrableStakeManager.sol', () => {
           canMintHedron: true,
           canMintHedronAtEnd: true,
           shouldSendTokensToStaker: true,
-          stakeIsTransferrable: true,
+          stakeIsTransferable: true,
           copyExternalTips: true,
           // hasExternalTips: true, // controlled by contract
         },
@@ -54,7 +54,7 @@ describe('TransferrableStakeManager.sol', () => {
         newStakeDaysMethod: hre.ethers.BigNumber.from(0),
         consentAbilities: {
           ...settings.consentAbilities,
-          stakeIsTransferrable: true,
+          stakeIsTransferable: true,
         },
       }
       const encodedSettings = await x.stakeManager.encodeSettings(decodedSettings)
@@ -89,7 +89,7 @@ describe('TransferrableStakeManager.sol', () => {
         newStakeDaysMethod: hre.ethers.BigNumber.from(0),
         consentAbilities: {
           ...settings.consentAbilities,
-          stakeIsTransferrable: true,
+          stakeIsTransferable: true,
         },
       }
       const encodedSettings = await x.stakeManager.encodeSettings(decodedSettings)
@@ -115,7 +115,7 @@ describe('TransferrableStakeManager.sol', () => {
     })
   })
   describe('transfer receivership', () => {
-    let transferrableSettings!: bigint
+    let transferableSettings!: bigint
     let stakeStartArgs!: [string, bigint, number, bigint]
     beforeEach(async () => {
       const settings = await x.stakeManager.defaultSettings()
@@ -123,13 +123,13 @@ describe('TransferrableStakeManager.sol', () => {
         ...settings,
         consentAbilities: {
           ...settings.consentAbilities,
-          stakeIsTransferrable: true,
+          stakeIsTransferable: true,
         },
       }
       const encodedsettings = await x.stakeManager.encodeSettings(updatedSettings)
-      transferrableSettings = encodedsettings.toBigInt()
+      transferableSettings = encodedsettings.toBigInt()
       const [signer1] = x.signers
-      stakeStartArgs = [signer1.address, x.oneMillion / 10n, 1, transferrableSettings]
+      stakeStartArgs = [signer1.address, x.oneMillion / 10n, 1, transferableSettings]
     })
     it('can call onStakeReceived on eoa', async () => {
       const [signer1, signer2] = x.signers

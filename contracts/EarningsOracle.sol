@@ -66,7 +66,7 @@ contract EarningsOracle is Utils {
    * @param untilDay the day to stop counting
    * @param multiplier a number to multiply by the difference of the payout
    */
-  function payoutDeltaTrucated(
+  function payoutDeltaTruncated(
     uint256 startDay,
     uint256 untilDay,
     uint256 multiplier

@@ -64,7 +64,7 @@ describe('EncodableSettings.sol', () => {
       abilities.canMintHedron,
       abilities.canMintHedronAtEnd,
       abilities.shouldSendTokensToStaker,
-      abilities.stakeIsTransferrable,
+      abilities.stakeIsTransferable,
       abilities.copyExternalTips,
       abilities.hasExternalTips,
     ], abilities)
@@ -72,7 +72,7 @@ describe('EncodableSettings.sol', () => {
       const abilities = {
         hasExternalTips: false,
         copyExternalTips: true,
-        stakeIsTransferrable: false,
+        stakeIsTransferable: false,
         shouldSendTokensToStaker: true,
         canMintHedronAtEnd: false,
         canMintHedron: true,
@@ -101,7 +101,7 @@ describe('EncodableSettings.sol', () => {
           canMintHedron: false,
           canMintHedronAtEnd: false,
           shouldSendTokensToStaker: false,
-          stakeIsTransferrable: false,
+          stakeIsTransferable: false,
           copyExternalTips: false,
           hasExternalTips: false,
         }))
@@ -112,7 +112,7 @@ describe('EncodableSettings.sol', () => {
           canMintHedron: true,
           canMintHedronAtEnd: true,
           shouldSendTokensToStaker: true,
-          stakeIsTransferrable: true,
+          stakeIsTransferable: true,
           copyExternalTips: true,
           hasExternalTips: true,
         }))

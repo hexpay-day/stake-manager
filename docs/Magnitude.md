@@ -17,7 +17,7 @@ function _computeDayMagnitude(uint256 limit, uint256 method, uint256 x, uint256 
 ### _computeMagnitude
 
 ```solidity
-function _computeMagnitude(uint256 limit, struct Magnitude.Linear linear, uint256 v2, uint256 v1) internal pure returns (uint256 amount)
+function _computeMagnitude(uint256 limit, uint256 linear, uint256 v2, uint256 v1) internal pure returns (uint256 amount)
 ```
 
 compute a useful value from 2 inputs
@@ -29,7 +29,7 @@ an expression to tell us where to land on the plot. Result is never less than 0,
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | limit | uint256 |  |
-| linear | struct Magnitude.Linear | holds the linear data to describe how to plot a provied y value |
+| linear | uint256 | holds the linear data to describe how to plot a provied y value |
 | v2 | uint256 | a secondary magnitude to use - generally the amount of the end stake |
 | v1 | uint256 | the starting point of v2 used for deltas |
 

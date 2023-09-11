@@ -20,8 +20,8 @@ abstract contract EncodableSettings is StakeInfo {
   uint256 internal constant INDEX_RIGHT_COPY_ITERATIONS = EIGHT;
   uint256 internal constant INDEX_RIGHT_HAS_EXTERNAL_TIPS = 7;
   uint256 internal constant INDEX_RIGHT_COPY_EXTERNAL_TIPS = 6;
-  uint256 internal constant INDEX_RIGHT_STAKE_IS_TRANSFERRABLE = 5;
-  uint256 internal constant INDEX_LEFT_STAKE_IS_TRANSFERRABLE = SLOTS - INDEX_RIGHT_STAKE_IS_TRANSFERRABLE;
+  uint256 internal constant INDEX_RIGHT_STAKE_IS_TRANSFERABLE = 5;
+  uint256 internal constant INDEX_LEFT_STAKE_IS_TRANSFERABLE = SLOTS - INDEX_RIGHT_STAKE_IS_TRANSFERABLE;
   uint256 internal constant INDEX_RIGHT_SHOULD_SEND_TOKENS_TO_STAKER = FOUR;
   uint256 internal constant INDEX_RIGHT_CAN_MINT_HEDRON_AT_END = THREE;
   uint256 internal constant INDEX_RIGHT_CAN_MINT_HEDRON = TWO;
@@ -38,7 +38,7 @@ abstract contract EncodableSettings is StakeInfo {
     bool canMintHedron;
     bool canMintHedronAtEnd;
     bool shouldSendTokensToStaker;
-    bool stakeIsTransferrable;
+    bool stakeIsTransferable;
     bool copyExternalTips;
     bool hasExternalTips;
   }
@@ -61,7 +61,7 @@ abstract contract EncodableSettings is StakeInfo {
      * 00000100(2): can mint hedron (any time)
      * 00001000(3): can mint hedron during end stake - future should be 0
      * 00010000(4): should send tokens to staker
-     * 00100000(5): stake is transferrable
+     * 00100000(5): stake is transferable
      * 01000000(6): copy external tips to next stake
      * 10000000(7): has external tips (contract controlled)
      */
@@ -112,7 +112,7 @@ abstract contract EncodableSettings is StakeInfo {
     return ConsentAbilities({
       hasExternalTips: (abilities >> INDEX_RIGHT_HAS_EXTERNAL_TIPS) % TWO == ONE,
       copyExternalTips: (abilities >> INDEX_RIGHT_COPY_EXTERNAL_TIPS) % TWO == ONE,
-      stakeIsTransferrable: (abilities >> INDEX_RIGHT_STAKE_IS_TRANSFERRABLE) % TWO == ONE,
+      stakeIsTransferable: (abilities >> INDEX_RIGHT_STAKE_IS_TRANSFERABLE) % TWO == ONE,
       shouldSendTokensToStaker: (abilities >> INDEX_RIGHT_SHOULD_SEND_TOKENS_TO_STAKER) % TWO == ONE,
       canMintHedronAtEnd: (abilities >> INDEX_RIGHT_CAN_MINT_HEDRON_AT_END) % TWO == ONE,
       canMintHedron: (abilities >> INDEX_RIGHT_CAN_MINT_HEDRON) % TWO == ONE,
@@ -300,7 +300,7 @@ abstract contract EncodableSettings is StakeInfo {
     return (
       (consentAbilities.hasExternalTips ? ONE : ZERO) << INDEX_RIGHT_HAS_EXTERNAL_TIPS |
       (consentAbilities.copyExternalTips ? ONE : ZERO) << INDEX_RIGHT_COPY_EXTERNAL_TIPS |
-      (consentAbilities.stakeIsTransferrable ? ONE : ZERO) << INDEX_RIGHT_STAKE_IS_TRANSFERRABLE |
+      (consentAbilities.stakeIsTransferable ? ONE : ZERO) << INDEX_RIGHT_STAKE_IS_TRANSFERABLE |
       (consentAbilities.shouldSendTokensToStaker ? ONE : ZERO) << INDEX_RIGHT_SHOULD_SEND_TOKENS_TO_STAKER |
       (consentAbilities.canMintHedronAtEnd ? ONE : ZERO) << INDEX_RIGHT_CAN_MINT_HEDRON_AT_END |
       (consentAbilities.canMintHedron ? ONE : ZERO) << INDEX_RIGHT_CAN_MINT_HEDRON |
@@ -386,7 +386,7 @@ abstract contract EncodableSettings is StakeInfo {
         canMintHedron: false,
         canMintHedronAtEnd: false,
         shouldSendTokensToStaker: false,
-        stakeIsTransferrable: false,
+        stakeIsTransferable: false,
         copyExternalTips: false,
         hasExternalTips: false
       })

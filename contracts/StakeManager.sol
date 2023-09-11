@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity >=0.8.18;
 
-import "./TransferrableStakeManager.sol";
-import "./EarningsOracle.sol";
+import { TransferableStakeManager } from "./TransferableStakeManager.sol";
+import { EarningsOracle } from "./EarningsOracle.sol";
 
-contract StakeManager is TransferrableStakeManager, EarningsOracle {
+contract StakeManager is TransferableStakeManager, EarningsOracle {
   constructor() EarningsOracle(ONE, ZERO) {}
 }

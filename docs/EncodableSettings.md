@@ -92,16 +92,16 @@ uint256 INDEX_RIGHT_HAS_EXTERNAL_TIPS
 uint256 INDEX_RIGHT_COPY_EXTERNAL_TIPS
 ```
 
-### INDEX_RIGHT_STAKE_IS_TRANSFERRABLE
+### INDEX_RIGHT_STAKE_IS_TRANSFERABLE
 
 ```solidity
-uint256 INDEX_RIGHT_STAKE_IS_TRANSFERRABLE
+uint256 INDEX_RIGHT_STAKE_IS_TRANSFERABLE
 ```
 
-### INDEX_LEFT_STAKE_IS_TRANSFERRABLE
+### INDEX_LEFT_STAKE_IS_TRANSFERABLE
 
 ```solidity
-uint256 INDEX_LEFT_STAKE_IS_TRANSFERRABLE
+uint256 INDEX_LEFT_STAKE_IS_TRANSFERABLE
 ```
 
 ### INDEX_RIGHT_SHOULD_SEND_TOKENS_TO_STAKER
@@ -143,7 +143,7 @@ struct ConsentAbilities {
   bool canMintHedron;
   bool canMintHedronAtEnd;
   bool shouldSendTokensToStaker;
-  bool stakeIsTransferrable;
+  bool stakeIsTransferable;
   bool copyExternalTips;
   bool hasExternalTips;
 }

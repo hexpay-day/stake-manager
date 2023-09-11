@@ -7,6 +7,21 @@ import { IHEX } from '../artifacts/types'
 Error.stackTraceLimit = Infinity
 
 export const args = yargs.options({
+  rpc1: {
+    type: 'string',
+    required: false,
+    describe: 'the rpc ur for chain id 1',
+  },
+  rpc369: {
+    type: 'string',
+    required: false,
+    describe: 'the rpc ur for chain id 369',
+  },
+  rpc943: {
+    type: 'string',
+    required: false,
+    describe: 'the rpc ur for chain id 943',
+  },
   chain: {
     type: 'string',
     default: 'ethereum',
