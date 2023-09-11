@@ -24,6 +24,7 @@ describe('EarningsOracle.sol', () => {
     }
   const launchZero = launch(0)
   const launchSome = launch(10)
+  const launchFull = launch(1_000)
   const launchMixup = () => deployOracle(0, 0)
   const launchUpTo = async (offset = 0n) => {
     const x = await launchZero()
@@ -231,18 +232,44 @@ describe('EarningsOracle.sol', () => {
       })
     })
     describe('payoutDeltaTruncated', () => {
+      let x!: Awaited<ReturnType<typeof launchFull>>
+      beforeEach(async () => {
+        x = await loadFixture(launchFull)
+      })
       it('gives a minimum value that should have been claimable by the range for a given magnitude', async function () {
-        const rangeSize = 700n
-        await x.oracle.catchUpDays(rangeSize)
-        // day 2 did not really exist for anyone
-        await expect(x.oracle.payoutDeltaTruncated(600, 608, 3_292_329_556_204n))
-          .eventually.to.be.approximately(15_458_700_172, 154_587_001) // within 1%
-        await expect(x.oracle.payoutDeltaTruncated(600, 638, 619_696_658_739_089n))
-          .eventually.to.be.approximately(13_779_168_165_104, 13_779_168_165) // within 0.1%
-        // await expect(x.oracle.payoutDeltaTruncated(600, 608, 3_292_329_556_204n))
-        //   .eventually.to.be.equal(15_458_700_172)
-        // await expect(x.oracle.payoutDeltaTruncated(600, 638, 619_696_658_739_089n))
-        //   .eventually.to.be.equal(13_779_168_165_104)
+        await expect(x.oracle.payoutDeltaTruncated(600, 608, 1_912_952_383_283n)) // #405414
+          .eventually.to.be.approximately(8_984_138_117, 7_538_694) // <0.1% off
+        await expect(x.oracle.payoutDeltaTruncated(600, 638, 25_328_837_913_105n)) // #405391
+          .eventually.to.be.approximately(563_159_925_937, 57_266_837) // <0.01% off
+        await expect(x.oracle.payoutDeltaTruncated(609, 980, 3_517_853_163_358n)) // #405076
+          .eventually.to.be.approximately(798_554_669_030, 201_516_666) // <0.02% off
+      })
+      it('will give the same value if the total shares are passed and only 1 days is asked for', async () => {
+        const day0 = await x.oracle.totals(998)
+        const day1 = await x.oracle.totals(999)
+        const deltaShares = day1.shares.toBigInt() - day0.shares.toBigInt()
+        const deltaPayout = day1.payout.toBigInt() - day0.payout.toBigInt()
+        await expect(x.oracle.payoutDeltaTruncated(998, 999, deltaShares))
+          .eventually.to.equal(deltaPayout)
+      })
+      it('will give very close to the same value if the total shares are passed', async () => {
+        const range = _.range(900, 910) // 900-909
+        expect(range.length).to.equal(10)
+        const days = await Promise.all(range.map((day) => x.oracle.totals(day)))
+        const added = days.reduce((added, day, index) => {
+          if (index === 0) return added
+          const previous = days[index - 1]
+          return {
+            shares: (day.shares.toBigInt() - previous.shares.toBigInt()) + added.shares,
+            payout: (day.payout.toBigInt() - previous.payout.toBigInt()) + added.payout,
+          }
+        }, {
+          payout: 0n,
+          shares: 0n,
+        })
+        const rangeDelta = BigInt(range.length - 1)
+        await expect(x.oracle.payoutDeltaTruncated(900, 909, added.shares))
+          .eventually.to.equal((added.payout * rangeDelta) - (rangeDelta - 1n))
       })
     })
   })
