@@ -77,7 +77,7 @@ contract EarningsOracle is Utils {
       totals[untilDay].shares - totals[startDay].shares
     )) - (
       // for a 1 day span, the amount is actually known
-      (untilDay - startDay) - 1
+      (untilDay - startDay) - ONE
     );
   }
   /**

@@ -237,12 +237,27 @@ describe('EarningsOracle.sol', () => {
         x = await loadFixture(launchFull)
       })
       it('gives a minimum value that should have been claimable by the range for a given magnitude', async function () {
-        await expect(x.oracle.payoutDeltaTruncated(600, 608, 1_912_952_383_283n)) // #405414
-          .eventually.to.be.approximately(8_984_138_117, 7_538_694) // <0.1% off
-        await expect(x.oracle.payoutDeltaTruncated(600, 638, 25_328_837_913_105n)) // #405391
-          .eventually.to.be.approximately(563_159_925_937, 57_266_837) // <0.01% off
-        await expect(x.oracle.payoutDeltaTruncated(609, 980, 3_517_853_163_358n)) // #405076
-          .eventually.to.be.approximately(798_554_669_030, 201_516_666) // <0.02% off
+        // #405414
+        // locked day: 601
+        // staked days: 8
+        await expect(x.oracle.payoutDeltaTruncated(600, 608, 1_912_952_383_283n))
+          .eventually.to.be.approximately(8_984_138_117, 7_538_694) // <0.1% off - 8991676811n
+        // console.log((await x.oracle.payoutDeltaTruncated(599, 607, 1_912_952_383_283n)).toBigInt()) // 8984161413n
+        // console.log((await x.oracle.payoutDeltaTruncated(598, 606, 1_912_952_383_283n)).toBigInt()) // 8982014940n
+        // #405391
+        // locked day: 600
+        // staked days: 38
+        await expect(x.oracle.payoutDeltaTruncated(600, 638, 25_328_837_913_105n))
+          .eventually.to.be.approximately(563_159_925_937, 57_266_837) // <0.1% off - 563102659100n
+        // console.log((await x.oracle.payoutDeltaTruncated(599, 637, 25_328_837_913_105n)).toBigInt()) // 563153228090n
+        // console.log((await x.oracle.payoutDeltaTruncated(598, 636, 25_328_837_913_105n)).toBigInt()) // 563189245812n
+        // #405076
+        // locked day: 609
+        // staked days: 371
+        await expect(x.oracle.payoutDeltaTruncated(609, 980, 3_517_853_163_358n))
+          .eventually.to.be.approximately(798_554_669_030, 201_516_666) // <0.1% off - 798353152364n
+        // console.log((await x.oracle.payoutDeltaTruncated(608, 979, 3_517_853_163_358n)).toBigInt()) // 798263966000n
+        // console.log((await x.oracle.payoutDeltaTruncated(607, 978, 3_517_853_163_358n)).toBigInt()) // 798150954582n
       })
       it('will give the same value if the total shares are passed and only 1 days is asked for', async () => {
         const day0 = await x.oracle.totals(998)
