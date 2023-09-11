@@ -7,7 +7,7 @@ abstract contract EncodableSettings is StakeInfo {
   // the index of the first bit of targeted information
   uint256 internal constant UNUSED_SPACE_RIGHT_UINT8 = SLOTS - EIGHT;
   uint256 internal constant UNUSED_SPACE_RIGHT_UINT16 = SLOTS - SIXTEEN;
-  uint256 internal constant UNUSED_SPACE_RIGHT_UINT64 = SLOTS - 64;
+  uint256 internal constant UNUSED_SPACE_RIGHT_UINT64 = SLOTS - SIXTY_FOUR;
   uint256 internal constant INDEX_RIGHT_HEDRON_TIP = SLOTS - SEVENTY_TWO;
   uint256 internal constant INDEX_RIGHT_TARGET_TIP = INDEX_RIGHT_HEDRON_TIP - SEVENTY_TWO;
   uint256 internal constant INDEX_LEFT_TARGET_TIP = SLOTS - 144;

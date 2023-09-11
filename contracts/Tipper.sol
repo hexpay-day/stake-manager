@@ -11,7 +11,7 @@ abstract contract Tipper is Bank, UnderlyingStakeable, CurrencyList, EncodableSe
   uint256 internal constant INDEX_EXTERNAL_TIP_CURRENCY = 200;
   uint256 internal constant INDEX_EXTERNAL_TIP_CURRENCY_ONLY = INDEX_EXTERNAL_TIP_CURRENCY + ONE;
   uint256 internal constant INDEX_EXTERNAL_TIP_LIMIT = SEVENTY_TWO; // 128 bits long
-  uint256 internal constant INDEX_EXTERNAL_TIP_METHOD = 64;
+  uint256 internal constant INDEX_EXTERNAL_TIP_METHOD = SIXTY_FOUR;
   constructor()
     Bank()
     UnderlyingStakeable()
@@ -104,7 +104,8 @@ abstract contract Tipper is Bank, UnderlyingStakeable, CurrencyList, EncodableSe
       uint256 cachedWithdrawableBalance = withdrawableBalance;
       uint256 limit = uint128(tip >> INDEX_EXTERNAL_TIP_LIMIT);
       if (uint72(tip) == ZERO) {
-        // existance of a tip number allows us to use ZERO as simplest pathway
+        // checking for existance of a tip number
+        // allows us to use ZERO as simplest pathway
         tip = limit;
       } else {
         uint256 method = uint8(tip >> INDEX_EXTERNAL_TIP_METHOD);

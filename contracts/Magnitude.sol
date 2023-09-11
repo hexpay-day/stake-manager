@@ -55,7 +55,7 @@ contract Magnitude is Utils {
       uint256 method = uint8(linear);
       if (method < X_OPTIONS) {
         if (method == ONE) {
-          amount = uint64(linear >> EIGHT); // 1
+          amount = (uint256(uint56(linear >> EIGHT)) << uint256(uint8(linear >> SIXTY_FOUR))); // 1
         } else {
           amount = v2; // 2
         }
@@ -65,7 +65,7 @@ contract Magnitude is Utils {
         if (delta == ZERO) return ZERO;
         // even with uint16 (max: 65535), we can still get down to 0.01% increments
         // with scaling we can go even further (though it is choppier)
-        // x has an embedded 1 offset from upper if statement
+        // x has an embedded 1 offset
         int256 x = line.x << (line.xFactor - ONE);
         uint256 y = line.y << line.yFactor;
         int256 b = line.b << line.bFactor;
@@ -112,8 +112,9 @@ contract Magnitude is Utils {
     if (linear.method >= X_OPTIONS) revert NotAllowed();
     if (linear.xFactor == ZERO) {
       return uint72(
-        linear.y << EIGHT
-        | uint8(linear.method)
+        uint256(linear.yFactor << SIXTY_FOUR)
+        | uint256(uint56(linear.y << EIGHT))
+        | uint256(uint8(linear.method))
       );
     }
     // xFactor must be > 0
@@ -148,7 +149,7 @@ contract Magnitude is Utils {
       // when xFactor is 0, nothing below makes a difference except y
       if (linear.xFactor == ZERO) {
         // y is being used because it is the only uint
-        linear.y = uint64(encodedLinear >> EIGHT);
+        linear.y = (uint256(uint56(encodedLinear >> EIGHT)) << uint8(encodedLinear >> SIXTY_FOUR));
         return linear;
       }
       // numerator

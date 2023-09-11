@@ -946,6 +946,46 @@ describe("StakeManager", function () {
       await expect(x.stakeManager.withdrawableBalanceOf(etherAddress, signer1.address))
         .eventually.to.equal(oneEther - (3n * tipAmount))
     })
+    it('can add large tips by adding a yFactor', async () => {
+      const x = await loadFixture(utils.deployFixture)
+      const nextStakeId = await utils.nextStakeId(x.hex)
+      const [signer1, signer2, signer3] = x.signers
+      const days = 10
+      const defaultEncodedSettings = await x.stakeManager.defaultEncodedSettings()
+      await x.stakeManager.stakeStartFromBalanceFor(signer1.address, x.stakedAmount, days, defaultEncodedSettings)
+      await utils.moveForwardDays(3, x)
+      const depositAmount = oneEther * 1_000n
+      const etherAddress = hre.ethers.constants.AddressZero
+      const tipAmount = depositAmount / 10n
+      const yFactor = 20n
+      const encodedLinear = await x.stakeManager.encodeLinear({
+        method: 1,
+        xFactor: 0,
+        x: 0,
+        yFactor,
+        y: tipAmount >> yFactor,
+        bFactor: 0,
+        b: 0,
+      })
+      await expect(x.stakeManager.depositAndAddTipToStake(true, etherAddress, nextStakeId, depositAmount, encodedLinear, {
+        value: depositAmount,
+      }))
+        .to.changeEtherBalances(
+          [signer1, x.stakeManager],
+          [depositAmount * -1n, depositAmount],
+        )
+      await utils.moveForwardDays(days + 1, x)
+      expect(tipAmount)
+        .to.be.greaterThan(2n**56n)
+      await expect(x.stakeManager.connect(signer2).stakeEndByConsentWithTipTo(nextStakeId, signer3.address))
+        .to.emit(x.stakeManager, 'Tip')
+        .withArgs(
+          nextStakeId,
+          etherAddress,
+          signer3.address,
+          tipAmount,
+        )
+    })
     it('if own stake is ended, cannot add to tip', async () => {
       const x = await loadFixture(utils.deployFixture)
       const nextStakeId = await utils.nextStakeId(x.hex)
@@ -954,7 +994,6 @@ describe("StakeManager", function () {
       await x.stakeManager.stakeStartFromBalanceFor(signer1.address, x.stakedAmount, days, 0)
       await x.stakeManager.stakeStartFromBalanceFor(signer2.address, x.stakedAmount, days * 2, 0)
       await utils.moveForwardDays(days + 1, x)
-      const oneEther = hre.ethers.utils.parseEther('1').toBigInt()
       const tipAmount = oneEther / 100n
       await expect(x.stakeManager.depositAndAddTipToStake(false, hre.ethers.constants.AddressZero, nextStakeId, tipAmount, 0, {
         value: tipAmount,
@@ -1000,7 +1039,6 @@ describe("StakeManager", function () {
       const [signer1, signer2] = x.signers
       await x.stakeManager.stakeStartFromBalanceFor(signer1.address, x.stakedAmount, days, 0)
       await utils.moveForwardDays(days + 1, x)
-      const oneEther = hre.ethers.utils.parseEther('1').toBigInt()
       const tipAmount = oneEther / 100n
       const tenthEther = oneEther / 10n
       await expect(x.stakeManager.depositToken(hre.ethers.constants.AddressZero, oneEther - 2n, {
