@@ -62,22 +62,25 @@ contract EarningsOracle is Utils {
   /**
    * multiply the difference of the payout by a constant and divide that result by the denominator
    * subtract half of the difference between the two days to find the possible lower bound
-   * @param startDay the day to start counting
-   * @param untilDay the day to stop counting
-   * @param multiplier a number to multiply by the difference of the payout
+   * @param lockedDay the day that the stake was locked
+   * @param stakedDays the number of days that the stake was locked
+   * @param shares a number to multiply by the difference of the payout
    */
   function payoutDeltaTruncated(
-    uint256 startDay,
-    uint256 untilDay,
-    uint256 multiplier
+    uint256 lockedDay,
+    uint256 stakedDays,
+    uint256 shares
   ) external view returns(uint256 payout) {
+    // we have to have a data point that can be used as our zero point
+    uint256 zeroDay = lockedDay - ONE;
+    uint256 untilDay = zeroDay + stakedDays;
     return ((
-      (totals[untilDay].payout - totals[startDay + ONE].payout) * multiplier * (untilDay - startDay)
+      (totals[untilDay].payout - totals[zeroDay].payout) * shares * (untilDay - zeroDay)
     ) / (
-      totals[untilDay].shares - totals[startDay + ONE].shares
+      totals[untilDay].shares - totals[zeroDay].shares
     )) - (
       // for a 1 day span, the amount is actually known
-      (untilDay - startDay) - ONE
+      untilDay - lockedDay
     );
   }
   /**
