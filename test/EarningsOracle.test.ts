@@ -237,7 +237,7 @@ describe('EarningsOracle.sol', () => {
       beforeEach(async () => {
         x = await loadFixture(launchFull)
       })
-      it.only('gives a minimum value that should have been claimable by the range for a given magnitude', async function () {
+      it('gives a minimum value that should have been claimable by the range for a given magnitude', async function () {
         const rangeFrom = (startFrom: bigint, startTo: bigint) => (new Array(Number(startTo - startFrom))).fill(startFrom).map((a, index) => a + BigInt(index) as bigint)
         const logValues = async (startFrom: bigint, startTo: bigint, days: bigint) => {
           const range = rangeFrom(startFrom, startTo + 1n)
@@ -353,9 +353,9 @@ describe('EarningsOracle.sol', () => {
         await expect(x.oracle.payoutDeltaTruncated(999, 1, deltaShares))
           .eventually.to.equal(deltaPayout)
       })
-      it('will give very close to the same value if the total shares are passed', async () => {
-        const lockedDay = 900n
-        const stakedDays = 10n
+      it('will give the same value if the total shares are passed', async () => {
+        const lockedDay = 600n
+        const stakedDays = 300n
         const range = _.range(Number(lockedDay), Number(lockedDay + stakedDays)) // 900-909
         expect(range.length).to.equal(stakedDays)
         const neededDays = [Number(lockedDay - 1n)].concat(range)
@@ -372,7 +372,7 @@ describe('EarningsOracle.sol', () => {
             [
               day.shares.toBigInt() - previous.shares.toBigInt(),
               day.payout.toBigInt() - previous.payout.toBigInt(),
-            ],
+            ]
           ])
         }, [] as [bigint, bigint][])
         expect(contractDayData).to.deep.equal(hexDayData)
@@ -381,10 +381,27 @@ describe('EarningsOracle.sol', () => {
           payout: _(contractDayData).map('1').reduce((t, a) => t + a, 0n),
         }
         const rangeDelta = BigInt(range.length)
-        await expect(x.oracle.payoutDeltaTruncated(lockedDay, stakedDays, added.shares))
-          .eventually.to.equal((added.payout * rangeDelta) - (rangeDelta - 1n))
         expect(hexDays.reduce((total, day) => total + day.dayPayoutTotal.toBigInt(), 0n))
           .to.equal(added.payout)
+        await expect(x.oracle.payoutDeltaTruncated(lockedDay, stakedDays, added.shares))
+          .eventually.to.equal((added.payout * rangeDelta) - (rangeDelta - 1n))
+        const avgShares = added.shares / rangeDelta
+        await expect(x.oracle.payoutDeltaTruncated(lockedDay, stakedDays, avgShares))
+          .eventually.to.equal(added.payout - rangeDelta) // rangeDelta, not rangeDelta - 1 because rounding down occurs at avg
+        const checkAgainstBrute = async (shares: bigint) => {
+          const bruteForcedPayout = hexDays.reduce((total, day) => total + (
+            (day.dayPayoutTotal.toBigInt() * shares) / day.dayStakeSharesTotal.toBigInt()
+          ), 0n)
+          const estimated = await x.oracle.payoutDeltaTruncated(lockedDay, stakedDays, shares)
+          const est = estimated.toBigInt()
+          const delta = est - bruteForcedPayout
+          const absDelta = delta < 0n ? -delta : delta
+          // estimated delta is within 0.1% error
+          // console.log(`${absDelta} < ${bruteForcedPayout} / 1000`)
+          expect(absDelta < (bruteForcedPayout / 1_000n), `${absDelta} < ${bruteForcedPayout} / 1000`).to.be.true
+        }
+        await checkAgainstBrute(avgShares / 100n)
+        await checkAgainstBrute(avgShares / 10_000n)
       })
     })
   })
