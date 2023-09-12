@@ -232,7 +232,7 @@ describe('EarningsOracle.sol', () => {
           .eventually.to.equal(previousSize.toBigInt() + max.toBigInt())
       })
     })
-    describe.only('payoutDeltaTruncated', () => {
+    describe('payoutDeltaTruncated', () => {
       let x!: Awaited<ReturnType<typeof launchFull>>
       beforeEach(async () => {
         x = await loadFixture(launchFull)
