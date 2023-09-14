@@ -32,7 +32,7 @@ contract StakeEnder is Magnitude, SingletonHedronManager {
     return _stakeEndByConsent({
       stakeId: stakeId,
       tipTo: tipTo,
-      _count: (_currentDay() << INDEX_RIGHT_TODAY) | _stakeCount({
+      count: (_currentDay() << INDEX_RIGHT_TODAY) | _stakeCount({
         staker: address(this)
       })
     });
@@ -59,9 +59,8 @@ contract StakeEnder is Magnitude, SingletonHedronManager {
    * if there were 2 variables, the contract ended up too large
    */
   function _stakeEndByConsent(
-    uint256 stakeId, address tipTo, uint256 _count
-  ) internal returns(uint256 delta, uint256 count) {
-    count = _count;
+    uint256 stakeId, address tipTo, uint256 count
+  ) internal returns(uint256 delta, uint256) {
     (uint256 idx, address staker) = _stakeIdToInfo({
       stakeId: stakeId
     });
@@ -121,7 +120,7 @@ contract StakeEnder is Magnitude, SingletonHedronManager {
           });
         }
       }
-      if (hedronAmount > 0) {
+      if (hedronAmount > ZERO) {
         _attributeFunds({
           setting: setting,
           index: INDEX_RIGHT_SHOULD_SEND_TOKENS_TO_STAKER,
@@ -139,32 +138,30 @@ contract StakeEnder is Magnitude, SingletonHedronManager {
     });
     // direct funds after end stake
     // only place the stake struct exists is in memory in this method
-    {
-      if (uint8(setting >> INDEX_RIGHT_TARGET_TIP) > ZERO) {
-        uint256 targetTip = _computeMagnitude({
-          limit: delta,
-          linear: uint72(setting >> INDEX_RIGHT_TARGET_TIP),
-          v2: delta,
-          v1: stake.stakedHearts
-        });
-        if (targetTip > ZERO) {
-          unchecked {
-            delta = delta - targetTip;
-          }
-          if (tipTo != address(0)) {
-            _addToTokenWithdrawable({
-              token: TARGET,
-              to: tipTo,
-              amount: targetTip
-            });
-          }
-          emit Tip({
-            stakeId: stakeId,
+    if (uint8(setting >> INDEX_RIGHT_TARGET_TIP) > ZERO) {
+      uint256 targetTip = _computeMagnitude({
+        limit: delta,
+        linear: uint72(setting >> INDEX_RIGHT_TARGET_TIP),
+        v2: delta,
+        v1: stake.stakedHearts
+      });
+      if (targetTip > ZERO) {
+        unchecked {
+          delta = delta - targetTip;
+        }
+        if (tipTo != address(0)) {
+          _addToTokenWithdrawable({
             token: TARGET,
             to: tipTo,
             amount: targetTip
           });
         }
+        emit Tip({
+          stakeId: stakeId,
+          token: TARGET,
+          to: tipTo,
+          amount: targetTip
+        });
       }
     }
     uint256 nextStakeId;
@@ -196,18 +193,6 @@ contract StakeEnder is Magnitude, SingletonHedronManager {
             index: uint128(count)
           });
           ++count;
-          // settings will be maintained for the new stake
-          // note, because 0 is used, one often needs to use x-1
-          // for the number of times you want to copy
-          // but because permissions are maintained, it may end up
-          // being easier to think about it as x-2
-          setting = (_decrementCopyIterations({
-            setting: setting
-          }) >> INDEX_RIGHT_CAN_MINT_HEDRON << INDEX_RIGHT_CAN_MINT_HEDRON) | ONE;
-          _logSettingsUpdate({
-            stakeId: nextStakeId,
-            settings: setting
-          });
         }
       }
     }
@@ -224,14 +209,32 @@ contract StakeEnder is Magnitude, SingletonHedronManager {
       setting: setting,
       index: INDEX_RIGHT_HAS_EXTERNAL_TIPS
     })) {
-      _executeTipList({
+      uint256 nextStakeTipsLength = _executeTipList({
         stakeId: stakeId,
         staker: staker,
         tipTo: tipTo,
-        nextStakeId: nextStakeId > ZERO && _isOneAtIndex({
+        nextStakeId: _isOneAtIndex({
           setting: setting,
           index: INDEX_RIGHT_COPY_EXTERNAL_TIPS
         }) ? nextStakeId : ZERO
+      });
+      if (nextStakeTipsLength > ZERO) {
+        // add setting to flag tips as existing in new settings
+        setting = setting | (ONE << INDEX_RIGHT_HAS_EXTERNAL_TIPS);
+      }
+    }
+    if (nextStakeId > ZERO) {
+      // settings will be maintained for the new stake
+      // note, because 0 is used, one often needs to use x-1
+      // for the number of times you want to copy
+      // but because permissions are maintained, it may end up
+      // being easier to think about it as x-2
+      setting = (_decrementCopyIterations({
+        setting: setting
+      }) >> INDEX_RIGHT_CAN_MINT_HEDRON << INDEX_RIGHT_CAN_MINT_HEDRON) | ONE;
+      _logSettingsUpdate({
+        stakeId: nextStakeId,
+        settings: setting
       });
     }
     return (delta, count);
@@ -266,7 +269,7 @@ contract StakeEnder is Magnitude, SingletonHedronManager {
       (, count) = _stakeEndByConsent({
         stakeId: stakeIds[i],
         tipTo: tipTo,
-        _count: count
+        count: count
       });
       unchecked {
         ++i;

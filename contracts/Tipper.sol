@@ -78,17 +78,37 @@ abstract contract Tipper is Bank, UnderlyingStakeable, CurrencyList, EncodableSe
   function _stakeIdTipSize(uint256 stakeId) internal view returns(uint256) {
     return stakeIdTips[stakeId].length;
   }
+  function computeTip(uint256 tip) external view returns(uint256 limit, uint256 consumed) {
+    return _computeTip(tip);
+  }
+  function _computeTip(uint256 tip) internal view returns (uint256 limit, uint256 consumed) {
+    limit = uint128(tip >> INDEX_EXTERNAL_TIP_LIMIT);
+    if (uint72(tip) == ZERO) {
+      // checking for existance of a tip number
+      // allows us to use ZERO as simplest pathway
+      consumed = limit;
+    } else {
+      consumed = _computeMagnitude({
+        limit: limit,
+        linear: uint72(tip),
+        v2: limit,
+        v1: block.basefee
+      });
+    }
+    return (limit, consumed);
+  }
   /**
    * execute a list of tips and leave them in the unattributed space
    * @param stakeId the stake id whose tips should be executed
    * @param staker the staker that owns the stake id
    * @param nextStakeId the next stake id if tips are to be copied / rolled over
    */
-  function _executeTipList(uint256 stakeId, address staker, uint256 nextStakeId, address tipTo) internal {
+  function _executeTipList(uint256 stakeId, address staker, uint256 nextStakeId, address tipTo) internal returns(uint256 nextStakeTipsLength) {
     uint256 i;
     uint256 len = stakeIdTips[stakeId].length;
     uint256 tip;
     uint256 cachedTip;
+    uint256 limit;
     // disallows future removal of tips
     tipStakeIdToStaker[stakeId] = address(0);
     do {
@@ -99,30 +119,12 @@ abstract contract Tipper is Bank, UnderlyingStakeable, CurrencyList, EncodableSe
       stakeIdTips[stakeId].pop();
       uint256 idx = tip << ONE >> INDEX_EXTERNAL_TIP_CURRENCY_ONLY;
       address token = indexToToken[idx];
-      bool reusable = (tip >> MAX_UINT8) == ONE;
       uint256 withdrawableBalance = withdrawableBalanceOf[token][staker];
       uint256 cachedWithdrawableBalance = withdrawableBalance;
-      uint256 limit = uint128(tip >> INDEX_EXTERNAL_TIP_LIMIT);
-      if (uint72(tip) == ZERO) {
-        // checking for existance of a tip number
-        // allows us to use ZERO as simplest pathway
-        tip = limit;
-      } else {
-        uint256 method = uint8(tip >> INDEX_EXTERNAL_TIP_METHOD);
-        if (method > ZERO) {
-          tip = _computeMagnitude({
-            limit: limit,
-            linear: uint72(tip),
-            v2: limit,
-            v1: block.basefee
-          });
-        }
-        // this is a refund
-        if (limit != tip) {
-          unchecked {
-            withdrawableBalance += (limit - tip);
-          }
-        }
+      (limit, tip) = _computeTip(tip);
+      // this is a refund
+      unchecked {
+        withdrawableBalance += (limit - tip);
       }
       if (tip > ZERO) {
         emit Tip({
@@ -135,24 +137,30 @@ abstract contract Tipper is Bank, UnderlyingStakeable, CurrencyList, EncodableSe
           if (tipTo == address(0)) {
             attributed[token] -= tip;
           } else {
-            withdrawableBalanceOf[token][tipTo] = withdrawableBalanceOf[token][tipTo] + tip;
-            // because attributed already has the tip, we should not double count it
+            if (tipTo == staker) {
+              withdrawableBalance += tip;
+            } else {
+              withdrawableBalanceOf[token][tipTo] = withdrawableBalanceOf[token][tipTo] + tip;
+              // because attributed already has the tip, we should not double count it
+            }
           }
         }
       }
-      if (reusable && nextStakeId > ZERO) {
+      if (_isOneAtIndex({
+        setting: cachedTip,
+        index: MAX_UINT8
+      }) && nextStakeId > ZERO) {
         limit = _clamp({
           amount: limit,
           max: withdrawableBalance
         });
         if (limit > ZERO) {
-          cachedTip = _encodeTipSettings(reusable, idx, limit, cachedTip);
+          cachedTip = _encodeTipSettings(true, idx, limit, cachedTip);
           unchecked {
             withdrawableBalance -= limit;
           }
           // we no longer need currency idx
           // so this line takes it over / reuses it
-          idx = stakeIdTips[nextStakeId].length;
           stakeIdTips[nextStakeId].push(cachedTip);
           if (tipStakeIdToStaker[nextStakeId] == address(0)) {
             tipStakeIdToStaker[nextStakeId] = staker;
@@ -160,9 +168,12 @@ abstract contract Tipper is Bank, UnderlyingStakeable, CurrencyList, EncodableSe
           emit AddTip({
             stakeId: nextStakeId,
             token: token,
-            index: idx,
+            index: nextStakeTipsLength,
             setting: cachedTip
           });
+          unchecked {
+            ++nextStakeTipsLength;
+          }
         }
       }
       if (withdrawableBalance != cachedWithdrawableBalance) {
@@ -206,7 +217,7 @@ abstract contract Tipper is Bank, UnderlyingStakeable, CurrencyList, EncodableSe
     uint256 amount,
     uint256 encodedLinear
   ) internal pure returns(uint256) {
-    if (uint8(encodedLinear >> INDEX_EXTERNAL_TIP_METHOD) == ZERO && encodedLinear != ZERO) {
+    if (uint8(encodedLinear) == ZERO && encodedLinear != ZERO) {
       revert NotAllowed();
     }
     return uint256(reusable ? ONE : ZERO) << MAX_UINT8

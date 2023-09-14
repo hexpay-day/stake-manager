@@ -234,6 +234,7 @@ describe('HSIStakeManager.sol', () => {
           value: tipAmount,
         },
       )
+      const tip = await x.existingStakeManager.stakeIdTips(targetStakeIdAsHsi.hsiAddress, 0)
       await expect(x.existingStakeManager.hsiStakeEndManyWithTipTo([targetStakeIdAsHsi.hsiAddress], signer2.address))
         .to.emit(x.hex, 'StakeEnd')
         .withArgs(anyUint, anyUint, targetStakeIdAsHsi.hsiAddress, targetStakeIdAsHsi.stakeId)
@@ -249,6 +250,8 @@ describe('HSIStakeManager.sol', () => {
           signer2.address,
           tipAmount
         )
+      await expect(x.existingStakeManager.computeTip(tip))
+        .eventually.to.deep.equal([tipAmount, tipAmount])
     })
     it('end deposited stakes in any order', async () => {
       const x = await loadFixture(utils.deployAndProcureHSIFixture)

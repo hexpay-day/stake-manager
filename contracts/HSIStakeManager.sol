@@ -158,7 +158,7 @@ contract HSIStakeManager is StakeEnder {
       (, count) = _stakeEndByConsent({
         stakeId: uint160(hsiAddresses[i]),
         tipTo: tipTo,
-        _count: count
+        count: count
       });
       unchecked {
         ++i;

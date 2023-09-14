@@ -61,7 +61,7 @@ describe("StakeManager", function () {
         false,
         0,
         x.oneEther,
-        BigInt.asUintN(64, encodedLinearFailure.toBigInt())
+        encodedLinearFailure.toBigInt() >> 8n << 8n,
       )).to.revertedWithCustomError(x.stakeManager, 'NotAllowed')
     })
   })
