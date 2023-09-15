@@ -93,10 +93,10 @@ than startDay argument otherwise call may fail
 | startDay | uint256 | the day to start counting from |
 | untilDay | uint256 | the day to end with (inclusive) |
 
-### payoutDeltaTrucated
+### payoutDeltaTruncated
 
 ```solidity
-function payoutDeltaTrucated(uint256 startDay, uint256 untilDay, uint256 multiplier) external view returns (uint256 payout)
+function payoutDeltaTruncated(uint256 lockedDay, uint256 stakedDays, uint256 shares) external view returns (uint256 payout)
 ```
 
 multiply the difference of the payout by a constant and divide that result by the denominator
@@ -106,9 +106,9 @@ subtract half of the difference between the two days to find the possible lower 
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| startDay | uint256 | the day to start counting |
-| untilDay | uint256 | the day to stop counting |
-| multiplier | uint256 | a number to multiply by the difference of the payout |
+| lockedDay | uint256 | the day that the stake was locked |
+| stakedDays | uint256 | the number of days that the stake was locked |
+| shares | uint256 | a number to multiply by the difference of the payout |
 
 ### _storeDay
 

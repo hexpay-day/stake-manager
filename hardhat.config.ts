@@ -59,7 +59,7 @@ const defaultHardhatNetwork = {
   ...defaultNetwork,
   allowBlocksWithSameTimestamp: true,
   accounts: {
-    accountsBalance: ethers.utils.parseEther((1_000_000_000).toString()).toString(),
+    accountsBalance: ethers.utils.parseEther((100_000_000_000).toString()).toString(),
     count: 5,
     mnemonic: conf.args.mnemonic,
   } as HardhatNetworkAccountsConfig,

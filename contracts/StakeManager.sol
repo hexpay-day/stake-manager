@@ -4,6 +4,6 @@ pragma solidity >=0.8.18;
 import { TransferableStakeManager } from "./TransferableStakeManager.sol";
 import { EarningsOracle } from "./EarningsOracle.sol";
 
-contract StakeManager is TransferableStakeManager, EarningsOracle {
+contract StakeManager is TransferableStakeManager {
   constructor() EarningsOracle(ONE, ZERO) {}
 }

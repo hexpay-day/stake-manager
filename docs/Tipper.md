@@ -112,10 +112,22 @@ check the count of a list of tips provided by the staker
 | ---- | ---- | ----------- |
 | stakeId | uint256 | the stake id to check the list of tips |
 
+### computeTip
+
+```solidity
+function computeTip(uint256 tip) external view returns (uint256 limit, uint256 consumed)
+```
+
+### _computeTip
+
+```solidity
+function _computeTip(uint256 tip) internal view returns (uint256 limit, uint256 consumed)
+```
+
 ### _executeTipList
 
 ```solidity
-function _executeTipList(uint256 stakeId, address staker, uint256 nextStakeId, address tipTo) internal
+function _executeTipList(uint256 stakeId, address staker, uint256 nextStakeId, address tipTo) internal returns (uint256 nextStakeTipsLength)
 ```
 
 execute a list of tips and leave them in the unattributed space

@@ -5,28 +5,38 @@ import { setTimeout } from "timers/promises";
 export const main = async (args: any, hre: HardhatRuntimeEnvironment) => {
   const [signer] = await hre.ethers.getSigners()
   const addr = await signer.getAddress()
-  console.log('deployer %o', addr)
+  const currentBalance = await signer.getBalance()
+  const balance = hre.ethers.utils.formatEther(currentBalance)
+  console.log('deployer %o with %o', addr, balance)
   const ExistingStakeManager = await hre.ethers.getContractFactory('ExistingStakeManager')
   const StakeManager = await hre.ethers.getContractFactory('StakeManager')
   const IsolatedStakeManagerFactory = await hre.ethers.getContractFactory('IsolatedStakeManagerFactory')
   let nonce = await waitUntilNonce(signer, 0)
+  console.log('deploying')
+  const oneGwei = 10n**9n
+  const overrides = {
+    type: 2,
+    maxFeePerGas: oneGwei,
+    maxPriorityFeePerGas: oneGwei / 10n,
+    gasLimit: 20_000_000,
+  }
   const existingStakeManager = await ExistingStakeManager.deploy({
     nonce,
-    type: 2,
+    ...overrides,
   })
   await existingStakeManager.deployed()
   console.log('@%o ExistingStakeManager() -> %o @ %o', nonce, existingStakeManager.address, existingStakeManager.deployTransaction.hash)
   nonce = await waitUntilNonce(signer, 1)
   const stakeManager = await StakeManager.deploy({
     nonce,
-    type: 2,
+    ...overrides,
   })
   await stakeManager.deployed()
   console.log('@%o StakeManager() -> %o @ %o', nonce, stakeManager.address, stakeManager.deployTransaction.hash)
   nonce = await waitUntilNonce(signer, 2)
   const isolatedStakeManagerFactory = await IsolatedStakeManagerFactory.deploy({
     nonce,
-    type: 2,
+    ...overrides,
   })
   await isolatedStakeManagerFactory.deployed()
   console.log('@%o IsolatedStakeManagerFactory() -> %o @ %o', nonce, isolatedStakeManagerFactory.address, isolatedStakeManagerFactory.deployTransaction.hash)

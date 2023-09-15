@@ -43,7 +43,7 @@ function _verifyStakeMatchesIndex(uint256 index, uint256 stakeId) internal view 
 ### _stakeEndByConsent
 
 ```solidity
-function _stakeEndByConsent(uint256 stakeId, address tipTo, uint256 _count) internal returns (uint256 delta, uint256 count)
+function _stakeEndByConsent(uint256 stakeId, address tipTo, uint256 count) internal returns (uint256 delta, uint256)
 ```
 
 end a stake with the consent of the underlying staker's settings
@@ -58,14 +58,14 @@ if there were 2 variables, the contract ended up too large_
 | ---- | ---- | ----------- |
 | stakeId | uint256 | the stake id to end |
 | tipTo | address |  |
-| _count | uint256 |  |
+| count | uint256 |  |
 
 #### Return Values
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | delta | uint256 | the amount of hex at the end of the stake |
-| count | uint256 |  |
+| [1] | uint256 |  |
 
 ### stakeEndByConsentForMany
 

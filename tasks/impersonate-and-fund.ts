@@ -26,7 +26,8 @@ export const main = async (args: Input, hre: HardhatRuntimeEnvironment) => {
   const amountInput = BigInt(args.amount)
   const decimalInput = hre.ethers.utils.parseUnits(args.decimal, decimals).toBigInt()
   const amount = amountInput || decimalInput
-  const provider = new hre.ethers.providers.JsonRpcProvider("http://localhost:8545")
+  // if you get a timeout error, try changing this to localhost or 127.0.0.1
+  const provider = new hre.ethers.providers.JsonRpcProvider("http://127.0.0.1:8545/")
   let account = provider.getSigner(0)
   if (impersonate !== 'no') {
     const impersonationTarget = impersonate || await hexWhale(hre)

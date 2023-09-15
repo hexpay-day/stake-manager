@@ -103,7 +103,9 @@ abstract contract Tipper is Bank, UnderlyingStakeable, CurrencyList, EncodableSe
    * @param staker the staker that owns the stake id
    * @param nextStakeId the next stake id if tips are to be copied / rolled over
    */
-  function _executeTipList(uint256 stakeId, address staker, uint256 nextStakeId, address tipTo) internal returns(uint256 nextStakeTipsLength) {
+  function _executeTipList(
+    uint256 stakeId, address staker, uint256 nextStakeId, address tipTo
+  ) internal returns(uint256 nextStakeTipsLength) {
     uint256 i;
     uint256 len = stakeIdTips[stakeId].length;
     uint256 tip;

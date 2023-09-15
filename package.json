@@ -19,8 +19,7 @@
     "artifacts"
   ],
   "engines": {
-    "node": ">=20.6",
-    "yarn": ">=1.22"
+    "node": ">=20.6"
   },
   "devDependencies": {
     "@ethersproject/abi": "^5.7.0",
