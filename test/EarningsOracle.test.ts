@@ -17,7 +17,7 @@ describe('EarningsOracle.sol', () => {
   const launch = (untilDay: ethers.BigNumberish) =>
     async function launchEarningsOracle() {
       const oracle = await deployOracle(1, untilDay)
-      const hex = await hre.ethers.getContractAt('contracts/interfaces/IHEX.sol:IHEX', utils.hexAddress) as IHEX
+      const hex = await hre.ethers.getContractAt('contracts/interfaces/IHEX.sol:IHEX', config.hexAddress) as IHEX
       return {
         hex,
         oracle,

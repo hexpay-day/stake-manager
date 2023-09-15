@@ -29,8 +29,7 @@ export const main = async (args: Input, hre: HardhatRuntimeEnvironment) => {
   const provider = new hre.ethers.providers.JsonRpcProvider("http://localhost:8545")
   let account = provider.getSigner(0)
   if (impersonate !== 'no') {
-    const network = await provider.getNetwork()
-    const impersonationTarget = impersonate || hexWhale(network.chainId)
+    const impersonationTarget = impersonate || await hexWhale(hre)
     await provider.send("hardhat_impersonateAccount", [impersonationTarget])
     account = provider.getSigner(impersonationTarget)
   }

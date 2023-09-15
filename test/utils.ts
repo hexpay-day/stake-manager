@@ -7,7 +7,7 @@ import _ from "lodash"
 import * as ethers from 'ethers'
 import * as Chai from "chai"
 import * as config from '../src/config'
-import { IERC20, IERC20Metadata } from "../artifacts/types"
+import { Hedron, IERC20, IERC20Metadata } from "../artifacts/types"
 
 Chai.Assertion.addMethod('printGasUsage', function (this: any) {
   let subject = this._obj
@@ -36,10 +36,6 @@ Chai.Assertion.addMethod('printGasUsage', function (this: any) {
   return this
 })
 
-export const hexAddress = hre.ethers.utils.getAddress('0x2b591e99afe9f32eaa6214f7b7629768c40eeb39')
-
-export const hedronAddress = hre.ethers.utils.getAddress('0x3819f64f282bf135d62168C1e513280dAF905e06')
-
 export const deployFixture = async () => {
   const Utils = await hre.ethers.getContractFactory('Utils')
   const utils = await Utils.deploy()
@@ -49,8 +45,8 @@ export const deployFixture = async () => {
   const _signers = await hre.ethers.getSigners()
   const signers = _signers.slice(0, 20)
   const [signer] = signers
-  const hex = await hre.ethers.getContractAt('contracts/interfaces/IHEX.sol:IHEX', hexAddress) as IHEX
-  const hedron = await hre.ethers.getContractAt('contracts/interfaces/IHedron.sol:IHedron', hedronAddress)
+  const hex = await hre.ethers.getContractAt('contracts/interfaces/IHEX.sol:IHEX', config.hexAddress) as IHEX
+  const hedron = await hre.ethers.getContractAt('contracts/interfaces/IHedron.sol:IHedron', config.hedronAddress) as Hedron
   const hsim = await hre.ethers.getContractAt('IHEXStakeInstanceManager', await hedron.hsim())
   const TransferReceiver = await hre.ethers.getContractFactory('TransferReceiver')
   const transferReceiver = await TransferReceiver.deploy()
@@ -59,7 +55,7 @@ export const deployFixture = async () => {
   const maximusStakeManager = existingStakeManager
   const decimals = await hex.decimals()
   const oneMillion = hre.ethers.utils.parseUnits('1000000', decimals).toBigInt()
-  const hexWhale = await config.hexWhale(hex)
+  const hexWhale = await config.hexWhale(hre)
   await hre.vizor.impersonate(hexWhale, async (swa) => {
     const h = hex.connect(swa)
     await Promise.all(signers.map(async (signer) => {

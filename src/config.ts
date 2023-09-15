@@ -3,6 +3,7 @@ import { ethers } from 'ethers'
 dotenv.config()
 import * as yargs from 'yargs'
 import { IHEX } from '../artifacts/types'
+import { HardhatRuntimeEnvironment } from 'hardhat/types'
 
 Error.stackTraceLimit = Infinity
 
@@ -60,7 +61,8 @@ export const args = yargs.options({
   },
 }).env().parseSync()
 
-export const hexWhale = async (hex: IHEX) => {
+export const hexWhale = async (hre: HardhatRuntimeEnvironment) => {
+  const hex = await hre.ethers.getContractAt('contracts/interfaces/IHEX.sol:IHEX', hexAddress) as IHEX
   const pulsechainMainnetHexWhale = ethers.utils.getAddress('0x5280aa3cF5D6246B8a17dFA3D75Db26617B73937')
   const ethereumMainnetHexWhale = ethers.utils.getAddress('0x075e72a5edf65f0a5f44699c7654c1a76941ddc8')
   const whaleBalanceOf = await hex.balanceOf(pulsechainMainnetHexWhale)
@@ -68,3 +70,7 @@ export const hexWhale = async (hex: IHEX) => {
     ? pulsechainMainnetHexWhale
     : ethereumMainnetHexWhale
 }
+
+export const hexAddress = ethers.utils.getAddress('0x2b591e99afe9f32eaa6214f7b7629768c40eeb39')
+
+export const hedronAddress = ethers.utils.getAddress('0x3819f64f282bf135d62168C1e513280dAF905e06')

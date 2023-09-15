@@ -4,13 +4,14 @@ import * as hre from "hardhat"
 import * as utils from './utils'
 import _ from 'lodash'
 import { anyUint, anyValue } from "@nomicfoundation/hardhat-chai-matchers/withArgs"
+import * as config from '../src/config'
 
 describe('IsolatedStakeManager.sol', () => {
   describe('state', () => {
     it('knows what to target', async () => {
       const x = await loadFixture(utils.deployFixture)
       await expect(x.isolatedStakeManager.TARGET())
-        .eventually.to.equal(utils.hexAddress)
+        .eventually.to.equal(config.hexAddress)
     })
   })
   describe('ownership', () => {
