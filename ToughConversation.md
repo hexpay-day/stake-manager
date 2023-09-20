@@ -56,9 +56,9 @@ In contract terms, success would be the majority of stakes started after these c
 Economically, success would be, at a minimum, reducing the cost of ending a stake, or even more broadly, managing a stake / principle by a fraction, at least 50%, however, I think these savings are achievable, especially for short-medium to medium-long stakes. This, value, expressed in terms of dollars could be highly valuable by itself. However, what is better is that this value compounds over time and allows hexicans to have more dollars to spend on other (non gas) things.
 
 Here are some graphs and data relevant to the issue.
-* https://dune.com/queries/2633637/4373958
-* https://dune.com/queries/2633639
-* https://dune.com/hexpay_day/end-stake-costs
+* [https://dune.com/queries/2633637/4373958](https://dune.com/queries/2633637/4373958)
+* [https://dune.com/queries/2633639](https://dune.com/queries/2633639)
+* [https://dune.com/hexpay_day/end-stake-costs](https://dune.com/hexpay_day/end-stake-costs)
 
 Note: it appears that someone did do shared end stakes at some point (5 total transactions over the course of 3 years). It seems that they stopped for some reason. Perhaps they did not understand what they were doing or shut down for other reasons and did not realize the value of what they had.
 
