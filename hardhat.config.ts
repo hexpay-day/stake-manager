@@ -2,6 +2,8 @@ import { task, type HardhatUserConfig, types } from "hardhat/config";
 import type {
   Artifact,
   HardhatNetworkAccountsConfig,
+  HardhatNetworkChainConfig,
+  HardhatNetworkConfig,
   HardhatNetworkUserConfig,
   NetworkUserConfig,
   SolcUserConfig,
@@ -55,7 +57,7 @@ const defaultNetwork = {
   timeout: 100_000_000,
 }
 
-const defaultHardhatNetwork = {
+const defaultHardhatNetwork: HardhatNetworkUserConfig = {
   ...defaultNetwork,
   allowBlocksWithSameTimestamp: true,
   accounts: {
@@ -63,6 +65,10 @@ const defaultHardhatNetwork = {
     count: 5,
     mnemonic: conf.args.mnemonic,
   } as HardhatNetworkAccountsConfig,
+  mining: {
+    auto: true,
+    interval: 10_000,
+  },
 }
 
 const blockNumber = conf.args.blockNumber || 18057421

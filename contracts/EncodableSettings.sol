@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity >=0.8.18;
 
-import "./StakeInfo.sol";
+import { StakeInfo } from "./StakeInfo.sol";
 
 abstract contract EncodableSettings is StakeInfo {
   // the index of the first bit of targeted information

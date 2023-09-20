@@ -64,14 +64,14 @@ Source Units in Scope: **`23`** (**100%**)
 | 📝 | ./contracts/SingletonHedronManager.sol | 1 | **** | 82 | 82 | 74 | 6 | 30 | **<abbr title='Unchecked Blocks'>Σ</abbr>** |
 | 📝 | ./contracts/StakeEnder.sol | 1 | **** | 287 | 277 | 243 | 32 | 101 | **<abbr title='Payable Functions'>💰</abbr><abbr title='Unchecked Blocks'>Σ</abbr>** |
 | 📝 | ./contracts/StakeInfo.sol | 1 | **** | 137 | 137 | 51 | 84 | 35 | **** |
-| 📝 | ./contracts/StakeManager.sol | 1 | **** | 7 | 7 | 4 | 1 | 3 | **** |
+| 📝 | ./contracts/StakeManager.sol | 1 | **** | 9 | 9 | 6 | 1 | 6 | **** |
 | 📝 | ./contracts/StakeStarter.sol | 1 | **** | 89 | 74 | 51 | 21 | 34 | **<abbr title='Payable Functions'>💰</abbr>** |
 | 🎨 | ./contracts/Tipper.sol | 1 | **** | 551 | 513 | 360 | 152 | 151 | **<abbr title='Payable Functions'>💰</abbr><abbr title='Unchecked Blocks'>Σ</abbr>** |
 | 📝 | ./contracts/TransferableStakeManager.sol | 1 | **** | 107 | 107 | 73 | 33 | 37 | **<abbr title='Payable Functions'>💰</abbr>** |
 | 📝 | ./contracts/UnderlyingStakeManager.sol | 1 | **** | 196 | 189 | 115 | 72 | 56 | **<abbr title='Unchecked Blocks'>Σ</abbr>** |
 | 🎨 | ./contracts/UnderlyingStakeable.sol | 1 | **** | 139 | 122 | 55 | 75 | 38 | **<abbr title='Unchecked Blocks'>Σ</abbr>** |
 | 📝 | ./contracts/Utils.sol | 1 | **** | 57 | 57 | 43 | 13 | 88 | **<abbr title='Uses Assembly'>🖥</abbr>** |
-| 📝🎨 | **Totals** | **23** | **** | **3945**  | **3779** | **2447** | **1309** | **1318** | **<abbr title='Uses Assembly'>🖥</abbr><abbr title='Payable Functions'>💰</abbr><abbr title='DelegateCall'>👥</abbr><abbr title='Uses Hash-Functions'>🧮</abbr><abbr title='Unchecked Blocks'>Σ</abbr>** |
+| 📝🎨 | **Totals** | **23** | **** | **3947**  | **3781** | **2449** | **1309** | **1321** | **<abbr title='Uses Assembly'>🖥</abbr><abbr title='Payable Functions'>💰</abbr><abbr title='DelegateCall'>👥</abbr><abbr title='Uses Hash-Functions'>🧮</abbr><abbr title='Unchecked Blocks'>Σ</abbr>** |
 
 <sub>
 Legend: <a onclick="toggleVisibility('table-legend', this)">[➕]</a>
@@ -172,7 +172,7 @@ This section lists functions that are explicitly declared public or payable. Ple
 
 | External   | Internal | Private | Pure | View |
 | ---------- | -------- | ------- | ---- | ---- |
-| 105 | 186  | 0 | 44 | 54 |
+| 105 | 187  | 0 | 44 | 54 |
 
 #### <span id=t-statevariables>StateVariables</span>
 
@@ -264,10 +264,10 @@ This section lists functions that are explicitly declared public or payable. Ple
 |-------------|--------------|
 | ./contracts/AuthorizationManager.sol | a8dc212dede252429e74eee0121882c5a852ea7a |
 | ./contracts/Bank.sol | a2327bdb4f5563dbf66842ff5bd418b4c587a76b |
-| ./contracts/CurrencyList.sol | 44b6f73f91923c171ce5780e7614ca0762b4cadc |
+| ./contracts/CurrencyList.sol | 506bf6e3200d7f6ab64a85270269a082b02184e0 |
 | ./contracts/EarningsOracle.sol | 9437d0eba081c2cb27cd2aac867a473dc83e35d9 |
-| ./contracts/EncodableSettings.sol | bbee7c356f433588676b294421d12df2d37c5390 |
-| ./contracts/ExistingStakeManager.sol | 22598533afb3b31b1f25f19b6a004ecd7714c143 |
+| ./contracts/EncodableSettings.sol | 274158a8dc5b12e148647cc82b48872db454401d |
+| ./contracts/ExistingStakeManager.sol | 42c5dded1dfc76533a3cfa56bb750081bb40ba5f |
 | ./contracts/GoodAccounting.sol | ab772f60ba2a25e012dc3b24b58d63f339869b90 |
 | ./contracts/HSIStakeManager.sol | 6b9f46dcc66e831a70f72055a4b6598b393ec8d3 |
 | ./contracts/IsolatedStakeManager.sol | 66f215ebe1bbcddb637852d2fed7aec3b546f50e |
@@ -275,14 +275,14 @@ This section lists functions that are explicitly declared public or payable. Ple
 | ./contracts/Magnitude.sol | 5b133f2d774748512b0ea723a8b1700f810ff879 |
 | ./contracts/MaximusStakeManager.sol | 5944edc34f34df7531cb910368bd84b82ce25af5 |
 | ./contracts/MulticallExtension.sol | 9f4e38e9228e1583e320561d55d9b0407d2e841c |
-| ./contracts/SingletonHedronManager.sol | 751cacd3c42b199c039c40d5430193e9ed24a624 |
+| ./contracts/SingletonHedronManager.sol | eba8bb20504f64dcb543f72904f7638af5ea3054 |
 | ./contracts/StakeEnder.sol | 953e751495b5a0ebf7c8e659a83f71f4c4d4e9d2 |
 | ./contracts/StakeInfo.sol | eaa02c41fa02bbcaa3514a25d251a193396ba57d |
-| ./contracts/StakeManager.sol | 8c91f56602edbdd245c0bb4da4752750fe99dcf4 |
-| ./contracts/StakeStarter.sol | 7d4a2a122fbfd0a4c9bf08a797df4134a03d269f |
+| ./contracts/StakeManager.sol | 04774eaffc88e40ee747f1c8852f1eb81d0e2f07 |
+| ./contracts/StakeStarter.sol | 24d71fa8a1c4b78ecc42c0ddbcf5b885595e528b |
 | ./contracts/Tipper.sol | 757c96a47e3c9006e88f8deb933e0ffee01fab2e |
 | ./contracts/TransferableStakeManager.sol | c44a9e8eaee363a28c9f0a710749178d1fbadb30 |
-| ./contracts/UnderlyingStakeManager.sol | 262653ad448cc08c38e660db0432dda9e2abd9fb |
+| ./contracts/UnderlyingStakeManager.sol | c044aa9bcb9a65a0805d3c61b910caa736325057 |
 | ./contracts/UnderlyingStakeable.sol | 62df4b2dfc1a54f7e8cdff100d41e00b505d5225 |
 | ./contracts/Utils.sol | 7cb69b1d8735824c4f39248385b22f7e937e838f |
 
@@ -480,7 +480,8 @@ This section lists functions that are explicitly declared public or payable. Ple
 | └ | encodeInfo | External ❗️ |   |NO❗️ |
 | └ | _encodeInfo | Internal 🔒 |   | |
 ||||||
-| **StakeManager** | Implementation | TransferableStakeManager |||
+| **StakeManager** | Implementation | TransferableStakeManager, EarningsOracle |||
+| └ | <Constructor> | Public ❗️ | 🛑  | EarningsOracle |
 ||||||
 | **StakeStarter** | Implementation | StakeEnder |||
 | └ | stakeStartFromBalanceFor | External ❗️ |  💵 |NO❗️ |

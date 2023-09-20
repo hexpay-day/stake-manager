@@ -113,7 +113,7 @@ contract UnderlyingStakeManager is GoodAccounting {
       stakeId: stakeId,
       stakeCountAfter: _stakeCount({
         staker: address(this)
-      }) - 1
+      }) - ONE
     });
     _withdrawTokenTo({
       token: TARGET,
@@ -152,7 +152,7 @@ contract UnderlyingStakeManager is GoodAccounting {
     UnderlyingStakeable.StakeStore memory stake = _getStake(address(this), stakeIndex);
     uint256 stakeCountAfter = _stakeCount({
       staker: address(this)
-    }) - 1;
+    }) - ONE;
     // at this point, we can guarantee that we own the stake
     amount = _stakeEnd({
       stakeIndex: stakeIndex,

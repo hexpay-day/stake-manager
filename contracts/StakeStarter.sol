@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity >=0.8.18;
 
-import "./StakeEnder.sol";
+import { StakeEnder } from "./StakeEnder.sol";
 
 contract StakeStarter is StakeEnder {
   /**
