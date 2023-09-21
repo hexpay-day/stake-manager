@@ -2,7 +2,7 @@
   "license": "UNLICENSED",
   "name": "@hexpayday/stake-manager",
   "scripts": {
-    "build": "yarn run lint && yarn run metrics && yarn run cloc && yarn run docgen",
+    "build": "yarn run lint && yarn run metrics && yarn run cloc && yarn run docs",
     "metrics": "solidity-code-metrics ./contracts/*.sol > metrics.md",
     "docs": "rm -rf docs && hardhat docgen && cp ./*.md docs && rm docs/cloc.md docs/metrics.md",
     "cloc": "cloc --by-file --out=./cloc.md ./contracts/*.sol",
