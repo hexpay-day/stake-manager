@@ -1,10 +1,13 @@
 site_name: Stake Manager
 site_url: https://hexpay-day.github.io/stake-manager/
 extra_css:
-  - docgen-templates/extra.css
+  - extra.css
 extra_javascript:
   - https://cdn.jsdelivr.net/npm/highlightjs-solidity@2.0.6/dist/solidity.min.js
+plugins:
+  - search
 theme:
+  logo: logo.jpeg
   prev_next_buttons_location: False
   name: readthedocs
   highlightjs: true

@@ -17,3 +17,4 @@ contracts/hardhat-dependency-compiler
 .vscode
 cloc.md
 site
+docs
