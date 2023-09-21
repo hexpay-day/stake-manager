@@ -150,7 +150,7 @@ abstract contract Tipper is Bank, UnderlyingStakeable, CurrencyList, EncodableSe
       }
       if (_isOneAtIndex({
         setting: cachedTip,
-        index: MAX_UINT8
+        index: MAX_UINT_8
       }) && nextStakeId > ZERO) {
         limit = _clamp({
           amount: limit,
@@ -222,7 +222,7 @@ abstract contract Tipper is Bank, UnderlyingStakeable, CurrencyList, EncodableSe
     if (uint8(encodedLinear) == ZERO && encodedLinear != ZERO) {
       revert NotAllowed();
     }
-    return uint256(reusable ? ONE : ZERO) << MAX_UINT8
+    return uint256(reusable ? ONE : ZERO) << MAX_UINT_8
       | (uint256(currencyIndex) << INDEX_EXTERNAL_TIP_CURRENCY)
       | (uint256(uint128(amount)) << INDEX_EXTERNAL_TIP_LIMIT)
       | uint256(uint72(encodedLinear));
@@ -389,7 +389,7 @@ abstract contract Tipper is Bank, UnderlyingStakeable, CurrencyList, EncodableSe
         ++i;
       }
     } while (i < len);
-    if (tipsLast == MAX_256) {
+    if (tipsLast == MAX_UINT_256) {
       // remove from settings
       uint256 setting = stakeIdToSettings[stakeId];
       _logSettingsUpdate({

@@ -359,7 +359,7 @@ abstract contract EncodableSettings is StakeInfo {
        * so by default, restarting their stakes are the most efficient means of managing tokens
        */
       uint8(TWO), uint16(ZERO),
-      uint8(MAX_UINT8), // restart forever
+      uint8(MAX_UINT_8), // restart forever
       /*
        * by index: 00000001
        * 7: signal to ender that tips exist to be collected (allows contract to avoid an SLOAD) (0)
@@ -412,7 +412,7 @@ abstract contract EncodableSettings is StakeInfo {
     if (copyIterations == ZERO) {
       return uint8(setting);
     }
-    if (copyIterations == MAX_UINT8) {
+    if (copyIterations == MAX_UINT_8) {
       return setting;
     }
     unchecked {
