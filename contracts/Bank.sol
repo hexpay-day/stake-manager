@@ -199,6 +199,7 @@ contract Bank is Utils {
 
   /**
    * adds a balance to the provided staker of the magnitude given in amount
+   * @param token the token being accounted for
    * @param to the account to add a withdrawable balance to
    * @param amount the amount to add to the staker's withdrawable balance as well as the attributed tokens
    */
