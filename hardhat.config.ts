@@ -25,6 +25,7 @@ import * as conf from './src/config'
 import { main as deploy } from './tasks/deploy'
 import { main as impersonateAndFund } from './tasks/impersonate-and-fund'
 import { main as increase } from './tasks/time-warp'
+import _ from "lodash";
 
 task('impersonate-and-fund', 'impersonate an address and fund another address with a provided amount of hex')
   // address is valid on pulsechain v4 + ethereum
@@ -273,9 +274,10 @@ const config: HardhatUserConfig = {
     timeout: 100_000_000,
   },
   docgen: {
-    exclude: ['reference'],
+    exclude: ['reference', 'test'],
     pages: 'files',
-    // output:
+    templates: 'docgen-templates',
+    outputDir: 'docs/api',
   },
 };
 
