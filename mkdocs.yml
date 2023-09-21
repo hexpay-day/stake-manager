@@ -1,6 +1,17 @@
 site_name: Stake Manager
-theme: readthedocs
-# nav:
-#   - Api
-#   - Features.md
-#   - ToughConversation.md
+site_url: https://hexpay-day.github.io/stake-manager/
+extra_css:
+  - docgen-templates/extra.css
+extra_javascript:
+  - https://cdn.jsdelivr.net/npm/highlightjs-solidity@2.0.6/dist/solidity.min.js
+theme:
+  prev_next_buttons_location: False
+  name: readthedocs
+  highlightjs: true
+  collapse_navigation: false
+  titles_only: true
+  # hljs_style: github
+  hljs_languages:
+    # - solidity
+    - bash
+    - javascript
