@@ -49,29 +49,29 @@ Source Units in Scope: **`23`** (**100%**)
 | Type | File   | Logic Contracts | Interfaces | Lines | nLines | nSLOC | Comment Lines | Complex. Score | Capabilities |
 | ---- | ------ | --------------- | ---------- | ----- | ------ | ----- | ------------- | -------------- | ------------ | 
 | 🎨 | ./contracts/AuthorizationManager.sol | 1 | **** | 114 | 114 | 47 | 65 | 23 | **** |
-| 📝 | ./contracts/Bank.sol | 1 | **** | 274 | 264 | 171 | 89 | 87 | **<abbr title='Payable Functions'>💰</abbr><abbr title='Unchecked Blocks'>Σ</abbr>** |
+| 📝 | ./contracts/Bank.sol | 1 | **** | 287 | 277 | 171 | 102 | 87 | **<abbr title='Payable Functions'>💰</abbr><abbr title='Unchecked Blocks'>Σ</abbr>** |
 | 📝 | ./contracts/CurrencyList.sol | 1 | **** | 51 | 51 | 34 | 12 | 17 | **** |
 | 📝 | ./contracts/EarningsOracle.sol | 1 | **** | 229 | 225 | 146 | 77 | 64 | **<abbr title='Unchecked Blocks'>Σ</abbr>** |
 | 🎨 | ./contracts/EncodableSettings.sol | 1 | **** | 434 | 420 | 240 | 179 | 119 | **<abbr title='Payable Functions'>💰</abbr><abbr title='Unchecked Blocks'>Σ</abbr>** |
 | 📝 | ./contracts/ExistingStakeManager.sol | 1 | **** | 7 | 7 | 3 | 2 | 3 | **** |
-| 🎨 | ./contracts/GoodAccounting.sol | 1 | **** | 138 | 130 | 92 | 36 | 40 | **** |
+| 🎨 | ./contracts/GoodAccounting.sol | 1 | **** | 137 | 129 | 91 | 36 | 38 | **** |
 | 📝 | ./contracts/HSIStakeManager.sol | 1 | **** | 257 | 246 | 166 | 78 | 98 | **<abbr title='Payable Functions'>💰</abbr><abbr title='Unchecked Blocks'>Σ</abbr>** |
 | 📝 | ./contracts/IsolatedStakeManager.sol | 1 | **** | 254 | 254 | 155 | 97 | 96 | **<abbr title='Payable Functions'>💰</abbr>** |
 | 📝 | ./contracts/IsolatedStakeManagerFactory.sol | 1 | **** | 27 | 27 | 18 | 7 | 21 | **<abbr title='Uses Hash-Functions'>🧮</abbr>** |
 | 📝 | ./contracts/Magnitude.sol | 1 | **** | 213 | 197 | 139 | 65 | 85 | **<abbr title='Unchecked Blocks'>Σ</abbr>** |
 | 📝 | ./contracts/MaximusStakeManager.sol | 1 | **** | 194 | 189 | 108 | 84 | 67 | **<abbr title='Unchecked Blocks'>Σ</abbr>** |
-| 📝 | ./contracts/MulticallExtension.sol | 1 | **** | 101 | 90 | 59 | 29 | 25 | **<abbr title='DelegateCall'>👥</abbr><abbr title='Unchecked Blocks'>Σ</abbr>** |
-| 📝 | ./contracts/SingletonHedronManager.sol | 1 | **** | 82 | 82 | 74 | 6 | 30 | **<abbr title='Unchecked Blocks'>Σ</abbr>** |
-| 📝 | ./contracts/StakeEnder.sol | 1 | **** | 287 | 277 | 243 | 32 | 101 | **<abbr title='Payable Functions'>💰</abbr><abbr title='Unchecked Blocks'>Σ</abbr>** |
+| 📝 | ./contracts/MulticallExtension.sol | 1 | **** | 99 | 88 | 59 | 27 | 25 | **<abbr title='DelegateCall'>👥</abbr><abbr title='Unchecked Blocks'>Σ</abbr>** |
+| 📝 | ./contracts/SingletonHedronManager.sol | 1 | **** | 80 | 80 | 72 | 6 | 30 | **<abbr title='Unchecked Blocks'>Σ</abbr>** |
+| 📝 | ./contracts/StakeEnder.sol | 1 | **** | 285 | 275 | 241 | 32 | 101 | **<abbr title='Payable Functions'>💰</abbr><abbr title='Unchecked Blocks'>Σ</abbr>** |
 | 📝 | ./contracts/StakeInfo.sol | 1 | **** | 137 | 137 | 51 | 84 | 35 | **** |
 | 📝 | ./contracts/StakeManager.sol | 1 | **** | 9 | 9 | 6 | 1 | 6 | **** |
 | 📝 | ./contracts/StakeStarter.sol | 1 | **** | 89 | 74 | 51 | 21 | 34 | **<abbr title='Payable Functions'>💰</abbr>** |
-| 🎨 | ./contracts/Tipper.sol | 1 | **** | 551 | 513 | 360 | 152 | 151 | **<abbr title='Payable Functions'>💰</abbr><abbr title='Unchecked Blocks'>Σ</abbr>** |
+| 🎨 | ./contracts/Tipper.sol | 1 | **** | 550 | 512 | 359 | 152 | 151 | **<abbr title='Payable Functions'>💰</abbr><abbr title='Unchecked Blocks'>Σ</abbr>** |
 | 📝 | ./contracts/TransferableStakeManager.sol | 1 | **** | 107 | 107 | 73 | 33 | 37 | **<abbr title='Payable Functions'>💰</abbr>** |
 | 📝 | ./contracts/UnderlyingStakeManager.sol | 1 | **** | 196 | 189 | 115 | 72 | 56 | **<abbr title='Unchecked Blocks'>Σ</abbr>** |
 | 🎨 | ./contracts/UnderlyingStakeable.sol | 1 | **** | 139 | 122 | 55 | 75 | 38 | **<abbr title='Unchecked Blocks'>Σ</abbr>** |
-| 📝 | ./contracts/Utils.sol | 1 | **** | 57 | 57 | 43 | 13 | 88 | **<abbr title='Uses Assembly'>🖥</abbr>** |
-| 📝🎨 | **Totals** | **23** | **** | **3947**  | **3781** | **2449** | **1309** | **1321** | **<abbr title='Uses Assembly'>🖥</abbr><abbr title='Payable Functions'>💰</abbr><abbr title='DelegateCall'>👥</abbr><abbr title='Uses Hash-Functions'>🧮</abbr><abbr title='Unchecked Blocks'>Σ</abbr>** |
+| 📝 | ./contracts/Utils.sol | 1 | **** | 95 | 95 | 43 | 51 | 88 | **<abbr title='Uses Assembly'>🖥</abbr>** |
+| 📝🎨 | **Totals** | **23** | **** | **3990**  | **3824** | **2443** | **1358** | **1319** | **<abbr title='Uses Assembly'>🖥</abbr><abbr title='Payable Functions'>💰</abbr><abbr title='DelegateCall'>👥</abbr><abbr title='Uses Hash-Functions'>🧮</abbr><abbr title='Unchecked Blocks'>Σ</abbr>** |
 
 <sub>
 Legend: <a onclick="toggleVisibility('table-legend', this)">[➕]</a>
@@ -153,7 +153,7 @@ The analysis finished with **`0`** errors and **`0`** duplicate files.
 
 #### <span id=t-inline-documentation>Inline Documentation</span>
 
-- **Comment-to-Source Ratio:** On average there are`1.99` code lines per comment (lower=better).
+- **Comment-to-Source Ratio:** On average there are`1.91` code lines per comment (lower=better).
 - **ToDo's:** `0` 
 
 #### <span id=t-components>Components</span>
@@ -263,28 +263,28 @@ This section lists functions that are explicitly declared public or payable. Ple
 |  File Name  |  SHA-1 Hash  |
 |-------------|--------------|
 | ./contracts/AuthorizationManager.sol | a8dc212dede252429e74eee0121882c5a852ea7a |
-| ./contracts/Bank.sol | a2327bdb4f5563dbf66842ff5bd418b4c587a76b |
+| ./contracts/Bank.sol | 8555d61fdeb18c3b1dbbb7443d36ba16d7d930ca |
 | ./contracts/CurrencyList.sol | 506bf6e3200d7f6ab64a85270269a082b02184e0 |
 | ./contracts/EarningsOracle.sol | 9437d0eba081c2cb27cd2aac867a473dc83e35d9 |
-| ./contracts/EncodableSettings.sol | 274158a8dc5b12e148647cc82b48872db454401d |
+| ./contracts/EncodableSettings.sol | 8a75a6404b241191e96d79d6901195cbe01eb810 |
 | ./contracts/ExistingStakeManager.sol | 42c5dded1dfc76533a3cfa56bb750081bb40ba5f |
-| ./contracts/GoodAccounting.sol | ab772f60ba2a25e012dc3b24b58d63f339869b90 |
+| ./contracts/GoodAccounting.sol | 220874bc07613d94429124a0439cfd9ee7fb4682 |
 | ./contracts/HSIStakeManager.sol | 6b9f46dcc66e831a70f72055a4b6598b393ec8d3 |
 | ./contracts/IsolatedStakeManager.sol | 66f215ebe1bbcddb637852d2fed7aec3b546f50e |
 | ./contracts/IsolatedStakeManagerFactory.sol | e273ea4a137a3d45059858b70f91780443a02301 |
 | ./contracts/Magnitude.sol | 5b133f2d774748512b0ea723a8b1700f810ff879 |
 | ./contracts/MaximusStakeManager.sol | 5944edc34f34df7531cb910368bd84b82ce25af5 |
-| ./contracts/MulticallExtension.sol | 9f4e38e9228e1583e320561d55d9b0407d2e841c |
-| ./contracts/SingletonHedronManager.sol | eba8bb20504f64dcb543f72904f7638af5ea3054 |
-| ./contracts/StakeEnder.sol | 953e751495b5a0ebf7c8e659a83f71f4c4d4e9d2 |
+| ./contracts/MulticallExtension.sol | d4664267b4c69443cc910facdae05e93b2f8621e |
+| ./contracts/SingletonHedronManager.sol | 70695fdf848a860de5c7ba5b35351332a963914f |
+| ./contracts/StakeEnder.sol | 3aa770cd448b5a66cc740681ddbb15501e3cca34 |
 | ./contracts/StakeInfo.sol | eaa02c41fa02bbcaa3514a25d251a193396ba57d |
 | ./contracts/StakeManager.sol | 04774eaffc88e40ee747f1c8852f1eb81d0e2f07 |
 | ./contracts/StakeStarter.sol | 24d71fa8a1c4b78ecc42c0ddbcf5b885595e528b |
-| ./contracts/Tipper.sol | 757c96a47e3c9006e88f8deb933e0ffee01fab2e |
-| ./contracts/TransferableStakeManager.sol | c44a9e8eaee363a28c9f0a710749178d1fbadb30 |
+| ./contracts/Tipper.sol | 73702a90af7679e3bd4bacf222f9028e47c2f5e8 |
+| ./contracts/TransferableStakeManager.sol | 28eb35c788d98c6ed721ff59aa6b9f6dbe1aa307 |
 | ./contracts/UnderlyingStakeManager.sol | c044aa9bcb9a65a0805d3c61b910caa736325057 |
 | ./contracts/UnderlyingStakeable.sol | 62df4b2dfc1a54f7e8cdff100d41e00b505d5225 |
-| ./contracts/Utils.sol | 7cb69b1d8735824c4f39248385b22f7e937e838f |
+| ./contracts/Utils.sol | 51811c5880fd28217e816fc4050c618924f45d50 |
 
 
  Contracts Description Table
@@ -369,13 +369,13 @@ This section lists functions that are explicitly declared public or payable. Ple
 ||||||
 | **ExistingStakeManager** | Implementation | MaximusStakeManager |||
 ||||||
-| **GoodAccounting** | Implementation | StakeInfo, Tipper |||
-| └ | checkStakeGoodAccounting | External ❗️ | 🛑  |NO❗️ |
-| └ | checkStakeGoodAccountingFor | External ❗️ | 🛑  |NO❗️ |
+| **GoodAccounting** | Implementation | Tipper |||
+| └ | checkAndDoStakeGoodAccounting | External ❗️ | 🛑  |NO❗️ |
+| └ | checkAndDoStakeGoodAccountingFor | External ❗️ | 🛑  |NO❗️ |
 | └ | isGoodAccountable | External ❗️ |   |NO❗️ |
 | └ | isStakeIdGoodAccountable | External ❗️ |   |NO❗️ |
 | └ | _isGoodAccountable | Internal 🔒 |   | |
-| └ | _checkStakeGoodAccounting | Internal 🔒 | 🛑  | |
+| └ | _checkAndDoStakeGoodAccounting | Internal 🔒 | 🛑  | |
 | └ | stakeGoodAccounting | External ❗️ | 🛑  |NO❗️ |
 | └ | _stakeGoodAccounting | Internal 🔒 | 🛑  | |
 ||||||
