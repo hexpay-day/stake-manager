@@ -4,10 +4,9 @@ pragma solidity >=0.8.18;
 import { IHEX } from "./interfaces/IHEX.sol";
 import { UnderlyingStakeable } from "./UnderlyingStakeable.sol";
 import { Bank } from "./Bank.sol";
-import { StakeInfo } from "./StakeInfo.sol";
 import { Tipper } from "./Tipper.sol";
 
-abstract contract GoodAccounting is StakeInfo, Tipper {
+abstract contract GoodAccounting is Tipper {
   /**
    * check that the provided stake can be ended and end it
    * @param stakeId the stake id to end as custodied by this contract
