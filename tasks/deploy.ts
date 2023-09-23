@@ -14,10 +14,13 @@ export const main = async (args: any, hre: HardhatRuntimeEnvironment) => {
   let nonce = await waitUntilNonce(signer, 0)
   console.log('deploying')
   const oneGwei = 10n**9n
+  const gasInfo = await hre.ethers.provider.getFeeData()
+  const maxFeePerGas = gasInfo.maxFeePerGas?.toBigInt() as bigint
+  const maxPriorityFeePerGas = maxFeePerGas / 10n
   const overrides = {
     type: 2,
-    maxFeePerGas: oneGwei,
-    maxPriorityFeePerGas: oneGwei / 10n,
+    maxFeePerGas,
+    maxPriorityFeePerGas,
     gasLimit: 20_000_000,
   }
   const existingStakeManager = await ExistingStakeManager.deploy({
