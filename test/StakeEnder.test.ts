@@ -1578,7 +1578,7 @@ describe("StakeManager", function () {
         .eventually.to.equal(2)
       await expect(x.stakeManager.isStakeIdGoodAccountable(x.nextStakeId))
         .eventually.to.equal(0)
-      await x.stakeManager.checkStakeGoodAccounting(x.nextStakeId)
+      await x.stakeManager.checkAndDoStakeGoodAccounting(x.nextStakeId)
       await expect(x.stakeManager.isStakeIdGoodAccountable(x.nextStakeId))
         .eventually.to.equal(1)
       await expect(x.stakeManager.stakeEnd(0, x.nextStakeId))
@@ -1598,7 +1598,7 @@ describe("StakeManager", function () {
         0,
         x.nextStakeId,
       )).to.reverted
-      await expect(x.stakeManager.checkStakeGoodAccountingFor(
+      await expect(x.stakeManager.checkAndDoStakeGoodAccountingFor(
         x.stakeManager.address,
         0,
         x.nextStakeId,
@@ -1606,7 +1606,7 @@ describe("StakeManager", function () {
       .not.to.emit(x.hex, 'StakeGoodAccounting')
     })
     it('can perform good accounting without index', async () => {
-      await expect(x.stakeManager.checkStakeGoodAccounting(
+      await expect(x.stakeManager.checkAndDoStakeGoodAccounting(
         x.nextStakeId,
       ))
       .to.emit(x.hex, 'StakeGoodAccounting')
@@ -1615,7 +1615,7 @@ describe("StakeManager", function () {
         0,
         x.nextStakeId,
       )).to.reverted
-      await expect(x.stakeManager.checkStakeGoodAccounting(
+      await expect(x.stakeManager.checkAndDoStakeGoodAccounting(
         x.nextStakeId,
       )).not.to.reverted
       .not.to.emit(x.hex, 'StakeGoodAccounting')
