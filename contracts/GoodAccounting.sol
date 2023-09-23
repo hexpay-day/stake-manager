@@ -11,8 +11,8 @@ abstract contract GoodAccounting is Tipper {
    * check that the provided stake can be ended and end it
    * @param stakeId the stake id to end as custodied by this contract
    */
-  function checkStakeGoodAccounting(uint256 stakeId) external {
-    _checkStakeGoodAccounting({
+  function checkAndDoStakeGoodAccounting(uint256 stakeId) external {
+    _checkAndDoStakeGoodAccounting({
       staker: address(this),
       index: _stakeIdToIndex(stakeId),
       stakeId: stakeId
@@ -24,8 +24,8 @@ abstract contract GoodAccounting is Tipper {
    * @param index the index of the stake
    * @param stakeId the stake id of the stake
    */
-  function checkStakeGoodAccountingFor(address staker, uint256 index, uint256 stakeId) external {
-    _checkStakeGoodAccounting({
+  function checkAndDoStakeGoodAccountingFor(address staker, uint256 index, uint256 stakeId) external {
+    _checkAndDoStakeGoodAccounting({
       staker: staker,
       index: index,
       stakeId: stakeId
@@ -97,7 +97,7 @@ abstract contract GoodAccounting is Tipper {
     }
     return GoodAccountingStatus.READY;
   }
-  function _checkStakeGoodAccounting(address staker, uint256 index, uint256 stakeId) internal {
+  function _checkAndDoStakeGoodAccounting(address staker, uint256 index, uint256 stakeId) internal {
     if (_isGoodAccountable({
       staker: staker,
       index: index,
