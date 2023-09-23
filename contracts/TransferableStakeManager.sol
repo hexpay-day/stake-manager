@@ -93,7 +93,7 @@ contract TransferableStakeManager is StakeStarter {
       tipStakeIdToStaker[stakeId] = to;
     }
     (bool success, bytes memory data) = to.call(
-      abi.encodeWithSelector(IStakeReceiver.onStakeReceived.selector, msg.sender, stakeId)
+      abi.encodeCall(IStakeReceiver.onStakeReceived, (msg.sender, stakeId))
     );
     if (!success) {
       _bubbleRevert(data);
