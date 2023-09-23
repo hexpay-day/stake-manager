@@ -266,10 +266,10 @@ contract Bank is Utils {
     }
     return amount;
   }
-  function _attributeFunds(uint256 setting, uint256 index, address token, address staker, uint256 amount) internal {
+  function _attributeFunds(uint256 setting, address token, address staker, uint256 amount) internal {
     if (_isOneAtIndex({
       setting: setting,
-      index: index
+      index: FOUR
     })) {
       _withdrawTokenTo({
         token: token,

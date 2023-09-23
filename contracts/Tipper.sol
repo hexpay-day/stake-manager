@@ -372,7 +372,6 @@ abstract contract Tipper is Bank, UnderlyingStakeable, CurrencyList, EncodableSe
       address token = address(indexToToken[tip << ONE >> INDEX_EXTERNAL_TIP_CURRENCY_ONLY]);
       _attributeFunds({
         token: token,
-        index: INDEX_RIGHT_SHOULD_SEND_TOKENS_TO_STAKER,
         setting: settings,
         staker: staker,
         amount: uint128(tip >> INDEX_EXTERNAL_TIP_LIMIT)

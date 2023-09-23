@@ -73,8 +73,6 @@ contract MulticallExtension is Utils {
    * call multiple / arbitrary steps allowing each to fail independently or requiring all to succeed
    * @param calls the sequence of calls that is requested
    * @param allowFailures allows the calls to fail separately or requires all to succeed or fail
-   * @notice while the method is payable, this is only for gas optimization purposes
-   * no value is passable, nor should it be used in any of the required contracts
    */
   function _multicall(bytes[] calldata calls, bool allowFailures) internal {
     uint256 len = calls.length;

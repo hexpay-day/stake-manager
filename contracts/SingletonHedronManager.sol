@@ -47,7 +47,6 @@ contract SingletonHedronManager is UnderlyingStakeManager {
         if (currentTo != to) {
           _attributeFunds({
             setting: setting,
-            index: INDEX_RIGHT_SHOULD_SEND_TOKENS_TO_STAKER,
             token: HEDRON,
             staker: address(uint160(to)),
             amount: hedronTokens
@@ -69,7 +68,6 @@ contract SingletonHedronManager is UnderlyingStakeManager {
     if (hedronTokens > ZERO) {
       _attributeFunds({
         setting: setting,
-        index: INDEX_RIGHT_SHOULD_SEND_TOKENS_TO_STAKER,
         token: HEDRON,
         staker: address(uint160(to)),
         amount: hedronTokens
