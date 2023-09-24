@@ -165,6 +165,11 @@ contract Bank is Utils {
    * @param transferOut whether to transfer token out
    * @param recipient the recipient of the tokens
    * @param basisPoints the number of basis points (100% = 10_000)
+   * @notice collecting unattributed percentages should
+   * be used before a blanket collection
+   * in order to reduce rounding errors
+   * @dev please be sure to run blanket collect unattributed
+   * calls to collect any remaining tokens
    */
   function collectUnattributedPercent(
     address token, bool transferOut, address payable recipient,

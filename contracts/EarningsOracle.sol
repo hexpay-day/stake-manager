@@ -74,9 +74,6 @@ contract EarningsOracle is Utils {
     uint256 stakedDays,
     uint256 shares
   ) external view returns(uint256 payout) {
-    if (startDay >= untilDay) {
-      revert NotAllowed();
-    }
     // we have to have a data point that can be used as our zero point
     uint256 zeroDay = lockedDay - ONE;
     uint256 untilDay = zeroDay + stakedDays;

@@ -75,7 +75,6 @@ contract SingletonHedronManager is UnderlyingStakeManager {
     }
   }
   function _mintHedron(uint256 index, uint256 stakeId) internal virtual returns(uint256 amount) {
-    if (MAX_UINT_40 < stakeId) revert NotAllowed();
     return IHedron(HEDRON).mintNative(index, uint40(stakeId));
   }
 }

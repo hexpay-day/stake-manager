@@ -37,7 +37,6 @@ contract UnderlyingStakeManager is GoodAccounting {
   function _stakeEnd(
     uint256 stakeIndex, uint256 stakeId, uint256 stakeCountAfter
   ) internal virtual returns(uint256 delta) {
-    if (MAX_UINT_40 < stakeId) revert NotAllowed();
     // calculate the balance before
     // cannot use tokens attributed here because of tipping
     uint256 balanceBefore = _balanceOf({
