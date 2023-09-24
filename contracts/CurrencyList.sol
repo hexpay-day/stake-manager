@@ -13,6 +13,8 @@ contract CurrencyList is Utils {
     uint256 indexed index
   );
 
+  error MustBeHolder();
+
   address[] public indexToToken;
   mapping(address => uint256) public currencyToIndex;
   /**
@@ -29,7 +31,11 @@ contract CurrencyList is Utils {
     if (!token.isContract()) {
       revert NotAllowed();
     }
-
+    // reduces griefing
+    if (IERC20(token).balanceOf(msg.sender) == ZERO) {
+      revert MustBeHolder();
+    }
+    // add token to list
     return _addCurrencyToList({
       token: token
     });

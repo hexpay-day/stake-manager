@@ -5,6 +5,13 @@ import { IHedron } from "./interfaces/IHedron.sol";
 import { UnderlyingStakeManager } from "./UnderlyingStakeManager.sol";
 
 contract SingletonHedronManager is UnderlyingStakeManager {
+  /**
+   * combine a boolean from a setting value and the owner address to
+   * reduce the number of transfers / writes that occur during a loop
+   * @param setting the setting to determine if a withdrawal should occur
+   * @param owner the owner of the underlying stake
+   * @return to the uint256 representation of a single bit in settings and an owner address
+   */
   function createTo(uint256 setting, address owner) external pure returns(uint256 to) {
     return _createTo({
       setting: setting,

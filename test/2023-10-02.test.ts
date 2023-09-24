@@ -7,7 +7,7 @@ import { anyUint } from '@nomicfoundation/hardhat-chai-matchers/withArgs'
 
 describe("2023-10-02 utc", function () {
   it('can end base and hsi', async () => {
-    const depositDate = new Date('2023-09-15T00:00:00Z')
+    const depositDate = new Date('2023-09-29T00:00:00Z')
     const endDate = new Date('2023-10-02T00:00:00Z')
     const execAddress = '0xE971e07BF9917e91DFbeD9165f2ea8e6FF876880'
 

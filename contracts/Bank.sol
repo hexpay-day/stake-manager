@@ -240,10 +240,6 @@ contract Bank is Utils {
         amnt = IERC20(token).balanceOf(address(this));
         IERC20(token).safeTransferFrom(depositor, address(this), amount);
         amnt = IERC20(token).balanceOf(address(this)) - amnt;
-        if (amnt != amount) {
-          // tax tokens not allowed
-          revert NotAllowed();
-        }
       }
     } else {
       // transfer in already occurred
