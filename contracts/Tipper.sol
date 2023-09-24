@@ -258,7 +258,6 @@ abstract contract Tipper is Bank, UnderlyingStakeable, CurrencyList, EncodableSe
       to: recipient,
       amount: depositedAmount
     });
-    // do now allow for overriding of tip settings, only increase in gas token
     _checkStakeCustodian({
       stakeId: stakeId
     });

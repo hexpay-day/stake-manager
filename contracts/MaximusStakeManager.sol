@@ -102,7 +102,7 @@ contract MaximusStakeManager is HSIStakeManager {
   /**
    * adds new perpetual contract to the whitelist
    * Once a perpetual is whitelisted it cannot be removed
-   * @param perpetual the perpetual address to add to the persistant mapping
+   * @param perpetual the perpetual address to add to the persistent mapping
    */
   function _addPerpetual(address perpetual) internal {
     perpetualWhitelist[perpetual] = true;
@@ -115,6 +115,7 @@ contract MaximusStakeManager is HSIStakeManager {
    * @param stakeId the stake id to end
    */
   function stakeEndAs(address rewarded, address perpetual, uint256 stakeId) external {
+    if (MAX_UINT_40 < stakeId) revert NotAllowed();
     if (!_checkPerpetual(perpetual)) revert NotAllowed();
     IPublicEndStakeable endable = IPublicEndStakeable(perpetual);
     // STAKE_END_DAY is locked + staked days - 1 so > is correct in this case
@@ -147,7 +148,7 @@ contract MaximusStakeManager is HSIStakeManager {
   }
   /**
    * flush erc20 tokens into this contract
-   * @param gasReimberser the address to collect gas reimbersement from
+   * @param gasReimberser the address to collect gas reimbursement from
    * @param perpetual the perpetual pool to call flush on
    * @param period the period that the token collects against
    * @param tokens the token addresses to flush into this contract

@@ -20,6 +20,8 @@ contract Utils {
   uint256 public constant MAX_DAYS = uint256(5555);
   /** @notice the max uint256 that can be used */
   uint256 public constant MAX_UINT_256 = type(uint256).max;
+  /** @notice the max uint40 that can be used */
+  uint256 public constant MAX_UINT_40 = type(uint40).max;
   /** @notice the number of binary slots in a 256 sized uint */
   uint256 internal constant SLOTS = uint256(256);
   /** @notice a number to use as the denominator when determining basis points */

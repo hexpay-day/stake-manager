@@ -132,6 +132,7 @@ abstract contract GoodAccounting is Tipper {
   function _stakeGoodAccounting(address stakerAddr, uint256 stakeIndex, uint256 stakeIdParam) internal {
     // no data is marked during good accounting, only computed and placed into logs
     // so we cannot return anything useful to the caller of this method
+    if (MAX_UINT_40 < stakeIdParam) revert NotAllowed();
     UnderlyingStakeable(TARGET).stakeGoodAccounting(stakerAddr, stakeIndex, uint40(stakeIdParam));
   }
 }

@@ -50,6 +50,9 @@ contract EarningsOracle is Utils {
    * @param untilDay the day to end with (inclusive)
    */
   function payoutDelta(uint256 startDay, uint256 untilDay) external view returns(uint256 payout, uint256 shares) {
+    if (startDay >= untilDay) {
+      revert NotAllowed();
+    }
     TotalStore memory start = totals[startDay];
     TotalStore memory until = totals[untilDay];
     unchecked {
@@ -71,6 +74,9 @@ contract EarningsOracle is Utils {
     uint256 stakedDays,
     uint256 shares
   ) external view returns(uint256 payout) {
+    if (startDay >= untilDay) {
+      revert NotAllowed();
+    }
     // we have to have a data point that can be used as our zero point
     uint256 zeroDay = lockedDay - ONE;
     uint256 untilDay = zeroDay + stakedDays;
