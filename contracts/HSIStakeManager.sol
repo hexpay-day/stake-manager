@@ -48,7 +48,7 @@ contract HSIStakeManager is StakeEnder {
   }
   /**
    * deposit a tokenized hsi into this contract
-   * @param token the address of the token (HEDRON)
+   * @param token the address of the token (HSIM)
    * @param tokenId the token id to deposit into this contract
    */
   function _deposit721(address token, uint256 tokenId) internal returns(address owner) {

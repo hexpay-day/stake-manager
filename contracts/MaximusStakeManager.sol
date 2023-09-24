@@ -36,20 +36,6 @@ contract MaximusStakeManager is HSIStakeManager {
     uint256 amount
   );
   /**
-   * notes that a reward is being distributed to a given address,
-   * which previously ended a perpetual contract's stake
-   * @param perpetual the address of the perpetual contract
-   * @param period the period being rewarded
-   * @param token the token being rewarded
-   * @param amount the amount of the token being rewarded
-   */
-  event DistributeReward(
-    address indexed perpetual,
-    uint256 indexed period,
-    address indexed token,
-    uint256 amount
-  );
-  /**
    * a list of known perpetual contracts is set during constructor
    */
   constructor() {

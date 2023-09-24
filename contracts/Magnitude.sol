@@ -2,7 +2,6 @@
 pragma solidity >=0.8.18;
 
 import { Utils } from "./Utils.sol";
-import { UnderlyingStakeable } from "./UnderlyingStakeable.sol";
 
 contract Magnitude is Utils {
   uint256 constant internal X_OPTIONS = THREE;

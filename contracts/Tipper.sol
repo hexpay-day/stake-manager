@@ -11,7 +11,6 @@ abstract contract Tipper is Bank, UnderlyingStakeable, CurrencyList, EncodableSe
   uint256 internal constant INDEX_EXTERNAL_TIP_CURRENCY = 200;
   uint256 internal constant INDEX_EXTERNAL_TIP_CURRENCY_ONLY = INDEX_EXTERNAL_TIP_CURRENCY + ONE;
   uint256 internal constant INDEX_EXTERNAL_TIP_LIMIT = SEVENTY_TWO; // 128 bits long
-  uint256 internal constant INDEX_EXTERNAL_TIP_METHOD = SIXTY_FOUR;
   constructor()
     Bank()
     UnderlyingStakeable()
