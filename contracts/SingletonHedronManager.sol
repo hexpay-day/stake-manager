@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity >=0.8.18;
+pragma solidity ^0.8.18;
 
 import { IHedron } from "./interfaces/IHedron.sol";
 import { UnderlyingStakeManager } from "./UnderlyingStakeManager.sol";
