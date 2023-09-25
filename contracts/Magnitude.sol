@@ -3,6 +3,8 @@ pragma solidity ^0.8.18;
 
 import { Utils } from "./Utils.sol";
 
+import "hardhat/console.sol";
+
 contract Magnitude is Utils {
   uint256 constant internal X_OPTIONS = THREE;
   function _computeDayMagnitude(
@@ -21,17 +23,13 @@ contract Magnitude is Utils {
           amount = stakedDays; // 2 - repeat number of days
         }
       } else {
-        // 3 - start an equally spaced ladder, even if end stake happens late
-        uint256 daysAfterLock = today - lockedDay;
-        if (daysAfterLock == stakedDays) {
-          amount = stakedDays; // ended on first available day (most cases)
-        } else {
-          // did not end on first available day
-          // presumptive value extrapolated backward
-          lockedDay = today - (daysAfterLock % (stakedDays + ONE));
-          // else locked day was last presumptive locked day
-          amount = stakedDays - (today - lockedDay);
-        }
+        // // 3 - start an equally spaced ladder, even if end stake happens late
+        uint256 nextLockedDay = today + ONE;
+        uint256 lockedDaysDelta = nextLockedDay - lockedDay;
+        uint256 stakeDaysConsumption = stakedDays + ONE;
+        uint256 stakedDaysModifier = lockedDaysDelta % stakeDaysConsumption;
+        amount = stakedDays - stakedDaysModifier;
+        amount = amount < x ? (stakedDays + amount + ONE) : amount;
       }
       amount = amount > limit ? limit : amount;
     }

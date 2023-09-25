@@ -86,9 +86,36 @@ describe('Magnitude.sol', () => {
       // therefore, last (missed) ladder iterations:
       // t-26,t-15,t-4
       // so we are 4 days into the ladder, so we should stake for
-      // 6 more days to get us back on track
+      // 5 more days to get us back on track (lockedDay = currentDay + 1)
       await expect(x.stakeManager.computeDayMagnitude(noLimit, 3, 0, currentDay, stk.lockedDay, stk.stakedDays))
-        .eventually.to.equal(6)
+        .eventually.to.equal(5)
+    })
+    it('3: works even if the magnitude would otherwise be zero', async () => {
+      await expect(x.stakeManager.computeDayMagnitude(noLimit, 2, 0, 0, stake.lockedDay, stake.stakedDays))
+        .eventually.to.equal(10)
+    })
+    it('3: returns number of staked days if match', async () => {
+      // missed end by more than 1 round
+      const currentDay = (await x.hex.currentDay()).toNumber()
+      // zero day
+      await expect(x.stakeManager.computeDayMagnitude(noLimit, 3, 0, currentDay, currentDay - 21, 10))
+        .eventually.to.equal(10)
+      await expect(x.stakeManager.computeDayMagnitude(noLimit, 3, 0, currentDay, currentDay - 22, 10))
+        .eventually.to.equal(9)
+      await expect(x.stakeManager.computeDayMagnitude(noLimit, 3, 0, currentDay, currentDay - 23, 10))
+        .eventually.to.equal(8)
+      await expect(x.stakeManager.computeDayMagnitude(noLimit, 3, 0, currentDay, currentDay - 19, 10))
+        .eventually.to.equal(1)
+      // will fail if not handled
+      await expect(x.stakeManager.computeDayMagnitude(noLimit, 3, 0, currentDay, currentDay - 20, 10))
+        .eventually.to.equal(0)
+    })
+    it('3: returns an adjusted number if lower than x', async () => {
+      const currentDay = (await x.hex.currentDay()).toNumber()
+      await expect(x.stakeManager.computeDayMagnitude(noLimit, 3, 1, currentDay, currentDay - 20, 10))
+        .eventually.to.equal(11)
+      await expect(x.stakeManager.computeDayMagnitude(noLimit, 3, 2, currentDay, currentDay - 19, 10))
+        .eventually.to.equal(12)
     })
   })
   const l = {
