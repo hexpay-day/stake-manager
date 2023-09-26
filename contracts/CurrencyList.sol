@@ -16,7 +16,7 @@ contract CurrencyList is Utils {
   error MustBeHolder();
 
   address[] public indexToToken;
-  mapping(address => uint256) public currencyToIndex;
+  mapping(address token => uint256) public currencyToIndex;
   /**
    * creates a registry of tokens to map addresses that stakes will tip in
    * to numbers so that they can fit in a single byteword,

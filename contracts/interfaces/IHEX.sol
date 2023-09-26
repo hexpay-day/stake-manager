@@ -156,12 +156,6 @@ interface IHEX is IERC20, IERC20Metadata, IUnderlyingStakeable {
   function currentDay() external view returns (uint256);
   function globalInfo() external view returns(uint256[13] memory);
 
-  // mapping(uint256 => DailyDataStore) public dailyData;
-  // struct DailyDataStore {
-  //   uint72 dayPayoutTotal;
-  //   uint72 dayStakeSharesTotal;
-  //   uint56 dayUnclaimedSatoshisTotal;
-  // }
   function dailyData(uint256 day) external view returns(
     uint72 dayPayoutTotal,
     uint72 dayStakeSharesTotal,

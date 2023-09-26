@@ -24,13 +24,13 @@ contract Bank is Utils {
   /**
    * @notice keeps a global mapping of attributed funds that the contract is custodying
    */
-  mapping(address => uint256) public attributed;
+  mapping(address token => uint256) public attributed;
   /**
    * @notice keeps a mapping of the withdrawable funds that the contract is custodying
    * the contract may also be custodying tips, but an amount held within
    * a tip is not withdrawable so it cannot be held in this mapping
    */
-  mapping(address => mapping(address => uint256)) public withdrawableBalanceOf;
+  mapping(address token => mapping(address account => uint256)) public withdrawableBalanceOf;
   /**
    * gets unattributed tokens floating in the contract
    * @param token the address of the token that you wish to get the unattributed value of

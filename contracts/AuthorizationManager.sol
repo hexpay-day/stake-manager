@@ -15,7 +15,7 @@ abstract contract AuthorizationManager is UnderlyingStakeable {
    * @dev most of the time the keys will be addresses
    * so you will often have to encode the addresses as byte32
    */
-  mapping(bytes32 => uint256) public authorization;
+  mapping(bytes32 key => uint256) public authorization;
   /**
    * emitted after settings are updated to allow various
    * addresses and key combinations to act on owners behalf

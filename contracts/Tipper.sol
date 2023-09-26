@@ -34,8 +34,8 @@ abstract contract Tipper is Bank, UnderlyingStakeable, CurrencyList, EncodableSe
    * to the lower level `stakeIdInfo` mapping and individuals who do not wish to tip
    * should not be charged 2k gas for checking if this mapping exists
    */
-  mapping(uint256 => address) internal tipStakeIdToStaker;
-  mapping(uint256 => uint256[]) public stakeIdTips;
+  mapping(uint256 stakeId => address) internal tipStakeIdToStaker;
+  mapping(uint256 stakeId => uint256[]) public stakeIdTips;
   event AddTip(
     uint256 indexed stakeId,
     address indexed token,

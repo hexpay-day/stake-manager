@@ -8,7 +8,7 @@ contract StakeInfo is Magnitude {
    * @notice the owner of a stake indexed by the stake id
    * index + 160(owner)
    */
-  mapping(uint256 => uint256) public stakeIdInfo;
+  mapping(uint256 stakeId => uint256) public stakeIdInfo;
   /**
    * @notice this error is thrown when the stake in question
    * is not owned by the expected address

@@ -65,7 +65,7 @@ abstract contract EncodableSettings is StakeInfo {
      */
     ConsentAbilities consentAbilities;
   }
-  mapping(uint256 => uint256) public stakeIdToSettings;
+  mapping(uint256 stakeId => uint256) public stakeIdToSettings;
   /**
    * an event to signal that settings to direct funds
    * at the end of a stake have been updated
