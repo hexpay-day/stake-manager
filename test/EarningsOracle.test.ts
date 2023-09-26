@@ -139,6 +139,10 @@ describe('EarningsOracle.sol', () => {
       x = await loadFixture(launchSome)
     })
     describe('payoutDelta', () => {
+      it('fails if numbers are not provided in correct order', async () => {
+        await expect(x.oracle.payoutDelta(5, 4))
+          .to.revertedWithCustomError(x.oracle, 'NotAllowed')
+      })
       it('provides the amount of tokens paid out during that time in an accumulative number', async () => {
         const split = 6
         const size = await x.oracle.totalsCount()
