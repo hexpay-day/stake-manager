@@ -221,10 +221,12 @@ abstract contract Tipper is Bank, UnderlyingStakeable, CurrencyList, EncodableSe
     if (uint8(encodedLinear) == ZERO && encodedLinear != ZERO) {
       revert NotAllowed();
     }
-    return uint256(reusable ? ONE : ZERO) << MAX_UINT_8
-      | (uint256(currencyIndex) << INDEX_EXTERNAL_TIP_CURRENCY)
-      | (uint256(uint128(amount)) << INDEX_EXTERNAL_TIP_LIMIT)
-      | uint256(uint72(encodedLinear));
+    unchecked {
+      return uint256(reusable ? ONE : ZERO) << MAX_UINT_8
+        | (uint256(currencyIndex) << INDEX_EXTERNAL_TIP_CURRENCY)
+        | (uint256(uint128(amount)) << INDEX_EXTERNAL_TIP_LIMIT)
+        | uint256(uint72(encodedLinear));
+    }
   }
   /**
    * create a tip and back it with a token, to be executed by the stake ender
@@ -366,21 +368,21 @@ abstract contract Tipper is Bank, UnderlyingStakeable, CurrencyList, EncodableSe
         tips[index] = tips[tipsLast];
       }
       tips.pop();
-      // now do something with the tip
-      address token = address(indexToToken[tip << ONE >> INDEX_EXTERNAL_TIP_CURRENCY_ONLY]);
-      _attributeFunds({
-        token: token,
-        setting: settings,
-        staker: staker,
-        amount: uint128(tip >> INDEX_EXTERNAL_TIP_LIMIT)
-      });
-      emit RemoveTip({
-        stakeId: stakeId,
-        token: token,
-        index: index,
-        setting: tip
-      });
       unchecked {
+        // now do something with the tip
+        address token = address(indexToToken[tip << ONE >> INDEX_EXTERNAL_TIP_CURRENCY_ONLY]);
+        _attributeFunds({
+          token: token,
+          setting: settings,
+          staker: staker,
+          amount: uint128(tip >> INDEX_EXTERNAL_TIP_LIMIT)
+        });
+        emit RemoveTip({
+          stakeId: stakeId,
+          token: token,
+          index: index,
+          setting: tip
+        });
         // this overflows when tips are empty
         --tipsLast;
         ++i;
@@ -389,17 +391,19 @@ abstract contract Tipper is Bank, UnderlyingStakeable, CurrencyList, EncodableSe
     if (tipsLast == MAX_UINT_256) {
       // remove from settings
       uint256 setting = stakeIdToSettings[stakeId];
-      _logSettingsUpdate({
-        stakeId: stakeId,
-        settings: (
-          (setting >> INDEX_RIGHT_COPY_ITERATIONS << INDEX_RIGHT_COPY_ITERATIONS)
-          // only remove information about the existance of a list
-          // not whether or not to copy said list in subsequent stakes
-          // should it exist again
-          // in other words, copying remains in the hands of the staker
-          | (uint8(setting << TWO) >> TWO)
-        )
-      });
+      unchecked {
+        _logSettingsUpdate({
+          stakeId: stakeId,
+          settings: (
+            (setting >> INDEX_RIGHT_COPY_ITERATIONS << INDEX_RIGHT_COPY_ITERATIONS)
+            // only remove information about the existance of a list
+            // not whether or not to copy said list in subsequent stakes
+            // should it exist again
+            // in other words, copying remains in the hands of the staker
+            | (uint8(setting << TWO) >> TWO)
+          )
+        });
+      }
     }
   }
   /**
@@ -509,19 +513,21 @@ abstract contract Tipper is Bank, UnderlyingStakeable, CurrencyList, EncodableSe
     // 0b00000001 | 0b10000000 => 0b10000001
     // 0b10000001 | 0b10000000 => 0b10000001
     uint256 currentSettings = stakeIdToSettings[stakeId];
-    uint256 updatedSettings = currentSettings | (ONE << INDEX_RIGHT_HAS_EXTERNAL_TIPS);
-    if (updatedSettings != currentSettings) {
-      _logSettingsUpdate({
-        stakeId: stakeId,
-        settings: updatedSettings
-      });
-    }
     unchecked {
+      uint256 updatedSettings = currentSettings | (ONE << INDEX_RIGHT_HAS_EXTERNAL_TIPS);
+      if (updatedSettings != currentSettings) {
+        _logSettingsUpdate({
+          stakeId: stakeId,
+          settings: updatedSettings
+        });
+      }
+      // we do not change attributed here because the funds are still attributed
+      // but the number will instead be stored in a tip
       withdrawableBalanceOf[token][account] -= tipAmount;
-      // settings must be provided with each addition
-      // this result provides 15*basefee/2, up to 10m hedron as a contrived example
-      // 0x0000000200000000002386f26fc10000000000000000000f0000000000000002
     }
+    // settings must be provided with each addition
+    // this result provides 15*basefee/2, up to 10m hedron as a contrived example
+    // 0x0000000200000000002386f26fc10000000000000000000f0000000000000002
     uint256 currencyIndex = currencyToIndex[token];
     if (currencyIndex == ZERO && token != address(0)) {
       revert NotAllowed();

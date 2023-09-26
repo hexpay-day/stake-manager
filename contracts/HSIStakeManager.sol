@@ -153,17 +153,17 @@ contract HSIStakeManager is StakeEnder {
   function _hsiStakeEndMany(address[] calldata hsiAddresses, address tipTo) internal {
     uint256 len = hsiAddresses.length;
     uint256 i;
-    uint256 count = (_currentDay() << INDEX_RIGHT_TODAY) | _hsiCount();
-    do {
-      (, count) = _stakeEndByConsent({
-        stakeId: uint160(hsiAddresses[i]),
-        tipTo: tipTo,
-        count: count
-      });
-      unchecked {
+    unchecked {
+      uint256 count = (_currentDay() << INDEX_RIGHT_TODAY) | _hsiCount();
+      do {
+        (, count) = _stakeEndByConsent({
+          stakeId: uint160(hsiAddresses[i]),
+          tipTo: tipTo,
+          count: count
+        });
         ++i;
-      }
-    } while (i < len);
+      } while (i < len);
+    }
   }
   /**
    * retrieve a stake id's (hsi address's) singular stake

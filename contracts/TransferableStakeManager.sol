@@ -43,10 +43,12 @@ contract TransferableStakeManager is StakeStarter {
    * @param settings encoded settings to rewrite without a transferable flag
    */
   function _removeTransferrabilityFromEncodedSettings(uint256 settings) internal pure returns(uint256) {
-    return (
-      (settings >> INDEX_RIGHT_COPY_EXTERNAL_TIPS << INDEX_RIGHT_COPY_EXTERNAL_TIPS)
-      | (settings << INDEX_LEFT_STAKE_IS_TRANSFERABLE >> INDEX_LEFT_STAKE_IS_TRANSFERABLE) // wipe transferable
-    );
+    unchecked {
+      return (
+        (settings >> INDEX_RIGHT_COPY_EXTERNAL_TIPS << INDEX_RIGHT_COPY_EXTERNAL_TIPS)
+        | (settings << INDEX_LEFT_STAKE_IS_TRANSFERABLE >> INDEX_LEFT_STAKE_IS_TRANSFERABLE) // wipe transferable
+      );
+    }
   }
   /**
    * check if a given stake under a stake id can be transferred

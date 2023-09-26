@@ -2,8 +2,6 @@ import { task, type HardhatUserConfig, types } from "hardhat/config";
 import type {
   Artifact,
   HardhatNetworkAccountsConfig,
-  HardhatNetworkChainConfig,
-  HardhatNetworkConfig,
   HardhatNetworkUserConfig,
   NetworkUserConfig,
   SolcUserConfig,

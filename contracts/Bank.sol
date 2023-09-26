@@ -14,6 +14,14 @@ contract Bank is Utils {
   using SafeERC20 for IERC20;
 
   /**
+   * notes that a previously unattributed token has been
+   * collected and attributed to an address
+   * @param token the token that is being collected by the caller
+   * @param to the address that the tokens are being attributed to
+   * @param amount the number of tokens being collected for the to address
+   */
+  event CollectUnattributedToken(address indexed token, address indexed to, uint256 amount);
+  /**
    * @notice keeps a global mapping of attributed funds that the contract is custodying
    */
   mapping(address => uint256) public attributed;
@@ -76,7 +84,9 @@ contract Bank is Utils {
    * 0 or a number above the limit is passed
    */
   function _clamp(uint256 amount, uint256 max) internal pure returns(uint256 clamped) {
-    return amount == ZERO || amount > max ? max : amount;
+    unchecked {
+      return amount == ZERO || amount > max ? max : amount;
+    }
   }
   /**
    * transfer a given number of tokens to the contract to be used by the contract's methods
@@ -157,6 +167,11 @@ contract Bank is Utils {
           amount: withdrawable
         });
       }
+      emit CollectUnattributedToken({
+        token: token,
+        to: to,
+        amount: amount
+      });
     }
   }
   /**

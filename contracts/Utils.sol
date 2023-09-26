@@ -19,7 +19,7 @@ contract Utils {
    */
   uint256 public constant MAX_DAYS = uint256(5555);
   /** @notice the max uint256 that can be used */
-  uint256 public constant MAX_UINT_256 = type(uint256).max;
+  uint256 internal constant MAX_UINT_256 = type(uint256).max;
   /** @notice the number of binary slots in a 256 sized uint */
   uint256 internal constant SLOTS = uint256(256);
   /** @notice a number to use as the denominator when determining basis points */
@@ -78,7 +78,9 @@ contract Utils {
     // in binary checks:
     // take the setting and shift it some number of bits left (leaving space for 1)
     // then go the opposite direction, once again leaving only space for 1
-    return 1 == (setting << (MAX_UINT_8 - index) >> MAX_UINT_8);
+    unchecked {
+      return ONE == (setting << (MAX_UINT_8 - index) >> MAX_UINT_8);
+    }
   }
   /**
    * after an error is caught, it can be reverted again
