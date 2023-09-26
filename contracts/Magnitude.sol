@@ -22,8 +22,19 @@ contract Magnitude is Utils {
           numDays = stakedDays; // 2 - repeat number of days
         }
       } else {
-        // 3 - start an equally spaced ladder, even if end stake happens late
         // 4 is a flag to front end that this stake may no longer match its history
+        // the reason this must cut off contract controlled days is because
+        // we do not have enough bits to store locked day and staked days from
+        // previous iterations. the code below either does a shorter or a longer stake
+        // depending on the x (bump min) value which helps get around the 0 issue
+        // using this feature and not paying attention
+        // to your stake could lead to it not being restarted
+        // with this constraint, a stake will never be restarted for longer than 2x
+        // the original stake - otherwise the stakes could indefinitely elongate
+        if (newMethod == FOUR) {
+          return (newMethod, ZERO);
+        }
+        // 3 - start an equally spaced ladder, even if end stake happens late
         uint256 nextLockedDay = today + ONE;
         uint256 lockedDaysDelta = nextLockedDay - lockedDay;
         uint256 stakeDaysConsumption = stakedDays + ONE;
@@ -32,9 +43,11 @@ contract Magnitude is Utils {
         // x is the equivalent to "bump to next stake ladder" if under this value
         if (numDays < x) {
           numDays = stakedDays + numDays + ONE;
-          if (newMethod == THREE) {
-            ++newMethod;
-          }
+        }
+        if (numDays != stakedDays) {
+          // unless the ladder is being restarted on the end day
+          // disallow new stakes until the user updates the setting (reset to 3)
+          ++newMethod;
         }
       }
       numDays = numDays > limit ? limit : numDays;

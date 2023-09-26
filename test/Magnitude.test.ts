@@ -88,7 +88,7 @@ describe('Magnitude.sol', () => {
       // so we are 4 days into the ladder, so we should stake for
       // 5 more days to get us back on track (lockedDay = currentDay + 1)
       await expect(x.stakeManager.computeDayMagnitude(noLimit, 3, 0, currentDay, stk.lockedDay, stk.stakedDays))
-        .eventually.to.deep.equal([3, 5])
+        .eventually.to.deep.equal([4, 5])
     })
     it('3: works even if the magnitude would otherwise be zero', async () => {
       await expect(x.stakeManager.computeDayMagnitude(noLimit, 2, 0, 0, stake.lockedDay, stake.stakedDays))
@@ -101,14 +101,14 @@ describe('Magnitude.sol', () => {
       await expect(x.stakeManager.computeDayMagnitude(noLimit, 3, 0, currentDay, currentDay - 21, 10))
         .eventually.to.deep.equal([3, 10])
       await expect(x.stakeManager.computeDayMagnitude(noLimit, 3, 0, currentDay, currentDay - 22, 10))
-        .eventually.to.deep.equal([3, 9])
+        .eventually.to.deep.equal([4, 9])
       await expect(x.stakeManager.computeDayMagnitude(noLimit, 3, 0, currentDay, currentDay - 23, 10))
-        .eventually.to.deep.equal([3, 8])
+        .eventually.to.deep.equal([4, 8])
       await expect(x.stakeManager.computeDayMagnitude(noLimit, 3, 0, currentDay, currentDay - 19, 10))
-        .eventually.to.deep.equal([3, 1])
+        .eventually.to.deep.equal([4, 1])
       // will fail if check for zero is not in place
       await expect(x.stakeManager.computeDayMagnitude(noLimit, 3, 0, currentDay, currentDay - 20, 10))
-        .eventually.to.deep.equal([3, 0])
+        .eventually.to.deep.equal([4, 0])
     })
     it('3: returns an adjusted number if lower than x', async () => {
       const currentDay = (await x.hex.currentDay()).toNumber()
@@ -116,6 +116,20 @@ describe('Magnitude.sol', () => {
         .eventually.to.deep.equal([4, 11])
       await expect(x.stakeManager.computeDayMagnitude(noLimit, 3, 2, currentDay, currentDay - 19, 10))
         .eventually.to.deep.equal([4, 12])
+    })
+    it('4: is contract controlled and acts as a flag for the user to re-establish ladder', async () => {
+      let currentDay = (await x.hex.currentDay()).toNumber()
+      await expect(x.stakeManager.computeDayMagnitude(noLimit, 3, 2, currentDay, currentDay - 19, 10))
+        .eventually.to.deep.equal([4, 12])
+      // end stake in 12+1 days
+      const nextStartDay = currentDay
+      const nextLockedDay = nextStartDay + 1
+      const stakedDays = 12
+      const nextEndDay = 11 + nextLockedDay + stakedDays
+      // late again - only
+      currentDay = nextEndDay + 9
+      await expect(x.stakeManager.computeDayMagnitude(noLimit, 4, 2, currentDay, currentDay - 19, stakedDays))
+        .eventually.to.deep.equal([4, 0])
     })
   })
   const l = {
