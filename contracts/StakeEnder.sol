@@ -172,6 +172,11 @@ contract StakeEnder is Magnitude, SingletonHedronManager {
         v1: stake.stakedHearts
       });
       if (newStakeAmount > ZERO) {
+        // this does not account for minimum newStakeAmount to have at least 1 share
+        // it is too expensive to check in the middle of this tight loop without
+        // crazy high costs - for the next 15 years, it should be done off chain
+        // stakes small enough to be anywhere near this
+        // threshold should simply be ignored
         if (uint8(setting >> INDEX_RIGHT_NEW_STAKE_DAYS_METHOD) > ZERO) {
           (uint256 newStakeDaysMethod, uint256 newStakeDays) = _computeDayMagnitude({
             limit: MAX_DAYS,
