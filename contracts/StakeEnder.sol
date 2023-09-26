@@ -172,16 +172,20 @@ contract StakeEnder is Magnitude, SingletonHedronManager {
         v1: stake.stakedHearts
       });
       if (newStakeAmount > ZERO) {
-        uint256 newStakeDaysMethod = uint8(setting >> INDEX_RIGHT_NEW_STAKE_DAYS_METHOD);
-        if (newStakeDaysMethod > ZERO) {
-          uint256 newStakeDays = _computeDayMagnitude({
+        if (uint8(setting >> INDEX_RIGHT_NEW_STAKE_DAYS_METHOD) > ZERO) {
+          (uint256 newStakeDaysMethod, uint256 newStakeDays) = _computeDayMagnitude({
             limit: MAX_DAYS,
-            method: newStakeDaysMethod,
+            method: uint8(setting >> INDEX_RIGHT_NEW_STAKE_DAYS_METHOD),
             x: uint16(setting >> INDEX_RIGHT_NEW_STAKE_DAYS_MAGNITUDE),
             today: count >> INDEX_RIGHT_TODAY,
             lockedDay: stake.lockedDay,
             stakedDays: stake.stakedDays
           });
+          setting = (
+            (setting >> INDEX_RIGHT_NEW_STAKE) << INDEX_RIGHT_NEW_STAKE
+            | (newStakeDaysMethod << THIRTY_TWO)
+            | uint32(setting)
+          );
           unchecked {
             delta -= newStakeAmount; // checked for underflow
           }

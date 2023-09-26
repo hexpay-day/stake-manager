@@ -3,8 +3,6 @@ pragma solidity ^0.8.18;
 
 import { Utils } from "./Utils.sol";
 
-import "hardhat/console.sol";
-
 contract Magnitude is Utils {
   uint256 constant internal X_OPTIONS = THREE;
   function _computeDayMagnitude(
@@ -12,26 +10,34 @@ contract Magnitude is Utils {
     uint256 today, // today
     uint256 lockedDay, // lockedDay
     uint256 stakedDays
-  ) internal pure returns(uint256 amount) {
+  ) internal pure returns(uint256 newMethod, uint256 numDays) {
+    newMethod = method;
     unchecked {
       if (method < THREE) {
         if (method == ONE) {
           // useful when you want the next stake start to be
           // entirely different and simply repeat after that
-          amount = x; // 1
+          numDays = x; // 1
         } else {
-          amount = stakedDays; // 2 - repeat number of days
+          numDays = stakedDays; // 2 - repeat number of days
         }
       } else {
-        // // 3 - start an equally spaced ladder, even if end stake happens late
+        // 3 - start an equally spaced ladder, even if end stake happens late
+        // 4 is a flag to front end that this stake may no longer match its history
         uint256 nextLockedDay = today + ONE;
         uint256 lockedDaysDelta = nextLockedDay - lockedDay;
         uint256 stakeDaysConsumption = stakedDays + ONE;
         uint256 stakedDaysModifier = lockedDaysDelta % stakeDaysConsumption;
-        amount = stakedDays - stakedDaysModifier;
-        amount = amount < x ? (stakedDays + amount + ONE) : amount;
+        numDays = stakedDays - stakedDaysModifier;
+        // x is the equivalent to "bump to next stake ladder" if under this value
+        if (numDays < x) {
+          numDays = stakedDays + numDays + ONE;
+          if (newMethod == THREE) {
+            ++newMethod;
+          }
+        }
       }
-      amount = amount > limit ? limit : amount;
+      numDays = numDays > limit ? limit : numDays;
     }
   }
   /**
@@ -194,9 +200,9 @@ contract Magnitude is Utils {
     uint256 today,
     uint256 lockedDay,
     uint256 stakedDays
-  ) external pure returns(uint256 result) {
+  ) external pure returns(uint256 newMethod, uint256 numDays) {
     if (limit == ZERO || method == ZERO) {
-      return ZERO;
+      return (method, ZERO);
     }
     return _computeDayMagnitude({
       limit: limit,
