@@ -1,7 +1,7 @@
-import { task, type HardhatUserConfig, types } from "hardhat/config";
+import { task, type HardhatUserConfig } from "hardhat/config";
 import type {
   Artifact,
-  HardhatNetworkAccountsConfig,
+  HardhatNetworkHDAccountsUserConfig,
   HardhatNetworkUserConfig,
   NetworkUserConfig,
   SolcUserConfig,
@@ -66,17 +66,19 @@ function getRemappings() {
 }
 
 const defaultNetwork = {
-  timeout: 100_000_000,
+  accounts: {
+    mnemonic: conf.args.mnemonic,
+    count: 5,
+  },
 }
 
 const defaultHardhatNetwork: HardhatNetworkUserConfig = {
-  ...defaultNetwork,
   allowBlocksWithSameTimestamp: true,
   accounts: {
     accountsBalance: ethers.utils.parseEther((100_000_000_000).toString()).toString(),
     count: 5,
     mnemonic: conf.args.mnemonic,
-  } as HardhatNetworkAccountsConfig,
+  } as HardhatNetworkHDAccountsUserConfig,
   mining: {
     auto: true,
     interval: 10_000,
@@ -86,7 +88,6 @@ const defaultHardhatNetwork: HardhatNetworkUserConfig = {
 const blockNumber = conf.args.blockNumber || 18057421
 
 const pulsechainV4: HardhatNetworkUserConfig = {
-  ...defaultHardhatNetwork,
   forking: {
     url: conf.args.rpc943 || 'https://rpc.v4.testnet.pulsechain.com',
     blockNumber,
@@ -102,12 +103,10 @@ const pulsechainV4: HardhatNetworkUserConfig = {
 }
 
 const pulsechain: HardhatNetworkUserConfig = {
-  ...defaultHardhatNetwork,
   forking: {
     url: conf.args.rpc369 || 'https://rpc.pulsechain.com',
     blockNumber,
   },
-  gasPrice: 'auto',
   chains: {
     369: {
       hardforkHistory: {
@@ -119,19 +118,34 @@ const pulsechain: HardhatNetworkUserConfig = {
 }
 
 const ethereum: HardhatNetworkUserConfig = {
-  ...defaultHardhatNetwork,
   forking: {
     url: conf.args.rpc1 || 'https://eth.llamarpc.com',
     blockNumber,
   },
+  // chains is known by hh
 }
 
 const hardhatNetworks: Record<string, HardhatNetworkUserConfig> = {
-  pulsechainV4,
-  pulsechain,
-  ethereum,
-  local: ethereum,
-  localhost: ethereum,
+  pulsechainV4: {
+    ...defaultHardhatNetwork,
+    ...pulsechainV4,
+  },
+  pulsechain: {
+    ...defaultHardhatNetwork,
+    ...pulsechain,
+  },
+  ethereum: {
+    ...defaultHardhatNetwork,
+    ...ethereum,
+  },
+  local: {
+    ...defaultHardhatNetwork,
+    ...ethereum,
+  },
+  localhost: {
+    ...defaultHardhatNetwork,
+    ...ethereum,
+  },
 }
 
 const networks: Record<string, NetworkUserConfig> = {

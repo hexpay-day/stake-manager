@@ -1,6 +1,6 @@
 import dotenv from 'dotenv'
-import { ethers } from 'ethers'
 dotenv.config()
+import { ethers } from 'ethers'
 import * as yargs from 'yargs'
 import { IHEX } from '../artifacts/types'
 import { HardhatRuntimeEnvironment } from 'hardhat/types'

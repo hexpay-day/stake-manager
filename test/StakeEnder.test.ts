@@ -354,6 +354,15 @@ describe("StakeManager", function () {
       await expect(x.stakeManager.stakeRestartById(x.nextStakeId))
         .to.emit(x.hex, 'StakeEnd')
     })
+    it('skips if stake is not valid', async () => {
+      const x = await loadFixture(utils.deployFixture)
+      const days = 3
+      // gives no consent for non owner to end
+      await x.stakeManager.stakeStart(x.stakedAmount, days)
+      await utils.moveForwardDays(days + 1, x)
+      await expect(x.stakeManager.stakeRestartById(x.nextStakeId - 1n))
+        .not.to.emit(x.hex, 'StakeEnd')
+    })
   })
   describe('stakeRestartManyById', () => {
     it('runs a permissioned, gas optimized, restart of a stake', async () => {

@@ -147,6 +147,9 @@ contract UnderlyingStakeManager is GoodAccounting {
     UnderlyingStakeable.StakeStore memory stake
   ) {
     (stakeIndex, staker) = _stakeIdToInfo(stakeId);
+    if (staker == address(0)) {
+      return (valid, staker, stakeIndex, stake);
+    }
     stake = _getStake({
       custodian: address(this),
       index: stakeIndex
@@ -163,16 +166,16 @@ contract UnderlyingStakeManager is GoodAccounting {
   function _stakeRestartById(uint256 stakeId) internal returns(
     uint256 amount, uint256 newStakeId
   ) {
-    _verifyStakeOwnership({
-      owner: msg.sender,
-      stakeId: stakeId
-    });
     (
       bool valid, address staker, uint256 stakeIndex,
       UnderlyingStakeable.StakeStore memory stake
     ) = _getStakeInfo(stakeId);
     if (!valid) {
       return (ZERO, ZERO);
+    }
+    // move to after valid check since this should happen less often
+    if (staker != msg.sender) {
+      revert StakeNotOwned(msg.sender, staker);
     }
     uint256 stakeCountAfter = _getStakeCount({
       staker: address(this)
