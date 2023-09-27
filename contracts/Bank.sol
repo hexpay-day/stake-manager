@@ -24,13 +24,13 @@ contract Bank is Utils {
   /**
    * @notice keeps a global mapping of attributed funds that the contract is custodying
    */
-  mapping(address token => uint256) public attributed;
+  mapping(address token => uint256 balance) public attributed;
   /**
    * @notice keeps a mapping of the withdrawable funds that the contract is custodying
    * the contract may also be custodying tips, but an amount held within
    * a tip is not withdrawable so it cannot be held in this mapping
    */
-  mapping(address token => mapping(address account => uint256)) public withdrawableBalanceOf;
+  mapping(address token => mapping(address account => uint256 balance)) public withdrawableBalanceOf;
   /**
    * gets unattributed tokens floating in the contract
    * @param token the address of the token that you wish to get the unattributed value of
@@ -286,9 +286,9 @@ contract Bank is Utils {
     }
     return amount;
   }
-  function _attributeFunds(uint256 setting, address token, address staker, uint256 amount) internal {
+  function _attributeFunds(uint256 settings, address token, address staker, uint256 amount) internal {
     if (_isOneAtIndex({
-      setting: setting,
+      settings: settings,
       index: FOUR
     })) {
       _withdrawTokenTo({

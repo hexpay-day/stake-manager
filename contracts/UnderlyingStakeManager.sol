@@ -82,7 +82,9 @@ contract UnderlyingStakeManager is GoodAccounting {
       owner: msg.sender,
       amount: amount,
       newStakedDays: newStakedDays,
-      index: _stakeCount(address(this))
+      index: _getStakeCount({
+        staker: address(this)
+      })
     });
   }
   /**
@@ -103,7 +105,9 @@ contract UnderlyingStakeManager is GoodAccounting {
    * @param stakeIndex the index of the stake to end
    * @param stakeId the stake id to end
    */
-  function _stakeEndByIndexAndId(uint256 stakeIndex, uint256 stakeId) internal virtual returns(uint256 amount) {
+  function _stakeEndByIndexAndId(
+    uint256 stakeIndex, uint256 stakeId
+  ) internal virtual returns(uint256 amount) {
     _verifyStakeOwnership({
       owner: msg.sender,
       stakeId: stakeId
@@ -111,7 +115,7 @@ contract UnderlyingStakeManager is GoodAccounting {
     amount = _stakeEnd({
       stakeIndex: stakeIndex,
       stakeId: stakeId,
-      stakeCountAfter: _stakeCount({
+      stakeCountAfter: _getStakeCount({
         staker: address(this)
       }) - ONE
     });
@@ -136,6 +140,19 @@ contract UnderlyingStakeManager is GoodAccounting {
     });
     return _stakeEndByIndexAndId(stakeIndex, stakeId);
   }
+  function _getStakeInfo(uint256 stakeId) internal view virtual returns(
+    bool valid,
+    address staker,
+    uint256 stakeIndex,
+    UnderlyingStakeable.StakeStore memory stake
+  ) {
+    (stakeIndex, staker) = _stakeIdToInfo(stakeId);
+    stake = _getStake({
+      custodian: address(this),
+      index: stakeIndex
+    });
+    valid = stake.stakeId == stakeId;
+  }
   /**
    * given ownership over a stake, end the stake
    * and restart all of the proceeds
@@ -143,14 +160,21 @@ contract UnderlyingStakeManager is GoodAccounting {
    * @return amount the amount ended and re-staked
    * @return newStakeId the newly recreated stake id
    */
-  function _stakeRestartById(uint256 stakeId) internal returns(uint256 amount, uint256 newStakeId) {
+  function _stakeRestartById(uint256 stakeId) internal returns(
+    uint256 amount, uint256 newStakeId
+  ) {
     _verifyStakeOwnership({
       owner: msg.sender,
       stakeId: stakeId
     });
-    (uint256 stakeIndex, address staker) = _stakeIdToInfo(stakeId);
-    UnderlyingStakeable.StakeStore memory stake = _getStake(address(this), stakeIndex);
-    uint256 stakeCountAfter = _stakeCount({
+    (
+      bool valid, address staker, uint256 stakeIndex,
+      UnderlyingStakeable.StakeStore memory stake
+    ) = _getStakeInfo(stakeId);
+    if (!valid) {
+      return (ZERO, ZERO);
+    }
+    uint256 stakeCountAfter = _getStakeCount({
       staker: address(this)
     }) - ONE;
     // at this point, we can guarantee that we own the stake
@@ -172,7 +196,9 @@ contract UnderlyingStakeManager is GoodAccounting {
    * @return amount the number of tokens that were ended and added to new stake
    * @return newStakeId the newly created stake id
    */
-  function stakeRestartById(uint256 stakeId) external returns(uint256 amount, uint256 newStakeId) {
+  function stakeRestartById(uint256 stakeId) external returns(
+    uint256 amount, uint256 newStakeId
+  ) {
     return _stakeRestartById({
       stakeId: stakeId
     });

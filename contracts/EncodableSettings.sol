@@ -65,7 +65,7 @@ abstract contract EncodableSettings is StakeInfo {
      */
     ConsentAbilities consentAbilities;
   }
-  mapping(uint256 stakeId => uint256) public stakeIdToSettings;
+  mapping(uint256 stakeId => uint256 settings) public stakeIdToSettings;
   /**
    * an event to signal that settings to direct funds
    * at the end of a stake have been updated
@@ -407,32 +407,32 @@ abstract contract EncodableSettings is StakeInfo {
   /**
    * modify the second byteword from the right to appropriately decrement
    * the number of times that these settings should be copied
-   * @param setting the setting to start with - only the 2nd byte from the right is modified
+   * @param settings the settings to start with - only the 2nd byte from the right is modified
    */
-  function decrementCopyIterations(uint256 setting) external pure returns(uint256) {
+  function decrementCopyIterations(uint256 settings) external pure returns(uint256) {
     return _decrementCopyIterations({
-      setting: setting
+      settings: settings
     });
   }
   /**
    * decrement the 2nd byte from the right if the value is < 255
-   * @param setting the setting to start with - only the 2nd byte from the right is modified
-   * @return updated encoded setting with appropriately decremented value
+   * @param settings the settings to start with - only the 2nd byte from the right is modified
+   * @return updated encoded settings with appropriately decremented value
    */
-  function _decrementCopyIterations(uint256 setting) internal pure returns(uint256) {
+  function _decrementCopyIterations(uint256 settings) internal pure returns(uint256) {
     unchecked {
-      uint256 copyIterations = uint8(setting >> INDEX_RIGHT_COPY_ITERATIONS);
+      uint256 copyIterations = uint8(settings >> INDEX_RIGHT_COPY_ITERATIONS);
       if (copyIterations == ZERO) {
-        return uint8(setting);
+        return uint8(settings);
       }
       if (copyIterations == MAX_UINT_8) {
-        return setting;
+        return settings;
       }
       --copyIterations;
       return (
-        (setting >> INDEX_RIGHT_NEW_STAKE_DAYS_MAGNITUDE << INDEX_RIGHT_NEW_STAKE_DAYS_MAGNITUDE)
+        (settings >> INDEX_RIGHT_NEW_STAKE_DAYS_MAGNITUDE << INDEX_RIGHT_NEW_STAKE_DAYS_MAGNITUDE)
         | (copyIterations << INDEX_RIGHT_COPY_ITERATIONS)
-        | uint8(setting)
+        | uint8(settings)
       );
     }
   }

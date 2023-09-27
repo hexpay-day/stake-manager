@@ -52,7 +52,7 @@ contract TransferableStakeManager is StakeStarter {
   }
   /**
    * check if a given stake under a stake id can be transferred
-   * @param stakeId the stake id to check transferrability setting
+   * @param stakeId the stake id to check transferrability settings
    */
   function canTransfer(uint256 stakeId) external view returns(bool) {
     return _canTransfer({
@@ -61,11 +61,11 @@ contract TransferableStakeManager is StakeStarter {
   }
   /**
    * check if a given stake under a stake id can be transferred
-   * @param stakeId the stake id to check transferrability setting
+   * @param stakeId the stake id to check transferrability settings
    */
   function _canTransfer(uint256 stakeId) internal view returns(bool) {
     return _isOneAtIndex({
-      setting: stakeIdToSettings[stakeId],
+      settings: stakeIdToSettings[stakeId],
       index: INDEX_RIGHT_STAKE_IS_TRANSFERABLE
     });
   }

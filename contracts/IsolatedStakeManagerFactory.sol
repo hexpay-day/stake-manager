@@ -9,7 +9,7 @@ contract IsolatedStakeManagerFactory {
    * @notice a mapping of a key that contains a modifier and the owning address
    * pointing to the address of the contract created by the stake manager
    */
-  mapping(address originalOwner => address) public isolatedStakeManagers;
+  mapping(address originalOwner => address manager) public isolatedStakeManagers;
   function createIsolatedManager(address staker) external returns(address existing) {
     existing = isolatedStakeManagers[staker];
     if (existing != address(0)) {

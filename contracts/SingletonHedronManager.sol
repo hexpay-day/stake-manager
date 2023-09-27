@@ -6,22 +6,22 @@ import { UnderlyingStakeManager } from "./UnderlyingStakeManager.sol";
 
 contract SingletonHedronManager is UnderlyingStakeManager {
   /**
-   * combine a boolean from a setting value and the owner address to
+   * combine a boolean from a settings value and the owner address to
    * reduce the number of transfers / writes that occur during a loop
-   * @param setting the setting to determine if a withdrawal should occur
+   * @param settings the settings to determine if a withdrawal should occur
    * @param owner the owner of the underlying stake
    * @return to the uint256 representation of a single bit in settings and an owner address
    */
-  function createTo(uint256 setting, address owner) external pure returns(uint256 to) {
+  function createTo(uint256 settings, address owner) external pure returns(uint256 to) {
     return _createTo({
-      setting: setting,
+      settings: settings,
       owner: owner
     });
   }
-  function _createTo(uint256 setting, address owner) internal pure returns(uint256 to) {
+  function _createTo(uint256 settings, address owner) internal pure returns(uint256 to) {
     unchecked {
       return ((_isOneAtIndex({
-        setting: setting,
+        settings: settings,
         index: INDEX_RIGHT_SHOULD_SEND_TOKENS_TO_STAKER
       }) ? ONE : ZERO) << ADDRESS_BIT_LENGTH) | uint160(owner);
     }
@@ -38,8 +38,8 @@ contract SingletonHedronManager is UnderlyingStakeManager {
     address currentOwner;
     uint256 stakeIndex;
     uint256 stakeId;
-    uint256 setting = stakeIdToSettings[stakeId];
-    uint256 to = _createTo(setting, _stakeIdToOwner({
+    uint256 settings = stakeIdToSettings[stakeId];
+    uint256 to = _createTo(settings, _stakeIdToOwner({
       stakeId: stakeIds[ZERO]
     }));
     unchecked {
@@ -48,15 +48,15 @@ contract SingletonHedronManager is UnderlyingStakeManager {
         (stakeIndex, currentOwner) = _stakeIdToInfo({
           stakeId: stakeId
         });
-        setting = stakeIdToSettings[stakeId];
+        settings = stakeIdToSettings[stakeId];
         if (msg.sender == currentOwner || _isOneAtIndex({
-          setting: setting,
+          settings: settings,
           index: INDEX_RIGHT_CAN_MINT_HEDRON
         })) {
-          uint256 currentTo = _createTo(setting, currentOwner);
+          uint256 currentTo = _createTo(settings, currentOwner);
           if (currentTo != to) {
             _attributeFunds({
-              setting: setting,
+              settings: settings,
               token: HEDRON,
               staker: address(uint160(to)),
               amount: hedronTokens
@@ -73,7 +73,7 @@ contract SingletonHedronManager is UnderlyingStakeManager {
       } while (i < len);
       if (hedronTokens > ZERO) {
         _attributeFunds({
-          setting: setting,
+          settings: settings,
           token: HEDRON,
           staker: address(uint160(to)),
           amount: hedronTokens

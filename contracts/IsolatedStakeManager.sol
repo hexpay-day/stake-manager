@@ -28,27 +28,27 @@ contract IsolatedStakeManager is Ownable2Step, AuthorizationManager, GoodAccount
   /**
    * set authorization flags for a provided target
    * @param account the address to change settings for
-   * @param setting the encoded setting (binary) to apply to the target address
+   * @param settings the encoded setting (binary) to apply to the target address
    */
-  function setAuthorization(address account, uint256 setting) external onlyOwner {
+  function setAuthorization(address account, uint256 settings) external onlyOwner {
     _setAddressAuthorization({
       account: account,
-      settings: setting
+      settings: settings
     });
   }
   /**
    * allow addresses to start stakes from tokens already in the contract
    * @param runner the anticipated address(es) that will be running the following method
    * @param stakeDays the number of days that can be passed for the address (to constrain griefing)
-   * @param setting the settings to provide (only index 0 is relevant)
+   * @param settings the settings to provide (only index 0 is relevant)
    */
-  function setStartAuthorization(address runner, uint16 stakeDays, uint256 setting) external onlyOwner {
+  function setStartAuthorization(address runner, uint16 stakeDays, uint256 settings) external onlyOwner {
     _setAuthorization({
       key: _startAuthorizationKey({
         runner: runner,
         stakeDays: stakeDays
       }),
-      settings: setting
+      settings: settings
     });
   }
   /**
@@ -73,12 +73,12 @@ contract IsolatedStakeManager is Ownable2Step, AuthorizationManager, GoodAccount
    * it is not rational to pass anything but zero for this method
    */
   function stakeStart(uint256 newStakedHearts, uint256 newStakedDays) external override {
-    uint256 setting = _getAddressSetting({
+    uint256 settings = _getAddressSettings({
       account: msg.sender
     });
     // blanket start authorization
     if (!_isOneAtIndex({
-      setting: setting,
+      settings: settings,
       index: ZERO
     })) {
       revert NotAllowed();
@@ -99,7 +99,7 @@ contract IsolatedStakeManager is Ownable2Step, AuthorizationManager, GoodAccount
   function stakeStartWithAuthorization(uint256 newStakedDays) external {
     // scoped authorization - to keep non-permitted contracts from griefing users
     if (!_isOneAtIndex({
-      setting: authorization[_startAuthorizationKey(msg.sender, newStakedDays)],
+      settings: authorization[_startAuthorizationKey(msg.sender, newStakedDays)],
       index: ZERO
     })) {
       revert NotAllowed();
@@ -186,7 +186,7 @@ contract IsolatedStakeManager is Ownable2Step, AuthorizationManager, GoodAccount
    */
   function _transferToOwner() internal {
     if (!_isOneAtIndex({
-      setting: _getAddressSetting(msg.sender),
+      settings: _getAddressSettings(msg.sender),
       index: THREE
     })) {
       revert NotAllowed();
@@ -200,17 +200,17 @@ contract IsolatedStakeManager is Ownable2Step, AuthorizationManager, GoodAccount
    * @param stake the stake to check authorization over
    */
   function _settingsCheck(IUnderlyingStakeable.StakeStore memory stake) internal view returns(bool) {
-    uint256 setting = _getAddressSetting(msg.sender);
+    uint256 settings = _getAddressSettings(msg.sender);
     if (_isEarlyEnding(stake.lockedDay, stake.stakedDays, _currentDay())) {
       // can early end stake
       return _isOneAtIndex({
-        setting: setting,
+        settings: settings,
         index: TWO
       });
     } else {
       // can end stake
       return _isOneAtIndex({
-        setting: setting,
+        settings: settings,
         index: ONE
       });
     }
@@ -244,7 +244,7 @@ contract IsolatedStakeManager is Ownable2Step, AuthorizationManager, GoodAccount
    */
   function _transferFromOwner(uint256 amount) internal {
     if (!_isOneAtIndex({
-      setting: _getAddressSetting(msg.sender),
+      settings: _getAddressSettings(msg.sender),
       index: FOUR
     })) {
       revert NotAllowed();

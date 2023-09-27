@@ -4,7 +4,10 @@ import * as hre from "hardhat"
 import * as utils from './utils'
 import _ from 'lodash'
 import { anyUint, anyValue } from "@nomicfoundation/hardhat-chai-matchers/withArgs"
-import { EncodableSettings } from "../artifacts/types"
+import { EncodableSettings, HSIStakeManager } from "../artifacts/types"
+import { StakeStartEvent } from "../artifacts/types/contracts/interfaces/IHEX"
+import { HSIStartEvent, IHEXStakeInstanceManager } from "../artifacts/types/contracts/interfaces/IHEXStakeInstanceManager"
+import { ContractTransaction } from "ethers"
 
 describe('HSIStakeManager.sol', () => {
   describe('depositHsi', () => {
@@ -32,7 +35,7 @@ describe('HSIStakeManager.sol', () => {
       await expect(x.existingStakeManager.connect(signer2).withdrawHsi(x.hsiTargets[0].hsiAddress))
         .to.revertedWithCustomError(x.existingStakeManager, 'StakeNotOwned')
         .withArgs(signer2.address, signer1.address)
-      await expect(x.existingStakeManager.hsiCount())
+      await expect(x.existingStakeManager.hsiCount(x.existingStakeManager.address))
         .eventually.to.equal(3)
       await expect(x.existingStakeManager.stakeIdInfo(x.hsiTargets[2].hsiAddress))
         .eventually.to.equal((2n << 160n) | BigInt(signer1.address)) // index 0
@@ -95,7 +98,7 @@ describe('HSIStakeManager.sol', () => {
   describe('hsiCount', () => {
     it('returns the count of hsis deposited in the hsi stake manager', async () => {
       const x = await loadFixture(utils.deployAndProcureHSIFixture)
-      await expect(x.existingStakeManager.hsiCount())
+      await expect(x.existingStakeManager.hsiCount(x.existingStakeManager.address))
         .eventually.to.equal(0)
 
       await expect(x.existingStakeManager.multicall(_.flatMap(x.hsiTargets, (target) => ([
@@ -103,7 +106,7 @@ describe('HSIStakeManager.sol', () => {
       ])), false))
         .to.emit(x.hsim, 'Transfer')
         .to.emit(x.hsim, 'HSIDetokenize')
-      await expect(x.existingStakeManager.hsiCount())
+      await expect(x.existingStakeManager.hsiCount(x.existingStakeManager.address))
         .eventually.to.equal(x.hsiTargets.length)
     })
   })
@@ -421,14 +424,52 @@ describe('HSIStakeManager.sol', () => {
         .to.emit(x.hsim, 'HSIDetokenize')
       await utils.moveForwardDays(30, x)
       const nextStakeId = await utils.nextStakeId(x.hex)
-      await expect(x.existingStakeManager.connect(signer2).hsiStakeEndMany([
+      const hsiEndMany = x.existingStakeManager.connect(signer2).hsiStakeEndMany([
         x.hsiTargets[0].hsiAddress,
-        signer1.address,
-      ]))
+        signer1.address, // invalid hsi addresses are ignored
+      ])
+      await expect(hsiEndMany)
         .to.emit(x.hex, 'StakeEnd')
         .withArgs(anyUint, anyUint, x.hsiTargets[0].hsiAddress, x.hsiTargets[0].stakeId)
         .to.emit(x.hex, 'StakeStart')
         .withArgs(anyUint, anyValue, nextStakeId)
+      const hsiAddress = await utils.receiptToHsiAddress(x.hsim, await hsiEndMany)
+      await expect(x.existingStakeManager.withdrawHsi(hsiAddress))
+        .to.emit(x.hsim, 'HSITokenize')
+        .withArgs(anyUint, anyUint, hsiAddress, x.existingStakeManager.address)
+        .to.emit(x.hsim, 'Transfer') // mint
+        .withArgs(hre.ethers.constants.AddressZero, x.existingStakeManager.address, anyUint)
+        .to.emit(x.hsim, 'Transfer') // transfer to tracked owner
+        .withArgs(x.existingStakeManager.address, signer1.address, anyUint)
+    })
+  })
+  describe('restarting', () => {
+    it('can restart stakes', async () => {
+      const x = await loadFixture(utils.deployAndProcureHSIFixture)
+      const [signer1] = x.signers
+      await expect(x.existingStakeManager.multicall(_.map(x.hsiTargets, (target) => (
+        x.existingStakeManager.interface.encodeFunctionData('depositHsi', [target.tokenId, 0])
+      )), false))
+        .to.emit(x.hsim, 'Transfer')
+        .to.emit(x.hsim, 'HSIDetokenize')
+      await utils.moveForwardDays(30, x)
+      // 30 day stake is in last
+      const targetStakeIdAsHsi = x.hsiTargets[0]
+      const nextStakeId = await utils.nextStakeId(x.hex)
+      const hsiRestart = x.existingStakeManager.stakeRestartById(targetStakeIdAsHsi.hsiAddress)
+      await expect(hsiRestart)
+        .to.emit(x.hex, 'StakeEnd')
+        .withArgs(anyUint, anyUint, targetStakeIdAsHsi.hsiAddress, targetStakeIdAsHsi.stakeId)
+        .to.emit(x.hex, 'StakeStart')
+        .withArgs(anyUint, anyValue, nextStakeId)
+      const restartedHsiAddress = await utils.receiptToHsiAddress(x.hsim, await hsiRestart)
+      await expect(x.existingStakeManager.withdrawHsi(restartedHsiAddress))
+        .to.emit(x.hsim, 'HSITokenize') // mint
+        .withArgs(anyUint, anyUint, restartedHsiAddress, x.existingStakeManager.address)
+        .to.emit(x.hsim, 'Transfer') // mint
+        .withArgs(hre.ethers.constants.AddressZero, x.existingStakeManager.address, anyUint)
+        .to.emit(x.hsim, 'Transfer') // transfer to tracked owner
+        .withArgs(x.existingStakeManager.address, signer1.address, anyUint)
     })
   })
 })

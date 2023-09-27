@@ -15,14 +15,14 @@ abstract contract AuthorizationManager is UnderlyingStakeable {
    * @dev most of the time the keys will be addresses
    * so you will often have to encode the addresses as byte32
    */
-  mapping(bytes32 key => uint256) public authorization;
+  mapping(bytes32 key => uint256 settings) public authorization;
   /**
    * emitted after settings are updated to allow various
    * addresses and key combinations to act on owners behalf
    * @param key the key, usually an address, that is authorized to perform new actions
    * @param settings the settings number - used as binary
    */
-  event UpdateAuthorization(bytes32 key, uint256 settings);
+  event UpdateAuthorization(bytes32 indexed key, uint256 settings);
   /**
    * the maximum authorization value that a setting can hold
    * @notice - this is enforced during _setAuthorization only so it
@@ -99,16 +99,16 @@ abstract contract AuthorizationManager is UnderlyingStakeable {
    */
   function _isAuthorized(bytes32 key, uint256 index) view internal returns(bool) {
     return _isOneAtIndex({
-      setting: authorization[key],
+      settings: authorization[key],
       index: index
     });
   }
   /**
-   * access setting scoped under an account (address) only
+   * access settings scoped under an account (address) only
    * @param account the account whose settings you wish to access
    * @return arbitrary authorization value
    */
-  function _getAddressSetting(address account) view internal returns(uint256) {
+  function _getAddressSettings(address account) view internal returns(uint256) {
     return authorization[bytes32(uint256(uint160(account)))];
   }
 }

@@ -12,11 +12,11 @@ contract MaximusStakeManager is HSIStakeManager {
   using Address for address payable;
   address public externalPerpetualSetter;
   address public externalPerpetualFilter;
-  mapping(address perpetual => bool) public perpetualWhitelist;
+  mapping(address perpetual => bool isPerpetual) public perpetualWhitelist;
   /**
    * bytes32 is a key made up of the perpetual whitelist address + the iteration of the stake found at
    */
-  mapping(address perpetual => mapping(uint256 period => address)) public rewardsTo;
+  mapping(address perpetual => mapping(uint256 period => address to)) public rewardsTo;
   /**
    * emitted when a contract is added to the whitelist
    * @param perpetual the perpetual contract added to the whitelist

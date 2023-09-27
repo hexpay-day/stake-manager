@@ -1,5 +1,5 @@
 {
-  "license": "UNLICENSED",
+  "license": "MIT",
   "name": "@hexpayday/stake-manager",
   "scripts": {
     "build": "yarn run lint && yarn run metrics && yarn run cloc && yarn run docs",
@@ -59,7 +59,7 @@
     "shx": "^0.3.4",
     "solhint": "^3.4.1",
     "solidity-code-metrics": "^0.0.23",
-    "solidity-coverage": "^0.8.4",
+    "solidity-coverage": "^0.8.5",
     "solidity-docgen": "^0.6.0-beta.36",
     "ts-node": "^10.9.1",
     "typechain": "^8.1.0",

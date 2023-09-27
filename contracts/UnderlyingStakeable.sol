@@ -15,7 +15,9 @@ abstract contract UnderlyingStakeable is MulticallExtension, IUnderlyingStakeabl
    * @param index the index of the stake to get
    * @return the stake on the list at the provided index
    */
-  function _getStake(address custodian, uint256 index) virtual internal view returns(StakeStore memory) {
+  function _getStake(
+    address custodian, uint256 index
+  ) virtual internal view returns(StakeStore memory) {
     return IUnderlyingStakeable(TARGET).stakeLists(custodian, index);
   }
   /**
@@ -35,6 +37,11 @@ abstract contract UnderlyingStakeable is MulticallExtension, IUnderlyingStakeabl
    */
   function _stakeCount(address staker) internal view returns(uint256 count) {
     return IUnderlyingStakeable(TARGET).stakeCount(staker);
+  }
+  function _getStakeCount(address staker) internal view virtual returns(uint256 count) {
+    return _stakeCount({
+      staker: staker
+    });
   }
   /**
    * retrieve the balance of a given owner
@@ -60,7 +67,9 @@ abstract contract UnderlyingStakeable is MulticallExtension, IUnderlyingStakeabl
    * @param index the index to focus on
    * @return stake the stake custodied by a given staker at a given index
    */
-  function stakeLists(address staker, uint256 index) view external returns(StakeStore memory stake) {
+  function stakeLists(
+    address staker, uint256 index
+  ) view external returns(StakeStore memory stake) {
     return _getStake({
       custodian: staker,
       index: index
@@ -94,7 +103,9 @@ abstract contract UnderlyingStakeable is MulticallExtension, IUnderlyingStakeabl
    * @param targetDay the day to check whether it will be categorized as ending early
    * @return isEarly the locked and staked days are greater than the target day (usually today)
    */
-  function isEarlyEnding(uint256 lockedDay, uint256 stakedDays, uint256 targetDay) external pure returns(bool isEarly) {
+  function isEarlyEnding(
+    uint256 lockedDay, uint256 stakedDays, uint256 targetDay
+  ) external pure returns(bool isEarly) {
     return _isEarlyEnding({
       lockedDay: lockedDay,
       stakedDays: stakedDays,
@@ -135,5 +146,7 @@ abstract contract UnderlyingStakeable is MulticallExtension, IUnderlyingStakeabl
    * or requires that the staker send start and end methods (0)
    */
   function stakeEnd(uint256 stakeIndex, uint40 stakeId) external virtual;
-  function stakeGoodAccounting(address stakerAddr, uint256 stakeIndex, uint40 stakeIdParam) external virtual;
+  function stakeGoodAccounting(
+    address stakerAddr, uint256 stakeIndex, uint40 stakeIdParam
+  ) external virtual;
 }

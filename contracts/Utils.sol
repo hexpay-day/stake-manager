@@ -65,21 +65,21 @@ contract Utils {
   address public constant HSIM = 0x8BD3d1472A656e312E94fB1BbdD599B8C51D18e3;
   /**
    * check if the number, in binary form, has a 1 at the provided index
-   * @param setting the setting number that holds up to 256 flags as 1/0
+   * @param settings the settings number that holds up to 256 flags as 1/0
    * @param index the index to check for a 1
    */
-  function isOneAtIndex(uint256 setting, uint256 index) external pure returns(bool isOne) {
+  function isOneAtIndex(uint256 settings, uint256 index) external pure returns(bool isOne) {
     return _isOneAtIndex({
-      setting: setting,
+      settings: settings,
       index: index
     });
   }
-  function _isOneAtIndex(uint256 setting, uint256 index) internal pure returns(bool isOne) {
+  function _isOneAtIndex(uint256 settings, uint256 index) internal pure returns(bool isOne) {
     // in binary checks:
-    // take the setting and shift it some number of bits left (leaving space for 1)
+    // take the settings and shift it some number of bits left (leaving space for 1)
     // then go the opposite direction, once again leaving only space for 1
     unchecked {
-      return ONE == (setting << (MAX_UINT_8 - index) >> MAX_UINT_8);
+      return ONE == (settings << (MAX_UINT_8 - index) >> MAX_UINT_8);
     }
   }
   /**

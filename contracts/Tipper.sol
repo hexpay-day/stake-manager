@@ -34,19 +34,19 @@ abstract contract Tipper is Bank, UnderlyingStakeable, CurrencyList, EncodableSe
    * to the lower level `stakeIdInfo` mapping and individuals who do not wish to tip
    * should not be charged 2k gas for checking if this mapping exists
    */
-  mapping(uint256 stakeId => address) internal tipStakeIdToStaker;
-  mapping(uint256 stakeId => uint256[]) public stakeIdTips;
+  mapping(uint256 stakeId => address staker) internal tipStakeIdToStaker;
+  mapping(uint256 stakeId => uint256[] tips) public stakeIdTips;
   event AddTip(
     uint256 indexed stakeId,
     address indexed token,
     uint256 indexed index,
-    uint256 setting
+    uint256 settings
   );
   event RemoveTip(
     uint256 indexed stakeId,
     address indexed token,
     uint256 indexed index,
-    uint256 setting
+    uint256 settings
   );
   /**
    * tip an address a defined amount and token
@@ -148,7 +148,7 @@ abstract contract Tipper is Bank, UnderlyingStakeable, CurrencyList, EncodableSe
         }
       }
       if (_isOneAtIndex({
-        setting: cachedTip,
+        settings: cachedTip,
         index: MAX_UINT_8
       }) && nextStakeId > ZERO) {
         limit = _clamp({
@@ -170,7 +170,7 @@ abstract contract Tipper is Bank, UnderlyingStakeable, CurrencyList, EncodableSe
             stakeId: nextStakeId,
             token: token,
             index: nextStakeTipsLength,
-            setting: cachedTip
+            settings: cachedTip
           });
           unchecked {
             ++nextStakeTipsLength;
@@ -373,7 +373,7 @@ abstract contract Tipper is Bank, UnderlyingStakeable, CurrencyList, EncodableSe
         address token = address(indexToToken[tip << ONE >> INDEX_EXTERNAL_TIP_CURRENCY_ONLY]);
         _attributeFunds({
           token: token,
-          setting: settings,
+          settings: settings,
           staker: staker,
           amount: uint128(tip >> INDEX_EXTERNAL_TIP_LIMIT)
         });
@@ -381,7 +381,7 @@ abstract contract Tipper is Bank, UnderlyingStakeable, CurrencyList, EncodableSe
           stakeId: stakeId,
           token: token,
           index: index,
-          setting: tip
+          settings: tip
         });
         // this overflows when tips are empty
         --tipsLast;
@@ -390,17 +390,17 @@ abstract contract Tipper is Bank, UnderlyingStakeable, CurrencyList, EncodableSe
     } while (i < len);
     if (tipsLast == MAX_UINT_256) {
       // remove from settings
-      uint256 setting = stakeIdToSettings[stakeId];
+      uint256 currentSettings = stakeIdToSettings[stakeId];
       unchecked {
         _logSettingsUpdate({
           stakeId: stakeId,
           settings: (
-            (setting >> INDEX_RIGHT_COPY_ITERATIONS << INDEX_RIGHT_COPY_ITERATIONS)
+            (currentSettings >> INDEX_RIGHT_COPY_ITERATIONS << INDEX_RIGHT_COPY_ITERATIONS)
             // only remove information about the existance of a list
             // not whether or not to copy said list in subsequent stakes
             // should it exist again
             // in other words, copying remains in the hands of the staker
-            | (uint8(setting << TWO) >> TWO)
+            | (uint8(currentSettings << TWO) >> TWO)
           )
         });
       }
@@ -532,19 +532,19 @@ abstract contract Tipper is Bank, UnderlyingStakeable, CurrencyList, EncodableSe
     if (currencyIndex == ZERO && token != address(0)) {
       revert NotAllowed();
     }
-    uint256 setting = _encodeTipSettings({
+    uint256 settings = _encodeTipSettings({
       reusable: reusable,
       currencyIndex: currencyIndex,
       amount: tipAmount,
       encodedLinear: encodedLinear
     });
     index = stakeIdTips[stakeId].length;
-    stakeIdTips[stakeId].push(setting);
+    stakeIdTips[stakeId].push(settings);
     emit AddTip({
       stakeId: stakeId,
       token: token,
       index: index,
-      setting: setting
+      settings: settings
     });
     return (index, tipAmount);
   }

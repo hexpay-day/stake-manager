@@ -33,7 +33,9 @@ contract HSIStakeManager is StakeEnder {
       token: HSIM,
       tokenId: tokenId
     });
-    uint256 index = _hsiCount();
+    uint256 index = _hsiCount({
+      staker: address(this)
+    });
     hsiAddress = IHEXStakeInstanceManager(HSIM).hexStakeDetokenize(tokenId);
     uint256 stakeId = uint256(uint160(hsiAddress));
     // erc721 is burned - no owner - only hsi address remains
@@ -100,7 +102,9 @@ contract HSIStakeManager is StakeEnder {
       owner: owner,
       hsiAddress: hsiAddress
     });
-    if (_hsiCount() > index) {
+    if (_hsiCount({
+      staker: address(this)
+    }) > index) {
       _rewriteIndex({
         index: index
       });
@@ -115,14 +119,18 @@ contract HSIStakeManager is StakeEnder {
   /**
    * the count or length of hsi's attributed to this contract
    */
-  function _hsiCount() internal view returns(uint256) {
-    return IHEXStakeInstanceManager(HSIM).hsiCount(address(this));
+  function hsiCount(address staker) external view returns(uint256 count) {
+    return _hsiCount({
+      staker: staker
+    });
   }
-  /**
-   * the count or length of hsi's attributed to this contract
-   */
-  function hsiCount() external view returns(uint256) {
-    return _hsiCount();
+  function _hsiCount(address staker) internal view returns(uint256 count) {
+    return IHEXStakeInstanceManager(HSIM).hsiCount(staker);
+  }
+  function _getStakeCount(address staker) internal view override returns(uint256 count) {
+    return _hsiCount({
+      staker: staker
+    });
   }
   /**
    * tokenize/mint a stake's erc721 token to transfer ownership of it
@@ -154,7 +162,9 @@ contract HSIStakeManager is StakeEnder {
     uint256 len = hsiAddresses.length;
     uint256 i;
     unchecked {
-      uint256 count = (_currentDay() << INDEX_RIGHT_TODAY) | _hsiCount();
+      uint256 count = (_currentDay() << INDEX_RIGHT_TODAY) | _hsiCount({
+        staker: address(this)
+      });
       do {
         (, count) = _stakeEndByConsent({
           stakeId: uint160(hsiAddresses[i]),
@@ -169,17 +179,22 @@ contract HSIStakeManager is StakeEnder {
    * retrieve a stake id's (hsi address's) singular stake
    * @param stakeId the stake id or hsi address to retrieve a stake from its list
    */
-  function _verifyStakeMatchesIndex(uint256, uint256 stakeId) internal view override returns(
+  function _getStakeInfo(uint256 stakeId) internal view override returns(
+    bool valid,
+    address staker,
+    uint256 stakeIndex,
     IUnderlyingStakeable.StakeStore memory stake
   ) {
     // we are only testing existance because the index
     // is always 0 for the custodian
     address hsiAddress = address(uint160(stakeId));
+    (stakeIndex, staker) = _stakeIdToInfo(stakeId);
     if (_stakeCount({ staker: hsiAddress }) == ONE) {
       stake = _getStake({
         custodian: hsiAddress,
         index: ZERO
       });
+      valid = true;
     }
   }
   /**
@@ -187,18 +202,18 @@ contract HSIStakeManager is StakeEnder {
    * unattributed tokens sent to this contract
    * @param index the hsim index of the stake to end
    * @param stakeId the stake id or hsi address
-   * @param stakeCountAfter the length of stakes that will exist
+   * @param hsiCountAfter the length of stakes that will exist
    * under the hsim after this end operation is complete
    */
   function _stakeEnd(
     uint256 index,
     uint256 stakeId,
-    uint256 stakeCountAfter
+    uint256 hsiCountAfter
   ) internal override returns(uint256 targetReward) {
     targetReward = IHEXStakeInstanceManager(HSIM)
       .hexStakeEnd(index, address(uint160(stakeId)));
     // move around the indexes for future stake ends
-    if (stakeCountAfter > index) {
+    if (hsiCountAfter > index) {
       _rewriteIndex({
         index: index
       });

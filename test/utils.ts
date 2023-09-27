@@ -7,9 +7,10 @@ import _ from "lodash"
 import * as ethers from 'ethers'
 import * as Chai from "chai"
 import * as config from '../src/config'
-import { Hedron, IERC20, IERC20Metadata } from "../artifacts/types"
+import { IHedron, IERC20, IERC20Metadata, IHEXStakeInstanceManager } from "../artifacts/types"
+import { HSIStartEvent } from "../artifacts/types/contracts/interfaces/IHEXStakeInstanceManager"
 
-Chai.Assertion.addMethod('printGasUsage', function (this: any) {
+Chai.Assertion.addMethod('printGasUsage', function (this: any, throws = true) {
   let subject = this._obj
   if (typeof subject === "function") {
     subject = subject()
@@ -19,9 +20,10 @@ Chai.Assertion.addMethod('printGasUsage', function (this: any) {
     [tx]:
     [ethers.providers.TransactionResponse],
   ) => {
+    const receipt = await tx.wait()
     hre.tracer.enabled = true
     await hre.run('trace', {
-      hash: tx.hash,
+      hash: receipt.transactionHash,
       fulltrace: true,
     })
     hre.tracer.enabled = false
@@ -46,7 +48,7 @@ export const deployFixture = async () => {
   const signers = _signers.slice(0, 20)
   const [signer] = signers
   const hex = await hre.ethers.getContractAt('contracts/interfaces/IHEX.sol:IHEX', config.hexAddress) as IHEX
-  const hedron = await hre.ethers.getContractAt('contracts/interfaces/IHedron.sol:IHedron', config.hedronAddress) as Hedron
+  const hedron = await hre.ethers.getContractAt('contracts/interfaces/IHedron.sol:IHedron', config.hedronAddress) as IHedron
   const hsim = await hre.ethers.getContractAt('IHEXStakeInstanceManager', await hedron.hsim())
   const TransferReceiver = await hre.ethers.getContractFactory('TransferReceiver')
   const transferReceiver = await TransferReceiver.deploy()
@@ -183,6 +185,13 @@ export const stakeSingletonBagAndWait = async () => {
   }
 }
 
+export type HSITarget = {
+  hsiAddress: string;
+  stakeId: bigint;
+  tokenId: bigint;
+  hsiIndex: bigint;
+}
+
 export const deployAndProcureHSIFixture = async () => {
   const x = await loadFixture(deployFixture)
   const [signerA] = x.signers
@@ -215,9 +224,9 @@ export const deployAndProcureHSIFixture = async () => {
     const tokenId = await x.hsim.tokenOfOwnerByIndex(signerA.address, index)
     return {
       ...target,
-      tokenId,
+      tokenId: tokenId.toBigInt(),
       hsiIndex: addrToId.get(target.hsiAddress) as bigint,
-    }
+    } as HSITarget
   }))
   await x.hsim.setApprovalForAll(x.existingStakeManager.address, true)
   return {
@@ -277,3 +286,17 @@ export const leechUsdc = async (amount: bigint, to: string, x: LeechUSDC) => {
 export const absMinInt16 = 2n**15n // zero point for int16
 
 export const DAY = 1000*60*60*24
+
+export const receiptToHsiAddress = async (hsim: IHEXStakeInstanceManager, tx: ethers.ContractTransaction) => {
+  const receipt = await tx.wait()
+  const stakeStartEvent = _(receipt.logs)
+    .map((log) => {
+      try {
+        const l = hsim.interface.parseLog(log)
+        if (l.name === 'HSIStart') return l
+      } catch (err) {}
+    })
+    .compact()
+    .first() as unknown as HSIStartEvent
+  return stakeStartEvent.args.hsiAddress
+}
