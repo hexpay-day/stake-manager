@@ -21,6 +21,9 @@ import * as ethers from "ethers";
 import * as conf from './src/config'
 
 import { main as deploy } from './tasks/deploy'
+import { main as deployExistingStakeManager } from './tasks/deploy/existing-stake-manager'
+import { main as deployStakeManager } from './tasks/deploy/stake-manager'
+import { main as deployIsolatedStakeManagerFactory } from './tasks/deploy/isolated-stake-manager-factory'
 import { main as impersonateAndFund } from './tasks/impersonate-and-fund'
 import { main as increase } from './tasks/time-warp'
 import _ from "lodash";
@@ -36,8 +39,18 @@ task('impersonate-and-fund', 'impersonate an address and fund another address wi
   .addOptionalParam('token', 'the token to send', '0x2b591e99afE9f32eAA6214f7B7629768c40Eeb39')
   .setAction(impersonateAndFund)
 
-task('deploy', 'deploys contracts')
+task('deploy', 'deploys all contracts')
+  .addOptionalParam('stopAt', 'the contract to stop at', 'none')
   .setAction(deploy)
+
+task('deploy:existing-stake-manager', 'deploys existing stake manager contract')
+  .setAction(deployExistingStakeManager)
+
+task('deploy:stake-manager', 'deploys stake manager contract')
+  .setAction(deployStakeManager)
+
+task('deploy:isolated-stake-manager-factory', 'deploys stake manager contract')
+  .setAction(deployIsolatedStakeManagerFactory)
 
 task('increase', 'increases the timestamp of the chain by a magnitude and unit')
   .addPositionalParam('magnitude', 'the size of the jump', '1')
