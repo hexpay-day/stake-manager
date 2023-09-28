@@ -72,7 +72,9 @@ contract StakeInfo is Magnitude {
    * @notice value will be address(0) for unknown
    */
   function _stakeIdToOwner(uint256 stakeId) internal view returns(address owner) {
-    return address(uint160(stakeIdInfo[stakeId]));
+    unchecked {
+      return address(uint160(stakeIdInfo[stakeId]));
+    }
   }
   /**
    * get the info of a stake given it's id. The index must match
@@ -93,7 +95,9 @@ contract StakeInfo is Magnitude {
    */
   function _stakeIdToInfo(uint256 stakeId) internal view returns(uint256 index, address owner) {
     uint256 info = stakeIdInfo[stakeId];
-    return (info >> ADDRESS_BIT_LENGTH, address(uint160(info)));
+    unchecked {
+      return (info >> ADDRESS_BIT_LENGTH, address(uint160(info)));
+    }
   }
   /**
    * the index of the stake id - useful when indexes are moving around
@@ -111,7 +115,9 @@ contract StakeInfo is Magnitude {
    * @return index of the stake in the targeted list
    */
   function _stakeIdToIndex(uint256 stakeId) internal view returns(uint256 index) {
-    return stakeIdInfo[stakeId] >> ADDRESS_BIT_LENGTH;
+    unchecked {
+      return stakeIdInfo[stakeId] >> ADDRESS_BIT_LENGTH;
+    }
   }
   /**
    * encode an index and owner pair to track under a single sload
@@ -132,6 +138,8 @@ contract StakeInfo is Magnitude {
    * @return info the encoded uint256 that can be decoded to the index and owner
    */
   function _encodeInfo(uint256 index, address owner) internal pure returns(uint256 info) {
-    return (index << ADDRESS_BIT_LENGTH) | uint160(owner);
+    unchecked {
+      return (index << ADDRESS_BIT_LENGTH) | uint160(owner);
+    }
   }
 }

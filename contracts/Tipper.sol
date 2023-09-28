@@ -112,29 +112,27 @@ abstract contract Tipper is Bank, UnderlyingStakeable, CurrencyList, EncodableSe
     uint256 limit;
     // disallows future removal of tips
     tipStakeIdToStaker[stakeId] = address(0);
-    do {
-      // tips get executed in reverse order so that the contract
-      // can clean itself up (gas refund) as it goes along
-      tip = stakeIdTips[stakeId][len - ONE - i];
-      cachedTip = tip;
-      stakeIdTips[stakeId].pop();
-      uint256 idx = tip << ONE >> INDEX_EXTERNAL_TIP_CURRENCY_ONLY;
-      address token = indexToToken[idx];
-      uint256 withdrawableBalance = withdrawableBalanceOf[token][staker];
-      uint256 cachedWithdrawableBalance = withdrawableBalance;
-      (limit, tip) = _computeTip(tip);
-      // this is a refund
-      unchecked {
+    unchecked {
+      do {
+        // tips get executed in reverse order so that the contract
+        // can clean itself up (gas refund) as it goes along
+        tip = stakeIdTips[stakeId][len - ONE - i];
+        cachedTip = tip;
+        stakeIdTips[stakeId].pop();
+        uint256 idx = tip << ONE >> INDEX_EXTERNAL_TIP_CURRENCY_ONLY;
+        address token = indexToToken[idx];
+        uint256 withdrawableBalance = withdrawableBalanceOf[token][staker];
+        uint256 cachedWithdrawableBalance = withdrawableBalance;
+        (limit, tip) = _computeTip(tip);
+        // this is a refund
         withdrawableBalance += (limit - tip);
-      }
-      if (tip > ZERO) {
-        emit Tip({
-          stakeId: stakeId,
-          token: token,
-          to: tipTo,
-          amount: tip
-        });
-        unchecked {
+        if (tip > ZERO) {
+          emit Tip({
+            stakeId: stakeId,
+            token: token,
+            to: tipTo,
+            amount: tip
+          });
           if (tipTo == address(0)) {
             attributed[token] -= tip;
           } else {
@@ -146,44 +144,38 @@ abstract contract Tipper is Bank, UnderlyingStakeable, CurrencyList, EncodableSe
             }
           }
         }
-      }
-      if (_isOneAtIndex({
-        settings: cachedTip,
-        index: MAX_UINT_8
-      }) && nextStakeId > ZERO) {
-        limit = _clamp({
-          amount: limit,
-          max: withdrawableBalance
-        });
-        if (limit > ZERO) {
-          cachedTip = _encodeTipSettings(true, idx, limit, cachedTip);
-          unchecked {
-            withdrawableBalance -= limit;
-          }
-          // we no longer need currency idx
-          // so this line takes it over / reuses it
-          stakeIdTips[nextStakeId].push(cachedTip);
-          if (tipStakeIdToStaker[nextStakeId] == address(0)) {
-            tipStakeIdToStaker[nextStakeId] = staker;
-          }
-          emit AddTip({
-            stakeId: nextStakeId,
-            token: token,
-            index: nextStakeTipsLength,
-            settings: cachedTip
+        if (_isOneAtIndex({
+          settings: cachedTip,
+          index: MAX_UINT_8
+        }) && nextStakeId > ZERO) {
+          limit = _clamp({
+            amount: limit,
+            max: withdrawableBalance
           });
-          unchecked {
+          if (limit > ZERO) {
+            cachedTip = _encodeTipSettings(true, idx, limit, cachedTip);
+            withdrawableBalance -= limit;
+            // we no longer need currency idx
+            // so this line takes it over / reuses it
+            stakeIdTips[nextStakeId].push(cachedTip);
+            if (tipStakeIdToStaker[nextStakeId] == address(0)) {
+              tipStakeIdToStaker[nextStakeId] = staker;
+            }
+            emit AddTip({
+              stakeId: nextStakeId,
+              token: token,
+              index: nextStakeTipsLength,
+              settings: cachedTip
+            });
             ++nextStakeTipsLength;
           }
         }
-      }
-      if (withdrawableBalance != cachedWithdrawableBalance) {
-        withdrawableBalanceOf[token][staker] = withdrawableBalance;
-      }
-      unchecked {
+        if (withdrawableBalance != cachedWithdrawableBalance) {
+          withdrawableBalanceOf[token][staker] = withdrawableBalance;
+        }
         ++i;
-      }
-    } while (i < len);
+      } while (i < len);
+    }
   }
   /**
    * encodes a series of data in 32+96+64+64 to fit into 256 bits to define
@@ -298,23 +290,21 @@ abstract contract Tipper is Bank, UnderlyingStakeable, CurrencyList, EncodableSe
     uint256 tipCount = _stakeIdTipSize({
       stakeId: stakeId
     });
-    if (tipCount > ZERO) {
-      uint256 i;
-      uint256[] memory indexes = new uint256[](tipCount);
-      unchecked {
+    unchecked {
+      if (tipCount > ZERO) {
+        uint256 i;
+        uint256[] memory indexes = new uint256[](tipCount);
         --tipCount;
-      }
-      do {
-        unchecked {
+        do {
           indexes[i] = tipCount - i;
           ++i;
-        }
-      } while (i <= tipCount);
-      _removeTipsFromStake({
-        stakeId: stakeId,
-        settings: settings,
-        indexes: indexes
-      });
+        } while (i <= tipCount);
+        _removeTipsFromStake({
+          stakeId: stakeId,
+          settings: settings,
+          indexes: indexes
+        });
+      }
     }
   }
   /**
