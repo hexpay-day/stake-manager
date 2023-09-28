@@ -81,20 +81,22 @@ abstract contract Tipper is Bank, UnderlyingStakeable, CurrencyList, EncodableSe
     return _computeTip(tip);
   }
   function _computeTip(uint256 tip) internal view returns (uint256 limit, uint256 consumed) {
-    limit = uint128(tip >> INDEX_EXTERNAL_TIP_LIMIT);
-    if (uint72(tip) == ZERO) {
-      // checking for existance of a tip number
-      // allows us to use ZERO as simplest pathway
-      consumed = limit;
-    } else {
-      consumed = _computeMagnitude({
-        limit: limit,
-        linear: uint72(tip),
-        v2: limit,
-        v1: block.basefee
-      });
+    unchecked {
+      limit = uint128(tip >> INDEX_EXTERNAL_TIP_LIMIT);
+      if (uint72(tip) == ZERO) {
+        // checking for existance of a tip number
+        // allows us to use ZERO as simplest pathway
+        consumed = limit;
+      } else {
+        consumed = _computeMagnitude({
+          limit: limit,
+          linear: uint72(tip),
+          v2: limit,
+          v1: block.basefee
+        });
+      }
+      return (limit, consumed);
     }
-    return (limit, consumed);
   }
   /**
    * execute a list of tips and leave them in the unattributed space
