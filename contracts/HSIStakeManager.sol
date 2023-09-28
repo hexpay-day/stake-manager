@@ -194,7 +194,7 @@ contract HSIStakeManager is StakeEnder {
         custodian: hsiAddress,
         index: ZERO
       });
-      valid = true;
+      valid = staker != address(0);
     }
   }
   /**
