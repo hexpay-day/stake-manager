@@ -189,6 +189,11 @@ contract Magnitude is Utils {
     uint256 limit, Linear calldata linear,
     uint256 v2, uint256 v1
   ) external pure returns(uint256 result) {
+    // the reason that this condition is necessary is because "method" of a decoded linear struct
+    // will range between 0-2 with the first two existing as special cases.
+    // after the range 0-2, the linear treatment turns into something actually linear (x/y)+b
+    // the flag of xFactor == 0 in combination with method = 0 is used to get around this,
+    // or act as a boolean to signal special treatment of 1 and 2
     if (limit == ZERO || (linear.method == ZERO && linear.xFactor == ZERO)) {
       return ZERO;
     }
