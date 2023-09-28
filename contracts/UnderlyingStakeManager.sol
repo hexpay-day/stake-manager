@@ -211,15 +211,15 @@ contract UnderlyingStakeManager is GoodAccounting {
    * @param stakeIds the list of stake ids to iterate over and restart
    */
   function stakeRestartManyById(uint256[] calldata stakeIds) external {
-    uint256 i;
-    uint256 len = stakeIds.length;
-    do {
-      _stakeRestartById({
-        stakeId: stakeIds[i]
-      });
-      unchecked {
+    unchecked {
+      uint256 i;
+      uint256 len = stakeIds.length;
+      do {
+        _stakeRestartById({
+          stakeId: stakeIds[i]
+        });
         ++i;
-      }
-    } while (i < len);
+      } while (i < len);
+    }
   }
 }
