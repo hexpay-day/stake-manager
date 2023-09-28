@@ -13,7 +13,7 @@ describe('MaximusStakeManager.sol', () => {
       const stake = await x.hex.stakeLists(x.base, 0)
       await expect(x.maximusStakeManager.stakeEndAs(signerA.address, x.base, stake.stakeId))
         .to.emit(x.hex, 'StakeEnd')
-        .withArgs(anyUint, anyUint, x.base, stake.stakeId)
+        .withArgs(anyUint, utils.anyUintNoPenalty, x.base, stake.stakeId)
     })
     it('canot end early', async () => {
       const x = await loadFixture(utils.endOfBaseFixtureOffset(1))
@@ -35,7 +35,7 @@ describe('MaximusStakeManager.sol', () => {
       const stake = await x.hex.stakeLists(x.base, 0)
       await expect(x.maximusStakeManager.stakeEndAs(signerB.address, x.base, stake.stakeId))
         .to.emit(x.hex, 'StakeEnd')
-        .withArgs(anyUint, anyUint, x.base, stake.stakeId)
+        .withArgs(anyUint, utils.anyUintNoPenalty, x.base, stake.stakeId)
     })
     it('fails if perpetual is not whitelisted', async () => {
       const x = await loadFixture(utils.endOfBaseFixture)
@@ -133,6 +133,7 @@ describe('MaximusStakeManager.sol', () => {
           .eventually.to.equal(true)
         await expect(x.existingStakeManager.stakeEndAs(...args))
           .to.emit(x.hex, 'StakeEnd')
+          .withArgs(anyUint, utils.anyUintNoPenalty, x.mockPerpetual.address, x.nextStakeId)
         await x.externalPerpetualFilter.setVerifyPerpetualResult(false)
         await expect(x.existingStakeManager.stakeEndAs(...args))
           .not.to.reverted

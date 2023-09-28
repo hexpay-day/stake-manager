@@ -73,14 +73,14 @@ describe("2023-10-02 utc", function () {
 
       await expect(doingCalls)
         .to.emit(x.hex, 'StakeEnd')
-        .withArgs(anyUint, anyUint, x.base, stake.stakeId)
+        .withArgs(anyUint, utils.anyUintNoPenalty, x.base, stake.stakeId)
       lastBlockTime = await getLastBlockTime()
       console.log('ending', lastBlockTime, new Date(endTime * 1_000), await x.existingStakeManager.checkEndable(x.base))
         // .printGasUsage()
       for (let hsi of hsis) {
         await expect(doingCalls)
           .to.emit(x.hex, 'StakeEnd')
-          .withArgs(anyUint, anyUint, hsi.hsiAddress, hsi.stakeId)
+          .withArgs(anyUint, utils.anyUintNoPenalty, hsi.hsiAddress, hsi.stakeId)
       }
       const IPoolContract = await hre.ethers.getContractAt('IPoolContract', x.base, swa)
       await expect(IPoolContract.getEndStaker())

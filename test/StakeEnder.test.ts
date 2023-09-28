@@ -2,7 +2,7 @@ import { loadFixture, setNextBlockBaseFeePerGas, time } from "@nomicfoundation/h
 import { expect } from "chai"
 import * as hre from "hardhat"
 import _ from 'lodash'
-import * as withArgs from '@nomicfoundation/hardhat-chai-matchers/withArgs'
+import { anyUint, anyValue } from '@nomicfoundation/hardhat-chai-matchers/withArgs'
 import * as utils from './utils'
 import { EncodableSettings } from "../artifacts/types"
 
@@ -184,9 +184,9 @@ describe("StakeManager", function () {
         x.stakeManager.interface.encodeFunctionData('stakeStart', [x.oneMillion / 2n, 20]),
       ], false))
         .to.emit(x.hex, 'StakeStart')
-        .withArgs(withArgs.anyValue, x.stakeManager.address, x.nextStakeId)
+        .withArgs(anyValue, x.stakeManager.address, x.nextStakeId)
         .to.emit(x.hex, 'StakeStart')
-        .withArgs(withArgs.anyValue, x.stakeManager.address, x.nextStakeId + 1n)
+        .withArgs(anyValue, x.stakeManager.address, x.nextStakeId + 1n)
     })
   })
   describe('same day stakeEnd', () => {
@@ -198,6 +198,7 @@ describe("StakeManager", function () {
       const stakeIndex = await x.stakeManager.stakeIdToIndex(x.nextStakeId)
       await expect(x.stakeManager.stakeEnd(stakeIndex, x.nextStakeId))
         .to.emit(x.hex, 'StakeEnd')
+        .withArgs(anyUint, utils.anyUintNoPenalty, x.stakeManager.address, x.nextStakeId)
         .to.emit(x.hex, 'Transfer')
         .withArgs(x.stakeManager.address, x.signers[0].address, x.stakedAmount)
     })
@@ -229,9 +230,9 @@ describe("StakeManager", function () {
         x.stakeManager.interface.encodeFunctionData('stakeStart', [x.oneMillion / 2n, 20]),
       ], false))
         .to.emit(x.hex, 'StakeEnd')
-        .withArgs(withArgs.anyValue, withArgs.anyValue, x.stakeManager.address, x.nextStakeId)
+        .withArgs(anyValue, utils.anyUintNoPenalty, x.stakeManager.address, x.nextStakeId)
         .to.emit(x.hex, 'StakeStart')
-        .withArgs(withArgs.anyValue, x.stakeManager.address, x.nextStakeId + 2n + 11n)
+        .withArgs(anyValue, x.stakeManager.address, x.nextStakeId + 2n + 11n)
     })
   })
   describe('stakeEndById', () => {
@@ -248,7 +249,7 @@ describe("StakeManager", function () {
       await utils.moveForwardDays(4, x)
       await expect(x.stakeManager.stakeEndById(x.nextStakeId))
         .to.emit(x.hex, 'StakeEnd')
-        .withArgs(withArgs.anyUint, withArgs.anyUint, x.stakeManager.address, x.nextStakeId)
+        .withArgs(anyUint, utils.anyUintNoPenalty, x.stakeManager.address, x.nextStakeId)
     })
   })
   describe('stakeEndByConsent', () => {
@@ -264,25 +265,25 @@ describe("StakeManager", function () {
         x.stakeManager.interface.encodeFunctionData('stakeStartFromBalanceFor', [signer1.address, x.oneMillion / 2n, days, defaultSettings]),
       ], false))
         .to.emit(x.hex, 'StakeStart')
-        .withArgs(withArgs.anyValue, x.stakeManager.address, x.nextStakeId)
+        .withArgs(anyValue, x.stakeManager.address, x.nextStakeId)
         .to.emit(x.hex, 'StakeStart')
-        .withArgs(withArgs.anyValue, x.stakeManager.address, x.nextStakeId + 1n)
+        .withArgs(anyValue, x.stakeManager.address, x.nextStakeId + 1n)
       await expect(x.stakeManager.connect(signer2).multicall([
         x.stakeManager.interface.encodeFunctionData('stakeStartFromBalanceFor', [signer2.address, x.oneMillion / 2n, half1, defaultSettings]),
         x.stakeManager.interface.encodeFunctionData('stakeStartFromBalanceFor', [signer2.address, x.oneMillion / 2n, days, defaultSettings]),
       ], false))
         .to.emit(x.hex, 'StakeStart')
-        .withArgs(withArgs.anyValue, x.stakeManager.address, x.nextStakeId + 2n)
+        .withArgs(anyValue, x.stakeManager.address, x.nextStakeId + 2n)
         .to.emit(x.hex, 'StakeStart')
-        .withArgs(withArgs.anyValue, x.stakeManager.address, x.nextStakeId + 3n)
+        .withArgs(anyValue, x.stakeManager.address, x.nextStakeId + 3n)
       await expect(x.stakeManager.connect(signer3).multicall([
         x.stakeManager.interface.encodeFunctionData('stakeStartFromBalanceFor', [signer3.address, x.oneMillion / 2n, half1, defaultSettings]),
         x.stakeManager.interface.encodeFunctionData('stakeStartFromBalanceFor', [signer3.address, x.oneMillion / 2n, days, defaultSettings]),
       ], false))
         .to.emit(x.hex, 'StakeStart')
-        .withArgs(withArgs.anyValue, x.stakeManager.address, x.nextStakeId + 4n)
+        .withArgs(anyValue, x.stakeManager.address, x.nextStakeId + 4n)
         .to.emit(x.hex, 'StakeStart')
-        .withArgs(withArgs.anyValue, x.stakeManager.address, x.nextStakeId + 5n)
+        .withArgs(anyValue, x.stakeManager.address, x.nextStakeId + 5n)
       // all 4 stakes are applied to the single manager (optimized)
       await expect(x.hex.stakeCount(x.stakeManager.address))
         .eventually.to.equal(6)
@@ -299,15 +300,15 @@ describe("StakeManager", function () {
         ]),
       ], false))
         .to.emit(x.hex, 'StakeEnd')
-        .withArgs(withArgs.anyUint, withArgs.anyUint, x.stakeManager.address, x.nextStakeId + 4n)
+        .withArgs(anyUint, utils.anyUintNoPenalty, x.stakeManager.address, x.nextStakeId + 4n)
         .to.emit(x.hex, 'StakeEnd')
-        .withArgs(withArgs.anyUint, withArgs.anyUint, x.stakeManager.address, x.nextStakeId + 2n)
+        .withArgs(anyUint, utils.anyUintNoPenalty, x.stakeManager.address, x.nextStakeId + 2n)
         .to.emit(x.hex, 'StakeEnd')
-        .withArgs(withArgs.anyUint, withArgs.anyUint, x.stakeManager.address, x.nextStakeId + 0n)
+        .withArgs(anyUint, utils.anyUintNoPenalty, x.stakeManager.address, x.nextStakeId + 0n)
         .to.emit(x.hex, 'Transfer')
-        .withArgs(hre.ethers.constants.AddressZero, x.stakeManager.address, withArgs.anyUint)
+        .withArgs(hre.ethers.constants.AddressZero, x.stakeManager.address, anyUint)
         .to.emit(x.hex, 'Transfer')
-        .withArgs(x.stakeManager.address, hre.ethers.constants.AddressZero, withArgs.anyUint)
+        .withArgs(x.stakeManager.address, hre.ethers.constants.AddressZero, anyUint)
         // .printGasUsage()
       await utils.moveForwardDays(half2, x)
       const originAddress = '0x9A6a414D6F3497c05E3b1De90520765fA1E07c03'
@@ -324,19 +325,19 @@ describe("StakeManager", function () {
         // .printGasUsage()
       await expect(tx)
         .to.emit(x.hex, 'StakeEnd')
-        .withArgs(withArgs.anyUint, withArgs.anyUint, x.stakeManager.address, x.nextStakeId + 5n)
+        .withArgs(anyUint, utils.anyUintNoPenalty, x.stakeManager.address, x.nextStakeId + 5n)
       await expect(tx)
         .to.emit(x.hex, 'StakeEnd')
-        .withArgs(withArgs.anyUint, withArgs.anyUint, x.stakeManager.address, x.nextStakeId + 1n)
+        .withArgs(anyUint, utils.anyUintNoPenalty, x.stakeManager.address, x.nextStakeId + 1n)
       await expect(tx)
         .to.emit(x.hex, 'StakeEnd')
-        .withArgs(withArgs.anyUint, withArgs.anyUint, x.stakeManager.address, x.nextStakeId + 3n)
+        .withArgs(anyUint, utils.anyUintNoPenalty, x.stakeManager.address, x.nextStakeId + 3n)
       await expect(tx)
         .to.emit(x.hex, 'Transfer')
-        .withArgs(hre.ethers.constants.AddressZero, x.stakeManager.address, withArgs.anyUint)
+        .withArgs(hre.ethers.constants.AddressZero, x.stakeManager.address, anyUint)
       await expect(tx)
         .to.emit(x.hex, 'Transfer')
-        .withArgs(x.stakeManager.address, hre.ethers.constants.AddressZero, withArgs.anyUint)
+        .withArgs(x.stakeManager.address, hre.ethers.constants.AddressZero, anyUint)
       await expect(x.hex.stakeCount(x.stakeManager.address)).eventually.to.equal(6)
     })
   })
@@ -353,6 +354,7 @@ describe("StakeManager", function () {
         .withArgs(signer2.address, signer1.address)
       await expect(x.stakeManager.stakeRestartById(x.nextStakeId))
         .to.emit(x.hex, 'StakeEnd')
+        .withArgs(anyUint, utils.anyUintNoPenalty, x.stakeManager.address, x.nextStakeId)
     })
     it('skips if stake is not valid', async () => {
       const x = await loadFixture(utils.deployFixture)
@@ -378,6 +380,9 @@ describe("StakeManager", function () {
         .withArgs(signer2.address, signer1.address)
       await expect(x.stakeManager.stakeRestartManyById([x.nextStakeId, x.nextStakeId + 1n]))
         .to.emit(x.hex, 'StakeEnd')
+        .withArgs(anyUint, utils.anyUintNoPenalty, x.stakeManager.address, x.nextStakeId)
+        .to.emit(x.hex, 'StakeEnd')
+        .withArgs(anyUint, utils.anyUintNoPenalty, x.stakeManager.address, x.nextStakeId + 1n)
     })
   })
   describe('withdrawal at end of stake', () => {
@@ -406,22 +411,22 @@ describe("StakeManager", function () {
       await utils.moveForwardDays(days + 1, x)
       await expect(x.stakeManager.connect(signer2).stakeEndByConsentForMany([x.nextStakeId]))
         .to.emit(x.hex, 'Transfer')
-        .withArgs(hre.ethers.constants.AddressZero, x.stakeManager.address, withArgs.anyUint)
+        .withArgs(hre.ethers.constants.AddressZero, x.stakeManager.address, anyUint)
         .to.emit(x.hedron, 'Transfer')
-        .withArgs(hre.ethers.constants.AddressZero, x.stakeManager.address, withArgs.anyUint)
+        .withArgs(hre.ethers.constants.AddressZero, x.stakeManager.address, anyUint)
         .to.emit(x.hex, 'Transfer')
-        .withArgs(x.stakeManager.address, signer1.address, withArgs.anyUint)
+        .withArgs(x.stakeManager.address, signer1.address, anyUint)
         .to.emit(x.hedron, 'Transfer')
-        .withArgs(x.stakeManager.address, signer1.address, withArgs.anyUint)
+        .withArgs(x.stakeManager.address, signer1.address, anyUint)
         // .printGasUsage()
       const balanceBefore = await x.hex.balanceOf(signer1.address)
       await expect(x.hex.balanceOf(x.stakeManager.address))
         .eventually.to.equal(0)
       await expect(x.stakeManager.connect(signer2).stakeEndByConsentForMany([x.nextStakeId + 1n]))
         .to.emit(x.hex, 'Transfer')
-        .withArgs(hre.ethers.constants.AddressZero, x.stakeManager.address, withArgs.anyUint)
+        .withArgs(hre.ethers.constants.AddressZero, x.stakeManager.address, anyUint)
         .to.emit(x.hedron, 'Transfer')
-        .withArgs(hre.ethers.constants.AddressZero, x.stakeManager.address, withArgs.anyUint)
+        .withArgs(hre.ethers.constants.AddressZero, x.stakeManager.address, anyUint)
       await expect(x.hex.balanceOf(x.stakeManager.address))
         .eventually.to.be.greaterThan(0)
       await expect(x.hex.balanceOf(signer1.address))
@@ -460,7 +465,7 @@ describe("StakeManager", function () {
         .eventually.to.be.equal(0)
       await expect(x.stakeManager.connect(signer2).stakeEndByConsentForMany([x.nextStakeId]))
         .to.emit(x.hex, 'Transfer')
-        .withArgs(hre.ethers.constants.AddressZero, x.stakeManager.address, withArgs.anyUint)
+        .withArgs(hre.ethers.constants.AddressZero, x.stakeManager.address, anyUint)
       await expect(x.stakeManager.withdrawableBalanceOf(x.hex.address, signer1.address))
         .eventually.to.be.greaterThan(0)
     })
@@ -500,7 +505,7 @@ describe("StakeManager", function () {
         .eventually.to.equal(0)
       await expect(x.stakeManager.connect(signer2).stakeEndByConsentForManyWithTipTo([x.nextStakeId, x.nextStakeId + 1n], signer3.address))
         .to.emit(x.hex, 'Transfer')
-        .withArgs(hre.ethers.constants.AddressZero, x.stakeManager.address, withArgs.anyUint)
+        .withArgs(hre.ethers.constants.AddressZero, x.stakeManager.address, anyUint)
       await expect(x.stakeManager.withdrawableBalanceOf(x.hex.address, signer3.address))
         .eventually.to.equal(magnitudeA + magnitudeB)
     })
@@ -536,9 +541,9 @@ describe("StakeManager", function () {
       await utils.moveForwardDays(4, x)
       await expect(x.stakeManager.connect(signer2).stakeEndByConsentForMany([nextStakeId]))
         .to.emit(x.hex, 'StakeEnd')
-        .withArgs(withArgs.anyValue, withArgs.anyValue, x.stakeManager.address, nextStakeId)
+        .withArgs(anyUint, utils.anyUintNoPenalty, x.stakeManager.address, nextStakeId)
         .to.emit(x.hex, 'Transfer')
-        .withArgs(hre.ethers.constants.AddressZero, x.stakeManager.address, withArgs.anyUint)
+        .withArgs(hre.ethers.constants.AddressZero, x.stakeManager.address, anyUint)
       await expect(x.stakeManager.withdrawableBalanceOf(x.hex.address, signer1.address))
         .eventually.to.be.greaterThan(0)
     })
@@ -596,12 +601,12 @@ describe("StakeManager", function () {
       ], false)
       await expect(endStakeAndCollect)
         .to.emit(x.hex, 'Transfer')
-        .withArgs(hre.ethers.constants.AddressZero, x.stakeManager.address, withArgs.anyUint)
+        .withArgs(hre.ethers.constants.AddressZero, x.stakeManager.address, anyUint)
         .to.emit(x.hex, 'Transfer')
         .withArgs(x.stakeManager.address, signer2.address, oneHundredHex)
         // restart the stake
         .to.emit(x.hex, 'Transfer')
-        .withArgs(x.stakeManager.address, hre.ethers.constants.AddressZero, withArgs.anyUint)
+        .withArgs(x.stakeManager.address, hre.ethers.constants.AddressZero, anyUint)
       await expect(endStakeAndCollect)
         .to.changeTokenBalances(x.hex,
           [signer2],
@@ -643,10 +648,10 @@ describe("StakeManager", function () {
       ], false)
       await expect(endStakeAndCollect)
         .to.emit(x.hex, 'Transfer')
-        .withArgs(hre.ethers.constants.AddressZero, x.stakeManager.address, withArgs.anyUint)
+        .withArgs(hre.ethers.constants.AddressZero, x.stakeManager.address, anyUint)
         // restart the stake
         .to.emit(x.hex, 'Transfer')
-        .withArgs(x.stakeManager.address, hre.ethers.constants.AddressZero, withArgs.anyUint)
+        .withArgs(x.stakeManager.address, hre.ethers.constants.AddressZero, anyUint)
     })
     it('can handle a curve that results in zero new stake amount', async () => {
       const x = await loadFixture(utils.deployFixture)
@@ -681,7 +686,7 @@ describe("StakeManager", function () {
       ], false)
       await expect(endStakeAndCollect)
         .to.emit(x.hex, 'Transfer')
-        .withArgs(hre.ethers.constants.AddressZero, x.stakeManager.address, withArgs.anyUint)
+        .withArgs(hre.ethers.constants.AddressZero, x.stakeManager.address, anyUint)
     })
     it('can leave the tip in the withdrawable mapping', async () => {
       const x = await loadFixture(utils.deployFixture)
@@ -759,6 +764,7 @@ describe("StakeManager", function () {
         ]),
       ], false))
         .to.emit(x.hex, 'StakeEnd')
+        .withArgs(anyUint, utils.anyUintNoPenalty, x.stakeManager.address, nextStakeId)
       await expect(x.stakeManager.withdrawableBalanceOf(hre.ethers.constants.AddressZero, signer2.address))
         .eventually.to.equal(tipAmount)
     })
@@ -813,6 +819,7 @@ describe("StakeManager", function () {
         maxFeePerGas: 10n**6n,
       }))
         .to.emit(x.hex, 'StakeEnd')
+        .withArgs(anyUint, utils.anyUintNoPenalty, x.stakeManager.address, nextStakeId)
       const latestBlock = await hre.ethers.provider.getBlock('latest')
       const basefee = latestBlock.baseFeePerGas?.toBigInt() as bigint
       await expect(x.stakeManager.withdrawableBalanceOf(hre.ethers.constants.AddressZero, signer2.address))
@@ -850,6 +857,7 @@ describe("StakeManager", function () {
         ]),
       ], false))
         .to.emit(x.hex, 'StakeEnd')
+        .withArgs(anyUint, utils.anyUintNoPenalty, x.stakeManager.address, nextStakeId)
         .to.changeEtherBalances(
           [x.stakeManager, signer2],
           [tipAmount * -1n, tipAmount],
@@ -890,6 +898,7 @@ describe("StakeManager", function () {
         .eventually.to.equal(oneEther)
       await expect(x.stakeManager.stakeEndById(nextStakeId))
         .to.emit(x.hex, 'StakeEnd')
+        .withArgs(anyUint, utils.anyUintNoPenalty, x.stakeManager.address, nextStakeId)
         .to.changeEtherBalances(
           [x.stakeManager, signer1],
           [0, 0],
@@ -917,6 +926,7 @@ describe("StakeManager", function () {
         signer2.address,
       ))
         .to.emit(x.hex, 'StakeEnd')
+        .withArgs(anyUint, utils.anyUintNoPenalty, x.stakeManager.address, nextStakeId)
         .to.emit(x.stakeManager, 'Tip')
         .withArgs(
           x.nextStakeId,
@@ -1029,6 +1039,7 @@ describe("StakeManager", function () {
         .eventually.to.equal(1)
       await expect(x.stakeManager.stakeEndById(nextStakeId))
         .to.emit(x.hex, 'StakeEnd')
+        .withArgs(anyUint, utils.anyUintNoPenalty, x.stakeManager.address, nextStakeId)
         .to.changeEtherBalances(
           [x.stakeManager, signer1],
           [0, 0],
@@ -1083,6 +1094,7 @@ describe("StakeManager", function () {
         .withArgs(signer2.address, signer1.address)
       await expect(x.stakeManager.stakeEndById(nextStakeId))
         .to.emit(x.hex, 'StakeEnd')
+        .withArgs(anyUint, utils.anyUintNoPenalty, x.stakeManager.address, nextStakeId)
         .to.changeEtherBalances(
           [x.stakeManager, signer1],
           [0, 0],
@@ -1161,6 +1173,7 @@ describe("StakeManager", function () {
       )
       await expect(x.stakeManager.connect(signer2).stakeEndByConsentWithTipTo(x.nextStakeId, signer3.address))
         .to.emit(x.hex, 'StakeEnd')
+        .withArgs(anyUint, utils.anyUintNoPenalty, x.stakeManager.address, x.nextStakeId)
         .to.emit(x.stakeManager, 'Tip')
         .withArgs(
           x.nextStakeId,
@@ -1205,6 +1218,7 @@ describe("StakeManager", function () {
         .eventually.to.equal(0)
       await expect(x.stakeManager.connect(signer2).stakeEndByConsent(nextStakeId))
         .to.emit(x.hex, 'StakeEnd')
+        .withArgs(anyUint, utils.anyUintNoPenalty, x.stakeManager.address, nextStakeId)
       await expect(x.stakeManager.getUnattributed(x.hedron.address))
         .eventually.to.be.greaterThan(0)
     })
@@ -1237,6 +1251,7 @@ describe("StakeManager", function () {
         .eventually.to.equal(0)
       await expect(x.stakeManager.connect(signer2).stakeEndByConsentWithTipTo(nextStakeId, signer2.address))
         .to.emit(x.hex, 'StakeEnd')
+        .withArgs(anyUint, utils.anyUintNoPenalty, x.stakeManager.address, nextStakeId)
         .to.emit(x.stakeManager, 'Tip')
         .withArgs(
           x.nextStakeId,
@@ -1309,6 +1324,7 @@ describe("StakeManager", function () {
 
       await expect(x.stakeManager.connect(signer2).stakeEndByConsentWithTipTo(nextStakeId, signer2.address))
         .to.emit(x.hex, 'StakeEnd')
+        .withArgs(anyUint, utils.anyUintNoPenalty, x.stakeManager.address, nextStakeId)
         .to.emit(x.stakeManager, 'Tip')
         .withArgs(
           x.nextStakeId,
@@ -1359,11 +1375,12 @@ describe("StakeManager", function () {
         .to.emit(x.hex, 'Transfer')
         .withArgs(x.stakeManager.address, hre.ethers.constants.AddressZero, x.stakedAmount)
         .to.emit(x.hex, 'StakeStart')
-        .withArgs(withArgs.anyUint, x.stakeManager.address, nextStakeId)
+        .withArgs(anyUint, x.stakeManager.address, nextStakeId)
       await utils.moveForwardDays(11, x)
       await expect(x.stakeManager.stakeEndByConsent(nextStakeId))
         .to.emit(x.hex, 'StakeStart')
         .to.emit(x.hex, 'StakeEnd')
+        .withArgs(anyUint, utils.anyUintNoPenalty, x.stakeManager.address, nextStakeId)
     })
     it('can disallow end stakes by anyone', async () => {
       const x = await loadFixture(utils.deployFixture)
@@ -1380,7 +1397,7 @@ describe("StakeManager", function () {
         .to.emit(x.hex, 'Transfer')
         .withArgs(x.stakeManager.address, hre.ethers.constants.AddressZero, x.stakedAmount)
         .to.emit(x.hex, 'StakeStart')
-        .withArgs(withArgs.anyUint, x.stakeManager.address, nextStakeId)
+        .withArgs(anyUint, x.stakeManager.address, nextStakeId)
       await utils.moveForwardDays(11, x)
       await expect(x.stakeManager.connect(signer2).stakeEndByConsent(nextStakeId))
         .not.to.emit(x.hex, 'StakeEnd')
@@ -1396,7 +1413,7 @@ describe("StakeManager", function () {
         x.stakeManager.interface.encodeFunctionData('stakeEndByConsent', [nextStakeId]),
       ], false))
         .to.emit(x.hex, 'StakeEnd')
-        .withArgs(withArgs.anyUint, withArgs.anyUint, x.stakeManager.address, nextStakeId)
+        .withArgs(anyUint, utils.anyUintNoPenalty, x.stakeManager.address, nextStakeId)
     })
     it('can tip in any currency', async () => {
       const x = await loadFixture(utils.deployFixture)
@@ -1425,6 +1442,7 @@ describe("StakeManager", function () {
       await utils.moveForwardDays(days + 1, x)
       await expect(x.stakeManager.connect(signer2).stakeEndByConsent(stakeId))
         .to.emit(x.hex, 'StakeEnd')
+        .withArgs(anyUint, utils.anyUintNoPenalty, x.stakeManager.address, stakeId)
       await expect(x.stakeManager.getUnattributed(x.usdc.address))
         .eventually.to.equal(tipAmount)
       await expect(x.stakeManager.connect(signer2).collectUnattributed(x.usdc.address, true, signer2.address, tipAmount / 2n))
@@ -1457,7 +1475,7 @@ describe("StakeManager", function () {
         .withArgs(nextStakeId, await x.stakeManager.encodeSettings(updatedSettings))
       await expect(x.stakeManager.connect(signer2).stakeEndByConsent(nextStakeId))
         .to.emit(x.hex, 'Transfer')
-        .withArgs(hre.ethers.constants.AddressZero, x.stakeManager.address, withArgs.anyUint)
+        .withArgs(hre.ethers.constants.AddressZero, x.stakeManager.address, anyUint)
     })
     it('can end early if owned by tx signer', async () => {
       const x = await loadFixture(utils.deployFixture)
@@ -1469,8 +1487,10 @@ describe("StakeManager", function () {
       await utils.moveForwardDays(days, x)
       await expect(x.stakeManager.stakeEndById(nextStakeId))
         .to.emit(x.hex, 'Transfer')
-        .withArgs(hre.ethers.constants.AddressZero, x.stakeManager.address, withArgs.anyUint)
+        .withArgs(hre.ethers.constants.AddressZero, x.stakeManager.address, anyUint)
         .to.emit(x.hex, 'StakeEnd')
+        // note that anyUintNoPenalty is not used here
+        .withArgs(anyUint, anyUint, x.stakeManager.address, nextStakeId)
     })
     it('can end on same day and returns all hex', async () => {
       const x = await loadFixture(utils.deployFixture)
@@ -1533,9 +1553,9 @@ describe("StakeManager", function () {
       await time.setNextBlockTimestamp(deadline + 1)
       await expect(x.stakeManager.stakeEndById(nextStakeId + 2n))
         .to.emit(x.hex, 'Transfer')
-        .withArgs(hre.ethers.constants.AddressZero, x.stakeManager.address, withArgs.anyUint)
+        .withArgs(hre.ethers.constants.AddressZero, x.stakeManager.address, anyUint)
         .to.emit(x.hex, 'Transfer')
-        .withArgs(x.stakeManager.address, signer1.address, withArgs.anyUint)
+        .withArgs(x.stakeManager.address, signer1.address, anyUint)
       await time.setNextBlockTimestamp(deadline + 1)
       await expect(x.stakeManager.multicallWithDeadline(deadline, [
         x.stakeManager.interface.encodeFunctionData('stakeEndById', [
@@ -1555,7 +1575,7 @@ describe("StakeManager", function () {
       await utils.moveForwardDays(11, x)
       await expect(x.stakeManager.connect(signer2).stakeEndByConsent(nextStakeId))
         .to.emit(x.hex, 'Transfer')
-        .withArgs(hre.ethers.constants.AddressZero, x.stakeManager.address, withArgs.anyUint)
+        .withArgs(hre.ethers.constants.AddressZero, x.stakeManager.address, anyUint)
       await expect(x.stakeManager.connect(signer2).stakeEndByConsent(nextStakeId))
         .not.to.reverted
         .not.to.emit(x.hex, 'Transfer')
@@ -1592,6 +1612,7 @@ describe("StakeManager", function () {
         .eventually.to.equal(1)
       await expect(x.stakeManager.stakeEnd(0, x.nextStakeId))
         .to.emit(x.hex, 'StakeEnd')
+        .withArgs(anyUint, utils.anyUintNoPenalty, x.stakeManager.address, x.nextStakeId)
       await expect(x.stakeManager.isStakeIdGoodAccountable(x.nextStakeId))
         .eventually.to.equal(3)
     })

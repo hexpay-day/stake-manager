@@ -141,7 +141,7 @@ describe('IsolatedStakeManager.sol', () => {
       const tx = x.isolatedStakeManager.stakeEnd(0, nextStakeId)
       await expect(tx)
         .to.emit(x.hex, 'StakeEnd')
-        .withArgs(anyUint, anyUint, x.isolatedStakeManager.address, nextStakeId)
+        .withArgs(anyUint, utils.anyUintNoPenalty, x.isolatedStakeManager.address, nextStakeId)
       const owner = await x.isolatedStakeManager.owner()
       const contractHoldings = (await x.hex.balanceOf(x.isolatedStakeManager.address)).sub(balanceBefore).toBigInt()
       await expect(tx)
@@ -160,7 +160,7 @@ describe('IsolatedStakeManager.sol', () => {
       await x.isolatedStakeManager.setAuthorization(signerB.address, 2)
       await expect(x.isolatedStakeManager.connect(signerB).stakeEnd(0, nextStakeId))
         .to.emit(x.hex, 'StakeEnd')
-        .withArgs(anyUint, anyUint, x.isolatedStakeManager.address, nextStakeId)
+        .withArgs(anyUint, utils.anyUintNoPenalty, x.isolatedStakeManager.address, nextStakeId)
     })
     it('fails if caller is unable to end stake early', async () => {
       const x = await loadFixture(utils.stakeBagAndWait)
@@ -184,7 +184,7 @@ describe('IsolatedStakeManager.sol', () => {
       const successful = x.isolatedStakeManager.checkAndStakeEnd(0, nextStakeId)
       await expect(successful)
         .to.emit(x.hex, 'StakeEnd')
-        .withArgs(anyUint, anyUint, x.isolatedStakeManager.address, nextStakeId)
+        .withArgs(anyUint, utils.anyUintNoPenalty, x.isolatedStakeManager.address, nextStakeId)
         // .printGasUsage()
     })
     it('skips if not authorized', async () => {
@@ -200,7 +200,7 @@ describe('IsolatedStakeManager.sol', () => {
       await x.isolatedStakeManager.setAuthorization(signerB.address, 2)
       await expect(successful)
         .to.emit(x.hex, 'StakeEnd')
-        .withArgs(anyUint, anyUint, x.isolatedStakeManager.address, nextStakeId)
+        .withArgs(anyUint, utils.anyUintNoPenalty, x.isolatedStakeManager.address, nextStakeId)
     })
   })
   describe('transferFromOwner', () => {

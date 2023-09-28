@@ -9,6 +9,7 @@ import * as Chai from "chai"
 import * as config from '../src/config'
 import { IHedron, IERC20, IERC20Metadata, IHEXStakeInstanceManager } from "../artifacts/types"
 import { HSIStartEvent } from "../artifacts/types/contracts/interfaces/IHEXStakeInstanceManager"
+import { anyUint } from "@nomicfoundation/hardhat-chai-matchers/withArgs"
 
 Chai.Assertion.addMethod('printGasUsage', function (this: any, throws = true) {
   let subject = this._obj
@@ -37,6 +38,8 @@ Chai.Assertion.addMethod('printGasUsage', function (this: any, throws = true) {
   this.catch = derivedPromise.catch.bind(derivedPromise)
   return this
 })
+
+type X = Awaited<ReturnType<typeof deployFixture>>
 
 export const deployFixture = async () => {
   const Utils = await hre.ethers.getContractFactory('Utils')
@@ -194,12 +197,24 @@ export type HSITarget = {
 
 export const deployAndProcureHSIFixture = async () => {
   const x = await loadFixture(deployFixture)
-  const [signerA] = x.signers
   const nxtStkId = await nextStakeId(x.hex)
-
   await x.hsim.hexStakeStart(x.stakedAmount, 29)
   await x.hsim.hexStakeStart(x.stakedAmount, 59)
   await x.hsim.hexStakeStart(x.stakedAmount, 89)
+  return procureHSIFixture(x, nxtStkId)
+}
+
+export const deployAndProcureSequentialDayHSIFixture = async () => {
+  const x = await loadFixture(deployFixture)
+  const nxtStkId = await nextStakeId(x.hex)
+  await x.hsim.hexStakeStart(x.stakedAmount, 87)
+  await x.hsim.hexStakeStart(x.stakedAmount, 88)
+  await x.hsim.hexStakeStart(x.stakedAmount, 89)
+  return procureHSIFixture(x, nxtStkId)
+}
+
+export const procureHSIFixture = async (x: X, nxtStkId: bigint) => {
+  const [signerA] = x.signers
   const hsiStakeIds = [
     nxtStkId,
     nxtStkId + 1n,
@@ -235,14 +250,14 @@ export const deployAndProcureHSIFixture = async () => {
   }
 }
 
-interface X {
+interface MinimalX {
   hex: IHEX;
   signers: SignerWithAddress[];
 }
 
 export const moveForwardDays = async (
   limit: number,
-  x: X,
+  x: MinimalX,
   step = 1,
 ) => {
   const _currentDay = await x.hex.currentDay()
@@ -299,4 +314,16 @@ export const receiptToHsiAddress = async (hsim: IHEXStakeInstanceManager, tx: et
     .compact()
     .first() as unknown as HSIStartEvent
   return stakeStartEvent.args.hsiAddress
+}
+
+export const anyUintNoPenalty = (i: any) => {
+  anyUint(i)
+  const n = i.isBigNumber ? i.toBigInt() : BigInt(i)
+  const penalty = BigInt.asUintN(72, n)
+  if (penalty > 0n) {
+    throw new Chai.AssertionError(
+      `anyUintNoPenalty expected its argument to be zero, but it was value ${n}`
+    );
+  }
+  return true
 }

@@ -206,7 +206,7 @@ describe('HSIStakeManager.sol', () => {
       const targetStakeIdAsHsi = x.hsiTargets[0]
       await expect(x.existingStakeManager.hsiStakeEndMany([targetStakeIdAsHsi.hsiAddress]))
         .to.emit(x.hex, 'StakeEnd')
-        .withArgs(anyUint, anyUint, targetStakeIdAsHsi.hsiAddress, targetStakeIdAsHsi.stakeId)
+        .withArgs(anyUint, utils.anyUintNoPenalty, targetStakeIdAsHsi.hsiAddress, targetStakeIdAsHsi.stakeId)
         .to.emit(x.hsim, 'HSIEnd')
         .to.emit(x.hex, 'Transfer')
         .withArgs(hre.ethers.constants.AddressZero, targetStakeIdAsHsi.hsiAddress, anyUint)
@@ -240,7 +240,7 @@ describe('HSIStakeManager.sol', () => {
       const tip = await x.existingStakeManager.stakeIdTips(targetStakeIdAsHsi.hsiAddress, 0)
       await expect(x.existingStakeManager.hsiStakeEndManyWithTipTo([targetStakeIdAsHsi.hsiAddress], signer2.address))
         .to.emit(x.hex, 'StakeEnd')
-        .withArgs(anyUint, anyUint, targetStakeIdAsHsi.hsiAddress, targetStakeIdAsHsi.stakeId)
+        .withArgs(anyUint, utils.anyUintNoPenalty, targetStakeIdAsHsi.hsiAddress, targetStakeIdAsHsi.stakeId)
         .to.emit(x.hsim, 'HSIEnd')
         .to.emit(x.hex, 'Transfer')
         .withArgs(hre.ethers.constants.AddressZero, targetStakeIdAsHsi.hsiAddress, anyUint)
@@ -257,7 +257,7 @@ describe('HSIStakeManager.sol', () => {
         .eventually.to.deep.equal([tipAmount, tipAmount])
     })
     it('end deposited stakes in any order', async () => {
-      const x = await loadFixture(utils.deployAndProcureHSIFixture)
+      const x = await loadFixture(utils.deployAndProcureSequentialDayHSIFixture)
       const defaultEncodedSettings = await x.existingStakeManager.defaultEncodedSettings()
       const deposits = _.flatMap(x.hsiTargets, (target) => ([
         x.existingStakeManager.interface.encodeFunctionData('depositHsi', [target.tokenId, defaultEncodedSettings]),
@@ -269,11 +269,11 @@ describe('HSIStakeManager.sol', () => {
       // 30 day stake is in last
       await expect(x.existingStakeManager.hsiStakeEndMany(_.map(x.hsiTargets, 'hsiAddress')))
         .to.emit(x.hex, 'StakeEnd')
-        .withArgs(anyUint, anyUint, x.hsiTargets[0].hsiAddress, x.hsiTargets[0].stakeId)
+        .withArgs(anyUint, utils.anyUintNoPenalty, x.hsiTargets[0].hsiAddress, x.hsiTargets[0].stakeId)
         .to.emit(x.hex, 'StakeEnd')
-        .withArgs(anyUint, anyUint, x.hsiTargets[1].hsiAddress, x.hsiTargets[1].stakeId)
+        .withArgs(anyUint, utils.anyUintNoPenalty, x.hsiTargets[1].hsiAddress, x.hsiTargets[1].stakeId)
         .to.emit(x.hex, 'StakeEnd')
-        .withArgs(anyUint, anyUint, x.hsiTargets[2].hsiAddress, x.hsiTargets[2].stakeId)
+        .withArgs(anyUint, utils.anyUintNoPenalty, x.hsiTargets[2].hsiAddress, x.hsiTargets[2].stakeId)
         .to.emit(x.hsim, 'HSIEnd')
         .to.emit(x.hex, 'Transfer')
         .withArgs(hre.ethers.constants.AddressZero, x.hsiTargets[0].hsiAddress, anyUint)
@@ -357,6 +357,7 @@ describe('HSIStakeManager.sol', () => {
 
       await expect(x.existingStakeManager.connect(signer2).hsiStakeEndMany([firstStakeTarget.hsiAddress]))
         .to.emit(x.hex, 'StakeEnd')
+        .withArgs(anyUint, utils.anyUintNoPenalty, firstStakeTarget.hsiAddress, firstStakeTarget.stakeId)
       await utils.moveForwardDays(30, x)
       // mints hedron rewards before hsi is ended so that we have a case
       // where 0 is the amount
@@ -365,6 +366,7 @@ describe('HSIStakeManager.sol', () => {
         .withArgs(hre.ethers.constants.AddressZero, x.existingStakeManager.address, anyUint)
       await expect(x.existingStakeManager.connect(signer2).hsiStakeEndMany([x.hsiTargets[1].hsiAddress]))
         .to.emit(x.hex, 'StakeEnd')
+        .withArgs(anyUint, utils.anyUintNoPenalty, x.hsiTargets[1].hsiAddress, x.hsiTargets[1].stakeId)
     })
   })
   describe('restarting hsis', async () => {
@@ -395,7 +397,7 @@ describe('HSIStakeManager.sol', () => {
       const nextStakeId = await utils.nextStakeId(x.hex)
       await expect(x.existingStakeManager.connect(signer2).hsiStakeEndMany([x.hsiTargets[0].hsiAddress]))
         .to.emit(x.hex, 'StakeEnd')
-        .withArgs(anyUint, anyUint, x.hsiTargets[0].hsiAddress, x.hsiTargets[0].stakeId)
+        .withArgs(anyUint, utils.anyUintNoPenalty, x.hsiTargets[0].hsiAddress, x.hsiTargets[0].stakeId)
         .to.emit(x.hex, 'StakeStart')
         .withArgs(anyUint, anyValue, nextStakeId)
     })
@@ -430,7 +432,7 @@ describe('HSIStakeManager.sol', () => {
       ])
       await expect(hsiEndMany)
         .to.emit(x.hex, 'StakeEnd')
-        .withArgs(anyUint, anyUint, x.hsiTargets[0].hsiAddress, x.hsiTargets[0].stakeId)
+        .withArgs(anyUint, utils.anyUintNoPenalty, x.hsiTargets[0].hsiAddress, x.hsiTargets[0].stakeId)
         .to.emit(x.hex, 'StakeStart')
         .withArgs(anyUint, anyValue, nextStakeId)
       const hsiAddress = await utils.receiptToHsiAddress(x.hsim, await hsiEndMany)
@@ -459,7 +461,7 @@ describe('HSIStakeManager.sol', () => {
       const hsiRestart = x.existingStakeManager.stakeRestartById(targetStakeIdAsHsi.hsiAddress)
       await expect(hsiRestart)
         .to.emit(x.hex, 'StakeEnd')
-        .withArgs(anyUint, anyUint, targetStakeIdAsHsi.hsiAddress, targetStakeIdAsHsi.stakeId)
+        .withArgs(anyUint, utils.anyUintNoPenalty, targetStakeIdAsHsi.hsiAddress, targetStakeIdAsHsi.stakeId)
         .to.emit(x.hex, 'StakeStart')
         .withArgs(anyUint, anyValue, nextStakeId)
       const restartedHsiAddress = await utils.receiptToHsiAddress(x.hsim, await hsiRestart)

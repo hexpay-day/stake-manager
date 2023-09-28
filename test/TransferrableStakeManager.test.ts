@@ -75,6 +75,7 @@ describe('TransferableStakeManager.sol', () => {
         .eventually.to.equal(0)
       await expect(x.stakeManager.stakeEndByConsent(x.nextStakeId))
         .to.emit(x.hex, 'StakeEnd')
+        .withArgs(anyUint, utils.anyUintNoPenalty, x.stakeManager.address, x.nextStakeId)
         .to.emit(x.hex, 'Transfer')
         .withArgs(hre.ethers.constants.AddressZero, x.stakeManager.address, anyUint)
       await expect(x.stakeManager.withdrawableBalanceOf(x.hex.address, signer2.address))
