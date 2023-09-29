@@ -63,10 +63,10 @@ Source Units in Scope: **`23`** (**100%**)
 | 📝 | contracts/MulticallExtension.sol | 1 | **** | 99 | 88 | 59 | 27 | 25 | **<abbr title='DelegateCall'>👥</abbr><abbr title='Unchecked Blocks'>Σ</abbr>** |
 | 📝 | contracts/SingletonHedronManager.sol | 1 | **** | 87 | 87 | 72 | 13 | 30 | **<abbr title='Unchecked Blocks'>Σ</abbr>** |
 | 📝 | contracts/StakeEnder.sol | 1 | **** | 287 | 277 | 236 | 40 | 98 | **<abbr title='Payable Functions'>💰</abbr><abbr title='Unchecked Blocks'>Σ</abbr>** |
-| 📝 | contracts/StakeInfo.sol | 1 | **** | 137 | 137 | 51 | 84 | 35 | **** |
+| 📝 | contracts/StakeInfo.sol | 1 | **** | 145 | 145 | 59 | 84 | 35 | **<abbr title='Unchecked Blocks'>Σ</abbr>** |
 | 📝 | contracts/StakeManager.sol | 1 | **** | 6 | 6 | 3 | 1 | 3 | **** |
 | 📝 | contracts/StakeStarter.sol | 1 | **** | 89 | 74 | 51 | 21 | 34 | **<abbr title='Payable Functions'>💰</abbr>** |
-| 🎨 | contracts/Tipper.sol | 1 | **** | 554 | 516 | 362 | 153 | 150 | **<abbr title='Payable Functions'>💰</abbr><abbr title='Unchecked Blocks'>Σ</abbr>** |
+| 🎨 | contracts/Tipper.sol | 1 | **** | 546 | 508 | 354 | 153 | 150 | **<abbr title='Payable Functions'>💰</abbr><abbr title='Unchecked Blocks'>Σ</abbr>** |
 | 📝 | contracts/TransferableStakeManager.sol | 1 | **** | 109 | 109 | 75 | 33 | 37 | **<abbr title='Payable Functions'>💰</abbr><abbr title='Unchecked Blocks'>Σ</abbr>** |
 | 📝 | contracts/UnderlyingStakeManager.sol | 1 | **** | 225 | 207 | 132 | 73 | 61 | **<abbr title='Unchecked Blocks'>Σ</abbr>** |
 | 🎨 | contracts/UnderlyingStakeable.sol | 1 | **** | 152 | 127 | 60 | 75 | 39 | **<abbr title='Unchecked Blocks'>Σ</abbr>** |
@@ -277,12 +277,12 @@ This section lists functions that are explicitly declared public or payable. Ple
 | contracts/MulticallExtension.sol | 88034c4f27d20ae95cc1edcee8b721908409325f |
 | contracts/SingletonHedronManager.sol | 730f391448e907376a35bda0e1d85297be07b753 |
 | contracts/StakeEnder.sol | dd649c4968580cd13b5e0e8af3ec68c470bf704d |
-| contracts/StakeInfo.sol | ee1dac4984e064286b7c7e38f6b40906ab143aec |
+| contracts/StakeInfo.sol | a29b9828acaf1e8335ddb8732fe799f0fc40c001 |
 | contracts/StakeManager.sol | a6bba67bddb847d7d2663be7b1267a04510d926b |
 | contracts/StakeStarter.sol | 3fe799e38990e94ec1f701b6835edc2f1dcd00d3 |
-| contracts/Tipper.sol | 799ab62f8f2f4ebf3ab01689a0bcca92910251a3 |
+| contracts/Tipper.sol | 917d041cb1970faa9b22a5c7a8c35140cda9f082 |
 | contracts/TransferableStakeManager.sol | 00f230aa6e1641e549f7bf4a6bf76c100475b3ad |
-| contracts/UnderlyingStakeManager.sol | 0b49127f1d4d39dc60f3d17d360538970d92649e |
+| contracts/UnderlyingStakeManager.sol | 57dec48ac06f218532279698431c18b81df2d25b |
 | contracts/UnderlyingStakeable.sol | ec553ee7722dec9634871d76c379f9a8e605317e |
 | contracts/Utils.sol | 062fb47a1a6f1745bcb2016bcba82ea8aba8ee87 |
 

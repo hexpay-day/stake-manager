@@ -149,27 +149,29 @@ abstract contract Tipper is Bank, UnderlyingStakeable, CurrencyList, EncodableSe
         if (_isOneAtIndex({
           settings: cachedTip,
           index: MAX_UINT_8
-        }) && nextStakeId > ZERO) {
-          limit = _clamp({
-            amount: limit,
-            max: withdrawableBalance
-          });
-          if (limit > ZERO) {
-            cachedTip = _encodeTipSettings(true, idx, limit, cachedTip);
-            withdrawableBalance -= limit;
-            // we no longer need currency idx
-            // so this line takes it over / reuses it
-            stakeIdTips[nextStakeId].push(cachedTip);
-            if (tipStakeIdToStaker[nextStakeId] == address(0)) {
-              tipStakeIdToStaker[nextStakeId] = staker;
-            }
-            emit AddTip({
-              stakeId: nextStakeId,
-              token: token,
-              index: nextStakeTipsLength,
-              settings: cachedTip
+        })) {
+          if (nextStakeId > ZERO) {
+            limit = _clamp({
+              amount: limit,
+              max: withdrawableBalance
             });
-            ++nextStakeTipsLength;
+            if (limit > ZERO) {
+              cachedTip = _encodeTipSettings(true, idx, limit, cachedTip);
+              withdrawableBalance -= limit;
+              // we no longer need currency idx
+              // so this line takes it over / reuses it
+              stakeIdTips[nextStakeId].push(cachedTip);
+              if (tipStakeIdToStaker[nextStakeId] == address(0)) {
+                tipStakeIdToStaker[nextStakeId] = staker;
+              }
+              emit AddTip({
+                stakeId: nextStakeId,
+                token: token,
+                index: nextStakeTipsLength,
+                settings: cachedTip
+              });
+              ++nextStakeTipsLength;
+            }
           }
         }
         if (withdrawableBalance != cachedWithdrawableBalance) {
@@ -212,8 +214,10 @@ abstract contract Tipper is Bank, UnderlyingStakeable, CurrencyList, EncodableSe
     uint256 amount,
     uint256 encodedLinear
   ) internal pure returns(uint256) {
-    if (uint8(encodedLinear) == ZERO && encodedLinear != ZERO) {
-      revert NotAllowed();
+    if (uint8(encodedLinear) == ZERO) {
+      if (encodedLinear != ZERO) {
+        revert NotAllowed();
+      }
     }
     unchecked {
       return uint256(reusable ? ONE : ZERO) << MAX_UINT_8
@@ -443,9 +447,11 @@ abstract contract Tipper is Bank, UnderlyingStakeable, CurrencyList, EncodableSe
    */
   function _verifyTipAmountAllowed(uint256 stakeId, uint256 amount) internal view returns(address recipient) {
     (, recipient) = _stakeIdToInfo(stakeId);
-    if (amount == ZERO && msg.sender != recipient) {
-      // cannot allow other people to take staker deposits
-      revert NotAllowed();
+    if (amount == ZERO) {
+      if (msg.sender != recipient) {
+        // cannot allow other people to take staker deposits
+        revert NotAllowed();
+      }
     }
   }
   /**
@@ -521,8 +527,10 @@ abstract contract Tipper is Bank, UnderlyingStakeable, CurrencyList, EncodableSe
     // this result provides 15*basefee/2, up to 10m hedron as a contrived example
     // 0x0000000200000000002386f26fc10000000000000000000f0000000000000002
     uint256 currencyIndex = currencyToIndex[token];
-    if (currencyIndex == ZERO && token != address(0)) {
-      revert NotAllowed();
+    if (currencyIndex == ZERO) {
+      if (token != address(0)) {
+        revert NotAllowed();
+      }
     }
     uint256 settings = _encodeTipSettings({
       reusable: reusable,

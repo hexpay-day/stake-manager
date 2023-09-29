@@ -121,7 +121,9 @@ contract MaximusStakeManager is HSIStakeManager {
    * @return isEndable denotes whether or not the stake is endable
    */
   function _checkEndable(IPublicEndStakeable endable) internal view returns(bool isEndable) {
-    return _currentDay() > endable.STAKE_END_DAY() && endable.STAKE_IS_ACTIVE();
+    if (_currentDay() > endable.STAKE_END_DAY()) {
+      return endable.STAKE_IS_ACTIVE();
+    }
   }
   /**
    * checks if a given perpetual is endable

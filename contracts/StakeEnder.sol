@@ -74,11 +74,11 @@ contract StakeEnder is Magnitude, SingletonHedronManager {
         lockedDay: stake.lockedDay,
         stakedDays: stake.stakedDays,
         targetDay: count >> INDEX_RIGHT_TODAY
-      }) && !_isOneAtIndex({
-        settings: settings,
-        index: INDEX_RIGHT_CAN_EARLY_STAKE_END
       })) {
-        return (ZERO, count);
+        if (!_isOneAtIndex({
+          settings: settings,
+          index: INDEX_RIGHT_CAN_EARLY_STAKE_END
+        })) return (ZERO, count);
       }
       if (_isOneAtIndex({
         settings: settings,
@@ -155,43 +155,45 @@ contract StakeEnder is Magnitude, SingletonHedronManager {
         }
       }
       uint256 nextStakeId;
-      if (delta > ZERO && uint8(settings >> INDEX_RIGHT_NEW_STAKE) > ZERO) {
-        uint256 newStakeAmount = _computeMagnitude({
-          limit: delta,
-          linear: uint72(settings >> INDEX_RIGHT_NEW_STAKE),
-          v2: delta,
-          v1: stake.stakedHearts
-        });
-        if (newStakeAmount > ZERO) {
-          // this does not account for minimum newStakeAmount to have at least 1 share
-          // it is too expensive to check in the middle of this tight loop without
-          // crazy high costs - for the next 15 years, it should be done off chain
-          // stakes small enough to be anywhere near this
-          // threshold should simply be ignored
-          uint256 newStakeDaysMethod = uint8(settings >> INDEX_RIGHT_NEW_STAKE_DAYS_METHOD);
-          if (newStakeDaysMethod > ZERO) {
-            uint256 newStakeDays;
-            (newStakeDaysMethod, newStakeDays) = _computeDayMagnitude({
-              limit: MAX_DAYS,
-              method: newStakeDaysMethod,
-              x: uint16(settings >> INDEX_RIGHT_NEW_STAKE_DAYS_MAGNITUDE),
-              today: count >> INDEX_RIGHT_TODAY,
-              lockedDay: stake.lockedDay,
-              stakedDays: stake.stakedDays
-            });
-            settings = (
-              (settings >> INDEX_RIGHT_NEW_STAKE) << INDEX_RIGHT_NEW_STAKE
-              | (newStakeDaysMethod << THIRTY_TWO) // only 0-4
-              | uint32(settings)
-            );
-            delta -= newStakeAmount; // already checked for underflow
-            nextStakeId = _stakeStartFor({
-              owner: staker,
-              amount: newStakeAmount,
-              newStakedDays: newStakeDays,
-              index: uint128(count)
-            });
-            ++count;
+      if (delta > ZERO) {
+        if (uint8(settings >> INDEX_RIGHT_NEW_STAKE) > ZERO) {
+          uint256 newStakeAmount = _computeMagnitude({
+            limit: delta,
+            linear: uint72(settings >> INDEX_RIGHT_NEW_STAKE),
+            v2: delta,
+            v1: stake.stakedHearts
+          });
+          if (newStakeAmount > ZERO) {
+            // this does not account for minimum newStakeAmount to have at least 1 share
+            // it is too expensive to check in the middle of this tight loop without
+            // crazy high costs - for the next 15 years, it should be done off chain
+            // stakes small enough to be anywhere near this
+            // threshold should simply be ignored
+            uint256 newStakeDaysMethod = uint8(settings >> INDEX_RIGHT_NEW_STAKE_DAYS_METHOD);
+            if (newStakeDaysMethod > ZERO) {
+              uint256 newStakeDays;
+              (newStakeDaysMethod, newStakeDays) = _computeDayMagnitude({
+                limit: MAX_DAYS,
+                method: newStakeDaysMethod,
+                x: uint16(settings >> INDEX_RIGHT_NEW_STAKE_DAYS_MAGNITUDE),
+                today: count >> INDEX_RIGHT_TODAY,
+                lockedDay: stake.lockedDay,
+                stakedDays: stake.stakedDays
+              });
+              settings = (
+                (settings >> INDEX_RIGHT_NEW_STAKE) << INDEX_RIGHT_NEW_STAKE
+                | (newStakeDaysMethod << THIRTY_TWO) // only 0-4
+                | uint32(settings)
+              );
+              delta -= newStakeAmount; // already checked for underflow
+              nextStakeId = _stakeStartFor({
+                owner: staker,
+                amount: newStakeAmount,
+                newStakedDays: newStakeDays,
+                index: uint128(count)
+              });
+              ++count;
+            }
           }
         }
       }

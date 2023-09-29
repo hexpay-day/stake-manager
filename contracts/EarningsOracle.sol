@@ -101,19 +101,25 @@ contract EarningsOracle is Utils {
     ) = IHEX(TARGET).dailyData({
       day: day
     });
-    if (day > lastZeroDay && dayStakeSharesTotal == 0) {
-      // stake data is not yet set
-      revert NotAllowed();
+    if (day > lastZeroDay) {
+      if (dayStakeSharesTotal == ZERO) {
+        // stake data is not yet set
+        revert NotAllowed();
+      }
     }
     (uint256 payout, uint256 shares) = _readTotals(day, _total);
     return _saveDay(dayPayoutTotal + payout, dayStakeSharesTotal + shares);
   }
   function _readTotals(uint256 day, Total memory _total) internal view returns(uint256 payout, uint256 shares) {
     (payout, shares) = (_total.payout, _total.shares);
-    if (payout == ZERO && shares == ZERO && day > ZERO) {
-      TotalStore memory prev = totals[day - ONE];
-      payout = prev.payout;
-      shares = prev.shares;
+    if (payout == ZERO) {
+      if (shares == ZERO) {
+        if (day > ZERO) {
+          TotalStore memory prev = totals[day - ONE];
+          payout = prev.payout;
+          shares = prev.shares;
+        }
+      }
     }
   }
   function _saveDay(uint256 payout, uint256 shares) internal returns(Total memory total) {
@@ -137,7 +143,7 @@ contract EarningsOracle is Utils {
     }
     return _storeDay({
       day: day,
-      _total: Total(0, 0)
+      _total: Total(ZERO, ZERO)
     });
   }
   /**
@@ -147,11 +153,11 @@ contract EarningsOracle is Utils {
     uint256 size = totals.length;
     if (size >= IHEX(TARGET).currentDay()) {
       // no need to increment
-      return (total, 0);
+      return (total, ZERO);
     }
     return (_storeDay({
       day: size,
-      _total: Total(0, 0)
+      _total: Total(ZERO, ZERO)
     }), size);
   }
   /**
@@ -203,7 +209,7 @@ contract EarningsOracle is Utils {
    */
   function catchUpDays(uint256 iterations) external returns(Total memory total, uint256 day) {
     // constrain by gas costs
-    iterations = iterations == 0 || iterations > MAX_CATCH_UP_DAYS ? MAX_CATCH_UP_DAYS : iterations;
+    iterations = iterations == ZERO || iterations > MAX_CATCH_UP_DAYS ? MAX_CATCH_UP_DAYS : iterations;
     uint256 startDay = totals.length;
     // constrain by size
     uint256 limit = IHEX(TARGET).currentDay();

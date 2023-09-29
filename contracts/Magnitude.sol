@@ -194,8 +194,13 @@ contract Magnitude is Utils {
     // after the range 0-2, the linear treatment turns into something actually linear (x/y)+b
     // the flag of xFactor == 0 in combination with method = 0 is used to get around this,
     // or act as a boolean to signal special treatment of 1 and 2
-    if (limit == ZERO || (linear.method == ZERO && linear.xFactor == ZERO)) {
+    if (limit == ZERO) {
       return ZERO;
+    }
+    if (linear.method == ZERO) {
+      if (linear.xFactor == ZERO) {
+        return ZERO;
+      }
     }
     return _computeMagnitude({
       limit: limit,
