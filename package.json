@@ -5,7 +5,7 @@
     "build": "yarn run lint && yarn run metrics && yarn run cloc && yarn run docs",
     "metrics": "solidity-code-metrics ./contracts/*.sol > metrics.md",
     "docs": "rm -rf docs && hardhat docgen && cp ./*.md docs && rm docs/cloc.md docs/metrics.md && yarn run copy-static",
-    "copy-static": "cp static/* docs",
+    "copy-static": "cp -r static/* docs",
     "cloc": "cloc --by-file --out=./cloc.md ./contracts/*.sol",
     "lint": "solhint 'contracts/**/*.sol'",
     "test": "hardhat test",
