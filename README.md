@@ -7,7 +7,7 @@ build the contracts
 yarn run build
 ```
 
-note: sometimes tests fail if your network connection is a little slow at the time and are running for the first time after a fresh install or deleting the cache
+***NOTE: sometimes tests fail if your network connection is a little slow at the time and are running for the first time after a fresh install or deleting the cache***
 
 run tests
 ```bash
