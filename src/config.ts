@@ -59,6 +59,11 @@ export const args = yargs.options({
     require: false,
     default: 'test test test test test test test test test test test junk',
   },
+  apiKey: {
+    type: 'string',
+    require: false,
+    default: 'abc',
+  },
 }).env().parseSync()
 
 export const hexWhale = async (hre: HardhatRuntimeEnvironment) => {

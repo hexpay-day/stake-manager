@@ -189,8 +189,6 @@ const settings: SolcUserConfig["settings"] = {
   },
 }
 
-const explorerApiKey = 'abc'
-
 let hexArtifact = {} as unknown as Artifact;
 try {
   const hexArtifactPath = path.join(__dirname, 'artifacts', 'contracts', 'reference', 'Hex.sol', 'HEX.json')
@@ -270,13 +268,13 @@ const config: HardhatUserConfig = {
   }))(false),
   etherscan: {
     apiKey: {
-      'external': explorerApiKey,
+      'external': conf.args.apiKey,
     },
     customChains: [{
       network: 'external',
       chainId: 1,
       urls: {
-        apiURL: 'https://etherscan.io/api',
+        apiURL: 'https://api.etherscan.io/api',
         browserURL: 'https://etherscan.io/',
       },
     }, {

@@ -1,5 +1,5 @@
 site_name: Stake Manager
-site_url: https://hexpay-day.github.io/stake-manager/
+site_url: https://docs.hexpay.day
 extra_css:
   - extra.css
 extra_javascript:
@@ -8,6 +8,7 @@ plugins:
   - search
 theme:
   logo: logo.jpeg
+  favicon: logo.png
   prev_next_buttons_location: False
   name: readthedocs
   highlightjs: true
