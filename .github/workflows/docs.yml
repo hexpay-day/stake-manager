@@ -29,6 +29,8 @@ jobs:
         uses: borales/actions-yarn@v4
         with:
           cmd: install # will run `yarn install` command
-      - run: yarn run build
+      - name: Build Docs
         uses: borales/actions-yarn@v4
+        with:
+          cmd: build
       - run: mkdocs gh-deploy --force
