@@ -16,6 +16,10 @@ yarn run test
 yarn run test --trace-error # with error traces
 ```
 
+### Verification
+
+verification should occur with git hash `f1180beb5322796abeaa5fd2371afb3f6a880d62` to have the correct bytecode
+
 ### Run Traces
 
 ```bash

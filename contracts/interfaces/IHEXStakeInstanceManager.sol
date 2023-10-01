@@ -44,5 +44,4 @@ interface IHEXStakeInstanceManager is IERC721, IERC721Enumerable {
   function hexStakeEnd (uint256 hsiIndex, address hsiAddress) external returns (uint256);
   function hexStakeStart (uint256 amount, uint256 length) external returns (address);
   function hsiToken(uint256 tokenId) external view returns(address);
-  function setApprovalForall(address operator, bool approved) external;
 }
