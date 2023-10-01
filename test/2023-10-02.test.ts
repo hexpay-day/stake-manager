@@ -7,14 +7,15 @@ import { anyUint } from '@nomicfoundation/hardhat-chai-matchers/withArgs'
 
 describe("2023-10-02 utc", function () {
   it('can end base and hsi', async () => {
-    const depositDate = new Date('2023-09-29T00:00:00Z')
+    const depositDate = new Date('2023-10-01T00:00:00Z')
     const endDate = new Date('2023-10-02T00:00:00Z')
     const execAddress = '0xE971e07BF9917e91DFbeD9165f2ea8e6FF876880'
 
     const x = await loadFixture(utils.deployFixture)
-    const depositTime = Math.floor(+depositDate / 1_000)
+    const hour = 60*60
+    const depositTime = Math.floor(+depositDate / 1_000) + (hour * 23)
     const endTime = Math.floor(+endDate / 1_000)
-    const deltaDays = (((endTime - depositTime) * 1_000) / utils.DAY) - 1
+    const deltaDays = Math.floor(((endTime - depositTime) * 1_000) / utils.DAY) - 1
     const tokenIds = [
       14095,
       14096,
@@ -23,15 +24,19 @@ describe("2023-10-02 utc", function () {
       14099,
       14100,
     ]
-    const hsis = await Promise.all(tokenIds.map(async (tokenId) => {
+    const hsis = _.compact(await Promise.all(tokenIds.map(async (tokenId) => {
       const hsiAddress = await x.hsim.hsiToken(tokenId)
+      if (hsiAddress === hre.ethers.constants.AddressZero) {
+        // skip case where token is not a contract
+        return
+      }
       const stake = await x.hex.stakeLists(hsiAddress, 0)
       return {
         tokenId,
         hsiAddress,
         stakeId: stake.stakeId,
       }
-    }))
+    })))
     await hre.vizor.impersonate(execAddress, async (swa) => {
       const execStakeManager = x.existingStakeManager.connect(swa)
       await time.setNextBlockTimestamp(depositTime - 1)

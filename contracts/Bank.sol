@@ -3,15 +3,15 @@ pragma solidity ^0.8.18;
 
 import { Address } from "@openzeppelin/contracts/utils/Address.sol";
 import { IERC20 } from  "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import { Utils } from "./Utils.sol";
+import { SafeERC20 } from "./SafeERC20.sol";
 
 /**
  * @title A subcontract to track balances of deposited tokens
  */
 contract Bank is Utils {
-  using Address for address payable;
   using SafeERC20 for IERC20;
+  using Address for address payable;
 
   /**
    * notes that a previously unattributed token has been

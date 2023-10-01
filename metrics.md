@@ -43,8 +43,8 @@ This section lists files that are in scope for the metrics report.
 
 ### <span id=t-source-Units-in-Scope>Source Units in Scope</span>
 
-Source Units Analyzed: **`23`**<br>
-Source Units in Scope: **`23`** (**100%**)
+Source Units Analyzed: **`24`**<br>
+Source Units in Scope: **`24`** (**100%**)
 
 | Type | File   | Logic Contracts | Interfaces | Lines | nLines | nSLOC | Comment Lines | Complex. Score | Capabilities |
 | ---- | ------ | --------------- | ---------- | ----- | ------ | ----- | ------------- | -------------- | ------------ |
@@ -61,6 +61,7 @@ Source Units in Scope: **`23`** (**100%**)
 | 📝 | contracts/Magnitude.sol | 1 | **** | 239 | 223 | 151 | 78 | 89 | **<abbr title='Unchecked Blocks'>Σ</abbr>** |
 | 📝 | contracts/MaximusStakeManager.sol | 1 | **** | 182 | 177 | 104 | 76 | 68 | **<abbr title='Unchecked Blocks'>Σ</abbr>** |
 | 📝 | contracts/MulticallExtension.sol | 1 | **** | 99 | 88 | 59 | 27 | 25 | **<abbr title='DelegateCall'>👥</abbr><abbr title='Unchecked Blocks'>Σ</abbr>** |
+| 📚 | contracts/SafeERC20.sol | 1 | **** | 39 | 36 | 13 | 18 | 9 | **** |
 | 📝 | contracts/SingletonHedronManager.sol | 1 | **** | 87 | 87 | 72 | 13 | 30 | **<abbr title='Unchecked Blocks'>Σ</abbr>** |
 | 📝 | contracts/StakeEnder.sol | 1 | **** | 289 | 279 | 238 | 40 | 100 | **<abbr title='Payable Functions'>💰</abbr><abbr title='Unchecked Blocks'>Σ</abbr>** |
 | 📝 | contracts/StakeInfo.sol | 1 | **** | 145 | 145 | 59 | 84 | 35 | **<abbr title='Unchecked Blocks'>Σ</abbr>** |
@@ -71,7 +72,7 @@ Source Units in Scope: **`23`** (**100%**)
 | 📝 | contracts/UnderlyingStakeManager.sol | 1 | **** | 225 | 207 | 132 | 73 | 61 | **<abbr title='Unchecked Blocks'>Σ</abbr>** |
 | 🎨 | contracts/UnderlyingStakeable.sol | 1 | **** | 152 | 127 | 60 | 75 | 39 | **<abbr title='Unchecked Blocks'>Σ</abbr>** |
 | 📝 | contracts/Utils.sol | 1 | **** | 95 | 95 | 44 | 50 | 85 | **<abbr title='Uses Assembly'>🖥</abbr><abbr title='Unchecked Blocks'>Σ</abbr>** |
-| 📝🎨 | **Totals** | **23** | **** | **4130**  | **3942** | **2529** | **1396** | **1339** | **<abbr title='Uses Assembly'>🖥</abbr><abbr title='Payable Functions'>💰</abbr><abbr title='DelegateCall'>👥</abbr><abbr title='Uses Hash-Functions'>🧮</abbr><abbr title='Unchecked Blocks'>Σ</abbr>** |
+| 📝📚🎨 | **Totals** | **24** | **** | **4169**  | **3978** | **2542** | **1414** | **1348** | **<abbr title='Uses Assembly'>🖥</abbr><abbr title='Payable Functions'>💰</abbr><abbr title='DelegateCall'>👥</abbr><abbr title='Uses Hash-Functions'>🧮</abbr><abbr title='Unchecked Blocks'>Σ</abbr>** |
 
 <sub>
 Legend: <a onclick="toggleVisibility('table-legend', this)">[➕]</a>
@@ -153,14 +154,14 @@ The analysis finished with **`0`** errors and **`0`** duplicate files.
 
 #### <span id=t-inline-documentation>Inline Documentation</span>
 
-- **Comment-to-Source Ratio:** On average there are`1.94` code lines per comment (lower=better).
+- **Comment-to-Source Ratio:** On average there are`1.93` code lines per comment (lower=better).
 - **ToDo's:** `0`
 
 #### <span id=t-components>Components</span>
 
 | 📝Contracts   | 📚Libraries | 🔍Interfaces | 🎨Abstract |
 | ------------- | ----------- | ------------ | ---------- |
-| 18 | 0  | 0  | 5 |
+| 18 | 1  | 0  | 5 |
 
 #### <span id=t-exposed-functions>Exposed Functions</span>
 
@@ -172,7 +173,7 @@ This section lists functions that are explicitly declared public or payable. Ple
 
 | External   | Internal | Private | Pure | View |
 | ---------- | -------- | ------- | ---- | ---- |
-| 105 | 188  | 0 | 44 | 56 |
+| 105 | 193  | 1 | 44 | 56 |
 
 #### <span id=t-statevariables>StateVariables</span>
 
@@ -200,10 +201,9 @@ This section lists functions that are explicitly declared public or payable. Ple
 | ------------------------ | ------ |
 | @openzeppelin/contracts/access/Ownable2Step.sol | 1 |
 | @openzeppelin/contracts/token/ERC20/ERC20.sol | 1 |
-| @openzeppelin/contracts/token/ERC20/IERC20.sol | 5 |
-| @openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol | 2 |
+| @openzeppelin/contracts/token/ERC20/IERC20.sol | 6 |
 | @openzeppelin/contracts/token/ERC721/IERC721.sol | 1 |
-| @openzeppelin/contracts/utils/Address.sol | 3 |
+| @openzeppelin/contracts/utils/Address.sol | 4 |
 
 #### <span id=t-totals>Totals</span>
 
@@ -263,18 +263,19 @@ This section lists functions that are explicitly declared public or payable. Ple
 |  File Name  |  SHA-1 Hash  |
 |-------------|--------------|
 | contracts/AuthorizationManager.sol | 9d5b3b311c94f3d04423741ab360c7a3d0a9a920 |
-| contracts/Bank.sol | 2fdfc3b08fdc8613a1fdc7c3d61cd8d4ca8f3df0 |
+| contracts/Bank.sol | db7e36427f8624070bd96b605589d1cbf1d6be3c |
 | contracts/CurrencyList.sol | 4c88c6fc580b0294b813064f6364c48db0434713 |
 | contracts/EarningsOracle.sol | ce059a3aadb213a9ec817942f3e0da76635f9b18 |
 | contracts/EncodableSettings.sol | e496d6dd34b7d59d6ad02a5076a8b9895aa9706c |
 | contracts/ExistingStakeManager.sol | 645f443d16fe8ca9709e14c0d8759438f26e941a |
 | contracts/GoodAccounting.sol | 4821f9e00a2e29eb8a6208c03f00cf6eb146e60c |
 | contracts/HSIStakeManager.sol | b18bd0637d68449d530cc3ef116c917d4e67b837 |
-| contracts/IsolatedStakeManager.sol | 07a297e9bc2249ac141b4fd526fd21d88457cbad |
+| contracts/IsolatedStakeManager.sol | d344fa1e35a9d2f5062786dd17f70a6e89efccf1 |
 | contracts/IsolatedStakeManagerFactory.sol | 8fdf473c9b6e76adaadbb9b18745f61f7f5758a2 |
 | contracts/Magnitude.sol | 44450908a79f5f9d4ccccac03730ed3c57d4c7d3 |
 | contracts/MaximusStakeManager.sol | fb1871561f64e572c8aa995982ecd8773d53b0ed |
 | contracts/MulticallExtension.sol | 88034c4f27d20ae95cc1edcee8b721908409325f |
+| contracts/SafeERC20.sol | f7f80edc46aa8a6629c36bb7767dadc33b64f6e4 |
 | contracts/SingletonHedronManager.sol | 730f391448e907376a35bda0e1d85297be07b753 |
 | contracts/StakeEnder.sol | 28bb7eac165fa965029cfe0acb8f66f54deec718 |
 | contracts/StakeInfo.sol | a29b9828acaf1e8335ddb8732fe799f0fc40c001 |
@@ -449,6 +450,11 @@ This section lists functions that are explicitly declared public or payable. Ple
 | └ | multicallWithDeadline | External ❗️ | 🛑  |NO❗️ |
 | └ | multicallWithPreviousBlockHash | External ❗️ | 🛑  |NO❗️ |
 | └ | _multicall | Internal 🔒 | 🛑  | |
+||||||
+| **SafeERC20** | Library |  |||
+| └ | safeTransfer | Internal 🔒 | 🛑  | |
+| └ | safeTransferFrom | Internal 🔒 | 🛑  | |
+| └ | _callOptionalReturn | Private 🔐 | 🛑  | |
 ||||||
 | **SingletonHedronManager** | Implementation | UnderlyingStakeManager |||
 | └ | createTo | External ❗️ |   |NO❗️ |

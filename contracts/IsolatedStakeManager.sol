@@ -2,11 +2,11 @@
 pragma solidity ^0.8.18;
 
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import { Ownable2Step } from "@openzeppelin/contracts/access/Ownable2Step.sol";
 import { IUnderlyingStakeable } from "./interfaces/IUnderlyingStakeable.sol";
 import { AuthorizationManager } from "./AuthorizationManager.sol";
 import { GoodAccounting } from "./GoodAccounting.sol";
+import { SafeERC20 } from "./SafeERC20.sol";
 
 contract IsolatedStakeManager is Ownable2Step, AuthorizationManager, GoodAccounting {
   using SafeERC20 for IERC20;

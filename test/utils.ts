@@ -260,6 +260,7 @@ export const moveForwardDays = async (
   x: MinimalX,
   step = 1,
 ) => {
+  if (limit < 1) return
   const _currentDay = await x.hex.currentDay()
   const currentDay = _currentDay.toNumber()
   const endDay = currentDay + limit
