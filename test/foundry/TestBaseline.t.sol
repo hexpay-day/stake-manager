@@ -24,6 +24,13 @@ contract TestBaselineEnd1 is TestStakeManager {
     _stakeStart(vm.addr(6), startingBalance / 10, _days()); // 11
     _stakeStart(vm.addr(6), startingBalance / 10, _days()); // 12
     _stakeStart(vm.addr(7), startingBalance / 10, _days()); // 13
+    _stakeStart(vm.addr(8), startingBalance / 10, _days()); // 14
+    _stakeStart(vm.addr(8), startingBalance / 10, _days()); // 15
+    _stakeStart(vm.addr(8), startingBalance / 10, _days()); // 16
+    _stakeStart(vm.addr(8), startingBalance / 10, _days()); // 17
+    _stakeStart(vm.addr(8), startingBalance / 10, _days()); // 18
+    _stakeStart(vm.addr(8), startingBalance / 10, _days()); // 19
+    _stakeStart(vm.addr(8), startingBalance / 10, _days()); // 20
     // this line is added to make gas estimations comparable
     _directStakeStart(vm.addr(1), startingBalance / 10, _days());
     _moveDays(vm.addr(5), _days() + 1);
@@ -67,6 +74,17 @@ contract TestBaselineEnd1 is TestStakeManager {
     list[2] = nextStakeId + 10;
     _stakeRestartManyById(vm.addr(5), list);
   }
+  function testBaselineSelfManagedRestart7() public virtual {
+    uint256[] memory list = new uint256[](7);
+    list[0] = nextStakeId + 14;
+    list[1] = nextStakeId + 15;
+    list[2] = nextStakeId + 16;
+    list[3] = nextStakeId + 17;
+    list[4] = nextStakeId + 18;
+    list[5] = nextStakeId + 19;
+    list[6] = nextStakeId + 20;
+    _stakeRestartManyById(vm.addr(8), list);
+  }
   function testBaselineSelfManagedRestart2() public virtual {
     uint256[] memory list = new uint256[](2);
     list[0] = nextStakeId + 11;
@@ -87,5 +105,11 @@ contract TestBaselineEnd90 is TestBaselineEnd1 {
 contract TestBaselineEnd369 is TestBaselineEnd1 {
   function _days() internal override virtual pure returns(uint256) {
     return 369;
+  }
+}
+
+contract TestBaselineEnd3690 is TestBaselineEnd1 {
+  function _days() internal override virtual pure returns(uint256) {
+    return 3690;
   }
 }
