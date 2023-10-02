@@ -12,16 +12,19 @@ export const args = yargs.options({
     type: 'string',
     required: false,
     describe: 'the rpc ur for chain id 1',
+    default: 'https://eth.llamarpc.com',
   },
   rpc369: {
     type: 'string',
     required: false,
     describe: 'the rpc ur for chain id 369',
+    default: 'https://rpc.pulsechain.com',
   },
   rpc943: {
     type: 'string',
     required: false,
     describe: 'the rpc ur for chain id 943',
+    default: 'https://rpc.v4.testnet.pulsechain.com',
   },
   chain: {
     type: 'string',
@@ -53,6 +56,7 @@ export const args = yargs.options({
   blockNumber: {
     type: 'number',
     require: false,
+    default: 18057421,
   },
   mnemonic: {
     type: 'string',

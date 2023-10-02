@@ -29,6 +29,7 @@
     "@ethersproject/abi": "^5.7.0",
     "@ethersproject/bytes": "^5.7.0",
     "@ethersproject/providers": "^5.7.2",
+    "@flashbots/ethers-provider-bundle": "^0.6.2",
     "@hexpayday/solidity-code-metrics": "^0.0.26",
     "@nomicfoundation/hardhat-chai-matchers": "^1.0.0",
     "@nomicfoundation/hardhat-network-helpers": "^1.0.0",
@@ -67,5 +68,6 @@
     "typescript": "^5.0.4",
     "yargs": "^17.7.2"
   },
-  "version": "1.0.16"
+  "version": "1.0.16",
+  "dependencies": {}
 }

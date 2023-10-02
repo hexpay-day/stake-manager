@@ -236,17 +236,18 @@ contract Bank is Utils {
    * @notice after a deduction, funds could be considered "unattributed"
    * and if they are left in such a state they could be picked up by anyone else
    */
-  function _deductWithdrawable(address token, address account, uint256 amount) internal returns(uint256) {
+  function _deductWithdrawable(address token, address account, uint256 amount) internal returns(uint256 value) {
     uint256 withdrawable = withdrawableBalanceOf[token][account];
-    amount = _clamp({
+    value = _clamp({
       amount: amount,
       max: withdrawable
     });
-    unchecked {
-      withdrawableBalanceOf[token][account] = withdrawable - amount;
-      attributed[token] = attributed[token] - amount;
+    if (value > ZERO) {
+      unchecked {
+        withdrawableBalanceOf[token][account] = withdrawable - value;
+        attributed[token] = attributed[token] - value;
+      }
     }
-    return amount;
   }
   /** deposits tokens from a staker and marks them for that staker */
   function _depositTokenFrom(address token, address depositor, uint256 amount) internal returns(uint256 amnt) {
@@ -258,7 +259,7 @@ contract Bank is Utils {
       }
     } else {
       // transfer in already occurred
-      // make sure that multicall is not payable (it isn't)
+      // make sure that multicall is not payable
       amnt = msg.value;
     }
   }
@@ -279,10 +280,12 @@ contract Bank is Utils {
    * @param amount the number of tokens to send
    */
   function _withdrawTokenTo(address token, address payable to, uint256 amount) internal returns(uint256) {
-    if (token == address(0)) {
-      to.sendValue(amount);
-    } else {
-      IERC20(token).safeTransfer(to, amount);
+    if (amount > ZERO) {
+      if (token == address(0)) {
+        to.sendValue(amount);
+      } else {
+        IERC20(token).safeTransfer(to, amount);
+      }
     }
     return amount;
   }

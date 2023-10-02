@@ -428,6 +428,11 @@
     "@ethersproject/properties" "^5.7.0"
     "@ethersproject/strings" "^5.7.0"
 
+"@flashbots/ethers-provider-bundle@^0.6.2":
+  version "0.6.2"
+  resolved "https://registry.yarnpkg.com/@flashbots/ethers-provider-bundle/-/ethers-provider-bundle-0.6.2.tgz#b1c9bf74f29f2715075b60bf7db0557c01692001"
+  integrity sha512-W4Hi47zWggWgLBwhoxH3qaojudAjcbBU+ldEYi5o06UQm/25Hk/AUvCLiN+9nvy1g3xxpF9QBdMniUwjC4cpBw==
+
 "@hexpayday/solidity-code-metrics@^0.0.26":
   version "0.0.26"
   resolved "https://registry.yarnpkg.com/@hexpayday/solidity-code-metrics/-/solidity-code-metrics-0.0.26.tgz#a727b0f84ffde2d7a4438c2eb3a8188184d5f7b6"

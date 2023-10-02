@@ -25,7 +25,10 @@ import { main as deployExistingStakeManager } from './tasks/deploy/existing-stak
 import { main as deployStakeManager } from './tasks/deploy/stake-manager'
 import { main as deployIsolatedStakeManagerFactory } from './tasks/deploy/isolated-stake-manager-factory'
 import { main as impersonateAndFund } from './tasks/impersonate-and-fund'
-import { main as increase } from './tasks/time-warp'
+import { main as timeWarp } from './tasks/time-warp'
+import { main as depositHsi } from './tasks/write/hsi/deposit'
+import { main as countHsi } from './tasks/read/hsi/count'
+import { main as endBundleBase } from './tasks/write/existing/end-bundle/base'
 import _ from "lodash";
 
 task('impersonate-and-fund', 'impersonate an address and fund another address with a provided amount of hex')
@@ -52,10 +55,23 @@ task('deploy:stake-manager', 'deploys stake manager contract')
 task('deploy:isolated-stake-manager-factory', 'deploys stake manager contract')
   .setAction(deployIsolatedStakeManagerFactory)
 
-task('increase', 'increases the timestamp of the chain by a magnitude and unit')
+task('time-warp', 'increases the timestamp of the chain by a magnitude and unit')
   .addPositionalParam('magnitude', 'the size of the jump', '1')
   .addPositionalParam('unit', 'the unit of the time jump', 'days')
-  .setAction(increase)
+  .setAction(timeWarp)
+
+task('write:hsi:deposit', 'deposit hsis into an existing stake manager')
+  .addFlag('approveIndividual', 'prefer to use approve all instead of individual approvals')
+  .setAction(depositHsi)
+
+task('read:hsi:count', 'read hsi token counts')
+  .setAction(countHsi)
+
+task('write:existing:end-bundle:base', 'end the bundle of hsi + base')
+  .addFlag('mev', 'use the mev pathway to send transaction')
+  .addFlag('sim', 'simulate the transaction')
+  .addFlag('wait', 'wait until the block gets closer to the desired timestamp')
+  .setAction(endBundleBase)
 
 function getRemappings() {
   return fs
@@ -85,12 +101,10 @@ const defaultHardhatNetwork: HardhatNetworkUserConfig = {
   },
 }
 
-const blockNumber = conf.args.blockNumber || 18057421
-
 const pulsechainV4: HardhatNetworkUserConfig = {
   forking: {
-    url: conf.args.rpc943 || 'https://rpc.v4.testnet.pulsechain.com',
-    blockNumber,
+    url: conf.args.rpc943,
+    blockNumber: conf.args.blockNumber,
   },
   chains: {
     943: {
@@ -104,8 +118,8 @@ const pulsechainV4: HardhatNetworkUserConfig = {
 
 const pulsechain: HardhatNetworkUserConfig = {
   forking: {
-    url: conf.args.rpc369 || 'https://rpc.pulsechain.com',
-    blockNumber,
+    url: conf.args.rpc369,
+    blockNumber: conf.args.blockNumber,
   },
   chains: {
     369: {
@@ -119,8 +133,8 @@ const pulsechain: HardhatNetworkUserConfig = {
 
 const ethereum: HardhatNetworkUserConfig = {
   forking: {
-    url: conf.args.rpc1 || 'https://eth.llamarpc.com',
-    blockNumber,
+    url: conf.args.rpc1,
+    blockNumber: conf.args.blockNumber,
   },
   // chains is known by hh
 }
