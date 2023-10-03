@@ -1,6 +1,7 @@
 {
   "license": "MIT",
   "name": "@hexpayday/stake-manager",
+  "main": "./dist",
   "scripts": {
     "build": "tsc && yarn run lint && yarn run metrics && yarn run cloc && yarn run docs",
     "metrics": "solidity-code-metrics ./contracts/*.sol > metrics.md",
