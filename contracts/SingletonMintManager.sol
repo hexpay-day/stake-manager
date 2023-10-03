@@ -4,7 +4,7 @@ pragma solidity ^0.8.18;
 import { IHedron } from "./interfaces/IHedron.sol";
 import { UnderlyingStakeManager } from "./UnderlyingStakeManager.sol";
 
-contract SingletonHedronManager is UnderlyingStakeManager {
+contract SingletonMintManager is UnderlyingStakeManager {
   /**
    * combine a boolean from a settings value and the owner address to
    * reduce the number of transfers / writes that occur during a loop

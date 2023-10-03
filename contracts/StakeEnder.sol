@@ -2,10 +2,10 @@
 pragma solidity ^0.8.18;
 
 import { UnderlyingStakeable } from "./UnderlyingStakeable.sol";
-import { SingletonHedronManager } from "./SingletonHedronManager.sol";
+import { SingletonMintManager } from "./SingletonMintManager.sol";
 import { Magnitude } from "./Magnitude.sol";
 
-contract StakeEnder is Magnitude, SingletonHedronManager {
+contract StakeEnder is Magnitude, SingletonMintManager {
   uint8 public constant INDEX_RIGHT_TODAY = 128;
 
   /**
@@ -128,34 +128,34 @@ contract StakeEnder is Magnitude, SingletonHedronManager {
         stakeId: stakeId,
         stakeCountAfter: uint128(count)
       });
-      // direct funds after end stake
-      // only place the stake struct exists is in memory in this method
-      if (uint8(settings >> INDEX_RIGHT_TARGET_TIP) > ZERO) {
-        uint256 targetTip = _computeMagnitude({
-          limit: delta,
-          linear: uint72(settings >> INDEX_RIGHT_TARGET_TIP),
-          v2: delta,
-          v1: stake.stakedHearts
-        });
-        if (targetTip > ZERO) {
-          delta -= targetTip;
-          if (tipTo != address(0)) {
-            _addToTokenWithdrawable({
+      uint256 nextStakeId;
+      if (delta > ZERO) {
+        // direct funds after end stake
+        // only place the stake struct exists is in memory in this method
+        if (uint8(settings >> INDEX_RIGHT_TARGET_TIP) > ZERO) {
+          uint256 targetTip = _computeMagnitude({
+            limit: delta,
+            linear: uint72(settings >> INDEX_RIGHT_TARGET_TIP),
+            v2: delta,
+            v1: stake.stakedHearts
+          });
+          if (targetTip > ZERO) {
+            delta -= targetTip;
+            if (tipTo != address(0)) {
+              _addToTokenWithdrawable({
+                token: TARGET,
+                to: tipTo,
+                amount: targetTip
+              });
+            }
+            emit Tip({
+              stakeId: stakeId,
               token: TARGET,
               to: tipTo,
               amount: targetTip
             });
           }
-          emit Tip({
-            stakeId: stakeId,
-            token: TARGET,
-            to: tipTo,
-            amount: targetTip
-          });
         }
-      }
-      uint256 nextStakeId;
-      if (delta > ZERO) {
         if (uint8(settings >> INDEX_RIGHT_NEW_STAKE) > ZERO) {
           uint256 newStakeAmount = _computeMagnitude({
             limit: delta,
@@ -198,6 +198,7 @@ contract StakeEnder is Magnitude, SingletonHedronManager {
         }
       }
       if (delta > ZERO) {
+        // attribute leftover funds to staker
         _attributeFunds({
           settings: settings,
           token: TARGET,

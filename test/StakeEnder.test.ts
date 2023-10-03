@@ -1492,6 +1492,35 @@ describe("StakeManager", function () {
         // note that anyUintNoPenalty is not used here
         .withArgs(anyUint, anyUint, x.stakeManager.address, nextStakeId)
     })
+    it('can handle stakes that get no hex', async () => {
+      const x = await loadFixture(utils.deployFixture)
+      const nextStakeId = await utils.nextStakeId(x.hex)
+      const [signer1] = x.signers
+      const defaultSettings = await x.stakeManager.defaultSettings()
+      const encodedSettings = await x.stakeManager.encodeSettings({
+        ...defaultSettings,
+        consentAbilities: {
+          ...defaultSettings.consentAbilities,
+          canEarlyStakeEnd: true,
+        },
+      })
+      await x.stakeManager.stakeStartFromBalanceFor(signer1.address, x.stakedAmount, 5_555, encodedSettings)
+      await utils.moveForwardDays(90, x)
+      await expect(x.stakeManager.stakeIdToOwner(nextStakeId))
+        .eventually.to.equal(signer1.address)
+      await expect(x.stakeManager.stakeEndById(nextStakeId))
+        .to.emit(x.hex, 'Transfer')
+        .withArgs(hre.ethers.constants.AddressZero, '0x9A6a414D6F3497c05E3b1De90520765fA1E07c03', anyUint)
+        .to.emit(x.hex, 'StakeEnd')
+        // note that anyUintNoPenalty is not used here
+        .withArgs(anyUint, anyUint, x.stakeManager.address, nextStakeId)
+        .changeTokenBalances(x.hex,
+          [signer1, x.stakeManager],
+          [0, 0],
+        )
+      await expect(x.stakeManager.stakeIdToOwner(nextStakeId))
+        .eventually.to.equal(hre.ethers.constants.AddressZero)
+    })
     it('can end on same day and returns all hex', async () => {
       const x = await loadFixture(utils.deployFixture)
       const nextStakeId = await utils.nextStakeId(x.hex)

@@ -49,9 +49,9 @@ Source Units in Scope: **`24`** (**100%**)
 | Type | File   | Logic Contracts | Interfaces | Lines | nLines | nSLOC | Comment Lines | Complex. Score | Capabilities |
 | ---- | ------ | --------------- | ---------- | ----- | ------ | ----- | ------------- | -------------- | ------------ |
 | 🎨 | contracts/AuthorizationManager.sol | 1 | **** | 114 | 114 | 47 | 65 | 23 | **** |
-| 📝 | contracts/Bank.sol | 1 | **** | 307 | 297 | 179 | 114 | 88 | **<abbr title='Payable Functions'>💰</abbr><abbr title='Unchecked Blocks'>Σ</abbr>** |
+| 📝 | contracts/Bank.sol | 1 | **** | 310 | 300 | 182 | 114 | 90 | **<abbr title='Payable Functions'>💰</abbr><abbr title='Unchecked Blocks'>Σ</abbr>** |
 | 📝 | contracts/CurrencyList.sol | 1 | **** | 57 | 57 | 38 | 14 | 21 | **** |
-| 📝 | contracts/EarningsOracle.sol | 1 | **** | 238 | 234 | 155 | 77 | 69 | **<abbr title='Unchecked Blocks'>Σ</abbr>** |
+| 📝 | contracts/EarningsOracle.sol | 1 | **** | 236 | 232 | 153 | 77 | 68 | **<abbr title='Unchecked Blocks'>Σ</abbr>** |
 | 🎨 | contracts/EncodableSettings.sol | 1 | **** | 446 | 432 | 252 | 185 | 117 | **<abbr title='Payable Functions'>💰</abbr><abbr title='Unchecked Blocks'>Σ</abbr>** |
 | 📝 | contracts/ExistingStakeManager.sol | 1 | **** | 7 | 7 | 3 | 2 | 3 | **** |
 | 🎨 | contracts/GoodAccounting.sol | 1 | **** | 137 | 129 | 91 | 36 | 38 | **** |
@@ -63,7 +63,7 @@ Source Units in Scope: **`24`** (**100%**)
 | 📝 | contracts/MulticallExtension.sol | 1 | **** | 99 | 88 | 59 | 27 | 25 | **<abbr title='DelegateCall'>👥</abbr><abbr title='Unchecked Blocks'>Σ</abbr>** |
 | 📚 | contracts/SafeERC20.sol | 1 | **** | 39 | 36 | 13 | 18 | 9 | **** |
 | 📝 | contracts/SingletonHedronManager.sol | 1 | **** | 87 | 87 | 72 | 13 | 30 | **<abbr title='Unchecked Blocks'>Σ</abbr>** |
-| 📝 | contracts/StakeEnder.sol | 1 | **** | 289 | 279 | 238 | 40 | 100 | **<abbr title='Payable Functions'>💰</abbr><abbr title='Unchecked Blocks'>Σ</abbr>** |
+| 📝 | contracts/StakeEnder.sol | 1 | **** | 290 | 280 | 238 | 41 | 100 | **<abbr title='Payable Functions'>💰</abbr><abbr title='Unchecked Blocks'>Σ</abbr>** |
 | 📝 | contracts/StakeInfo.sol | 1 | **** | 145 | 145 | 59 | 84 | 35 | **<abbr title='Unchecked Blocks'>Σ</abbr>** |
 | 📝 | contracts/StakeManager.sol | 1 | **** | 6 | 6 | 3 | 1 | 3 | **** |
 | 📝 | contracts/StakeStarter.sol | 1 | **** | 89 | 74 | 51 | 21 | 34 | **<abbr title='Payable Functions'>💰</abbr>** |
@@ -72,7 +72,7 @@ Source Units in Scope: **`24`** (**100%**)
 | 📝 | contracts/UnderlyingStakeManager.sol | 1 | **** | 225 | 207 | 132 | 73 | 61 | **<abbr title='Unchecked Blocks'>Σ</abbr>** |
 | 🎨 | contracts/UnderlyingStakeable.sol | 1 | **** | 152 | 127 | 60 | 75 | 39 | **<abbr title='Unchecked Blocks'>Σ</abbr>** |
 | 📝 | contracts/Utils.sol | 1 | **** | 95 | 95 | 44 | 50 | 85 | **<abbr title='Uses Assembly'>🖥</abbr><abbr title='Unchecked Blocks'>Σ</abbr>** |
-| 📝📚🎨 | **Totals** | **24** | **** | **4169**  | **3978** | **2542** | **1414** | **1348** | **<abbr title='Uses Assembly'>🖥</abbr><abbr title='Payable Functions'>💰</abbr><abbr title='DelegateCall'>👥</abbr><abbr title='Uses Hash-Functions'>🧮</abbr><abbr title='Unchecked Blocks'>Σ</abbr>** |
+| 📝📚🎨 | **Totals** | **24** | **** | **4171**  | **3980** | **2543** | **1415** | **1349** | **<abbr title='Uses Assembly'>🖥</abbr><abbr title='Payable Functions'>💰</abbr><abbr title='DelegateCall'>👥</abbr><abbr title='Uses Hash-Functions'>🧮</abbr><abbr title='Unchecked Blocks'>Σ</abbr>** |
 
 <sub>
 Legend: <a onclick="toggleVisibility('table-legend', this)">[➕]</a>
@@ -263,9 +263,9 @@ This section lists functions that are explicitly declared public or payable. Ple
 |  File Name  |  SHA-1 Hash  |
 |-------------|--------------|
 | contracts/AuthorizationManager.sol | 9d5b3b311c94f3d04423741ab360c7a3d0a9a920 |
-| contracts/Bank.sol | db7e36427f8624070bd96b605589d1cbf1d6be3c |
+| contracts/Bank.sol | ca6de8b730bc5f9b7834ca7cde8cd76b345af573 |
 | contracts/CurrencyList.sol | 4c88c6fc580b0294b813064f6364c48db0434713 |
-| contracts/EarningsOracle.sol | ce059a3aadb213a9ec817942f3e0da76635f9b18 |
+| contracts/EarningsOracle.sol | 95389c96d55ed4bb8e83656f49a2969c2f208752 |
 | contracts/EncodableSettings.sol | e496d6dd34b7d59d6ad02a5076a8b9895aa9706c |
 | contracts/ExistingStakeManager.sol | 645f443d16fe8ca9709e14c0d8759438f26e941a |
 | contracts/GoodAccounting.sol | 4821f9e00a2e29eb8a6208c03f00cf6eb146e60c |
@@ -277,7 +277,7 @@ This section lists functions that are explicitly declared public or payable. Ple
 | contracts/MulticallExtension.sol | 88034c4f27d20ae95cc1edcee8b721908409325f |
 | contracts/SafeERC20.sol | f7f80edc46aa8a6629c36bb7767dadc33b64f6e4 |
 | contracts/SingletonHedronManager.sol | 730f391448e907376a35bda0e1d85297be07b753 |
-| contracts/StakeEnder.sol | 28bb7eac165fa965029cfe0acb8f66f54deec718 |
+| contracts/StakeEnder.sol | 996d56df245f186f4e5c2848c9949b552647c522 |
 | contracts/StakeInfo.sol | a29b9828acaf1e8335ddb8732fe799f0fc40c001 |
 | contracts/StakeManager.sol | a6bba67bddb847d7d2663be7b1267a04510d926b |
 | contracts/StakeStarter.sol | 3fe799e38990e94ec1f701b6835edc2f1dcd00d3 |

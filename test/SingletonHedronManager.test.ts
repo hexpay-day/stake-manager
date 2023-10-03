@@ -3,9 +3,9 @@ import { expect } from "chai"
 import * as hre from "hardhat"
 import * as utils from './utils'
 import _ from 'lodash'
-import { anyUint, anyValue } from "@nomicfoundation/hardhat-chai-matchers/withArgs"
+import { anyUint } from "@nomicfoundation/hardhat-chai-matchers/withArgs"
 
-describe('SingletonHedronManager.sol', () => {
+describe('SingletonMintManager.sol', () => {
   describe('mintRewards', () => {
     it('mints rewards from stakes', async () => {
       const x = await loadFixture(utils.stakeSingletonBagAndWait)
