@@ -113,12 +113,10 @@ contract EarningsOracle is Utils {
   function _readTotals(uint256 day, Total memory _total) internal view returns(uint256 payout, uint256 shares) {
     (payout, shares) = (_total.payout, _total.shares);
     if (payout == ZERO) {
-      if (shares == ZERO) {
-        if (day > ZERO) {
-          TotalStore memory prev = totals[day - ONE];
-          payout = prev.payout;
-          shares = prev.shares;
-        }
+      if (day > ZERO) {
+        TotalStore memory prev = totals[day - ONE];
+        payout = prev.payout;
+        shares = prev.shares;
       }
     }
   }

@@ -131,6 +131,8 @@ describe('MaximusStakeManager.sol', () => {
         await x.externalPerpetualFilter.setVerifyPerpetualResult(true)
         await expect(x.existingStakeManager.callStatic.checkPerpetual(x.mockPerpetual.address))
           .eventually.to.equal(true)
+        await expect(x.maximusStakeManager.checkEndable(x.mockPerpetual.address))
+          .eventually.to.equal(true)
         await expect(x.existingStakeManager.stakeEndAs(...args))
           .to.emit(x.hex, 'StakeEnd')
           .withArgs(anyUint, utils.anyUintNoPenalty, x.mockPerpetual.address, x.nextStakeId)
