@@ -1,15 +1,14 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.18;
 
-import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { Ownable2Step } from "@openzeppelin/contracts/access/Ownable2Step.sol";
 import { IUnderlyingStakeable } from "./interfaces/IUnderlyingStakeable.sol";
 import { AuthorizationManager } from "./AuthorizationManager.sol";
 import { GoodAccounting } from "./GoodAccounting.sol";
-import { SafeERC20 } from "./SafeERC20.sol";
+import { SafeTransferLib, ERC20 } from "solmate/src/utils/SafeTransferLib.sol";
 
 contract IsolatedStakeManager is Ownable2Step, AuthorizationManager, GoodAccounting {
-  using SafeERC20 for IERC20;
+  using SafeTransferLib for ERC20;
   constructor(address account) AuthorizationManager(31) {
     /*
      * by index:
@@ -191,7 +190,7 @@ contract IsolatedStakeManager is Ownable2Step, AuthorizationManager, GoodAccount
     })) {
       revert NotAllowed();
     }
-    IERC20(TARGET).safeTransfer(owner(), _balanceOf({
+    ERC20(TARGET).safeTransfer(owner(), _balanceOf({
       owner: address(this)
     }));
   }
@@ -249,6 +248,6 @@ contract IsolatedStakeManager is Ownable2Step, AuthorizationManager, GoodAccount
     })) {
       revert NotAllowed();
     }
-    IERC20(TARGET).safeTransferFrom(owner(), address(this), amount);
+    ERC20(TARGET).safeTransferFrom(owner(), address(this), amount);
   }
 }

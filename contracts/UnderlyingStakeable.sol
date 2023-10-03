@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.18;
 
-import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import { ERC20 } from "solmate/src/tokens/ERC20.sol";
 import { IUnderlyingStakeable } from "./interfaces/IUnderlyingStakeable.sol";
 import { IHedron } from "./interfaces/IHedron.sol";
 import { IHEX } from  "./interfaces/IHEX.sol";
@@ -59,7 +59,7 @@ abstract contract UnderlyingStakeable is MulticallExtension, IUnderlyingStakeabl
    * @return amount a balance amount
    */
   function _balanceOf(address owner) internal view returns(uint256 amount) {
-    return IERC20(TARGET).balanceOf(owner);
+    return ERC20(TARGET).balanceOf(owner);
   }
   /**
    * retrieve a stake at a staker's index given a staker address and an index

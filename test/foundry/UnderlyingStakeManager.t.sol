@@ -23,27 +23,27 @@ contract TestSingletonStakeManager is TestStakeManager {
   function testWithdrawalLimits() public {
     // alice deposits
     _depositTokenFrom(vm.addr(1), startingBalance);
-    _withdrawToken(vm.addr(2), payable(vm.addr(1)), 1);
-    _withdrawToken(vm.addr(1), payable(vm.addr(1)), startingBalance + 1);
-    _withdrawToken(vm.addr(1), payable(vm.addr(1)), startingBalance / 2);
+    _withdrawToken(vm.addr(2), vm.addr(1), 1);
+    _withdrawToken(vm.addr(1), vm.addr(1), startingBalance + 1);
+    _withdrawToken(vm.addr(1), vm.addr(1), startingBalance / 2);
     assertEq(IERC20(hx).balanceOf(vm.addr(1)), startingBalance);
-    _withdrawToken(vm.addr(1), payable(vm.addr(1)), startingBalance);
+    _withdrawToken(vm.addr(1), vm.addr(1), startingBalance);
     // using 0 withdraws the remaining balance
     _depositTokenFrom(vm.addr(1), startingBalance);
     assertEq(IERC20(hx).balanceOf(vm.addr(1)), 0);
-    _withdrawToken(vm.addr(1), payable(vm.addr(1)), 0);
+    _withdrawToken(vm.addr(1), vm.addr(1), 0);
     assertEq(IERC20(hx).balanceOf(vm.addr(1)), startingBalance);
   }
   function testWithdrawTo() public {
     _depositTokenFrom(vm.addr(1), startingBalance);
     // alice can withdraw her tokens
-    _withdrawToken(vm.addr(1), payable(vm.addr(1)), startingBalance / 2);
+    _withdrawToken(vm.addr(1), vm.addr(1), startingBalance / 2);
     assertEq(IERC20(hx).balanceOf(vm.addr(1)), startingBalance / 2);
     assertEq(stkMngr.withdrawableBalanceOf(hx, vm.addr(1)), startingBalance / 2);
     // and can send withdrawable tokens to bob through the contract
     assertEq(IERC20(hx).balanceOf(vm.addr(2)), startingBalance);
-    _withdrawToken(vm.addr(1), payable(vm.addr(2)), startingBalance / 2);
-    assertEq(IERC20(hx).balanceOf(payable(vm.addr(2))), startingBalance * 3 / 2);
+    _withdrawToken(vm.addr(1), vm.addr(2), startingBalance / 2);
+    assertEq(IERC20(hx).balanceOf(vm.addr(2)), startingBalance * 3 / 2);
     _transferTo(vm.addr(2), vm.addr(1), startingBalance / 2);
   }
   function testDirectStakeRestartSingle() public {

@@ -1,13 +1,10 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.18;
 
-import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import { Address } from "@openzeppelin/contracts/utils/Address.sol";
+import { SafeTransferLib, ERC20 } from "solmate/src/utils/SafeTransferLib.sol";
 import { Utils } from "./Utils.sol";
 
 contract CurrencyList is Utils {
-  using Address for address;
-
   event AddCurrency(
     address indexed token,
     uint256 indexed index
@@ -28,11 +25,11 @@ contract CurrencyList is Utils {
       return currencyToIndex[token];
     }
     // token must already exist - helps reduce grief attacks
-    if (!token.isContract()) {
+    if (token.code.length == ZERO) {
       revert NotAllowed();
     }
     // reduces griefing
-    if (IERC20(token).balanceOf(msg.sender) == ZERO) {
+    if (ERC20(token).balanceOf(msg.sender) == ZERO) {
       revert MustBeHolder();
     }
     // add token to list

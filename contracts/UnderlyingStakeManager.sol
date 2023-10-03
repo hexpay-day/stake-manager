@@ -121,7 +121,7 @@ contract UnderlyingStakeManager is GoodAccounting {
     });
     _withdrawTokenTo({
       token: TARGET,
-      to: payable(msg.sender),
+      to: msg.sender,
       amount: amount
     });
   }

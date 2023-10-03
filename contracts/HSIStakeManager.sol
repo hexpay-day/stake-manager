@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.18;
 
-import { IERC721 } from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
-import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import { ERC721 } from "solmate/src/tokens/ERC721.sol";
+import { ERC20 } from "solmate/src/tokens/ERC20.sol";
 import { IHedron } from "./interfaces/IHedron.sol";
 import { IHEXStakeInstanceManager } from "./interfaces/IHEXStakeInstanceManager.sol";
 import { IHEX } from "./interfaces/IHEX.sol";
@@ -54,8 +54,8 @@ contract HSIStakeManager is StakeEnder {
    * @param tokenId the token id to deposit into this contract
    */
   function _deposit721(address token, uint256 tokenId) internal returns(address owner) {
-    owner = IERC721(token).ownerOf(tokenId);
-    IERC721(token).transferFrom(msg.sender, address(this), tokenId);
+    owner = ERC721(token).ownerOf(tokenId);
+    ERC721(token).transferFrom(msg.sender, address(this), tokenId);
   }
   /**
    * a convenience method to retrieve a stake id from an hsi address
@@ -140,7 +140,7 @@ contract HSIStakeManager is StakeEnder {
    */
   function _withdraw721(uint256 index, address owner, address hsiAddress) internal returns(uint256 tokenId) {
     tokenId = IHEXStakeInstanceManager(HSIM).hexStakeTokenize(index, hsiAddress);
-    IERC721(HSIM).transferFrom(address(this), owner, tokenId);
+    ERC721(HSIM).transferFrom(address(this), owner, tokenId);
   }
   function hsiStakeEndMany(address[] calldata hsiAddresses) external payable {
     _hsiStakeEndMany({
@@ -243,7 +243,7 @@ contract HSIStakeManager is StakeEnder {
     uint256 newStakeDays,
     uint256 index
   ) internal override returns(uint256 stakeId) {
-    IERC20(TARGET).approve(HSIM, newStakeAmount);
+    ERC20(TARGET).approve(HSIM, newStakeAmount);
     address hsiAddress = IHEXStakeInstanceManager(HSIM)
       .hexStakeStart(newStakeAmount, newStakeDays);
     stakeId = uint160(hsiAddress);

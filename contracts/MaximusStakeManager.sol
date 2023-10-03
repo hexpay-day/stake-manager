@@ -1,15 +1,12 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.18;
 
-import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-import { Address } from "@openzeppelin/contracts/utils/Address.sol";
 import { IPublicEndStakeable } from "./interfaces/IPublicEndStakeable.sol";
 import { IExternalPerpetualFilter } from "./interfaces/IExternalPerpetualFilter.sol";
 import { HSIStakeManager } from "./HSIStakeManager.sol";
 import { IGasReimberser } from './interfaces/IGasReimberser.sol';
 
 contract MaximusStakeManager is HSIStakeManager {
-  using Address for address payable;
   address public externalPerpetualSetter;
   address public externalPerpetualFilter;
   mapping(address perpetual => bool isPerpetual) public perpetualWhitelist;
@@ -162,9 +159,9 @@ contract MaximusStakeManager is HSIStakeManager {
         token: token
       });
       if (token == address(0)) {
-        IGasReimberser(payable(gasReimberser)).flush();
+        IGasReimberser(gasReimberser).flush();
       } else {
-        IGasReimberser(payable(gasReimberser)).flush_erc20(token);
+        IGasReimberser(gasReimberser).flush_erc20(token);
       }
       // bal now represents delta
       bal = _getTokenBalance({

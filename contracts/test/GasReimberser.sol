@@ -1,16 +1,16 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.18;
 
-import { Address } from "@openzeppelin/contracts/utils/Address.sol";
-import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { Utils } from "../Utils.sol";
 import { IGasReimberser } from "../interfaces/IGasReimberser.sol";
 import { IPoolContract } from "../interfaces/IPoolContract.sol";
+import { SafeTransferLib, ERC20 } from "solmate/src/utils/SafeTransferLib.sol";
 
 // this contract was modeled after the following tweet:
 // https://twitter.com/TantoNomini/status/1630677746795057152
 contract GasReimberser is IGasReimberser, Utils {
-  using Address for address payable;
+  using SafeTransferLib for address;
+  using SafeTransferLib for ERC20;
   address public immutable POOL_ADDRESS;
   constructor(address poolAddress) {
     POOL_ADDRESS = poolAddress;
@@ -18,20 +18,20 @@ contract GasReimberser is IGasReimberser, Utils {
   receive() external payable {}
   function flush() external {
     IPoolContract pc = IPoolContract(POOL_ADDRESS);
-    address payable ender = payable(pc.getEndStaker());
+    address ender = pc.getEndStaker();
     require(msg.sender == ender, "Only End Staker can run this function.");
     uint256 amount = address(this).balance;
-    if (amount > 0) {
-      ender.sendValue(amount);
+    if (amount > ZERO) {
+      ender.safeTransferETH(amount);
     }
   }
   function flush_erc20(address token_contract_address) external {
     IPoolContract pc = IPoolContract(POOL_ADDRESS);
     address ender = pc.getEndStaker();
     require(msg.sender == ender, "Only End Staker can run this function.");
-    uint256 balance = IERC20(token_contract_address).balanceOf(address(this));
-    if (balance > 0) {
-      IERC20(token_contract_address).transfer(ender, balance);
+    uint256 balance = ERC20(token_contract_address).balanceOf(address(this));
+    if (balance > ZERO) {
+      ERC20(token_contract_address).safeTransfer(ender, balance);
     }
   }
 }

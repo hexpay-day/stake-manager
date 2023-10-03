@@ -1,17 +1,15 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.18;
 
-import { Address } from "@openzeppelin/contracts/utils/Address.sol";
-import { IERC20 } from  "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { Utils } from "./Utils.sol";
-import { SafeERC20 } from "./SafeERC20.sol";
+import { SafeTransferLib, ERC20 } from "solmate/src/utils/SafeTransferLib.sol";
 
 /**
  * @title A subcontract to track balances of deposited tokens
  */
 contract Bank is Utils {
-  using SafeERC20 for IERC20;
-  using Address for address payable;
+  using SafeTransferLib for address;
+  using SafeTransferLib for ERC20;
 
   /**
    * notes that a previously unattributed token has been
@@ -50,7 +48,7 @@ contract Bank is Utils {
    * @return amount of a balance custodied by this contract
    */
   function _getBalance(address token, address owner) internal view returns(uint256 amount) {
-    return token == address(0) ? owner.balance : IERC20(token).balanceOf(owner);
+    return token == address(0) ? owner.balance : ERC20(token).balanceOf(owner);
   }
   /**
    * gets the amount of unattributed tokens
@@ -137,7 +135,7 @@ contract Bank is Utils {
    */
   function collectUnattributed(
     address token, bool transferOut,
-    address payable to,
+    address to,
     uint256 amount
   ) external payable returns(uint256) {
     return _collectUnattributed({
@@ -149,7 +147,7 @@ contract Bank is Utils {
     });
   }
   function _collectUnattributed(
-    address token, bool transferOut, address payable to,
+    address token, bool transferOut, address to,
     uint256 amount, uint256 max
   ) internal returns(uint256 withdrawable) {
     withdrawable = _clamp(amount, max);
@@ -200,7 +198,7 @@ contract Bank is Utils {
    * @param to the to of the funds
    * @param amount the amount that should be deducted from the sender's balance
    */
-  function withdrawTokenTo(address token, address payable to, uint256 amount) external payable returns(uint256) {
+  function withdrawTokenTo(address token, address to, uint256 amount) external payable returns(uint256) {
     return _withdrawTokenTo({
       token: token,
       to: to,
@@ -214,7 +212,7 @@ contract Bank is Utils {
   function _getTokenBalance(address token) internal view returns(uint256) {
     return token == address(0)
       ? address(this).balance
-      : IERC20(token).balanceOf(address(this));
+      : ERC20(token).balanceOf(address(this));
   }
 
   /**
@@ -253,9 +251,9 @@ contract Bank is Utils {
   function _depositTokenFrom(address token, address depositor, uint256 amount) internal returns(uint256 amnt) {
     if (token != address(0)) {
       if (amount > ZERO) {
-        amnt = IERC20(token).balanceOf(address(this));
-        IERC20(token).safeTransferFrom(depositor, address(this), amount);
-        amnt = IERC20(token).balanceOf(address(this)) - amnt;
+        amnt = ERC20(token).balanceOf(address(this));
+        ERC20(token).safeTransferFrom(depositor, address(this), amount);
+        amnt = ERC20(token).balanceOf(address(this)) - amnt;
       }
     } else {
       // transfer in already occurred
@@ -279,12 +277,12 @@ contract Bank is Utils {
    * @param to where to send the tokens
    * @param amount the number of tokens to send
    */
-  function _withdrawTokenTo(address token, address payable to, uint256 amount) internal returns(uint256) {
+  function _withdrawTokenTo(address token, address to, uint256 amount) internal returns(uint256) {
     if (amount > ZERO) {
       if (token == address(0)) {
-        to.sendValue(amount);
+        to.safeTransferETH(amount);
       } else {
-        IERC20(token).safeTransfer(to, amount);
+        ERC20(token).safeTransfer(to, amount);
       }
     }
     return amount;
@@ -296,7 +294,7 @@ contract Bank is Utils {
     })) {
       _withdrawTokenTo({
         token: token,
-        to: payable(staker),
+        to: staker,
         amount: amount
       });
     } else {
