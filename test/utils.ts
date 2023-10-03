@@ -11,7 +11,6 @@ import { ERC721, IHedron, IHEXStakeInstanceManager } from "../artifacts/types"
 import { HSIStartEvent } from "../artifacts/types/contracts/interfaces/IHEXStakeInstanceManager"
 import { anyUint } from "@nomicfoundation/hardhat-chai-matchers/withArgs"
 import { ERC20 } from "../artifacts/types/solmate/src/tokens"
-import { TypedContractEvent } from "../artifacts/types/common"
 
 Chai.Assertion.addMethod('printGasUsage', function (this: any, throws = true) {
   let subject = this._obj

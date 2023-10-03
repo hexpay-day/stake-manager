@@ -2,7 +2,7 @@
   "license": "MIT",
   "name": "@hexpayday/stake-manager",
   "scripts": {
-    "build": "yarn run lint && yarn run metrics && yarn run cloc && yarn run docs",
+    "build": "tsc && yarn run lint && yarn run metrics && yarn run cloc && yarn run docs",
     "metrics": "solidity-code-metrics ./contracts/*.sol > metrics.md",
     "docs": "rm -rf docs && hardhat docgen && cp ./*.md docs && rm docs/cloc.md docs/metrics.md && yarn run copy-static",
     "copy-static": "cp -r static/* docs",
@@ -58,6 +58,7 @@
     "hardhat-vizor": "^0.0.24",
     "mocha-lcov-reporter": "^1.3.0",
     "shx": "^0.3.4",
+    "soldoc": "^0.1.3-beta.2",
     "solhint": "^3.4.1",
     "solidity-coverage": "^0.8.5",
     "solidity-docgen": "^0.6.0-beta.36",

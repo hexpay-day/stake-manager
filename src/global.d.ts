@@ -1,5 +1,6 @@
 // import { TracerEnvUser } from "hardhat-tracer";
 
+declare module 'soldoc' {}
 declare namespace Chai {
   interface Assertion {
     printGasUsage(): Assertion;

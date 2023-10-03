@@ -19,3 +19,4 @@ contracts/hardhat-dependency-compiler
 cloc.md
 site
 docs
+dist

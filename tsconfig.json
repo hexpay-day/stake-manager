@@ -6,7 +6,9 @@
     "forceConsistentCasingInFileNames": true,
     "strict": true,
     "skipLibCheck": true,
-    "resolveJsonModule": true
+    "skipDefaultLibCheck": true,
+    "resolveJsonModule": true,
+    "outDir": "dist"
   },
   "include": [
     "./node_modules/@nomicfoundation/hardhat-ethers",
@@ -15,5 +17,8 @@
     "tasks/**/*.ts",
     "artifacts/types/**/*.ts",
     "test/**/*.ts"
+  ],
+  "exclude": [
+    "node_modules/@nomicfoundation/hardhat-ethers"
   ]
 }
