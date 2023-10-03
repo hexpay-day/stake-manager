@@ -9,6 +9,10 @@ import type {
 import * as fs from 'fs'
 import * as path from 'path'
 import "@nomicfoundation/hardhat-toolbox";
+import '@nomicfoundation/hardhat-ethers'
+import '@nomicfoundation/hardhat-chai-matchers'
+import '@nomicfoundation/hardhat-network-helpers'
+import '@nomicfoundation/hardhat-verify'
 import "hardhat-preprocessor"
 import 'hardhat-tracer'
 import 'solidity-coverage'
@@ -16,6 +20,8 @@ import 'hardhat-vizor'
 import 'hardhat-gas-reporter'
 import 'hardhat-dependency-compiler'
 import 'solidity-docgen'
+import '@typechain/hardhat'
+import 'ethers'
 import * as ethers from "ethers";
 
 import * as conf from './src/config'
@@ -91,7 +97,7 @@ const defaultNetwork = {
 const defaultHardhatNetwork: HardhatNetworkUserConfig = {
   allowBlocksWithSameTimestamp: true,
   accounts: {
-    accountsBalance: ethers.utils.parseEther((100_000_000_000).toString()).toString(),
+    accountsBalance: ethers.parseEther((100_000_000_000).toString()).toString(),
     count: 5,
     mnemonic: conf.args.mnemonic,
   } as HardhatNetworkHDAccountsUserConfig,
@@ -228,7 +234,7 @@ const config: HardhatUserConfig = {
     external: networks[conf.args.chain],
   },
   typechain: {
-    target: 'ethers-v5',
+    target: 'ethers-v6',
     outDir: 'artifacts/types',
   },
   gasReporter: {
@@ -241,7 +247,7 @@ const config: HardhatUserConfig = {
     remoteContracts: [{
       abi: hexArtifact.abi,
       name: 'HEX',
-      address: ethers.utils.getAddress('0x2b591e99afe9f32eaa6214f7b7629768c40eeb39'),
+      address: ethers.getAddress('0x2b591e99afe9f32eaa6214f7b7629768c40eeb39'),
       bytecode: hexArtifact.bytecode,
     }],
   },

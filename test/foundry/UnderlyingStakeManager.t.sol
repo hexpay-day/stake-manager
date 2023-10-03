@@ -3,14 +3,14 @@ pragma solidity ^0.8.18;
 
 import { TestStakeManager } from "./TestStakeManager.t.sol";
 import { UnderlyingStakeManager } from "contracts/UnderlyingStakeManager.sol";
-import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import { ERC20 } from "solmate/src/tokens/ERC20.sol";
 import { MulticallExtension } from "contracts/MulticallExtension.sol";
 
 contract TestSingletonStakeManager is TestStakeManager {
   function testDeposits() public {
     _depositTokenFrom(vm.addr(1), startingBalance);
-    assertEq(IERC20(hx).balanceOf(vm.addr(1)), 0);
-    assertEq(IERC20(hx).balanceOf(address(stkMngr)), startingBalance);
+    assertEq(ERC20(hx).balanceOf(vm.addr(1)), 0);
+    assertEq(ERC20(hx).balanceOf(address(stkMngr)), startingBalance);
     assertEq(stkMngr.withdrawableBalanceOf(hx, vm.addr(1)), startingBalance);
     assertEq(stkMngr.attributed(hx), startingBalance);
     _depositTokenFrom(vm.addr(2), startingBalance);
@@ -26,24 +26,24 @@ contract TestSingletonStakeManager is TestStakeManager {
     _withdrawToken(vm.addr(2), vm.addr(1), 1);
     _withdrawToken(vm.addr(1), vm.addr(1), startingBalance + 1);
     _withdrawToken(vm.addr(1), vm.addr(1), startingBalance / 2);
-    assertEq(IERC20(hx).balanceOf(vm.addr(1)), startingBalance);
+    assertEq(ERC20(hx).balanceOf(vm.addr(1)), startingBalance);
     _withdrawToken(vm.addr(1), vm.addr(1), startingBalance);
     // using 0 withdraws the remaining balance
     _depositTokenFrom(vm.addr(1), startingBalance);
-    assertEq(IERC20(hx).balanceOf(vm.addr(1)), 0);
+    assertEq(ERC20(hx).balanceOf(vm.addr(1)), 0);
     _withdrawToken(vm.addr(1), vm.addr(1), 0);
-    assertEq(IERC20(hx).balanceOf(vm.addr(1)), startingBalance);
+    assertEq(ERC20(hx).balanceOf(vm.addr(1)), startingBalance);
   }
   function testWithdrawTo() public {
     _depositTokenFrom(vm.addr(1), startingBalance);
     // alice can withdraw her tokens
     _withdrawToken(vm.addr(1), vm.addr(1), startingBalance / 2);
-    assertEq(IERC20(hx).balanceOf(vm.addr(1)), startingBalance / 2);
+    assertEq(ERC20(hx).balanceOf(vm.addr(1)), startingBalance / 2);
     assertEq(stkMngr.withdrawableBalanceOf(hx, vm.addr(1)), startingBalance / 2);
     // and can send withdrawable tokens to bob through the contract
-    assertEq(IERC20(hx).balanceOf(vm.addr(2)), startingBalance);
+    assertEq(ERC20(hx).balanceOf(vm.addr(2)), startingBalance);
     _withdrawToken(vm.addr(1), vm.addr(2), startingBalance / 2);
-    assertEq(IERC20(hx).balanceOf(vm.addr(2)), startingBalance * 3 / 2);
+    assertEq(ERC20(hx).balanceOf(vm.addr(2)), startingBalance * 3 / 2);
     _transferTo(vm.addr(2), vm.addr(1), startingBalance / 2);
   }
   function testDirectStakeRestartSingle() public {

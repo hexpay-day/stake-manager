@@ -4,9 +4,7 @@ import { expect } from "chai"
 import * as hre from "hardhat"
 import * as utils from './utils'
 import { anyUint } from '@nomicfoundation/hardhat-chai-matchers/withArgs'
-import { IUnderlyingStakeable } from '../artifacts/types'
-import { parseLogs } from '../src/utils'
-import { StakeEndEvent } from '../artifacts/types/contracts/interfaces/IHEX'
+import { ethers } from 'ethers'
 
 describe("2023-10-02 utc", function () {
   it('can end base and hsi', async function () {
@@ -23,7 +21,7 @@ describe("2023-10-02 utc", function () {
     const depositTime = Math.floor(+depositDate / 1_000) + (hour * 23)
 
     const endTime = Math.floor(+endDate / 1_000)
-    const deltaDays = Math.floor(((endTime - depositTime) * 1_000) / utils.DAY) - 1
+    const deltaDays = BigInt(Math.floor(((endTime - depositTime) * 1_000) / utils.DAY) - 1)
     const tokenIds = [
       14095,
       14096,
@@ -34,7 +32,7 @@ describe("2023-10-02 utc", function () {
     ]
     const hsis = _.compact(await Promise.all(tokenIds.map(async (tokenId) => {
       const hsiAddress = await x.hsim.hsiToken(tokenId)
-      if (hsiAddress === hre.ethers.constants.AddressZero) {
+      if (hsiAddress === ethers.ZeroAddress) {
         // skip case where token is not a contract
         return
       }
@@ -49,7 +47,7 @@ describe("2023-10-02 utc", function () {
       const execStakeManager = x.existingStakeManager.connect(swa)
       if (_.now() < depositTime) {
         await time.setNextBlockTimestamp(depositTime - 1)
-        await x.hsim.connect(swa).setApprovalForAll(execStakeManager.address, true)
+        await x.hsim721.connect(swa as unknown as ethers.Signer).setApprovalForAll(execStakeManager.getAddress(), true)
         await time.setNextBlockTimestamp(depositTime)
         // const defaultSettings = await x.existingStakeManager.defaultEncodedSettings()
         // await expect(execStakeManager.multicall(_.map(hsis, (target) => (
@@ -61,7 +59,7 @@ describe("2023-10-02 utc", function () {
         //   .to.emit(x.hsim, 'Transfer')
         //   .to.emit(x.hsim, 'HSIDetokenize')
       }
-      await utils.moveForwardDays(deltaDays, x, 1)
+      await utils.moveForwardDays(deltaDays, x, 7n)
       const stake = await x.hex.stakeLists(x.base, 0)
       const doCalls = () => {
         return execStakeManager.multicall(
@@ -74,7 +72,7 @@ describe("2023-10-02 utc", function () {
       }
       // invalid timestamp - stakes will not end
       let lastBlockTime!: Date
-      const getLastBlockTime = async () => new Date((await x.multicall.getCurrentBlockTimestamp()).toNumber() * 1_000)
+      const getLastBlockTime = async () => new Date(Number((await x.multicall.getCurrentBlockTimestamp()) * 1_000n))
       lastBlockTime = await getLastBlockTime()
       console.log('multicall', lastBlockTime)
       await time.setNextBlockTimestamp(endTime - 1)
@@ -109,9 +107,9 @@ describe("2023-10-02 utc", function () {
           .to.emit(x.hex, 'StakeEnd')
           .withArgs(anyUint, utils.anyUintNoPenalty, hsi.hsiAddress, hsi.stakeId)
       }
-      const IPoolContract = await hre.ethers.getContractAt('IPoolContract', x.base, swa)
+      const IPoolContract = await hre.ethers.getContractAt('IPoolContract', x.base, swa as unknown as ethers.Signer)
       await expect(IPoolContract.getEndStaker())
-        .eventually.to.equal(execStakeManager.address)
+        .eventually.to.equal(execStakeManager.getAddress())
     })
   })
 })

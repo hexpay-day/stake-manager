@@ -6,7 +6,7 @@ import * as utils from './utils'
 import { IUnderlyingStakeable } from '../artifacts/types/contracts/interfaces/IHEX'
 
 describe('Magnitude.sol', () => {
-  const principle = hre.ethers.utils.parseUnits('100', 8).toBigInt()
+  const principle = hre.ethers.parseUnits('100', 8)
   const xOverYPlusB = {
     xFactor: 1,
     x: 3n,
@@ -27,7 +27,7 @@ describe('Magnitude.sol', () => {
 
   const yieldFromPrinciple = principle/10n
   const principleAndYield = principle+yieldFromPrinciple
-  const noLimit = hre.ethers.constants.MaxUint256
+  const noLimit = hre.ethers.MaxUint256
   const stake: IUnderlyingStakeable.StakeStoreStruct = {
     stakeId: 0,
     stakedDays: 10,
@@ -67,20 +67,20 @@ describe('Magnitude.sol', () => {
         .eventually.to.deep.equal([2, 10])
     })
     it('3: returns a computed day based on a tight ladder', async () => {
-      let currentDay!: number
+      let currentDay!: bigint
       let stk!: IUnderlyingStakeable.StakeStoreStruct
-      currentDay = (await x.hex.currentDay()).toNumber()
+      currentDay = (await x.hex.currentDay())
       stk = {
         ...stake,
-        lockedDay: currentDay - 10,
+        lockedDay: currentDay - 10n,
       }
       await expect(x.stakeManager.computeDayMagnitude(noLimit, 3, 0, currentDay, stk.lockedDay, stk.stakedDays))
         .eventually.to.deep.equal([3, stk.stakedDays])
       // missed end by more than 1 round
-      currentDay = (await x.hex.currentDay()).toNumber()
+      currentDay = (await x.hex.currentDay())
       stk = {
         ...stake,
-        lockedDay: currentDay - 26,
+        lockedDay: currentDay - 26n,
       }
       // t-26 => 1 full round = t-26 + stakedDays + 1 = t-26 + 10 + 1
       // therefore, last (missed) ladder iterations:
@@ -96,39 +96,39 @@ describe('Magnitude.sol', () => {
     })
     it('3: returns number of staked days if match', async () => {
       // missed end by more than 1 round
-      const currentDay = (await x.hex.currentDay()).toNumber()
+      const currentDay = (await x.hex.currentDay())
       // zero day
-      await expect(x.stakeManager.computeDayMagnitude(noLimit, 3, 0, currentDay, currentDay - 21, 10))
+      await expect(x.stakeManager.computeDayMagnitude(noLimit, 3, 0, currentDay, currentDay - 21n, 10))
         .eventually.to.deep.equal([3, 10])
-      await expect(x.stakeManager.computeDayMagnitude(noLimit, 3, 0, currentDay, currentDay - 22, 10))
+      await expect(x.stakeManager.computeDayMagnitude(noLimit, 3, 0, currentDay, currentDay - 22n, 10))
         .eventually.to.deep.equal([4, 9])
-      await expect(x.stakeManager.computeDayMagnitude(noLimit, 3, 0, currentDay, currentDay - 23, 10))
+      await expect(x.stakeManager.computeDayMagnitude(noLimit, 3, 0, currentDay, currentDay - 23n, 10))
         .eventually.to.deep.equal([4, 8])
-      await expect(x.stakeManager.computeDayMagnitude(noLimit, 3, 0, currentDay, currentDay - 19, 10))
+      await expect(x.stakeManager.computeDayMagnitude(noLimit, 3, 0, currentDay, currentDay - 19n, 10))
         .eventually.to.deep.equal([4, 1])
       // will fail if check for zero is not in place
-      await expect(x.stakeManager.computeDayMagnitude(noLimit, 3, 0, currentDay, currentDay - 20, 10))
+      await expect(x.stakeManager.computeDayMagnitude(noLimit, 3, 0, currentDay, currentDay - 20n, 10))
         .eventually.to.deep.equal([4, 0])
     })
     it('3: returns an adjusted number if lower than x', async () => {
-      const currentDay = (await x.hex.currentDay()).toNumber()
-      await expect(x.stakeManager.computeDayMagnitude(noLimit, 3, 1, currentDay, currentDay - 20, 10))
+      const currentDay = (await x.hex.currentDay())
+      await expect(x.stakeManager.computeDayMagnitude(noLimit, 3, 1, currentDay, currentDay - 20n, 10))
         .eventually.to.deep.equal([4, 11])
-      await expect(x.stakeManager.computeDayMagnitude(noLimit, 3, 2, currentDay, currentDay - 19, 10))
+      await expect(x.stakeManager.computeDayMagnitude(noLimit, 3, 2, currentDay, currentDay - 19n, 10))
         .eventually.to.deep.equal([4, 12])
     })
     it('4: is contract controlled and acts as a flag for the user to re-establish ladder', async () => {
-      let currentDay = (await x.hex.currentDay()).toNumber()
-      await expect(x.stakeManager.computeDayMagnitude(noLimit, 3, 2, currentDay, currentDay - 19, 10))
+      let currentDay = (await x.hex.currentDay())
+      await expect(x.stakeManager.computeDayMagnitude(noLimit, 3, 2, currentDay, currentDay - 19n, 10))
         .eventually.to.deep.equal([4, 12])
       // end stake in 12+1 days
       const nextStartDay = currentDay
-      const nextLockedDay = nextStartDay + 1
-      const stakedDays = 12
-      const nextEndDay = 11 + nextLockedDay + stakedDays
+      const nextLockedDay = nextStartDay + 1n
+      const stakedDays = 12n
+      const nextEndDay = 11n + nextLockedDay + stakedDays
       // late again - only
-      currentDay = nextEndDay + 9
-      await expect(x.stakeManager.computeDayMagnitude(noLimit, 4, 2, currentDay, currentDay - 19, stakedDays))
+      currentDay = nextEndDay + 9n
+      await expect(x.stakeManager.computeDayMagnitude(noLimit, 4, 2, currentDay, currentDay - 19n, stakedDays))
         .eventually.to.deep.equal([4, 0])
     })
   })

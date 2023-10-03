@@ -2,24 +2,25 @@ import { loadFixture } from "@nomicfoundation/hardhat-network-helpers"
 import type { ethers } from 'ethers'
 import * as hre from 'hardhat'
 import { expect } from "chai"
-import * as utils from './utils'
 import * as config from '../src/config'
 import _ from 'lodash'
-import { IHEX } from "../artifacts/types"
+import { ERC20, EarningsOracle, EarningsOracle__factory, IHEX } from "../artifacts/types"
 
 describe('EarningsOracle.sol', () => {
   const deployOracle = async (min: ethers.BigNumberish, untilDay: ethers.BigNumberish) => {
-    const EarningsOracle = await hre.ethers.getContractFactory('EarningsOracle')
+    const EarningsOracle = await hre.ethers.getContractFactory('EarningsOracle') as EarningsOracle__factory
     const oracle = await EarningsOracle.deploy(min, untilDay)
-    await oracle.deployed()
+    await oracle.deploymentTransaction()?.wait()
     return oracle
   }
   const launch = (untilDay: ethers.BigNumberish) =>
     async function launchEarningsOracle() {
       const oracle = await deployOracle(1, untilDay)
-      const hex = await hre.ethers.getContractAt('contracts/interfaces/IHEX.sol:IHEX', config.hexAddress) as IHEX
+      const hex = await hre.ethers.getContractAt('IHEX', config.hexAddress) as IHEX
+      const hex20 = await hre.ethers.getContractAt('ERC20', config.hexAddress) as ERC20
       return {
         hex,
+        hex20,
         oracle,
       }
     }
@@ -29,12 +30,11 @@ describe('EarningsOracle.sol', () => {
   const launchMixup = () => deployOracle(0, 0)
   const launchUpTo = async (offset = 0n) => {
     const x = await launchZero()
-    const _currentDay = await x.hex.currentDay()
-    const currentDay = _currentDay.toBigInt()
+    const currentDay = await x.hex.currentDay()
     const maxDay = currentDay - offset
     while (true) {
       const currentSize = await x.oracle.totalsCount()
-      const startDay = currentSize.toBigInt()
+      const startDay = currentSize
       if (startDay > maxDay) {
         throw new Error('cannot set to current day or higher')
       }
@@ -61,7 +61,7 @@ describe('EarningsOracle.sol', () => {
     describe('dailyData', () => {
       it('returns zero values when the day has not yet passed', async () => {
         const _currentDay = await x.hex.currentDay()
-        const currentDay = _currentDay.toBigInt()
+        const currentDay = _currentDay
         const dailyDataTomorrow = await x.hex.dailyData(currentDay)
         expect(dailyDataTomorrow.dayPayoutTotal).to.equal(0n)
         expect(dailyDataTomorrow.dayStakeSharesTotal).to.equal(0n)
@@ -69,9 +69,9 @@ describe('EarningsOracle.sol', () => {
       })
       it('returns nonzero values when the day has not yet passed but the lower bound has', async () => {
         const _currentDay = await x.hex.currentDay()
-        const currentDay = _currentDay.toBigInt()
+        const currentDay = _currentDay
         const dailyDataTomorrow = await x.hex.dailyData(currentDay - 1n)
-        if (dailyDataTomorrow.dayPayoutTotal.toBigInt() === 0n) {
+        if (dailyDataTomorrow.dayPayoutTotal === 0n) {
         }
         expect(dailyDataTomorrow.dayPayoutTotal).to.be.greaterThan(0n)
         expect(dailyDataTomorrow.dayStakeSharesTotal).to.be.greaterThan(0n)
@@ -119,7 +119,7 @@ describe('EarningsOracle.sol', () => {
         await x.oracle.storeDay(currentSize)
         await expect(x.oracle.storeDay(currentSize))
           .to.revertedWithCustomError(x.oracle, 'NotAllowed')
-        await x.oracle.storeDay(currentSize.toBigInt() + 1n)
+        await x.oracle.storeDay(currentSize + 1n)
       })
     })
     describe('incrementDay', () => {
@@ -146,12 +146,12 @@ describe('EarningsOracle.sol', () => {
       it('provides the amount of tokens paid out during that time in an accumulative number', async () => {
         const split = 6
         const size = await x.oracle.totalsCount()
-        const end = size.toBigInt() - 1n
+        const end = size - 1n
         const zeroToSplit = await x.oracle.payoutDelta(0, split)
         const splitToEnd = await x.oracle.payoutDelta(split, end)
         const all = await x.oracle.payoutDelta(0, end)
-        expect(all.payout).to.equal(zeroToSplit.payout.toBigInt() + splitToEnd.payout.toBigInt())
-        expect(all.shares).to.equal(zeroToSplit.shares.toBigInt() + splitToEnd.shares.toBigInt())
+        expect(all.payout).to.equal(zeroToSplit.payout + splitToEnd.payout)
+        expect(all.shares).to.equal(zeroToSplit.shares + splitToEnd.shares)
       })
       it('fails if an out of bounds value is provided', async () => {
         const size = await x.oracle.totalsCount()
@@ -164,13 +164,13 @@ describe('EarningsOracle.sol', () => {
         const size = await x.oracle.totalsCount()
         await x.oracle.incrementDay()
         await expect(x.oracle.totalsCount())
-          .eventually.to.equal(size.toBigInt() + 1n)
+          .eventually.to.equal(size + 1n)
       })
     })
     describe('storeDays', () => {
       it('stores a range of days', async () => {
         const previousSize = await x.oracle.totalsCount()
-        const startDay = previousSize.toBigInt()
+        const startDay = previousSize
         const rangeSize = 10n
         await x.oracle.storeDays(startDay, startDay + rangeSize)
         await expect(x.oracle.totalsCount())
@@ -178,7 +178,7 @@ describe('EarningsOracle.sol', () => {
       })
       it('if start day does not match, failure', async () => {
         const previousSize = await x.oracle.totalsCount()
-        const startDay = previousSize.toBigInt()
+        const startDay = previousSize
         const rangeSize = 10n
         await x.oracle.storeDays(startDay, startDay + rangeSize)
         await expect(x.oracle.totalsCount())
@@ -186,7 +186,7 @@ describe('EarningsOracle.sol', () => {
       })
       it('if start day does not match, failure', async () => {
         const previousSize = await x.oracle.totalsCount()
-        const startDay = previousSize.toBigInt()
+        const startDay = previousSize
         const rangeSize = 10n
         await x.oracle.storeDays(startDay + 1n, startDay + rangeSize)
         await expect(x.oracle.totalsCount())
@@ -199,7 +199,7 @@ describe('EarningsOracle.sol', () => {
       })
       it('collects until the provided day', async () => {
         const previousSize = await x.oracle.totalsCount()
-        const startDay = previousSize.toBigInt()
+        const startDay = previousSize
         const rangeSize = 10n
         await x.oracle.storeDays(0, startDay + rangeSize)
         await expect(x.oracle.totalsCount())
@@ -219,21 +219,21 @@ describe('EarningsOracle.sol', () => {
         const rangeSize = 10n
         await x.oracle.catchUpDays(rangeSize)
         await expect(x.oracle.totalsCount())
-          .eventually.to.equal(previousSize.toBigInt() + rangeSize)
+          .eventually.to.equal(previousSize + rangeSize)
       })
       it('maxes out at the max catch up days', async function () {
         const max = await x.oracle.MAX_CATCH_UP_DAYS()
         const previousSize = await x.oracle.totalsCount()
-        await x.oracle.catchUpDays(max.toBigInt() + 100n)
+        await x.oracle.catchUpDays(max + 100n)
         await expect(x.oracle.totalsCount())
-          .eventually.to.equal(previousSize.toBigInt() + max.toBigInt())
+          .eventually.to.equal(previousSize + max)
       })
       it('uses the max days if zero is provided', async function () {
         const max = await x.oracle.MAX_CATCH_UP_DAYS()
         const previousSize = await x.oracle.totalsCount()
         await x.oracle.catchUpDays(0)
         await expect(x.oracle.totalsCount())
-          .eventually.to.equal(previousSize.toBigInt() + max.toBigInt())
+          .eventually.to.equal(previousSize + max)
       })
     })
     describe('payoutDeltaTruncated', () => {
@@ -248,13 +248,13 @@ describe('EarningsOracle.sol', () => {
           for (let i = 0; i < range.length; i++) {
             const a = range[i]
             const b = a + days
-            console.log(a, b, (await x.oracle.payoutDeltaTruncated(a, days, shares)).toBigInt())
+            console.log(a, b, (await x.oracle.payoutDeltaTruncated(a, days, shares)))
           }
         }
         const checkDay = async (txHash: string, startDay: bigint) => {
           const tx = await hre.ethers.provider.getTransactionReceipt(txHash)
-          await expect(x.hex.callStatic.currentDay({
-            blockTag: `0x${tx.blockNumber.toString(16)}`
+          await expect(x.hex.currentDay.staticCall({
+            blockTag: `0x${tx?.blockNumber.toString(16)}`
           }))
             .eventually.to.equal(startDay)
           console.log('tx hash %o started on day %o', txHash, startDay)
@@ -262,7 +262,7 @@ describe('EarningsOracle.sol', () => {
         const hexBruteCalc = async (shares: bigint, lockedDay: bigint, stakedDays: bigint) => {
           const range = rangeFrom(lockedDay, lockedDay + stakedDays)
           const hexDays = await Promise.all(range.map((day) => x.hex.dailyData(day)))
-          const payout = hexDays.reduce((total, day) => total + ((day.dayPayoutTotal.toBigInt() * shares) / day.dayStakeSharesTotal.toBigInt()), 0n)
+          const payout = hexDays.reduce((total, day) => total + ((day.dayPayoutTotal * shares) / day.dayStakeSharesTotal), 0n)
           return payout
         }
         const estimate = async (args: {
@@ -280,7 +280,7 @@ describe('EarningsOracle.sol', () => {
           } = args
           const payout = await hexBruteCalc(shares, lockedDay, stakedDays)
           const estimated = await x.oracle.payoutDeltaTruncated(lockedDay, stakedDays, shares)
-          const est = estimated.toBigInt()
+          const est = estimated
           await expect(x.oracle.payoutDeltaTruncated(lockedDay, stakedDays, shares))
             .eventually.to.be.approximately(Number(payout), Number(delta))
           const d = payout - est
@@ -352,8 +352,8 @@ describe('EarningsOracle.sol', () => {
       it('will give the same value if the total shares are passed and only 1 days is asked for', async () => {
         const day0 = await x.oracle.totals(998) // zero day
         const day1 = await x.oracle.totals(999)
-        const deltaShares = day1.shares.toBigInt() - day0.shares.toBigInt()
-        const deltaPayout = day1.payout.toBigInt() - day0.payout.toBigInt()
+        const deltaShares = day1.shares - day0.shares
+        const deltaPayout = day1.payout - day0.payout
         await expect(x.oracle.payoutDeltaTruncated(999, 1, deltaShares))
           .eventually.to.equal(deltaPayout)
       })
@@ -366,16 +366,16 @@ describe('EarningsOracle.sol', () => {
         const days = await Promise.all(neededDays.map((day) => x.oracle.totals(day)))
         const hexDays = await Promise.all(range.map((day) => x.hex.dailyData(day)))
         const hexDayData = hexDays.map((day) => ([
-          day.dayStakeSharesTotal.toBigInt(),
-          day.dayPayoutTotal.toBigInt(),
+          day.dayStakeSharesTotal,
+          day.dayPayoutTotal,
         ]))
         const contractDayData = days.reduce((list, day, index) => {
           if (!index) return list
           const previous = days[index - 1]
           return list.concat([
             [
-              day.shares.toBigInt() - previous.shares.toBigInt(),
-              day.payout.toBigInt() - previous.payout.toBigInt(),
+              day.shares - previous.shares,
+              day.payout - previous.payout,
             ]
           ])
         }, [] as [bigint, bigint][])
@@ -385,7 +385,7 @@ describe('EarningsOracle.sol', () => {
           payout: _(contractDayData).map('1').reduce((t, a) => t + a, 0n),
         }
         const rangeDelta = BigInt(range.length)
-        expect(hexDays.reduce((total, day) => total + day.dayPayoutTotal.toBigInt(), 0n))
+        expect(hexDays.reduce((total, day) => total + day.dayPayoutTotal, 0n))
           .to.equal(added.payout)
         await expect(x.oracle.payoutDeltaTruncated(lockedDay, stakedDays, added.shares))
           .eventually.to.equal((added.payout * rangeDelta) - (rangeDelta - 1n))
@@ -394,10 +394,10 @@ describe('EarningsOracle.sol', () => {
           .eventually.to.equal(added.payout - rangeDelta) // rangeDelta, not rangeDelta - 1 because rounding down occurs at avg
         const checkAgainstBrute = async (shares: bigint) => {
           const bruteForcedPayout = hexDays.reduce((total, day) => total + (
-            (day.dayPayoutTotal.toBigInt() * shares) / day.dayStakeSharesTotal.toBigInt()
+            (day.dayPayoutTotal * shares) / day.dayStakeSharesTotal
           ), 0n)
           const estimated = await x.oracle.payoutDeltaTruncated(lockedDay, stakedDays, shares)
-          const est = estimated.toBigInt()
+          const est = estimated
           const delta = est - bruteForcedPayout
           const absDelta = delta < 0n ? -delta : delta
           // estimated delta is within 0.1% error
@@ -417,7 +417,7 @@ describe('EarningsOracle.sol', () => {
     describe('catchUpDays', () => {
       it('is clamped by the current day', async () => {
         const _currentSize = await x.oracle.totalsCount()
-        const currentSize = _currentSize.toBigInt()
+        const currentSize = _currentSize
         await x.oracle.catchUpDays(5000n)
         await expect(x.oracle.totalsCount())
           .eventually.to.equal(x.currentDay)
@@ -430,7 +430,7 @@ describe('EarningsOracle.sol', () => {
     describe('incrementDay', () => {
       it('is clamped by the current day', async () => {
         const _size = await x.oracle.totalsCount()
-        let size = _size.toBigInt()
+        let size = _size
         await x.oracle.incrementDay()
         ++size
         await expect(x.oracle.totalsCount())

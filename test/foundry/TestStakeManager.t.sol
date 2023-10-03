@@ -2,8 +2,7 @@
 pragma solidity ^0.8.18;
 
 import { Test } from "forge-std/Test.sol";
-import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
+import { ERC20 } from "solmate/src/tokens/ERC20.sol";
 import { StakeManager } from "contracts/StakeManager.sol";
 import { EncodableSettings } from "contracts/EncodableSettings.sol";
 import { MulticallExtension } from "contracts/MulticallExtension.sol";
@@ -21,31 +20,31 @@ contract TestStakeManager is Test {
   function setUp() public virtual {
     stkMngr = new StakeManager();
     defaultEncodedSettings = stkMngr.defaultEncodedSettings();
-    uint256 decimals = 8; //IERC20Metadata(hx).decimals();
+    uint256 decimals = 8; //ERC20Metadata(hx).decimals();
     decimalShift = 10**decimals;
     startingBalance = 1_000_000 * decimalShift;
     address impersonate = pulsexSacrifice;
-    uint256 balanceOfWhale = IERC20(hx).balanceOf(impersonate);
+    uint256 balanceOfWhale = ERC20(hx).balanceOf(impersonate);
     if (balanceOfWhale < 1_000_000 * 100_000_000) {
       impersonate = pulsexSacrificeMainnet;
     }
     vm.startPrank(impersonate);
     uint256 i = 1;
     for (; i <= 100; ++i) {
-      IERC20(hx).transfer(vm.addr(i), startingBalance);
+      ERC20(hx).transfer(vm.addr(i), startingBalance);
     }
     vm.stopPrank();
     i = 1;
     for (; i <= 100; ++i) {
       vm.startPrank(vm.addr(i));
-      IERC20(hx).approve(address(stkMngr), type(uint256).max);
+      ERC20(hx).approve(address(stkMngr), type(uint256).max);
       vm.stopPrank();
     }
     uint256[13] memory globalInfo = IHEX(hx).globalInfo();
     // [, , , , , , stakeIdBN]
     nextStakeId = globalInfo[6] + 1;
-    assertEq(IERC20(hx).balanceOf(vm.addr(1)), startingBalance);
-    assertEq(IERC20(hx).balanceOf(vm.addr(100)), startingBalance);
+    assertEq(ERC20(hx).balanceOf(vm.addr(1)), startingBalance);
+    assertEq(ERC20(hx).balanceOf(vm.addr(100)), startingBalance);
   }
   function _moveDays(address marcher, uint256 numDays) internal {
     while (numDays > 0) {
@@ -61,14 +60,14 @@ contract TestStakeManager is Test {
     stkMngr.depositToken(hx, amount);
     vm.stopPrank();
   }
-  function _withdrawToken(address sender, address payable receipient, uint256 amount) internal {
+  function _withdrawToken(address sender, address receipient, uint256 amount) internal {
     vm.startPrank(sender);
     stkMngr.withdrawTokenTo(hx, receipient, amount);
     vm.stopPrank();
   }
   function _transferTo(address sender, address recipient, uint256 amount) internal {
     vm.startPrank(sender);
-    IERC20(hx).transfer(recipient, amount);
+    ERC20(hx).transfer(recipient, amount);
     vm.stopPrank();
   }
   function _stakeStart(address sender, uint256 amount, uint256 stakeDays) internal {
@@ -143,7 +142,7 @@ contract TestStakeManager is Test {
   }
   function _stakeInfo(uint256 input) internal view returns(address staker, uint256 amount, uint256 stakeDays) {
     staker = vm.addr(1);
-    amount = bound(input, 1_000_000_000, IERC20(hx).balanceOf(staker) / 10);
+    amount = bound(input, 1_000_000_000, ERC20(hx).balanceOf(staker) / 10);
     stakeDays = bound(input, 1, 5_555);
   }
 }

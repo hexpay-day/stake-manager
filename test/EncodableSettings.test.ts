@@ -1,14 +1,15 @@
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers"
 import { expect } from "chai"
 import * as hre from "hardhat"
-import * as utils from './utils'
+import { deployFixture } from './utils'
+import * as utils from '../src/utils'
 import _ from 'lodash'
 import { EncodableSettings } from "../artifacts/types"
 
 describe('EncodableSettings.sol', () => {
-  let x!: Awaited<ReturnType<typeof utils.deployFixture>>
+  let x!: Awaited<ReturnType<typeof deployFixture>>
   beforeEach(async () => {
-    x = await loadFixture(utils.deployFixture)
+    x = await loadFixture(deployFixture)
   })
   describe('default methods', () => {
     it('should match', async () => {
@@ -42,6 +43,7 @@ describe('EncodableSettings.sol', () => {
     it('has a method for that', async () => {
       const defaultEncodedSettings = await x.stakeManager.defaultEncodedSettings()
       const defaultSettings = await x.stakeManager.defaultSettings()
+      const struct = utils.fromStruct(defaultSettings.consentAbilities) as EncodableSettings.ConsentAbilitiesStruct
       await expect(x.stakeManager.readEncodedSettings(defaultEncodedSettings, 208, 8))
         .eventually.to.equal(defaultSettings.newStake.method)
         .eventually.to.equal(2)
@@ -51,9 +53,10 @@ describe('EncodableSettings.sol', () => {
       await expect(x.stakeManager.readEncodedSettings(defaultEncodedSettings, 240, 8))
         .eventually.to.equal(defaultSettings.copyIterations)
         .eventually.to.equal(255)
-      const encodedConsentAbilities = await x.stakeManager.encodeConsentAbilities(defaultSettings.consentAbilities)
+
+      const encodedConsentAbilities = await x.stakeManager.encodeConsentAbilities(struct)
       await expect(x.stakeManager.readEncodedSettings(defaultEncodedSettings, 248, 8))
-        .eventually.to.equal(encodedConsentAbilities.toNumber())
+        .eventually.to.equal(encodedConsentAbilities)
         .eventually.to.equal(1)
     })
   })
@@ -88,14 +91,14 @@ describe('EncodableSettings.sol', () => {
       await expect(x.stakeManager.isOneAtIndex(encoded, 2)).eventually.to.equal(true)
       await expect(x.stakeManager.isOneAtIndex(encoded, 1)).eventually.to.equal(false)
       await expect(x.stakeManager.isOneAtIndex(encoded, 0)).eventually.to.equal(true)
-      await expect(x.stakeManager.decodeConsentAbilities(encoded))
-        .eventually.to.deep.equal(decodedConsentAbilitiesToResult(abilities))
+      await expect(x.stakeManager.decodeConsentAbilities(encoded).then(utils.fromStruct))
+        .eventually.to.deep.equal(abilities)
     })
     it('can be all true or false', async () => {
-      const decodedZero = await x.stakeManager.decodeConsentAbilities(0)
-      const decodedEff = await x.stakeManager.decodeConsentAbilities('0xff')
+      const decodedZero = utils.fromStruct(await x.stakeManager.decodeConsentAbilities(0))
+      const decodedEff = utils.fromStruct(await x.stakeManager.decodeConsentAbilities('0xff'))
       expect(decodedZero)
-        .to.deep.equal(decodedConsentAbilitiesToResult({
+        .to.deep.equal({
           canStakeEnd: false,
           canEarlyStakeEnd: false,
           canMintHedron: false,
@@ -104,9 +107,9 @@ describe('EncodableSettings.sol', () => {
           stakeIsTransferable: false,
           copyExternalTips: false,
           hasExternalTips: false,
-        }))
+        })
       expect(decodedEff)
-        .to.deep.equal(decodedConsentAbilitiesToResult({
+        .to.deep.equal({
           canStakeEnd: true,
           canEarlyStakeEnd: true,
           canMintHedron: true,
@@ -115,7 +118,7 @@ describe('EncodableSettings.sol', () => {
           stakeIsTransferable: true,
           copyExternalTips: true,
           hasExternalTips: true,
-        }))
+        })
       await expect(x.stakeManager.encodeConsentAbilities(decodedZero))
         .eventually.to.equal(0)
       await expect(x.stakeManager.encodeConsentAbilities(decodedEff))
@@ -126,7 +129,7 @@ describe('EncodableSettings.sol', () => {
     it('can update settings', async () => {
       const [signer1] = x.signers
       await x.stakeManager.stakeStartFromBalanceFor(signer1.address, x.stakedAmount, 1, 0)
-      await expect(x.stakeManager.updateSettingsEncoded(x.nextStakeId, hre.ethers.constants.MaxUint256))
+      await expect(x.stakeManager.updateSettingsEncoded(x.nextStakeId, hre.ethers.MaxUint256))
         .to.emit(x.stakeManager, 'UpdateSettings')
       await x.stakeManager.stakeIdToSettings(x.nextStakeId)
     })

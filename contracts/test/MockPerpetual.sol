@@ -5,6 +5,7 @@ import { IPublicEndStakeable } from "../interfaces/IPublicEndStakeable.sol";
 import { IHEX } from "../interfaces/IHEX.sol";
 import { IHedron } from "../interfaces/IHedron.sol";
 import { UnderlyingStakeable } from "../UnderlyingStakeable.sol";
+import { ERC20 } from "solmate/src/tokens/ERC20.sol";
 
 contract MockPerpetual is IPublicEndStakeable {
   address internal constant TARGET = 0x2b591e99afE9f32eAA6214f7B7629768c40Eeb39;
@@ -12,7 +13,7 @@ contract MockPerpetual is IPublicEndStakeable {
   function startStakeHEX() external {
     uint256 lockedDays = 1;
     STAKE_END_DAY = UnderlyingStakeable(TARGET).currentDay() + lockedDays;
-    IHEX(TARGET).stakeStart(IHEX(TARGET).balanceOf(address(this)), lockedDays);
+    IHEX(TARGET).stakeStart(ERC20(TARGET).balanceOf(address(this)), lockedDays);
   }
   uint256 public STAKE_END_DAY = 0;
   bool public STAKE_IS_ACTIVE = true;

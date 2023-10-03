@@ -3,13 +3,12 @@ import { expect } from "chai"
 import * as hre from "hardhat"
 import _ from 'lodash'
 import * as utils from './utils'
-import { anyUint } from "@nomicfoundation/hardhat-chai-matchers/withArgs"
 
 describe('StakeInfo.sol', () => {
   describe('verifyStakeOwnership', () => {
     it('errs if one is not the stake owner', async () => {
       const x = await loadFixture(utils.deployFixture)
-      await expect(x.stakeManager.verifyStakeOwnership(hre.ethers.constants.AddressZero, 1))
+      await expect(x.stakeManager.verifyStakeOwnership(hre.ethers.ZeroAddress, 1))
         .not.to.be.reverted
     })
     it('errs if no one owns a stake', async () => {
@@ -17,7 +16,7 @@ describe('StakeInfo.sol', () => {
       const [signer1] = x.signers
       await expect(x.stakeManager.verifyStakeOwnership(signer1.address, 1))
         .to.revertedWithCustomError(x.stakeManager, 'StakeNotOwned')
-        .withArgs(signer1.address, hre.ethers.constants.AddressZero)
+        .withArgs(signer1.address, hre.ethers.ZeroAddress)
     })
     it('errs if not the owner of a stake', async () => {
       const x = await loadFixture(utils.deployFixture)
@@ -61,8 +60,7 @@ describe('StakeInfo.sol', () => {
     it('stake info is registered under id', async () => {
       const x = await loadFixture(utils.deployFixture)
       const [signer1] = x.signers
-      const nextStakeIndex = await x.hex.stakeCount(x.stakeManager.address)
-      const stakeIndex = nextStakeIndex.toBigInt()
+      const stakeIndex = await x.hex.stakeCount(x.stakeManager.getAddress())
       await x.stakeManager.stakeStart(x.oneMillion, 1)
       await expect(x.stakeManager.stakeIdToInfo(x.nextStakeId))
         .eventually.to.be.deep.equal([stakeIndex, signer1.address])

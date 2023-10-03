@@ -1,17 +1,14 @@
-import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
-import { CallOverrides, ethers } from "ethers";
-import { HardhatRuntimeEnvironment } from "hardhat/types";
+import { Result, ethers } from "ethers";
 import { setTimeout } from "timers/promises";
-import { IHEX, IHEXStakeInstanceManager, IMulticall3, IUnderlyingStakeable } from "../artifacts/types";
+import { ERC721, IHEX, IHEXStakeInstanceManager, IMulticall3, IUnderlyingStakeable } from "../artifacts/types";
 import _ from "lodash";
-
 import * as addresses from './addresses'
 
-export const waitUntilNonce = async (signer: SignerWithAddress, nonce: number) => {
+export const waitUntilNonce = async (provider: ethers.Provider, account: string, nonce: number) => {
   let shouldWait!: boolean
   do {
-    const txCountLatest = await signer.getTransactionCount('latest')
-    const txCountPending = await signer.getTransactionCount('pending')
+    const txCountLatest = await provider.getTransactionCount(account, 'latest')
+    const txCountPending = await provider.getTransactionCount(account, 'pending')
     if (txCountLatest > nonce) {
       console.log('requested=%o latest=%o pending=%o', nonce, txCountLatest, txCountPending)
       throw new Error('nonce has passed')
@@ -29,38 +26,37 @@ export const waitUntilNonce = async (signer: SignerWithAddress, nonce: number) =
   return nonce
 }
 
-export const defaultOverrides = async (hre: HardhatRuntimeEnvironment): Promise<CallOverrides> => {
-  const gasInfo = await hre.ethers.provider.getFeeData()
-  const maxFeePerGas = gasInfo.maxFeePerGas?.toBigInt() as bigint
+export const defaultOverrides = (gasInfo: ethers.FeeData) => {
+  const maxFeePerGas = gasInfo.maxFeePerGas as bigint
   const maxPriorityFeePerGas = maxFeePerGas / 10n
   return {
     type: 2,
     maxFeePerGas,
     maxPriorityFeePerGas,
     gasLimit: 10_000_000n,
-  }
+  } as const
 }
 
-export const printTx = async (txPromise: Promise<ethers.ContractTransaction>, log: string, logInputs: any[]) => {
+export const printTx = async (txPromise: Promise<ethers.ContractTransactionResponse>, log: string, logInputs: any[]) => {
   const receipt = await (await txPromise).wait()
-  console.log(`${log} @ %o`, ...logInputs, receipt.transactionHash)
+  console.log(`${log} @ %o`, ...logInputs, receipt?.hash)
 }
 
-export const countHsi = async (address: string, hsim: IHEXStakeInstanceManager) => {
+export const countHsi = async (address: string, hsim: IHEXStakeInstanceManager, hsim721: ERC721) => {
   const [tokenized, detokenized] = await Promise.all([
-    hsim.balanceOf(address),
+    hsim721.balanceOf(address),
     hsim.hsiCount(address),
   ])
   return {
-    tokenized: tokenized.toBigInt(),
-    detokenized: detokenized.toBigInt(),
+    tokenized,
+    detokenized,
   }
 }
 
 export const getHsiApprovals = async (owner: string, operator: string, hsim: IHEXStakeInstanceManager, tokenIds: bigint[] = []) => {
   const approvedForAll = await hsim.isApprovedForAll(owner, operator)
   const approvals = await Promise.all(tokenIds.map(async (tokenId) => {
-    return ethers.utils.getAddress(await hsim.getApproved(tokenId)) === operator
+    return ethers.getAddress(await hsim.getApproved(tokenId)) === operator
   }))
   const tokenIdToApproval = new Map<bigint, boolean>(_.zip(tokenIds, approvals) as [bigint, boolean][])
   return {
@@ -89,7 +85,7 @@ export const loadHsiFrom = async (account: string, { hsim, multicall, hex }: {
     callHsim(hsim.interface.encodeFunctionData('hsiCount', [account])),
     callHsim(hsim.interface.encodeFunctionData('balanceOf', [account])),
   ]
-  const countResults = await multicall.callStatic.aggregate3(countCalls)
+  const countResults = await multicall.aggregate3.staticCall(countCalls)
   const [detokenizedCount, tokenizedCount] = countResults.map((result) => BigInt(result.returnData))
   const detokenizedCalls = _.range(0, Number(detokenizedCount)).map((index) => (
     callHsim(hsim.interface.encodeFunctionData('hsiLists', [
@@ -104,22 +100,22 @@ export const loadHsiFrom = async (account: string, { hsim, multicall, hex }: {
     ]))
   ))
   const allCalls = detokenizedCalls.concat(tokenizedCalls)
-  const allResults = await multicall.callStatic.aggregate3(allCalls)
+  const allResults = await multicall.aggregate3.staticCall(allCalls)
   // for whatever reason, index is not given during partition
   const detokenizedStakes = allResults.slice(0, detokenizedCalls.length) as IMulticall3.ResultStructOutput[]
   const tokenizedStakes = allResults.slice(detokenizedCalls.length) as IMulticall3.ResultStructOutput[]
-  const detokenizedAddresses = detokenizedStakes.map((result) => ethers.utils.getAddress(`0x${result.returnData.slice(-40)}`))
+  const detokenizedAddresses = detokenizedStakes.map((result) => ethers.getAddress(`0x${result.returnData.slice(-40)}`))
   const tokenIds = tokenizedStakes.map((result) => BigInt(result.returnData))
   const tokenHsiCalls = tokenIds.map((tokenId) => (
     callHsim(hsim.interface.encodeFunctionData('hsiToken', [tokenId]))
   ))
-  const tokenHsiResults = tokenHsiCalls ? await multicall.callStatic.aggregate3(tokenHsiCalls) : [] as IMulticall3.ResultStructOutput[]
-  const tokenizedHsi = tokenHsiResults.map((result) => ethers.utils.getAddress(`0x${result.returnData.slice(-40)}`))
+  const tokenHsiResults = tokenHsiCalls ? await multicall.aggregate3.staticCall(tokenHsiCalls) : [] as IMulticall3.ResultStructOutput[]
+  const tokenizedHsi = tokenHsiResults.map((result) => ethers.getAddress(`0x${result.returnData.slice(-40)}`))
   const allHsi = detokenizedAddresses.concat(tokenizedHsi)
   const stakeListCalls = allHsi.map((hsi) => callHex(
     hex.interface.encodeFunctionData('stakeLists', [hsi, 0])
   ))
-  const stakeListsResults = await multicall.callStatic.aggregate3(stakeListCalls)
+  const stakeListsResults = await multicall.aggregate3.staticCall(stakeListCalls)
   const stakesResults = stakeListsResults.map((result) => (hex.interface.decodeFunctionResult('stakeLists', result.returnData))[0] as unknown as IUnderlyingStakeable.StakeStoreStructOutput)
   return {
     stakes: stakesResults,
@@ -129,11 +125,11 @@ export const loadHsiFrom = async (account: string, { hsim, multicall, hex }: {
   } as const
 }
 
-export const parseLogs = (interfaces: ethers.utils.Interface[], logs: ethers.providers.Log[]) => {
+export const parseLogs = (interfaces: ethers.Interface[], logs: ethers.Log[]) => {
   const logDescriptions = _.map(logs, (log) => {
     for (const ntrface of interfaces) {
       try {
-        return ntrface.parseLog(log)
+        ntrface.parseLog(log as any)
       } catch (err) {}
     }
   })
@@ -141,4 +137,12 @@ export const parseLogs = (interfaces: ethers.utils.Interface[], logs: ethers.pro
     all: logDescriptions,
     valid: _.compact(logDescriptions),
   }
+}
+
+export const fromStruct = (struct: any): any => {
+  return _.mapValues(struct.toObject(), (val) => (
+    val instanceof Result || Array.isArray(val)
+      ? fromStruct(val)
+      : val
+  ))
 }

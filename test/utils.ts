@@ -1,30 +1,33 @@
-import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers"
+import { SignerWithAddress } from "@nomicfoundation/hardhat-ethers/signers"
 import { loadFixture, time } from "@nomicfoundation/hardhat-network-helpers"
 import { days } from "@nomicfoundation/hardhat-network-helpers/dist/src/helpers/time/duration"
 import type { IHEX } from "../artifacts/types/contracts/interfaces/IHEX"
 import * as hre from 'hardhat'
-import _ from "lodash"
 import * as ethers from 'ethers'
+import _ from "lodash"
 import * as Chai from "chai"
 import * as config from '../src/config'
-import { IHedron, IERC20, IERC20Metadata, IHEXStakeInstanceManager } from "../artifacts/types"
+import { ERC721, IHedron, IHEXStakeInstanceManager } from "../artifacts/types"
 import { HSIStartEvent } from "../artifacts/types/contracts/interfaces/IHEXStakeInstanceManager"
 import { anyUint } from "@nomicfoundation/hardhat-chai-matchers/withArgs"
+import { ERC20 } from "../artifacts/types/solmate/src/tokens"
+import { TypedContractEvent } from "../artifacts/types/common"
 
 Chai.Assertion.addMethod('printGasUsage', function (this: any, throws = true) {
   let subject = this._obj
   if (typeof subject === "function") {
     subject = subject()
   }
-  const target: ethers.providers.TransactionResponse | Promise<ethers.providers.TransactionResponse> = subject
+  const target: ethers.TransactionResponse | Promise<ethers.TransactionResponse> = subject
   const printGasUsed = async (
     [tx]:
-    [ethers.providers.TransactionResponse],
+    [ethers.TransactionResponse],
   ) => {
     const receipt = await tx.wait()
+    if (!receipt) throw new Error('receipt not found')
     hre.tracer.enabled = true
     await hre.run('trace', {
-      hash: receipt.transactionHash,
+      hash: receipt.hash,
       fulltrace: true,
     })
     hre.tracer.enabled = false
@@ -46,52 +49,56 @@ export const deployFixture = async () => {
   const utils = await Utils.deploy()
   const StakeManager = await hre.ethers.getContractFactory('StakeManager')
   const stakeManager = await StakeManager.deploy()
-  await stakeManager.deployed()
+  await stakeManager.deploymentTransaction()?.wait()
   const _signers = await hre.ethers.getSigners()
   const signers = _signers.slice(0, 20)
   const [signer] = signers
-  const hex = await hre.ethers.getContractAt('contracts/interfaces/IHEX.sol:IHEX', config.hexAddress) as IHEX
-  const hedron = await hre.ethers.getContractAt('contracts/interfaces/IHedron.sol:IHedron', config.hedronAddress) as IHedron
-  const hsim = await hre.ethers.getContractAt('IHEXStakeInstanceManager', await hedron.hsim())
+  // const IHEX = await hre.ethers.getContractAt()
+  const hex = await hre.ethers.getContractAt('contracts/interfaces/IHEX.sol:IHEX', config.hexAddress) as unknown as IHEX
+  const hex20 = await hre.ethers.getContractAt('solmate/src/tokens/ERC20.sol:ERC20', config.hexAddress) as unknown as ERC20
+  const hedron = await hre.ethers.getContractAt('contracts/interfaces/IHedron.sol:IHedron', config.hedronAddress) as unknown as IHedron
+  const hedron20 = await hre.ethers.getContractAt('solmate/src/tokens/ERC20.sol:ERC20', config.hedronAddress) as unknown as ERC20
+  const hsim = await hre.ethers.getContractAt('IHEXStakeInstanceManager', await hedron.hsim()) as unknown as IHEXStakeInstanceManager
+  const hsim721 = await hre.ethers.getContractAt('solmate/src/tokens/ERC721.sol:ERC721', await hedron.hsim()) as unknown as ERC721
   const TransferReceiver = await hre.ethers.getContractFactory('TransferReceiver')
   const transferReceiver = await TransferReceiver.deploy()
   const ExistingStakeManager = await hre.ethers.getContractFactory('ExistingStakeManager')
   const existingStakeManager = await ExistingStakeManager.deploy()
   const maximusStakeManager = existingStakeManager
-  const decimals = await hex.decimals()
-  const oneMillion = hre.ethers.utils.parseUnits('1000000', decimals).toBigInt()
-  const hexWhale = await config.hexWhale(hre)
+  const decimals = await hex20.decimals()
+  const oneMillion = hre.ethers.parseUnits('1000000', decimals)
+  const hexWhale = await config.hexWhale(hex20)
   await hre.vizor.impersonate(hexWhale, async (swa) => {
-    const h = hex.connect(swa)
+    const h = hex20.connect(swa as unknown as ethers.Signer)
     await Promise.all(signers.map(async (signer) => {
       await Promise.all([
         // allow infinite flow
-        hex.connect(signer)
-          .approve(stakeManager.address, hre.ethers.constants.MaxUint256),
-        hex.connect(signer).approve(hsim.address, hre.ethers.constants.MaxUint256),
+        hex20.connect(signer as unknown as ethers.Signer)
+          .approve(stakeManager.getAddress(), hre.ethers.MaxUint256),
+        hex20.connect(signer as unknown as ethers.Signer).approve(hsim.getAddress(), hre.ethers.MaxUint256),
         h.transfer(signer.address, oneMillion),
       ])
     }))
   })
   const IsolatedStakeManagerFactory = await hre.ethers.getContractFactory('IsolatedStakeManagerFactory')
   const isolatedStakeManagerFactory = await IsolatedStakeManagerFactory.deploy()
-  await isolatedStakeManagerFactory.deployed()
+  await isolatedStakeManagerFactory.deploymentTransaction()?.wait()
   await isolatedStakeManagerFactory.createIsolatedManager(signer.address)
   const isolatedStakeManagerAddress = await isolatedStakeManagerFactory.isolatedStakeManagers(signer.address)
   const isolatedStakeManager = await hre.ethers.getContractAt('IsolatedStakeManager', isolatedStakeManagerAddress)
-  const tx = await hex.connect(signer).approve(isolatedStakeManager.address, oneMillion)
+  const tx = await hex20.connect(signer as unknown as ethers.Signer).approve(isolatedStakeManager.getAddress(), oneMillion)
   await tx.wait()
   const base = '0xe9f84d418B008888A992Ff8c6D22389C2C3504e0'
   const stakedAmount = oneMillion / 10n
   const usdcAddress = '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48'
-  const usdc = await hre.ethers.getContractAt('@openzeppelin/contracts/token/ERC20/ERC20.sol:ERC20', usdcAddress) as IERC20Metadata
+  const usdc = await hre.ethers.getContractAt('solmate/src/tokens/ERC20.sol:ERC20', usdcAddress) as unknown as ERC20
   const multicall = await hre.ethers.getContractAt('IMulticall3', '0xcA11bde05977b3631167028862bE2a173976CA11')
   const MockExternalPerpetualFilter = await hre.ethers.getContractFactory('MockExternalPerpetualFilter')
   const externalPerpetualFilter = await MockExternalPerpetualFilter.deploy()
-  await externalPerpetualFilter.deployed()
+  await externalPerpetualFilter.deploymentTransaction()?.wait()
   const MockPerpetual = await hre.ethers.getContractFactory('MockPerpetual')
   const mockPerpetual = await MockPerpetual.deploy()
-  await mockPerpetual.deployed()
+  await mockPerpetual.deploymentTransaction()?.wait()
   const [, , , , , , stakeIdBN] = await hex.globalInfo()
   return {
     transferReceiver,
@@ -105,9 +112,11 @@ export const deployFixture = async () => {
       hex: hexWhale,
     },
     stakedAmount,
-    nextStakeId: stakeIdBN.toBigInt() + 1n,
-    oneEther: hre.ethers.utils.parseEther('1').toBigInt(),
+    nextStakeId: stakeIdBN + 1n,
+    oneEther: hre.ethers.parseEther('1'),
     hex,
+    hex20,
+    hedron20,
     decimals,
     oneMillion,
     signers,
@@ -120,26 +129,27 @@ export const deployFixture = async () => {
     base,
     hedron,
     hsim,
+    hsim721,
     existingStakeManager,
   }
 }
 
 export const nextStakeId = async (hex: IHEX) => {
   const [, , , , , , stakeIdBN] = await hex.globalInfo()
-  return stakeIdBN.toBigInt() + 1n
+  return stakeIdBN + 1n
 }
 
 export const endOfBaseFixture = async () => {
   return await endOfBaseFixtureOffset()()
 }
 
-export const endOfBaseFixtureOffset = (offset = 0) => async function a() {
+export const endOfBaseFixtureOffset = (offset = 0n) => async function a() {
   const x = await loadFixture(deployFixture)
   const currentDay = await x.hex.currentDay()
   const stake = await x.hex.stakeLists(x.base, 0)
   const endDay = stake.stakedDays + stake.lockedDay
-  const daysToEnd = endDay - currentDay.toNumber() - offset
-  await moveForwardDays(daysToEnd, x, 14)
+  const daysToEnd = endDay - currentDay - offset
+  await moveForwardDays(daysToEnd, x, 14n)
   const GasReimberser = await hre.ethers.getContractFactory('GasReimberser')
   const gasReimberser = await GasReimberser.deploy(x.base)
   const publicEndStakeable = await hre.ethers.getContractAt('IPublicEndStakeable', x.base)
@@ -152,38 +162,38 @@ export const endOfBaseFixtureOffset = (offset = 0) => async function a() {
 
 export const stakeBagAndWait = async () => {
   const x = await loadFixture(deployFixture)
-  const days = 30
+  const days = 30n
   await x.isolatedStakeManager.stakeStart(x.stakedAmount, days)
-  await x.isolatedStakeManager.stakeStart(x.stakedAmount, days + 1)
-  await x.isolatedStakeManager.stakeStart(x.stakedAmount, days + 100)
+  await x.isolatedStakeManager.stakeStart(x.stakedAmount, days + 1n)
+  await x.isolatedStakeManager.stakeStart(x.stakedAmount, days + 100n)
   const nsid = x.nextStakeId
   const stakeIds = [nsid, nsid + 1n, nsid + 2n, nsid + 3n]
-  await moveForwardDays(days + 1, x)
+  await moveForwardDays(days + 1n, x)
   const [, , , , , , stakeIdBN] = await x.hex.globalInfo()
   return {
     ...x,
     days,
-    stakedDays: [days, days + 1, days + 100],
-    nextStakeId: stakeIdBN.toBigInt() + 1n,
+    stakedDays: [days, days + 1n, days + 100n],
+    nextStakeId: stakeIdBN + 1n,
     stakeIds,
   }
 }
 
 export const stakeSingletonBagAndWait = async () => {
   const x = await loadFixture(deployFixture)
-  const days = 30
+  const days = 30n
   await x.stakeManager.stakeStart(x.stakedAmount, days)
-  await x.stakeManager.stakeStart(x.stakedAmount, days + 1)
-  await x.stakeManager.stakeStart(x.stakedAmount, days + 100)
+  await x.stakeManager.stakeStart(x.stakedAmount, days + 1n)
+  await x.stakeManager.stakeStart(x.stakedAmount, days + 100n)
   const nsid = x.nextStakeId
   const stakeIds = [nsid, nsid + 1n, nsid + 2n]
-  await moveForwardDays(days + 1, x)
+  await moveForwardDays(days + 1n, x)
   const [, , , , , , stakeIdBN] = await x.hex.globalInfo()
   return {
     ...x,
     days,
-    stakedDays: [days, days + 1, days + 100],
-    nextStakeId: stakeIdBN.toBigInt() + 1n,
+    stakedDays: [days, days + 1n, days + 100n],
+    nextStakeId: stakeIdBN + 1n,
     stakeIds,
   }
 }
@@ -230,7 +240,7 @@ export const procureHSIFixture = async (x: X, nxtStkId: bigint) => {
   const addrToId = new Map<string, bigint>()
   for (let i = 0; i < hsiTargetsPartial.length; i++) {
     const count = await x.hsim.hsiCount(signerA.address)
-    const index = count.toBigInt() - 1n
+    const index = count - 1n
     const target = hsiTargetsPartial[hsiTargetsPartial.length - 1 - i]
     await x.hsim.hexStakeTokenize(index, target.hsiAddress)
     addrToId.set(target.hsiAddress, index)
@@ -239,11 +249,11 @@ export const procureHSIFixture = async (x: X, nxtStkId: bigint) => {
     const tokenId = await x.hsim.tokenOfOwnerByIndex(signerA.address, index)
     return {
       ...target,
-      tokenId: tokenId.toBigInt(),
+      tokenId: tokenId,
       hsiIndex: addrToId.get(target.hsiAddress) as bigint,
     } as HSITarget
   }))
-  await x.hsim.setApprovalForAll(x.existingStakeManager.address, true)
+  await x.hsim721.setApprovalForAll(x.existingStakeManager.getAddress(), true)
   return {
     ...x,
     hsiTargets: hsiTargets.reverse(),
@@ -256,13 +266,12 @@ interface MinimalX {
 }
 
 export const moveForwardDays = async (
-  limit: number,
+  limit: bigint,
   x: MinimalX,
-  step = 1,
+  step = 1n,
 ) => {
-  if (limit < 1) return
-  const _currentDay = await x.hex.currentDay()
-  const currentDay = _currentDay.toNumber()
+  if (limit < 1n) return
+  const currentDay = await x.hex.currentDay()
   const endDay = currentDay + limit
   let movedToDay = currentDay
   // last signer is utilized as a standin for "the public"
@@ -270,19 +279,19 @@ export const moveForwardDays = async (
   let numDaysToMove = step
   do {
     if (movedToDay + numDaysToMove > endDay) {
-      numDaysToMove = 1
+      numDaysToMove = 1n
     }
-    await time.setNextBlockTimestamp(days(numDaysToMove) + await time.latest())
-    await x.hex.connect(lastSigner).stakeStart(hre.ethers.utils.parseUnits('1', 8), 1)
+    await time.setNextBlockTimestamp(days(Number(numDaysToMove)) + await time.latest())
+    await x.hex.connect(lastSigner as unknown as ethers.Signer).stakeStart(hre.ethers.parseUnits('1', 8), 1)
     movedToDay += numDaysToMove
   } while(movedToDay < endDay)
 }
 
 export const addressToBytes32 = (signer: SignerWithAddress) => toBytes32(signer.address)
 
-export const numberToBytes32 = (num: bigint) => hre.ethers.utils.hexZeroPad(hre.ethers.BigNumber.from(num).toHexString(), 32)
+export const numberToBytes32 = (num: bigint) => hre.ethers.zeroPadValue(`0x${num.toString(16)}`, 32)
 
-export const toBytes32 = (addr: string) => hre.ethers.utils.hexZeroPad(addr.toLowerCase(), 32)
+export const toBytes32 = (addr: string) => hre.ethers.zeroPadValue(addr.toLowerCase(), 32)
 
 export const deadline = () => Math.floor(_.now() / 1000) + 100
 
@@ -290,12 +299,12 @@ type LeechUSDC = {
   whales: {
     usdc: string;
   }
-  usdc: IERC20;
+  usdc: ERC20;
 }
 
 export const leechUsdc = async (amount: bigint, to: string, x: LeechUSDC) => {
   await hre.vizor.impersonate(x.whales.usdc, async (swa) => {
-    await x.usdc.connect(swa).transfer(to, amount)
+    await x.usdc.connect(swa as unknown as ethers.Signer).transfer(to, amount)
   })
 }
 
@@ -303,23 +312,24 @@ export const absMinInt16 = 2n**15n // zero point for int16
 
 export const DAY = 1000*60*60*24
 
-export const receiptToHsiAddress = async (hsim: IHEXStakeInstanceManager, tx: ethers.ContractTransaction) => {
+export const receiptToHsiAddress = async (hsim: IHEXStakeInstanceManager, tx: ethers.TransactionResponse) => {
   const receipt = await tx.wait()
+  if (!receipt) throw new Error('unable to find receipt')
   const stakeStartEvent = _(receipt.logs)
     .map((log) => {
       try {
-        const l = hsim.interface.parseLog(log)
-        if (l.name === 'HSIStart') return l
+        const l = hsim.interface.parseLog(log as any)
+        if (l?.name === 'HSIStart') return l
       } catch (err) {}
     })
     .compact()
-    .first() as unknown as HSIStartEvent
+    .first() as unknown as HSIStartEvent.LogDescription
   return stakeStartEvent.args.hsiAddress
 }
 
 export const anyUintNoPenalty = (i: any) => {
   anyUint(i)
-  const n = i.isBigNumber ? i.toBigInt() : BigInt(i)
+  const n = i.isBigNumber ? i : BigInt(i)
   const penalty = BigInt.asUintN(72, n)
   if (penalty > 0n) {
     throw new Chai.AssertionError(

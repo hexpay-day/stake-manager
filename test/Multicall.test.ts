@@ -4,6 +4,7 @@ import * as hre from "hardhat"
 import * as utils from './utils'
 import _ from 'lodash'
 import { anyUint, anyValue } from "@nomicfoundation/hardhat-chai-matchers/withArgs"
+import { toBeHex } from "ethers"
 
 describe('Multicall.sol', () => {
   describe('multicallWithDeadline', () => {
@@ -22,11 +23,11 @@ describe('Multicall.sol', () => {
       const tx = x.stakeManager.multicallWithDeadline(await time.latest() + 12, stakeStartData, false)
       await expect(tx)
         .to.emit(x.hex, 'StakeStart')
-        .withArgs(anyUint, x.stakeManager.address, nextStakeId)
+        .withArgs(anyUint, await x.stakeManager.getAddress(), nextStakeId)
         .to.emit(x.hex, 'StakeStart')
-        .withArgs(anyUint, x.stakeManager.address, nextStakeId + 1n)
+        .withArgs(anyUint, await x.stakeManager.getAddress(), nextStakeId + 1n)
         .to.emit(x.hex, 'StakeStart')
-        .withArgs(anyUint, x.stakeManager.address, nextStakeId + 2n)
+        .withArgs(anyUint, await x.stakeManager.getAddress(), nextStakeId + 2n)
     })
   })
   describe('multicallWithPreviousBlockHash', () => {
@@ -38,20 +39,20 @@ describe('Multicall.sol', () => {
         x.stakeManager.interface.encodeFunctionData('stakeStart', [x.stakedAmount, 60]),
         x.stakeManager.interface.encodeFunctionData('stakeStart', [x.stakedAmount, 90]),
       ]
-      let previousHash = hre.ethers.constants.MaxUint256.toHexString()
+      let previousHash = toBeHex(hre.ethers.MaxUint256)
       await expect(x.stakeManager.multicallWithPreviousBlockHash(previousHash, stakeStartData, false))
         .to.revertedWithCustomError(x.stakeManager, 'BlockHash')
         .withArgs(previousHash, anyValue)
       const latestBlock = await hre.ethers.provider.getBlock('latest')
-      previousHash = latestBlock.hash
+      previousHash = latestBlock?.hash as string
       const tx = x.stakeManager.multicallWithPreviousBlockHash(previousHash, stakeStartData, false)
       await expect(tx)
         .to.emit(x.hex, 'StakeStart')
-        .withArgs(anyUint, x.stakeManager.address, nextStakeId)
+        .withArgs(anyUint, await x.stakeManager.getAddress(), nextStakeId)
         .to.emit(x.hex, 'StakeStart')
-        .withArgs(anyUint, x.stakeManager.address, nextStakeId + 1n)
+        .withArgs(anyUint, await x.stakeManager.getAddress(), nextStakeId + 1n)
         .to.emit(x.hex, 'StakeStart')
-        .withArgs(anyUint, x.stakeManager.address, nextStakeId + 2n)
+        .withArgs(anyUint, await x.stakeManager.getAddress(), nextStakeId + 2n)
     })
   })
 })

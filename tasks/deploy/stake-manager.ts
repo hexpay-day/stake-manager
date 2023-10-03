@@ -4,18 +4,19 @@ import _ from "lodash"
 
 export const main = async (_args: any, hre: HardhatRuntimeEnvironment) => {
   const [signer] = await hre.ethers.getSigners()
-  const nonce = await waitUntilNonce(signer, 1).catch(() => null)
+  const nonce = await waitUntilNonce(signer.provider, signer.address, 1).catch(() => null)
   if (_.isNil(nonce)) return
   const StakeManager = await hre.ethers.getContractFactory('StakeManager')
-  const overrides = await defaultOverrides(hre)
+  const overrides = defaultOverrides(await hre.ethers.provider.getFeeData())
   const stakeManager = await StakeManager.deploy({
     nonce,
     ...overrides,
   })
-  await stakeManager.deployed()
+  const tx = stakeManager.deploymentTransaction()!
+  await tx.wait()
   console.log('@%o StakeManager() -> %o @ %o',
     nonce,
-    stakeManager.address,
-    stakeManager.deployTransaction.hash,
+    await stakeManager.getAddress(),
+    tx.hash,
   )
 }

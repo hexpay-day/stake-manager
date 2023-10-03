@@ -4,6 +4,7 @@ import * as hre from "hardhat"
 import * as utils from './utils'
 import _ from 'lodash'
 import { anyUint } from "@nomicfoundation/hardhat-chai-matchers/withArgs"
+import { ethers } from "ethers"
 
 describe('MaximusStakeManager.sol', () => {
   describe('stakeEndAs', () => {
@@ -16,7 +17,7 @@ describe('MaximusStakeManager.sol', () => {
         .withArgs(anyUint, utils.anyUintNoPenalty, x.base, stake.stakeId)
     })
     it('canot end early', async () => {
-      const x = await loadFixture(utils.endOfBaseFixtureOffset(1))
+      const x = await loadFixture(utils.endOfBaseFixtureOffset(1n))
       const [, signerB] = x.signers
       const stake = await x.hex.stakeLists(x.base, 0)
       await expect(x.maximusStakeManager.stakeEndAs(signerB.address, x.base, stake.stakeId))
@@ -50,50 +51,53 @@ describe('MaximusStakeManager.sol', () => {
       const stake = await x.hex.stakeLists(x.base, 0)
       await x.maximusStakeManager.stakeEndAs(signerA.address, x.base, stake.stakeId)
       const currentPeriod = await x.publicEndStakeable.getCurrentPeriod()
-      const oneEther = hre.ethers.utils.parseEther('1')
+      const oneEther = hre.ethers.parseEther('1')
       await signerC.sendTransaction({
         value: oneEther,
-        to: x.gasReimberser.address,
+        to: x.gasReimberser.getAddress(),
       })
-      await x.hex.connect(signerC).transfer(x.gasReimberser.address, x.stakedAmount)
-      await expect(x.maximusStakeManager.flush(x.gasReimberser.address, signerB.address, currentPeriod.toNumber() + 1, [x.hex.address]))
+      await x.hex20.connect(signerC as unknown as ethers.Signer).transfer(x.gasReimberser.getAddress(), x.stakedAmount)
+      await expect(x.maximusStakeManager.flush(x.gasReimberser.getAddress(), signerB.address, currentPeriod + 1n, [x.hex.getAddress()]))
         .to.revertedWithCustomError(x.maximusStakeManager, 'NotAllowed')
-      await expect(x.maximusStakeManager.flush(x.gasReimberser.address, x.base, currentPeriod.toNumber() + 1, [x.hex.address]))
+      const doFlush = x.maximusStakeManager.flush(x.gasReimberser.getAddress(), x.base, currentPeriod + 1n, [x.hex.getAddress()])
+      await expect(doFlush)
         .not.to.emit(x.maximusStakeManager, 'CollectReward')
-        .not.to.reverted
-      await expect(x.maximusStakeManager.flush(x.gasReimberser.address, x.base, currentPeriod.toNumber(), [hre.ethers.constants.AddressZero]))
+      await expect(doFlush).not.to.reverted
+      await expect(x.maximusStakeManager.flush(x.gasReimberser.getAddress(), x.base, currentPeriod, [hre.ethers.ZeroAddress]))
         .changeEtherBalances(
           [x.gasReimberser, x.maximusStakeManager, signerA],
-          [oneEther.toBigInt() * -1n, oneEther, 0],
+          [oneEther * -1n, oneEther, 0],
         )
-      await expect(x.maximusStakeManager.rewardsTo(x.base, currentPeriod.toNumber() + 1))
+      await expect(x.maximusStakeManager.rewardsTo(x.base, currentPeriod + 1n))
         .eventually.to.equal(signerA.address)
-      await expect(x.maximusStakeManager.flush(x.gasReimberser.address, x.base, currentPeriod.toNumber(), [x.hex.address]))
-        .changeTokenBalances(x.hex,
+      await expect(x.maximusStakeManager.flush(x.gasReimberser.getAddress(), x.base, currentPeriod, [x.hex.getAddress()]))
+        .changeTokenBalances(x.hex20,
           [x.gasReimberser, x.maximusStakeManager, signerA],
           [x.stakedAmount * -1n, x.stakedAmount, 0],
         )
-      const balanceNative = await signerA.provider?.getBalance(x.maximusStakeManager.address)
-      const bal = balanceNative?.toBigInt() || 0n
-      const balanceToken = await x.hex.balanceOf(x.maximusStakeManager.address)
-      const balToken = balanceToken.toBigInt()
-      await expect(x.maximusStakeManager.multicall([
+      const balanceNative = await signerA.provider?.getBalance(x.maximusStakeManager.getAddress())
+      const bal = balanceNative || 0n
+      const balanceToken = await x.hex20.balanceOf(x.maximusStakeManager.getAddress())
+      const balToken = balanceToken
+      const doWithdraw = x.maximusStakeManager.multicall([
         x.existingStakeManager.interface.encodeFunctionData('withdrawTokenTo', [
-          hre.ethers.constants.AddressZero,
+          hre.ethers.ZeroAddress,
           signerA.address,
           0,
         ]),
         x.existingStakeManager.interface.encodeFunctionData('withdrawTokenTo', [
-          x.hex.address,
+          await x.hex.getAddress(),
           signerA.address,
           0,
         ]),
-      ], false))
+      ], false)
+      await expect(doWithdraw)
         .changeEtherBalances(
           [x.maximusStakeManager, signerA],
           [bal * -1n, bal],
         )
-        .changeTokenBalances(x.hex,
+      await expect(doWithdraw)
+        .changeTokenBalances(x.hex20,
           [x.maximusStakeManager, signerA],
           [balToken * -1n, balToken],
         )
@@ -103,39 +107,39 @@ describe('MaximusStakeManager.sol', () => {
     it('sets the externalPerpetualFilter property', async () => {
       const x = await loadFixture(utils.endOfBaseFixture)
       await expect(x.existingStakeManager.externalPerpetualFilter())
-        .eventually.to.equal(hre.ethers.constants.AddressZero)
-      await x.existingStakeManager.setExternalPerpetualFilter(x.externalPerpetualFilter.address)
+        .eventually.to.equal(hre.ethers.ZeroAddress)
+      await x.existingStakeManager.setExternalPerpetualFilter(x.externalPerpetualFilter.getAddress())
       await expect(x.existingStakeManager.externalPerpetualFilter())
-        .eventually.to.equal(x.externalPerpetualFilter.address)
+        .eventually.to.equal(await x.externalPerpetualFilter.getAddress())
     })
     describe('after calling, perpetual whitelist can be updated by said contract', () => {
       it('allows the whitelist to be set which calls endStakeHEX', async () => {
         const x = await loadFixture(utils.deployFixture)
         const [signer1, signer2] = x.signers
-        await x.hex.transfer(x.mockPerpetual.address, x.oneMillion / 10n)
+        await x.hex20.transfer(x.mockPerpetual.getAddress(), x.oneMillion / 10n)
         await x.mockPerpetual.startStakeHEX();
-        await utils.moveForwardDays(2, x) // we can now end the stake
-        const args = [signer1.address, x.mockPerpetual.address, x.nextStakeId] as const
-        await expect(x.existingStakeManager.callStatic.checkPerpetual(x.mockPerpetual.address))
+        await utils.moveForwardDays(2n, x) // we can now end the stake
+        const args = [signer1.address, x.mockPerpetual.getAddress(), x.nextStakeId] as const
+        await expect(x.existingStakeManager.checkPerpetual.staticCall(x.mockPerpetual.getAddress()))
           .eventually.to.equal(false)
         await expect(x.existingStakeManager.stakeEndAs(...args))
           .to.revertedWithCustomError(x.existingStakeManager, 'NotAllowed')
-        await expect(x.maximusStakeManager.connect(signer2).setExternalPerpetualFilter(x.externalPerpetualFilter.address))
+        await expect(x.maximusStakeManager.connect(signer2).setExternalPerpetualFilter(x.externalPerpetualFilter.getAddress()))
           .to.revertedWithCustomError(x.maximusStakeManager, 'NotAllowed')
-        await expect(x.maximusStakeManager.setExternalPerpetualFilter(x.externalPerpetualFilter.address))
+        await expect(x.maximusStakeManager.setExternalPerpetualFilter(x.externalPerpetualFilter.getAddress()))
           .not.to.reverted
-        await expect(x.existingStakeManager.callStatic.checkPerpetual(x.mockPerpetual.address))
+        await expect(x.existingStakeManager.checkPerpetual.staticCall(x.mockPerpetual.getAddress()))
           .eventually.to.equal(false)
         await expect(x.existingStakeManager.stakeEndAs(...args))
           .to.revertedWithCustomError(x.existingStakeManager, 'NotAllowed')
         await x.externalPerpetualFilter.setVerifyPerpetualResult(true)
-        await expect(x.existingStakeManager.callStatic.checkPerpetual(x.mockPerpetual.address))
+        await expect(x.existingStakeManager.checkPerpetual.staticCall(x.mockPerpetual.getAddress()))
           .eventually.to.equal(true)
-        await expect(x.maximusStakeManager.checkEndable(x.mockPerpetual.address))
+        await expect(x.maximusStakeManager.checkEndable(x.mockPerpetual.getAddress()))
           .eventually.to.equal(true)
         await expect(x.existingStakeManager.stakeEndAs(...args))
           .to.emit(x.hex, 'StakeEnd')
-          .withArgs(anyUint, utils.anyUintNoPenalty, x.mockPerpetual.address, x.nextStakeId)
+          .withArgs(anyUint, utils.anyUintNoPenalty, await x.mockPerpetual.getAddress(), x.nextStakeId)
         await x.externalPerpetualFilter.setVerifyPerpetualResult(false)
         await expect(x.existingStakeManager.stakeEndAs(...args))
           .not.to.reverted

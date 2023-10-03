@@ -1,11 +1,9 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.18;
 
-import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import { IUnderlyingStakeable } from "./IUnderlyingStakeable.sol";
 
-interface IHEX is IERC20, IERC20Metadata, IUnderlyingStakeable {
+interface IHEX is IUnderlyingStakeable {
   /*  XfLobbyEnter      (auto-generated event)
 
       uint40            timestamp       -->  data0 [ 39:  0]

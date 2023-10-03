@@ -1,9 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.18;
 
-import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-
-interface IHedron is IERC20 {
+interface IHedron {
   event Claim(uint256 data, address indexed claimant, uint40 indexed stakeId);
   event LoanEnd(
       uint256 data,

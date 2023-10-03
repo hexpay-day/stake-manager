@@ -1,10 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.18;
 
-import { IERC721 } from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
-import { IERC721Enumerable } from "@openzeppelin/contracts/token/ERC721/extensions/IERC721Enumerable.sol";
-
-interface IHEXStakeInstanceManager is IERC721, IERC721Enumerable {
+interface IHEXStakeInstanceManager {
   event HSIStart(
     uint256         timestamp,
     address indexed hsiAddress,
@@ -44,4 +41,8 @@ interface IHEXStakeInstanceManager is IERC721, IERC721Enumerable {
   function hexStakeEnd (uint256 hsiIndex, address hsiAddress) external returns (uint256);
   function hexStakeStart (uint256 amount, uint256 length) external returns (address);
   function hsiToken(uint256 tokenId) external view returns(address);
+  function balanceOf(address account) external view returns(uint256);
+  function tokenOfOwnerByIndex(address account, uint256 index) external view returns(uint256);
+  function isApprovedForAll(address owner, address operator) external view returns(bool);
+  function getApproved(uint256 tokenId) external view returns(address);
 }

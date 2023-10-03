@@ -7,5 +7,13 @@
     "strict": true,
     "skipLibCheck": true,
     "resolveJsonModule": true
-  }
+  },
+  "include": [
+    "./node_modules/@nomicfoundation/hardhat-ethers",
+    "./hardhat.config.ts",
+    "src/**/*.ts",
+    "tasks/**/*.ts",
+    "artifacts/types/**/*.ts",
+    "test/**/*.ts"
+  ]
 }

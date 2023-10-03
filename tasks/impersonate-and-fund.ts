@@ -16,28 +16,28 @@ export const main = async (args: Input, hre: HardhatRuntimeEnvironment) => {
     to,
     token,
   } = args
-  let decimals = 18
+  let decimals = 18n
   let tkn!: ERC20
-  if (token !== hre.ethers.constants.AddressZero) {
-    tkn = await hre.ethers.getContractAt('@openzeppelin/contracts/token/ERC20/ERC20.sol:ERC20', token) as ERC20
+  if (token !== hre.ethers.ZeroAddress) {
+    tkn = await hre.ethers.getContractAt('solmate/src/tokens/ERC20.sol:ERC20', token) as unknown as ERC20
     tkn = tkn.connect(hre.ethers.provider)
     decimals = await tkn.decimals()
   }
   const amountInput = BigInt(args.amount)
-  const decimalInput = hre.ethers.utils.parseUnits(args.decimal, decimals).toBigInt()
+  const decimalInput = hre.ethers.parseUnits(args.decimal, decimals)
   const amount = amountInput || decimalInput
   // if you get a timeout error, try changing this to localhost or 127.0.0.1
-  const provider = new hre.ethers.providers.JsonRpcProvider("http://127.0.0.1:8545/")
-  let account = provider.getSigner(0)
+  const provider = new hre.ethers.JsonRpcProvider("http://127.0.0.1:8545/")
+  let account = await provider.getSigner(0)
   if (impersonate !== 'no') {
-    const impersonationTarget = impersonate || await hexWhale(hre)
+    const impersonationTarget = impersonate || await hexWhale(tkn)
     await provider.send("hardhat_impersonateAccount", [impersonationTarget])
-    account = provider.getSigner(impersonationTarget)
+    account = await provider.getSigner(impersonationTarget)
   }
-  if (token === hre.ethers.constants.AddressZero) {
+  if (token === hre.ethers.ZeroAddress) {
     const balance = await hre.ethers.provider.getBalance(await account.getAddress())
-    console.log('current balance of %o: %o', await account.getAddress(), hre.ethers.utils.formatEther(balance.toBigInt()))
-    console.log('sending %o native to %o', hre.ethers.utils.formatEther(amount), to)
+    console.log('current balance of %o: %o', await account.getAddress(), hre.ethers.formatEther(balance))
+    console.log('sending %o native to %o', hre.ethers.formatEther(amount), to)
     await account.sendTransaction({
       to,
       type: 2,
@@ -47,8 +47,8 @@ export const main = async (args: Input, hre: HardhatRuntimeEnvironment) => {
     tkn = tkn.connect(account)
     const symbol = await tkn.symbol()
     const balance = await tkn.balanceOf(await account.getAddress())
-    const amnt = hre.ethers.utils.formatUnits(amount, decimals)
-    console.log('current balance of %o: %o', await account.getAddress(), hre.ethers.utils.formatUnits(balance.toBigInt(), decimals))
+    const amnt = hre.ethers.formatUnits(amount, decimals)
+    console.log('current balance of %o: %o', await account.getAddress(), hre.ethers.formatUnits(balance, decimals))
     console.log('sending %o %o to %o', amnt, symbol, to)
     await tkn.transfer(to, amount, {
       type: 2,

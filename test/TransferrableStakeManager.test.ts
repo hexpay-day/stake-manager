@@ -4,6 +4,7 @@ import { expect } from "chai"
 import * as hre from 'hardhat'
 import { anyUint } from "@nomicfoundation/hardhat-chai-matchers/withArgs"
 import { EncodableSettings } from "../artifacts/types"
+import { fromStruct } from '../src/utils'
 
 describe('TransferableStakeManager.sol', () => {
   let x!: Awaited<ReturnType<typeof utils.deployFixture>>
@@ -16,9 +17,9 @@ describe('TransferableStakeManager.sol', () => {
       const [signer1] = x.signers
       const settings = await x.stakeManager.defaultSettings()
       const updatedSettings = {
-        ...settings,
+        ...fromStruct(settings),
         consentAbilities: {
-          ...settings.consentAbilities,
+          ...fromStruct(settings.consentAbilities),
           canStakeEnd: true,
           canEarlyStakeEnd: true,
           canMintHedron: true,
@@ -32,7 +33,7 @@ describe('TransferableStakeManager.sol', () => {
       const encodedSettings = await x.stakeManager.encodeSettings(updatedSettings)
       await expect(x.stakeManager.stakeStartFromBalanceFor(signer1.address, x.stakedAmount, days, encodedSettings))
         .to.emit(x.hex, 'StakeStart')
-      const removedEncoded = await x.stakeManager.removeTransferrabilityFromEncodedSettings(encodedSettings.toBigInt())
+      const removedEncoded = await x.stakeManager.removeTransferrabilityFromEncodedSettings(encodedSettings)
       await expect(x.stakeManager.removeTransferrability(x.nextStakeId))
         .to.emit(x.stakeManager, 'UpdateSettings')
         .withArgs(x.nextStakeId, removedEncoded)
@@ -46,14 +47,14 @@ describe('TransferableStakeManager.sol', () => {
   })
   describe('stakeTransfer', () => {
     it('allows for a transfer', async () => {
-      const days = 3
+      const days = 3n
       const [signer1, signer2, signer3] = x.signers
       const settings = await x.stakeManager.defaultSettings()
       const decodedSettings: EncodableSettings.SettingsStructOutput = {
-        ...settings,
-        newStakeDaysMethod: hre.ethers.BigNumber.from(0),
+        ...fromStruct(settings),
+        newStakeDaysMethod: 0n,
         consentAbilities: {
-          ...settings.consentAbilities,
+          ...fromStruct(settings.consentAbilities),
           stakeIsTransferable: true,
         },
       }
@@ -67,18 +68,18 @@ describe('TransferableStakeManager.sol', () => {
         .eventually.to.equal(true)
       await expect(x.stakeManager.connect(signer2).removeTransferrability(x.nextStakeId))
         .to.emit(x.stakeManager, 'UpdateSettings')
-        .withArgs(x.nextStakeId, await x.stakeManager.removeTransferrabilityFromEncodedSettings(encodedSettings.toBigInt()))
+        .withArgs(x.nextStakeId, await x.stakeManager.removeTransferrabilityFromEncodedSettings(encodedSettings))
       await expect(x.stakeManager.connect(signer2).stakeTransfer(x.nextStakeId, signer1.address))
         .to.revertedWithCustomError(x.stakeManager, 'NotAllowed')
-      await utils.moveForwardDays(days + 1, x)
-      await expect(x.stakeManager.withdrawableBalanceOf(x.hex.address, signer2.address))
+      await utils.moveForwardDays(days + 1n, x)
+      await expect(x.stakeManager.withdrawableBalanceOf(x.hex.getAddress(), signer2.address))
         .eventually.to.equal(0)
       await expect(x.stakeManager.stakeEndByConsent(x.nextStakeId))
         .to.emit(x.hex, 'StakeEnd')
-        .withArgs(anyUint, utils.anyUintNoPenalty, x.stakeManager.address, x.nextStakeId)
-        .to.emit(x.hex, 'Transfer')
-        .withArgs(hre.ethers.constants.AddressZero, x.stakeManager.address, anyUint)
-      await expect(x.stakeManager.withdrawableBalanceOf(x.hex.address, signer2.address))
+        .withArgs(anyUint, utils.anyUintNoPenalty, await x.stakeManager.getAddress(), x.nextStakeId)
+        .to.emit(x.hex20, 'Transfer')
+        .withArgs(hre.ethers.ZeroAddress, await x.stakeManager.getAddress(), anyUint)
+      await expect(x.stakeManager.withdrawableBalanceOf(x.hex.getAddress(), signer2.address))
         .eventually.to.be.greaterThan(0)
     })
     it('brings tips along', async () => {
@@ -86,10 +87,10 @@ describe('TransferableStakeManager.sol', () => {
       const [signer1, signer2, signer3] = x.signers
       const settings = await x.stakeManager.defaultSettings()
       const decodedSettings: EncodableSettings.SettingsStructOutput = {
-        ...settings,
-        newStakeDaysMethod: hre.ethers.BigNumber.from(0),
+        ...fromStruct(settings),
+        newStakeDaysMethod: 0n,
         consentAbilities: {
-          ...settings.consentAbilities,
+          ...fromStruct(settings.consentAbilities),
           stakeIsTransferable: true,
         },
       }
@@ -98,7 +99,7 @@ describe('TransferableStakeManager.sol', () => {
         .to.emit(x.hex, 'StakeStart')
       await expect(x.stakeManager.depositAndAddTipToStake(
         true,
-        hre.ethers.constants.AddressZero,
+        hre.ethers.ZeroAddress,
         x.nextStakeId,
         x.stakedAmount / 100n,
         0,
@@ -111,7 +112,7 @@ describe('TransferableStakeManager.sol', () => {
         .to.emit(x.stakeManager, 'TransferStake')
       await expect(x.stakeManager.connect(signer2).removeAllTips(x.nextStakeId))
         .to.emit(x.stakeManager, 'RemoveTip')
-      await expect(x.stakeManager.withdrawableBalanceOf(hre.ethers.constants.AddressZero, signer2.address))
+      await expect(x.stakeManager.withdrawableBalanceOf(hre.ethers.ZeroAddress, signer2.address))
         .eventually.to.equal(x.stakedAmount / 100n)
     })
   })
@@ -121,14 +122,14 @@ describe('TransferableStakeManager.sol', () => {
     beforeEach(async () => {
       const settings = await x.stakeManager.defaultSettings()
       const updatedSettings: EncodableSettings.SettingsStruct = {
-        ...settings,
+        ...fromStruct(settings),
         consentAbilities: {
-          ...settings.consentAbilities,
+          ...fromStruct(settings.consentAbilities),
           stakeIsTransferable: true,
         },
       }
       const encodedsettings = await x.stakeManager.encodeSettings(updatedSettings)
-      transferableSettings = encodedsettings.toBigInt()
+      transferableSettings = encodedsettings
       const [signer1] = x.signers
       stakeStartArgs = [signer1.address, x.oneMillion / 10n, 1, transferableSettings]
     })
@@ -144,9 +145,9 @@ describe('TransferableStakeManager.sol', () => {
       const [signer1] = x.signers
       await expect(x.stakeManager.stakeStartFromBalanceFor(...stakeStartArgs))
         .to.emit(x.hex, 'StakeStart')
-      await expect(x.stakeManager.stakeTransfer(x.nextStakeId, x.transferReceiver.address))
+      await expect(x.stakeManager.stakeTransfer(x.nextStakeId, x.transferReceiver.getAddress()))
         .to.emit(x.stakeManager, 'TransferStake')
-        .withArgs(signer1.address, x.transferReceiver.address, x.nextStakeId)
+        .withArgs(signer1.address, await x.transferReceiver.getAddress(), x.nextStakeId)
         .to.emit(x.transferReceiver, 'StakeReceived')
         .withArgs(signer1.address, x.nextStakeId)
     })
@@ -155,21 +156,21 @@ describe('TransferableStakeManager.sol', () => {
         await x.transferReceiver.setReceiveAction(1)
         await expect(x.stakeManager.stakeStartFromBalanceFor(...stakeStartArgs))
           .to.emit(x.hex, 'StakeStart')
-        await expect(x.stakeManager.stakeTransfer(x.nextStakeId, x.transferReceiver.address))
+        await expect(x.stakeManager.stakeTransfer(x.nextStakeId, x.transferReceiver.getAddress()))
           .to.revertedWithoutReason()
       })
       it('can bubble up string errors', async () => {
         await x.transferReceiver.setReceiveAction(2)
         await expect(x.stakeManager.stakeStartFromBalanceFor(...stakeStartArgs))
           .to.emit(x.hex, 'StakeStart')
-        await expect(x.stakeManager.stakeTransfer(x.nextStakeId, x.transferReceiver.address))
+        await expect(x.stakeManager.stakeTransfer(x.nextStakeId, x.transferReceiver.getAddress()))
           .to.revertedWith('Failed to receive')
       })
       it('can bubble up custom errors', async () => {
         await x.transferReceiver.setReceiveAction(3)
         await expect(x.stakeManager.stakeStartFromBalanceFor(...stakeStartArgs))
           .to.emit(x.hex, 'StakeStart')
-        await expect(x.stakeManager.stakeTransfer(x.nextStakeId, x.transferReceiver.address))
+        await expect(x.stakeManager.stakeTransfer(x.nextStakeId, x.transferReceiver.getAddress()))
           .to.revertedWithCustomError(x.transferReceiver, 'FailedToReceive')
           .withArgs(x.nextStakeId)
       })
@@ -177,7 +178,7 @@ describe('TransferableStakeManager.sol', () => {
         await x.transferReceiver.setReceiveAction(4)
         await expect(x.stakeManager.stakeStartFromBalanceFor(...stakeStartArgs))
           .to.emit(x.hex, 'StakeStart')
-        await expect(x.stakeManager.stakeTransfer(x.nextStakeId, x.transferReceiver.address))
+        await expect(x.stakeManager.stakeTransfer(x.nextStakeId, x.transferReceiver.getAddress()))
           .to.revertedWithPanic(50) // array index out of bounds
       })
     })
