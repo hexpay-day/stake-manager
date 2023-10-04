@@ -64,6 +64,10 @@ contract Utils {
    */
   address public constant HSIM = 0x8BD3d1472A656e312E94fB1BbdD599B8C51D18e3;
   /**
+   * @notice the address to mint communis tokens
+   */
+  address public constant COMM = 0x5A9780Bfe63f3ec57f01b087cD65BD656C9034A8;
+  /**
    * check if the number, in binary form, has a 1 at the provided index
    * @param settings the settings number that holds up to 256 flags as 1/0
    * @param index the index to check for a 1

@@ -119,6 +119,31 @@ contract StakeEnder is Magnitude, SingletonMintManager {
           });
         }
       }
+      if (_isOneAtIndex({
+        settings: settings,
+        index: 8
+      })) {
+        if (stake.stakedDays > 364) {
+          if (stake.stakeShares > 9_999) {
+            // check again (pure) because we have zero stack to work with
+            if (!_isEarlyEnding({
+              lockedDay: stake.lockedDay,
+              stakedDays: stake.stakedDays,
+              targetDay: count >> INDEX_RIGHT_TODAY
+            })) {
+              if ((count >> INDEX_RIGHT_TODAY) < (stake.lockedDay + stake.stakedDays + 38)) {
+                _communisStakeEndBonus({
+                  settings: settings,
+                  index: idx,
+                  staker: staker,
+                  referrer: tipTo,
+                  stake: stake
+                });
+              }
+            }
+          }
+        }
+      }
       // if this were to ever overflow then it will fail
       // in the subsequent stake end method since
       // hex can only hold 2^40-1 stakes
