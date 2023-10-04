@@ -30,7 +30,7 @@ contract Utils {
   int256 constant internal MIN_INT_16 = int256(type(int16).min);
   /** @notice the max value that can fit in a uint8 slot (255) */
   uint256 internal constant MAX_UINT_8 = uint256(type(uint8).max);
-  uint256 internal constant MAX_UINT_7 = uint256(type(uint8).max) / TWO;
+  uint256 internal constant MAX_UINT_7 = MAX_UINT_8 / TWO;
   /** @notice a uint256 as 0 in a constant */
   uint256 internal constant ZERO = uint256(0);
   /** @notice a uint256 as 1 in a constant */
