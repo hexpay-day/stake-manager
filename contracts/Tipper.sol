@@ -10,7 +10,7 @@ abstract contract Tipper is Bank, UnderlyingStakeable, CurrencyList, EncodableSe
   // 2^56 is a lot harder to grief than 2^32
   uint256 internal constant INDEX_EXTERNAL_TIP_CURRENCY = 200;
   uint256 internal constant INDEX_EXTERNAL_TIP_CURRENCY_ONLY = INDEX_EXTERNAL_TIP_CURRENCY + ONE;
-  uint256 internal constant INDEX_EXTERNAL_TIP_LIMIT = SEVENTY_TWO; // 128 bits long
+  uint256 internal constant INDEX_EXTERNAL_TIP_LIMIT = 72; // 128 bits long
   constructor()
     Bank()
     UnderlyingStakeable()
