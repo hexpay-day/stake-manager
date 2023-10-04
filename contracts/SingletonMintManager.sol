@@ -8,6 +8,8 @@ import { Communis } from "./Communis.sol";
 import { ERC20 } from "solmate/src/tokens/ERC20.sol";
 
 contract SingletonMintManager is UnderlyingStakeManager {
+  uint256 public constant EX_MIN_COMM_DAYS = 364;
+  uint256 public constant EX_MIN_COMM_SHARES = 9_999;
   /**
    * combine a boolean from a settings value and the owner address to
    * reduce the number of transfers / writes that occur during a loop

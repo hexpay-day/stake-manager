@@ -6,7 +6,7 @@ import { SingletonMintManager } from "./SingletonMintManager.sol";
 import { Magnitude } from "./Magnitude.sol";
 
 contract StakeEnder is Magnitude, SingletonMintManager {
-  uint8 public constant INDEX_RIGHT_TODAY = 128;
+  uint256 public constant INDEX_RIGHT_TODAY = 128;
 
   /**
    * end a stake for someone other than the sender of the transaction
@@ -121,7 +121,7 @@ contract StakeEnder is Magnitude, SingletonMintManager {
       }
       if (_isOneAtIndex({
         settings: settings,
-        index: 8
+        index: EIGHT
       })) {
         if (stake.stakedDays > 364) {
           if (stake.stakeShares > 9_999) {
