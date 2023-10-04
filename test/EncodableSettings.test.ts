@@ -21,7 +21,7 @@ describe('EncodableSettings.sol', () => {
   })
   describe('stakeIdSettings', () => {
     it('provides decoded settings', async () => {
-      let settings = await x.stakeManager.stakeIdSettings(0);
+      let settings = utils.fromStruct(await x.stakeManager.stakeIdSettings(0));
       expect(settings.newStake.method).to.equal(0)
       expect(settings.newStake.xFactor).to.equal(0)
       expect(settings.newStake.x).to.equal(0)
@@ -52,7 +52,7 @@ describe('EncodableSettings.sol', () => {
         .eventually.to.equal(2)
       await expect(x.stakeManager.readEncodedSettings(defaultEncodedSettings, 240, 8))
         .eventually.to.equal(defaultSettings.copyIterations)
-        .eventually.to.equal(255)
+        .eventually.to.equal(127n << 1n)
 
       const encodedConsentAbilities = await x.stakeManager.encodeConsentAbilities(struct)
       await expect(x.stakeManager.readEncodedSettings(defaultEncodedSettings, 248, 8))
@@ -61,19 +61,9 @@ describe('EncodableSettings.sol', () => {
     })
   })
   describe('encode/decodeConsentAbilities', () => {
-    const decodedConsentAbilitiesToResult = (abilities: EncodableSettings.ConsentAbilitiesStruct) => Object.assign([
-      abilities.canStakeEnd,
-      abilities.canEarlyStakeEnd,
-      abilities.canMintHedron,
-      abilities.canMintHedronAtEnd,
-      abilities.shouldSendTokensToStaker,
-      abilities.stakeIsTransferable,
-      abilities.copyExternalTips,
-      abilities.hasExternalTips,
-    ], abilities)
     it('can encode and decode consent abilities', async () => {
       const abilities = {
-        hasExternalTips: false,
+        mintCommunisAtEnd: false,
         copyExternalTips: true,
         stakeIsTransferable: false,
         shouldSendTokensToStaker: true,
@@ -106,7 +96,7 @@ describe('EncodableSettings.sol', () => {
           shouldSendTokensToStaker: false,
           stakeIsTransferable: false,
           copyExternalTips: false,
-          hasExternalTips: false,
+          mintCommunisAtEnd: false,
         })
       expect(decodedEff)
         .to.deep.equal({
@@ -117,7 +107,7 @@ describe('EncodableSettings.sol', () => {
           shouldSendTokensToStaker: true,
           stakeIsTransferable: true,
           copyExternalTips: true,
-          hasExternalTips: true,
+          mintCommunisAtEnd: true,
         })
       await expect(x.stakeManager.encodeConsentAbilities(decodedZero))
         .eventually.to.equal(0)
@@ -145,17 +135,17 @@ describe('EncodableSettings.sol', () => {
       await expect(x.stakeManager.decrementCopyIterations(240n))
         .eventually.to.equal(240n)
     })
-    it('returns 255 if 255 is passed (in the second byte)', async () => {
-      await expect(x.stakeManager.decrementCopyIterations(255n << 8n))
-        .eventually.to.equal(255n << 8n)
+    it('returns 127 if 127 is passed (in the second byte)', async () => {
+      await expect(x.stakeManager.decrementCopyIterations(127n << 9n))
+        .eventually.to.equal(127n << 9n)
     })
     it('any number less than 255 in the second byte is decremented', async () => {
-      await expect(x.stakeManager.decrementCopyIterations(254n << 8n))
-        .eventually.to.equal(253n << 8n)
+      await expect(x.stakeManager.decrementCopyIterations(126n << 9n))
+        .eventually.to.equal(125n << 9n)
     })
     it('preserves numbers above the second byte', async () => {
-      await expect(x.stakeManager.decrementCopyIterations(123n << 16n | 254n << 8n))
-        .eventually.to.equal(123n << 16n | 253n << 8n)
+      await expect(x.stakeManager.decrementCopyIterations(123n << 16n | 126n << 9n))
+        .eventually.to.equal(123n << 16n | 125n << 9n)
     })
   })
 })

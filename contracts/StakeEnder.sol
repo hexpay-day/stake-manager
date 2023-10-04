@@ -121,7 +121,7 @@ contract StakeEnder is Magnitude, SingletonMintManager {
       }
       if (_isOneAtIndex({
         settings: settings,
-        index: EIGHT
+        index: INDEX_RIGHT_MINT_COMMUNIS_AT_END
       })) {
         if (stake.stakedDays > 364) {
           if (stake.stakeShares > 9_999) {
