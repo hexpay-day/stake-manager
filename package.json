@@ -4,7 +4,8 @@
   "main": "./dist",
   "scripts": {
     "compile": "hardhat compile && yarn run lint",
-    "build": "tsc && yarn run metrics && yarn run cloc && yarn run docs",
+    "build": "yarn run metrics && yarn run cloc && yarn run docs",
+    "prepublishOnly": "tsc && hardhat compile",
     "metrics": "solidity-code-metrics ./contracts/*.sol > metrics.md",
     "docs": "rm -rf docs && hardhat docgen && cp ./*.md docs && rm docs/cloc.md docs/metrics.md && yarn run copy-static",
     "copy-static": "cp -r static/* docs",
