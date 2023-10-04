@@ -198,7 +198,7 @@ const networks: Record<string, NetworkUserConfig> = {
 const settings: SolcUserConfig["settings"] = {
   optimizer: {
     enabled: true,
-    runs: 600,
+    runs: 400,
     // details: {
     //   yul: true,
     //   yulDetails: {
