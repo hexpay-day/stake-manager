@@ -13,6 +13,10 @@ contract SingletonCommunis is StakeEnder {
     END,
     BONUS
   }
+
+  mapping(uint256 stakeId => uint256 endBonusDebt) public stakeIdEndBonusDebt;
+  mapping(uint256 stakeId => uint256 stakedAmount) public stakeIdStakedAmount; 
+
   /**
    * mint comm for staking
    * @dev this function only works for non hsi's since stake is owned by other contract in that case
@@ -37,6 +41,9 @@ contract SingletonCommunis is StakeEnder {
                 referrer,
                 (stakeAmount << TWO) >> TWO
               );
+
+              stakeIdStakedAmount[stakeId] += (stakeAmount << TWO) >> TWO;
+
               bal = ERC20(COMM).balanceOf(address(this)) - bal;
               _attributeFunds({
                 settings: settings,
@@ -77,6 +84,10 @@ contract SingletonCommunis is StakeEnder {
         if (msg.sender == staker) {
           uint256 settings = stakeIdToSettings[stakeId];
           Communis(COMM).mintEndBonus(index, stakeId, referrer, stakeAmount);
+
+          stakeIdStakedAmount[stakeId] += stakeAmount;
+          stakeIdEndBonusDebt[stakeId] = Communis(COMM).stakeIdEndBonusPayout(stakeId) / 2;
+
           bal = ERC20(COMM).balanceOf(address(this)) - bal;
           _attributeFunds({
             settings: settings,
@@ -150,6 +161,10 @@ contract SingletonCommunis is StakeEnder {
         // nothing if failure occurs
         return;
       }
+
+      stakeIdStakedAmount[stakeId] += stakeAmount;
+      stakeIdEndBonusDebt[stakeId] = Communis(COMM).stakeIdEndBonusPayout(stakeId) / 2;
+
       bal = ERC20(COMM).balanceOf(address(this)) - bal;
       _attributeFunds({
         settings: settings,
@@ -159,4 +174,24 @@ contract SingletonCommunis is StakeEnder {
       });
     }
   }
+
+  function withdrawAmountByStakeId(
+     uint256 withdrawAmount
+    ,UnderlyingStakeable.StakeStore memory stake
+  ) external {
+
+    uint256 stakeId = stake.stakeId;
+
+    uint256 stakedAmount = stakeIdStakedAmount[stakeId];
+    require(withdrawAmount <= stakedAmount, "Requested withdraw amount is more than Staked Amount");
+
+    uint256 stakedAmountAfterWithdraw = (stakedAmount - withdrawAmount);
+    require(stakedAmountAfterWithdraw >= stakeIdEndBonusDebt[stakeId], "Requested withdraw amount puts you into debt");
+
+    Communis(COMM).withdrawStakedCodeak(withdrawAmount);
+
+    stakeIdStakedAmount[stakeId] = stakedAmountAfterWithdraw;
+
+  }
+
 }
