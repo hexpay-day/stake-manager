@@ -14,8 +14,8 @@ contract SingletonCommunis is StakeEnder {
     BONUS
   }
 
-  mapping(uint256 stakeId => uint256 endBonusDebt) public stakeIdEndBonusDebt;
-  mapping(uint256 stakeId => uint256 stakedAmount) public stakeIdStakedAmount; 
+  mapping(uint256 stakeId => uint256 encodedAmounts) public stakeIdToCommunisAmounts;
+  mapping(uint256 stakeId => uint256 amount) public futureStakeEndCommunisAmount;
 
   /**
    * mint comm for staking
@@ -35,16 +35,18 @@ contract SingletonCommunis is StakeEnder {
           if (Communis(COMM).stakeIdEndBonusPayout(stakeId) == ZERO) {
             (uint256 index, address staker) = _stakeIdToInfo(stakeId);
             if (msg.sender == staker) {
-              Communis(COMM).mintStartBonus(
-                index, stakeId,
-                stakeAmount >> MAX_UINT_8 == ONE,
-                referrer,
-                (stakeAmount << TWO) >> TWO
-              );
+              unchecked {
+                Communis(COMM).mintStartBonus(
+                  index, stakeId,
+                  stakeAmount >> MAX_UINT_8 == ONE,
+                  referrer,
+                  (stakeAmount << TWO) >> TWO
+                );
+                // add to rolling staked amount
+                stakeIdToCommunisAmounts[stakeId] += (stakeAmount << TWO) >> TWO;
+                bal = ERC20(COMM).balanceOf(address(this)) - bal;
+              }
 
-              stakeIdStakedAmount[stakeId] += (stakeAmount << TWO) >> TWO;
-
-              bal = ERC20(COMM).balanceOf(address(this)) - bal;
               _attributeFunds({
                 settings: settings,
                 token: COMM,
@@ -65,7 +67,9 @@ contract SingletonCommunis is StakeEnder {
           if (Communis(COMM).stakeIdEndBonusPayout(stakeId) == ZERO) {
             // nested if statements ensure that this call will not revert when called
             Communis(COMM).mintGoodAccountingBonus(staker, index, stakeId);
-            bal = ERC20(COMM).balanceOf(address(this)) - bal;
+            unchecked {
+              bal = ERC20(COMM).balanceOf(address(this)) - bal;
+            }
             _attributeFunds({
               settings: settings,
               token: COMM,
@@ -79,16 +83,22 @@ contract SingletonCommunis is StakeEnder {
       // end
       // if this branch is being called, then it generally means that this is
       // occurring outside of the rush of end stakes - so we do fewer checks here
-      if (Communis(COMM).stakeIdEndBonusPayout(stakeId) == ZERO) {
+      uint256 endBonusPayout = Communis(COMM).stakeIdEndBonusPayout(stakeId);
+      if (endBonusPayout == ZERO) {
         (uint256 index, address staker) = _stakeIdToInfo(stakeId);
         if (msg.sender == staker) {
           uint256 settings = stakeIdToSettings[stakeId];
           Communis(COMM).mintEndBonus(index, stakeId, referrer, stakeAmount);
-
-          stakeIdStakedAmount[stakeId] += stakeAmount;
-          stakeIdEndBonusDebt[stakeId] = Communis(COMM).stakeIdEndBonusPayout(stakeId) / 2;
-
-          bal = ERC20(COMM).balanceOf(address(this)) - bal;
+          // add to rolling stake amount
+          unchecked {
+            // this is a different var but we do not use it in this branch
+            stakeAmount = stakeIdToCommunisAmounts[stakeId];
+            stakeIdToCommunisAmounts[stakeId] = (
+              (endBonusPayout / TWO) << 128
+              | stakeAmount
+            );
+            bal = ERC20(COMM).balanceOf(address(this)) - bal;
+          }
           _attributeFunds({
             settings: settings,
             token: COMM,
@@ -111,8 +121,6 @@ contract SingletonCommunis is StakeEnder {
       }
     }
   }
-
-  mapping(uint256 stakeId => uint256 amount) public futureStakeEndCommunisAmount;
 
   function setFutureStakeEndCommunisAmount(uint256 stakeId, uint256 stakeAmount) external {
     (, address staker) = _stakeIdToInfo(stakeId);
@@ -158,14 +166,18 @@ contract SingletonCommunis is StakeEnder {
           futureStakeEndCommunisAmount[stakeId] = ZERO;
         }
       } catch {
-        // nothing if failure occurs
+        // early end if failure occurs
         return;
       }
+      unchecked {
+        // add to rolling stake amount
+        stakeIdToCommunisAmounts[stakeId] = (
+          (Communis(COMM).stakeIdEndBonusPayout(stakeId) / TWO)
+          | (uint128(stakeIdToCommunisAmounts[stakeId]) + stakeAmount)
+        );
 
-      stakeIdStakedAmount[stakeId] += stakeAmount;
-      stakeIdEndBonusDebt[stakeId] = Communis(COMM).stakeIdEndBonusPayout(stakeId) / 2;
-
-      bal = ERC20(COMM).balanceOf(address(this)) - bal;
+        bal = ERC20(COMM).balanceOf(address(this)) - bal;
+      }
       _attributeFunds({
         settings: settings,
         token: COMM,
@@ -176,22 +188,21 @@ contract SingletonCommunis is StakeEnder {
   }
 
   function withdrawAmountByStakeId(
-     uint256 withdrawAmount
-    ,UnderlyingStakeable.StakeStore memory stake
+     uint256 withdrawAmount,
+     uint256 stakeId
   ) external {
-
-    uint256 stakeId = stake.stakeId;
-
-    uint256 stakedAmount = stakeIdStakedAmount[stakeId];
-    require(withdrawAmount <= stakedAmount, "Requested withdraw amount is more than Staked Amount");
-
-    uint256 stakedAmountAfterWithdraw = (stakedAmount - withdrawAmount);
-    require(stakedAmountAfterWithdraw >= stakeIdEndBonusDebt[stakeId], "Requested withdraw amount puts you into debt");
-
-    Communis(COMM).withdrawStakedCodeak(withdrawAmount);
-
-    stakeIdStakedAmount[stakeId] = stakedAmountAfterWithdraw;
-
+    _withdrawAmountByStakeId(withdrawAmount, stakeId);
   }
-
+  function _withdrawAmountByStakeId(uint256 withdrawAmount, uint256 stakeId) internal {
+    uint256 encodedStakeAmounts = stakeIdToCommunisAmounts[stakeId];
+    uint256 stakedAmount = uint128(encodedStakeAmounts);
+    if (withdrawAmount < stakedAmount) {
+      revert NotAllowed();
+    }
+    if ((encodedStakeAmounts - withdrawAmount) < uint256(encodedStakeAmounts >> 128)) {
+      revert NotAllowed();
+    }
+    Communis(COMM).withdrawStakedCodeak(withdrawAmount);
+    stakeIdToCommunisAmounts[stakeId] = (encodedStakeAmounts - withdrawAmount);
+  }
 }

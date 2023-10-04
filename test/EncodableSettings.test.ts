@@ -50,9 +50,9 @@ describe('EncodableSettings.sol', () => {
       await expect(x.stakeManager.readEncodedSettings(defaultEncodedSettings, 216, 8))
         .eventually.to.equal(defaultSettings.newStakeDaysMethod)
         .eventually.to.equal(2)
-      await expect(x.stakeManager.readEncodedSettings(defaultEncodedSettings, 240, 8))
+      await expect(x.stakeManager.readEncodedSettings(defaultEncodedSettings, 240, 7))
         .eventually.to.equal(defaultSettings.copyIterations)
-        .eventually.to.equal(127n << 1n)
+        .eventually.to.equal(127n)
 
       const encodedConsentAbilities = await x.stakeManager.encodeConsentAbilities(struct)
       await expect(x.stakeManager.readEncodedSettings(defaultEncodedSettings, 248, 8))
