@@ -15,8 +15,9 @@ abstract contract EncodableSettings is StakeInfo {
   uint256 internal constant INDEX_LEFT_NEW_STAKE = SLOTS - INDEX_RIGHT_NEW_STAKE;
   uint256 internal constant INDEX_RIGHT_NEW_STAKE_DAYS_METHOD = THIRTY_TWO;
   uint256 internal constant INDEX_RIGHT_NEW_STAKE_DAYS_MAGNITUDE = 16;
-  uint256 internal constant INDEX_RIGHT_COPY_ITERATIONS = EIGHT;
-  uint256 internal constant INDEX_RIGHT_HAS_EXTERNAL_TIPS = 7;
+  uint256 internal constant INDEX_RIGHT_COPY_ITERATIONS = 9;
+  uint256 internal constant INDEX_RIGHT_HAS_EXTERNAL_TIPS = EIGHT;
+  uint256 internal constant INDEX_RIGHT_MINT_COMMUNIS_AT_END = 7;
   uint256 internal constant INDEX_RIGHT_COPY_EXTERNAL_TIPS = 6;
   uint256 internal constant INDEX_RIGHT_STAKE_IS_TRANSFERABLE = 5;
   uint256 internal constant INDEX_LEFT_STAKE_IS_TRANSFERABLE = SLOTS - INDEX_RIGHT_STAKE_IS_TRANSFERABLE;
@@ -38,7 +39,7 @@ abstract contract EncodableSettings is StakeInfo {
     bool shouldSendTokensToStaker;
     bool stakeIsTransferable;
     bool copyExternalTips;
-    bool hasExternalTips;
+    bool mintCommunisAtEnd;
   }
   /**
    * @notice this struct holds information that can be encoded into a uint256
@@ -52,7 +53,9 @@ abstract contract EncodableSettings is StakeInfo {
     // useful to use methods 6+7 for stake days
     uint256 newStakeDaysMethod;
     uint256 newStakeDaysMagnitude;
-    uint256 copyIterations; // 0 for do not restart, 1-254 as countdown, 255 as restart indefinitely
+    uint256 copyIterations; // 0 for do not restart, 1-126 as countdown, 127 as restart indefinitely
+    // contract controlled
+    bool hasExternalTips;
     /**
      * 00000001(0): can stake end
      * 00000010(1): can early stake end
@@ -61,7 +64,7 @@ abstract contract EncodableSettings is StakeInfo {
      * 00010000(4): should send tokens to staker
      * 00100000(5): stake is transferable
      * 01000000(6): copy external tips to next stake
-     * 10000000(7): has external tips (contract controlled)
+     * 10000000(7): mint comm tokens just before end
      */
     ConsentAbilities consentAbilities;
   }
@@ -74,7 +77,7 @@ abstract contract EncodableSettings is StakeInfo {
    */
   event UpdateSettings(uint256 indexed stakeId, uint256 settings);
   uint256 private constant DEFAULT_ENCODED_SETTINGS
-    = uint256(0x000000000000000000000000000000000000000000000000000002020000ff01);
+    = uint256(0x000000000000000000000000000000000000000000000000000002020000fe01);
   /**
    * @return the default encoded settings used by end stakers to tip and end stakes
    */
@@ -119,7 +122,7 @@ abstract contract EncodableSettings is StakeInfo {
   function _decodeConsentAbilities(uint256 abilities) internal pure returns(ConsentAbilities memory) {
     unchecked {
       return ConsentAbilities({
-        hasExternalTips: (abilities >> INDEX_RIGHT_HAS_EXTERNAL_TIPS) % TWO == ONE,
+        mintCommunisAtEnd: (abilities >> INDEX_RIGHT_MINT_COMMUNIS_AT_END) % TWO == ONE,
         copyExternalTips: (abilities >> INDEX_RIGHT_COPY_EXTERNAL_TIPS) % TWO == ONE,
         stakeIsTransferable: (abilities >> INDEX_RIGHT_STAKE_IS_TRANSFERABLE) % TWO == ONE,
         shouldSendTokensToStaker: (abilities >> INDEX_RIGHT_SHOULD_SEND_TOKENS_TO_STAKER) % TWO == ONE,
@@ -187,7 +190,7 @@ abstract contract EncodableSettings is StakeInfo {
         settings: (
           (settings >> INDEX_RIGHT_COPY_ITERATIONS << INDEX_RIGHT_COPY_ITERATIONS)
           | uint8(stakeIdToSettings[stakeId] >> INDEX_RIGHT_HAS_EXTERNAL_TIPS << INDEX_RIGHT_HAS_EXTERNAL_TIPS)
-          | uint256(uint8(settings << ONE) >> ONE)
+          | uint256(uint8(settings)) // consent abilities
         )
       });
     }
@@ -267,6 +270,7 @@ abstract contract EncodableSettings is StakeInfo {
         | uint256(uint8(settings.newStakeDaysMethod)) << INDEX_RIGHT_NEW_STAKE_DAYS_METHOD
         | uint256(uint16(settings.newStakeDaysMagnitude)) << INDEX_RIGHT_NEW_STAKE_DAYS_MAGNITUDE
         | uint256(uint8(settings.copyIterations)) << INDEX_RIGHT_COPY_ITERATIONS
+        | (settings.hasExternalTips ? ONE << INDEX_RIGHT_HAS_EXTERNAL_TIPS : ZERO)
         | _encodeConsentAbilities(settings.consentAbilities);
     }
   }
@@ -293,6 +297,7 @@ abstract contract EncodableSettings is StakeInfo {
         uint8( encoded >> INDEX_RIGHT_NEW_STAKE_DAYS_METHOD),
         uint16(encoded >> INDEX_RIGHT_NEW_STAKE_DAYS_MAGNITUDE),
         uint8( encoded >> INDEX_RIGHT_COPY_ITERATIONS),
+        (encoded >> INDEX_RIGHT_HAS_EXTERNAL_TIPS) % TWO == ONE,
         _decodeConsentAbilities({
           abilities: uint8(encoded)
         })
@@ -317,7 +322,7 @@ abstract contract EncodableSettings is StakeInfo {
   function _encodeConsentAbilities(ConsentAbilities memory consentAbilities) internal pure returns(uint256) {
     unchecked {
       return (
-        ((consentAbilities.hasExternalTips ? ONE : ZERO) << INDEX_RIGHT_HAS_EXTERNAL_TIPS )
+        ((consentAbilities.mintCommunisAtEnd ? ONE : ZERO) << INDEX_RIGHT_MINT_COMMUNIS_AT_END)
         | ((consentAbilities.copyExternalTips ? ONE : ZERO) << INDEX_RIGHT_COPY_EXTERNAL_TIPS)
         | ((consentAbilities.stakeIsTransferable ? ONE : ZERO) << INDEX_RIGHT_STAKE_IS_TRANSFERABLE)
         | ((consentAbilities.shouldSendTokensToStaker ? ONE : ZERO) << INDEX_RIGHT_SHOULD_SEND_TOKENS_TO_STAKER)
@@ -349,13 +354,14 @@ abstract contract EncodableSettings is StakeInfo {
       if (copyIterations == ZERO) {
         return uint8(settings);
       }
-      if (copyIterations == MAX_UINT_8) {
+      // allow settings to perist indefinitely
+      if (copyIterations == 127) {
         return settings;
       }
       --copyIterations;
       return (
         (settings >> INDEX_RIGHT_NEW_STAKE_DAYS_MAGNITUDE << INDEX_RIGHT_NEW_STAKE_DAYS_MAGNITUDE)
-        | (copyIterations << INDEX_RIGHT_COPY_ITERATIONS)
+        | (copyIterations << INDEX_RIGHT_COPY_ITERATIONS) // this is 9. index 8 is left blank to erase tips
         | uint8(settings)
       );
     }
