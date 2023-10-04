@@ -6,15 +6,15 @@ import { StakeInfo } from "./StakeInfo.sol";
 abstract contract EncodableSettings is StakeInfo {
   // the index of the first bit of targeted information
   uint256 internal constant UNUSED_SPACE_RIGHT_UINT8 = SLOTS - EIGHT; // 256-8=248
-  uint256 internal constant UNUSED_SPACE_RIGHT_UINT16 = SLOTS - SIXTEEN; // 256-16=240
+  uint256 internal constant UNUSED_SPACE_RIGHT_UINT16 = SLOTS - 16; // 256-16=240
   uint256 internal constant UNUSED_SPACE_RIGHT_UINT64 = SLOTS - SIXTY_FOUR; // 256-64=192
-  uint256 internal constant INDEX_RIGHT_HEDRON_TIP = SLOTS - SEVENTY_TWO; // 256-72=184
-  uint256 internal constant INDEX_RIGHT_TARGET_TIP = INDEX_RIGHT_HEDRON_TIP - SEVENTY_TWO; // 184-72=112
+  uint256 internal constant INDEX_RIGHT_HEDRON_TIP = SLOTS - 72; // 256-72=184
+  uint256 internal constant INDEX_RIGHT_TARGET_TIP = INDEX_RIGHT_HEDRON_TIP - 72; // 184-72=112
   uint256 internal constant INDEX_LEFT_TARGET_TIP = SLOTS - 144; // 256-144=112
-  uint256 internal constant INDEX_RIGHT_NEW_STAKE = INDEX_RIGHT_TARGET_TIP - SEVENTY_TWO;
+  uint256 internal constant INDEX_RIGHT_NEW_STAKE = INDEX_RIGHT_TARGET_TIP - 72;
   uint256 internal constant INDEX_LEFT_NEW_STAKE = SLOTS - INDEX_RIGHT_NEW_STAKE;
   uint256 internal constant INDEX_RIGHT_NEW_STAKE_DAYS_METHOD = THIRTY_TWO;
-  uint256 internal constant INDEX_RIGHT_NEW_STAKE_DAYS_MAGNITUDE = SIXTEEN;
+  uint256 internal constant INDEX_RIGHT_NEW_STAKE_DAYS_MAGNITUDE = 16;
   uint256 internal constant INDEX_RIGHT_COPY_ITERATIONS = EIGHT;
   uint256 internal constant INDEX_RIGHT_HAS_EXTERNAL_TIPS = 7;
   uint256 internal constant INDEX_RIGHT_COPY_EXTERNAL_TIPS = 6;

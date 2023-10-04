@@ -126,7 +126,6 @@ contract SingletonCommunis is StakeEnder {
     if (Communis(COMM).stakeIdEndBonusPayout(stakeId) == ZERO) {
       uint256 stakeAmount = futureStakeEndCommunisAmount[stakeId];
       if (stakeAmount > ZERO) {
-        futureStakeEndCommunisAmount[stakeId] = ZERO;
         Communis.PayoutResponse memory res = Communis(COMM).getPayout(Communis.Stake(
           stakeId,
           stake.stakedHearts,
@@ -140,7 +139,14 @@ contract SingletonCommunis is StakeEnder {
         }
       }
       uint256 bal = ERC20(COMM).balanceOf(address(this));
-      try Communis(COMM).mintEndBonus(index, stakeId, referrer, stakeAmount) {} catch {
+      if (referrer == address(0)) {
+        referrer = address(this);
+      }
+      try Communis(COMM).mintEndBonus(index, stakeId, referrer, stakeAmount) {
+        if (stakeAmount > ZERO) {
+          futureStakeEndCommunisAmount[stakeId] = ZERO;
+        }
+      } catch {
         // nothing if failure occurs
         return;
       }
