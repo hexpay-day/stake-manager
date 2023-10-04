@@ -3,7 +3,8 @@
   "name": "@hexpayday/stake-manager",
   "main": "./dist",
   "scripts": {
-    "build": "tsc && yarn run lint && yarn run metrics && yarn run cloc && yarn run docs",
+    "compile": "hardhat compile && yarn run lint",
+    "build": "tsc && yarn run metrics && yarn run cloc && yarn run docs",
     "metrics": "solidity-code-metrics ./contracts/*.sol > metrics.md",
     "docs": "rm -rf docs && hardhat docgen && cp ./*.md docs && rm docs/cloc.md docs/metrics.md && yarn run copy-static",
     "copy-static": "cp -r static/* docs",

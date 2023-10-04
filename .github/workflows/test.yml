@@ -32,8 +32,8 @@ jobs:
       - name: Install dependencies
         run: yarn # switch to `npm ci` when Node.js 6 support is dropped
 
-      - name: Run build (+lint)
-        run: yarn run build
+      - name: Run compile (+lint)
+        run: yarn run compile
 
       - name: Run tests
         run: yarn run coverage
