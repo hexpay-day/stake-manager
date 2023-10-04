@@ -314,6 +314,7 @@ describe('HSIStakeManager.sol', () => {
         newStakeDaysMethod: 0,
         newStakeDaysMagnitude: 0,
         copyIterations: 0,
+        hasExternalTips: false,
       }
       const encodedSettings = await x.existingStakeManager.encodeSettings(settings)
       const firstStakeTarget = x.hsiTargets[0]
@@ -383,6 +384,7 @@ describe('HSIStakeManager.sol', () => {
         newStakeDaysMethod: 2,
         newStakeDaysMagnitude: 0,
         copyIterations: 0,
+        hasExternalTips: false,
       }
       const encodedSettings = await x.stakeManager.encodeSettings(settings)
       const deposits = _.flatMap(x.hsiTargets, (target) => ([
@@ -414,6 +416,7 @@ describe('HSIStakeManager.sol', () => {
         newStakeDaysMethod: 2,
         newStakeDaysMagnitude: 0,
         copyIterations: 0,
+        hasExternalTips: false,
       }
       const encodedSettings = await x.stakeManager.encodeSettings(settings)
       const deposits = _.flatMap(x.hsiTargets, (target) => ([

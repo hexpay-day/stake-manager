@@ -37,7 +37,7 @@ contract HSIStakeManager is StakeEnder {
       index: index,
       owner: owner
     });
-    _logSettingsUpdate({
+    _logPreservedSettingsUpdate({
       stakeId: stakeId,
       settings: encodedSettings
     });
