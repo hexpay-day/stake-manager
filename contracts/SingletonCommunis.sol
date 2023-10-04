@@ -82,8 +82,7 @@ contract SingletonCommunis is StakeEnder {
       // end
       // if this branch is being called, then it generally means that this is
       // occurring outside of the rush of end stakes - so we do fewer checks here
-      uint256 endBonusPayout = Communis(COMM).stakeIdEndBonusPayout(stakeId);
-      if (endBonusPayout == ZERO) {
+      if (Communis(COMM).stakeIdEndBonusPayout(stakeId) == ZERO) {
         (uint256 index, address staker) = _stakeIdToInfo(stakeId);
         if (msg.sender == staker) {
           uint256 settings = stakeIdToSettings[stakeId];
@@ -339,4 +338,5 @@ contract SingletonCommunis is StakeEnder {
       amount: payout
     });
   }
+
 }
