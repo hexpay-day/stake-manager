@@ -13,10 +13,10 @@
   "include": [
     "./node_modules/@nomicfoundation/hardhat-ethers",
     "./hardhat.config.ts",
-    "src/**/*.ts",
-    "tasks/**/*.ts",
-    "artifacts/types/**/*.ts",
-    "test/**/*.ts"
+    "./src/**/*.ts",
+    "./tasks/**/*.ts",
+    "./artifacts/types/**/*.ts",
+    "./test/**/*.ts"
   ],
   "exclude": [
     "node_modules/@nomicfoundation/hardhat-ethers"
