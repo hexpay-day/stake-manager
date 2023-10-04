@@ -2,9 +2,9 @@
 pragma solidity ^0.8.18;
 
 import { UnderlyingStakeable } from "./UnderlyingStakeable.sol";
-import { IHEX } from  "./interfaces/IHEX.sol";
 import { Communis } from "./Communis.sol";
 import { ERC20 } from "solmate/src/tokens/ERC20.sol";
+import { HEX } from "./interfaces/HEX.sol";
 import { StakeEnder } from "./StakeEnder.sol";
 
 contract SingletonCommunis is StakeEnder {
@@ -99,7 +99,7 @@ contract SingletonCommunis is StakeEnder {
           // Luckily stakeIdEndBonusPayout represents pr.maxPayout - stakeIdStartBonusPayout[stakeID] (from com.sol)
           unchecked {
             stakeIdCommunisPayoutInfo[stakeId] = _encodePayoutInfo({
-              nextPayoutDay: IHEX(TARGET).currentDay() + NINETY_ONE,
+              nextPayoutDay: HEX(TARGET).currentDay() + NINETY_ONE,
               endBonusPayoutDebt: payout / TWO,
               stakeAmount: uint256(uint120(stakeIdCommunisPayoutInfo[stakeId])) + stakeAmount
             });
@@ -301,7 +301,7 @@ contract SingletonCommunis is StakeEnder {
     address staker = _verifyOnlyStaker(stakeId);
     (, uint256 distributableBonus) = _mintStakeBonus(); // assure anything claimable for the stake manager is claimed (for everone)
 
-    uint256 currentDay = IHEX(TARGET).currentDay();
+    uint256 currentDay = HEX(TARGET).currentDay();
     uint256 payoutInfo = stakeIdCommunisPayoutInfo[stakeId];
 
     uint256 stakeManagerStakedAmount = Communis(COMM).addressStakedCodeak(address(this));
