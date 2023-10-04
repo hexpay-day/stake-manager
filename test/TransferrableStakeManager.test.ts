@@ -27,7 +27,6 @@ describe('TransferableStakeManager.sol', () => {
           shouldSendTokensToStaker: true,
           stakeIsTransferable: true,
           copyExternalTips: true,
-          // hasExternalTips: true, // controlled by contract
         },
       }
       const encodedSettings = await x.stakeManager.encodeSettings(updatedSettings)
