@@ -1,5 +1,6 @@
 # Stake Manager
 
+[![Tests](https://github.com/hexpay-day/stake-manager/actions/workflows/test.yml/badge.svg)](https://github.com/hexpay-day/stake-manager/actions/workflows/test.yml)
 [![Coverage Status](https://coveralls.io/repos/github/hexpay-day/stake-manager/badge.svg?branch=master)](https://coveralls.io/github/hexpay-day/stake-manager?branch=master)
 
 build the contracts
