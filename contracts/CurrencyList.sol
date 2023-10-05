@@ -20,7 +20,7 @@ contract CurrencyList is Utils {
    * reducing costs when tips in the same currency occur
    * @param token the token to add to the list of tippable tokens
    */
-  function addCurrencyToList(address token) external returns(uint256) {
+  function addCurrencyToList(address token) external payable returns(uint256) {
     if (currencyToIndex[token] > ZERO || token == address(0)) {
       return currencyToIndex[token];
     }

@@ -21,7 +21,7 @@ import 'hardhat-gas-reporter'
 import 'hardhat-dependency-compiler'
 import 'solidity-docgen'
 import '@typechain/hardhat'
-import 'ethers'
+import 'hardhat-contract-sizer'
 import * as ethers from "ethers";
 
 import * as conf from './src/config'
@@ -321,6 +321,9 @@ const config: HardhatUserConfig = {
     pages: 'files',
     templates: 'docgen-templates',
     outputDir: 'docs/api',
+  },
+  contractSizer: {
+    except: ["ERC20"],
   },
 };
 

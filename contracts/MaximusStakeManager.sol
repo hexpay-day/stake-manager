@@ -58,7 +58,7 @@ contract MaximusStakeManager is HSIStakeManager {
    * @param perpetual the perpetual contract to check
    * @return isPerpetual when address has passed through the filter or extended filter
    */
-  function checkPerpetual(address perpetual) external returns(bool isPerpetual) {
+  function checkPerpetual(address perpetual) external payable returns(bool isPerpetual) {
     return _checkPerpetual({
       perpetual: perpetual
     });

@@ -199,7 +199,7 @@ contract UnderlyingStakeManager is GoodAccounting {
    * @return amount the number of tokens that were ended and added to new stake
    * @return newStakeId the newly created stake id
    */
-  function stakeRestartById(uint256 stakeId) external returns(
+  function stakeRestartById(uint256 stakeId) external payable returns(
     uint256 amount, uint256 newStakeId
   ) {
     return _stakeRestartById({

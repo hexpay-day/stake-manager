@@ -72,7 +72,7 @@ abstract contract AuthorizationManager is UnderlyingStakeable {
    * @dev the index is an index of the bits as in binary (1/0)
    * @return whether or not the address authorization value has a 1/0 at the provided index
    */
-  function isAddressAuthorized(address account, uint256 index) view external returns(bool) {
+  function isAddressAuthorized(address account, uint256 index) external view returns(bool) {
     return _isAddressAuthorized({
       account: account,
       index: index
@@ -84,7 +84,7 @@ abstract contract AuthorizationManager is UnderlyingStakeable {
    * @param index the index of the setting boolean to check
    * @return whether or not the address authorization value has a 1/0 at the provided index
    */
-  function _isAddressAuthorized(address account, uint256 index) view internal returns(bool) {
+  function _isAddressAuthorized(address account, uint256 index) internal view returns(bool) {
     return _isAuthorized({
       key: bytes32(uint256(uint160(account))),
       index: index

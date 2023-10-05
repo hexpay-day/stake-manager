@@ -69,7 +69,7 @@ abstract contract UnderlyingStakeable is MulticallExtension, IUnderlyingStakeabl
    */
   function stakeLists(
     address staker, uint256 index
-  ) view external returns(StakeStore memory stake) {
+  ) external view returns(StakeStore memory stake) {
     return _getStake({
       custodian: staker,
       index: index

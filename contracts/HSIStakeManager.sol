@@ -28,7 +28,7 @@ contract HSIStakeManager is StakeEnder {
    * @param tokenId the token id to move to this contract
    * @dev requires approval to transfer hsi to this contract
    */
-  function depositHsi(uint256 tokenId, uint256 encodedSettings) external returns(address hsiAddress) {
+  function depositHsi(uint256 tokenId, uint256 encodedSettings) external payable returns(address hsiAddress) {
     address owner = _deposit721({
       token: HSIM,
       tokenId: tokenId
@@ -81,7 +81,7 @@ contract HSIStakeManager is StakeEnder {
    * @param hsiAddress the hsi address to withdraw from this contract
    * @dev caller must be logged as owner of hsi
    */
-  function withdrawHsi(address hsiAddress) external returns(uint256 tokenId) {
+  function withdrawHsi(address hsiAddress) external payable returns(uint256 tokenId) {
     uint256 stakeId = uint256(uint160(hsiAddress));
     _verifyStakeOwnership({
       owner: msg.sender,

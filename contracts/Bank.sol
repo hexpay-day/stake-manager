@@ -189,7 +189,7 @@ contract Bank is Utils {
   function collectUnattributedPercent(
     address token, bool transferOut, address payable recipient,
     uint256 basisPoints
-  ) external returns(uint256 amount) {
+  ) external payable returns(uint256 amount) {
     uint256 unattributed = _getUnattributed(token);
     amount = (unattributed * basisPoints) / TEN_K;
     _collectUnattributed(token, transferOut, recipient, amount, unattributed);
