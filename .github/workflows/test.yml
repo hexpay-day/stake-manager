@@ -48,6 +48,7 @@ jobs:
       #   uses: mhausenblas/mkdocs-deploy-gh-pages@1.26
 
   finish:
+    if: github.ref == 'refs/heads/master'
     needs: test
     permissions:
       pages: write      # to deploy to Pages
