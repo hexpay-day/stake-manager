@@ -82,3 +82,5 @@ export const hexWhale = async (hex: ERC20) => {
 export const hexAddress = ethers.getAddress('0x2b591e99afe9f32eaa6214f7b7629768c40eeb39')
 
 export const hedronAddress = ethers.getAddress('0x3819f64f282bf135d62168C1e513280dAF905e06')
+
+export const communisAddress = ethers.getAddress('0x5A9780Bfe63f3ec57f01b087cD65BD656C9034A8')

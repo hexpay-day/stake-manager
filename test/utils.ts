@@ -6,7 +6,7 @@ import * as ethers from 'ethers'
 import _ from "lodash"
 import * as Chai from "chai"
 import * as config from '../src/config'
-import { Hedron, HEXStakeInstanceManager, IsolatedStakeManagerFactory__factory, ExistingStakeManager__factory, TransferReceiver__factory, StakeManager__factory, Utils__factory, MockExternalPerpetualFilter__factory, HEX } from "../artifacts/types"
+import { Hedron, HEXStakeInstanceManager, IsolatedStakeManagerFactory__factory, ExistingStakeManager__factory, TransferReceiver__factory, StakeManager__factory, Utils__factory, MockExternalPerpetualFilter__factory, HEX, Communis } from "../artifacts/types"
 import { HSIStartEvent } from "../artifacts/types/contracts/interfaces/HEXStakeInstanceManager"
 import { anyUint } from "@nomicfoundation/hardhat-chai-matchers/withArgs"
 import { ERC20 } from "../artifacts/types/solmate/src/tokens"
@@ -55,6 +55,8 @@ export const deployFixture = async () => {
   const hedron = await hre.ethers.getContractAt('Hedron', config.hedronAddress) as unknown as Hedron
   const hsim = await hre.ethers.getContractAt('HEXStakeInstanceManager', await hedron.hsim()) as unknown as HEXStakeInstanceManager
   const TransferReceiver = await hre.ethers.getContractFactory('TransferReceiver') as unknown as TransferReceiver__factory
+  // const IHEX = await hre.ethers.getContractAt()
+  const communis = await hre.ethers.getContractAt('contracts/Communis.sol:Communis', config.communisAddress) as unknown as Communis
   const transferReceiver = await TransferReceiver.deploy()
   const ExistingStakeManager = await hre.ethers.getContractFactory('ExistingStakeManager') as unknown as ExistingStakeManager__factory
   const existingStakeManager = await ExistingStakeManager.deploy()
@@ -122,6 +124,7 @@ export const deployFixture = async () => {
     base,
     hsim,
     existingStakeManager,
+    communis,
   }
 }
 
