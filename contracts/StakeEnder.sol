@@ -6,7 +6,7 @@ import { SingletonMintManager } from "./SingletonMintManager.sol";
 import { Magnitude } from "./Magnitude.sol";
 
 contract StakeEnder is Magnitude, SingletonMintManager {
-  uint8 public constant INDEX_RIGHT_TODAY = 128;
+  uint256 public constant INDEX_RIGHT_TODAY = 128;
 
   /**
    * end a stake for someone other than the sender of the transaction
@@ -117,6 +117,31 @@ contract StakeEnder is Magnitude, SingletonMintManager {
             staker: staker,
             amount: hedronAmount
           });
+        }
+      }
+      if (_isOneAtIndex({
+        settings: settings,
+        index: INDEX_RIGHT_MINT_COMMUNIS_AT_END
+      })) {
+        if (stake.stakedDays > 364) {
+          if (stake.stakeShares > 9_999) {
+            // check again (pure) because we have zero stack to work with
+            if (!_isEarlyEnding({
+              lockedDay: stake.lockedDay,
+              stakedDays: stake.stakedDays,
+              targetDay: count >> INDEX_RIGHT_TODAY
+            })) {
+              if ((count >> INDEX_RIGHT_TODAY) < (stake.lockedDay + stake.stakedDays + 38)) {
+                _communisStakeEndBonus({
+                  settings: settings,
+                  index: idx,
+                  staker: staker,
+                  referrer: tipTo,
+                  stake: stake
+                });
+              }
+            }
+          }
         }
       }
       // if this were to ever overflow then it will fail

@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.18;
 
-import { StakeEnder } from "./StakeEnder.sol";
+import { SingletonCommunis } from "./SingletonCommunis.sol";
 
-contract StakeStarter is StakeEnder {
+contract StakeStarter is SingletonCommunis {
   /**
    * stake a given number of tokens for a given number of days
    * @param to the address that will own the staker

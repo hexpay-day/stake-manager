@@ -220,7 +220,7 @@ contract IsolatedStakeManager is Ownable2Step, AuthorizationManager, GoodAccount
    * @param stakeDays the number of days to stake
    */
   function _startAuthorizationKey(address runner, uint256 stakeDays) internal pure returns(bytes32) {
-    return bytes32(uint256(uint160(runner)) << SIXTEEN | uint16(stakeDays));
+    return bytes32((uint256(uint160(runner)) << 16) | uint16(stakeDays));
   }
   /**
    * starts a stake on the underlying contract for a given number of days

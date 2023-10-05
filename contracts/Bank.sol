@@ -118,11 +118,13 @@ contract Bank is Utils {
       depositor: msg.sender,
       amount: amount
     });
-    _addToTokenWithdrawable({
-      token: token,
-      to: to,
-      amount: amount
-    });
+    if (amount > ZERO) {
+      _addToTokenWithdrawable({
+        token: token,
+        to: to,
+        amount: amount
+      });
+    }
     return amount;
   }
   /**

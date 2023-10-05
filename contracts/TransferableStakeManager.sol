@@ -2,6 +2,7 @@
 pragma solidity ^0.8.18;
 
 import { StakeStarter } from "./StakeStarter.sol";
+import { SingletonCommunis } from "./SingletonCommunis.sol";
 import { IStakeReceiver } from "./interfaces/IStakeReceiver.sol";
 
 contract TransferableStakeManager is StakeStarter {
