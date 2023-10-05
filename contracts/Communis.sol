@@ -24,9 +24,11 @@ abstract contract Communis {
     uint256 stakeIndex, uint256 stakeID,
     bool applyRestakeBonus, address referrer, uint256 stakeAmount
   ) external virtual;
-  function stakeIdGoodAccountingBonusPayout(uint256 stakeId) external virtual returns(uint256);
-  function stakeIdEndBonusPayout(uint256 stakeId) external virtual returns(uint256);
-  function stakeIdStartBonusPayout(uint256 stakeId) external virtual returns(uint256);
+  function stakeIdGoodAccountingBonusPayout(uint256 stakeId) external virtual view returns(uint256);
+  function stakeIdEndBonusPayout(uint256 stakeId) external virtual view returns(uint256);
+  function stakeIdStartBonusPayout(uint256 stakeId) external virtual view returns(uint256);
+
   function withdrawStakedCodeak(uint256 withdrawAmount) external virtual;
   function getPayout(Stake memory s) external virtual pure returns (PayoutResponse memory pr);
+  function getStartBonusPayout(uint256 stakedDays, uint256 lockedDay, uint256 maxPayout, uint256 stakesOriginalShareRate, uint256 currentDay, uint256 globalShareRate, bool applyRestakeBonus) external virtual pure returns (uint256 payout); 
 }

@@ -7,7 +7,7 @@ import * as ethers from 'ethers'
 import _ from "lodash"
 import * as Chai from "chai"
 import * as config from '../src/config'
-import { ERC721, IHedron, IHEXStakeInstanceManager } from "../artifacts/types"
+import { ERC721, IHedron, IHEXStakeInstanceManager, Communis } from "../artifacts/types"
 import { HSIStartEvent } from "../artifacts/types/contracts/interfaces/IHEXStakeInstanceManager"
 import { anyUint } from "@nomicfoundation/hardhat-chai-matchers/withArgs"
 import { ERC20 } from "../artifacts/types/solmate/src/tokens"
@@ -56,6 +56,7 @@ export const deployFixture = async () => {
   const hex20 = await hre.ethers.getContractAt('solmate/src/tokens/ERC20.sol:ERC20', config.hexAddress) as unknown as ERC20
   const hedron = await hre.ethers.getContractAt('contracts/interfaces/IHedron.sol:IHedron', config.hedronAddress) as unknown as IHedron
   const hedron20 = await hre.ethers.getContractAt('solmate/src/tokens/ERC20.sol:ERC20', config.hedronAddress) as unknown as ERC20
+  const communis = await hre.ethers.getContractAt('contracts/Communis.sol:Communis', config.communisAddress) as unknown as Communis
   const hsim = await hre.ethers.getContractAt('IHEXStakeInstanceManager', await hedron.hsim()) as unknown as IHEXStakeInstanceManager
   const hsim721 = await hre.ethers.getContractAt('solmate/src/tokens/ERC721.sol:ERC721', await hedron.hsim()) as unknown as ERC721
   const TransferReceiver = await hre.ethers.getContractFactory('TransferReceiver')
@@ -129,6 +130,7 @@ export const deployFixture = async () => {
     hsim,
     hsim721,
     existingStakeManager,
+    communis,
   }
 }
 
