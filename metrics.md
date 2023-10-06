@@ -53,7 +53,7 @@ Source Units in Scope: **`25`** (**100%**)
 | 🎨 | contracts/Communis.sol | 1 | **** | 34 | 20 | 16 | 1 | 21 | **** |
 | 📝 | contracts/CurrencyList.sol | 1 | **** | 54 | 54 | 36 | 14 | 23 | **<abbr title='Payable Functions'>💰</abbr>** |
 | 📝 | contracts/EarningsOracle.sol | 1 | **** | 236 | 232 | 153 | 77 | 80 | **<abbr title='Payable Functions'>💰</abbr><abbr title='Unchecked Blocks'>Σ</abbr>** |
-| 🎨 | contracts/EncodableSettings.sol | 1 | **** | 369 | 355 | 214 | 147 | 113 | **<abbr title='Payable Functions'>💰</abbr><abbr title='Unchecked Blocks'>Σ</abbr>** |
+| 🎨 | contracts/EncodableSettings.sol | 1 | **** | 416 | 402 | 202 | 206 | 105 | **<abbr title='Payable Functions'>💰</abbr><abbr title='Unchecked Blocks'>Σ</abbr>** |
 | 📝 | contracts/ExistingStakeManager.sol | 1 | **** | 7 | 7 | 3 | 2 | 3 | **** |
 | 🎨 | contracts/GoodAccounting.sol | 1 | **** | 137 | 129 | 91 | 36 | 38 | **** |
 | 📝 | contracts/HSIStakeManager.sol | 1 | **** | 266 | 252 | 175 | 75 | 106 | **<abbr title='Payable Functions'>💰</abbr><abbr title='Unchecked Blocks'>Σ</abbr>** |
@@ -73,7 +73,7 @@ Source Units in Scope: **`25`** (**100%**)
 | 📝 | contracts/UnderlyingStakeManager.sol | 1 | **** | 225 | 207 | 132 | 73 | 63 | **<abbr title='Payable Functions'>💰</abbr><abbr title='Unchecked Blocks'>Σ</abbr>** |
 | 🎨 | contracts/UnderlyingStakeable.sol | 1 | **** | 143 | 118 | 55 | 71 | 35 | **<abbr title='Unchecked Blocks'>Σ</abbr>** |
 | 📝 | contracts/Utils.sol | 1 | **** | 96 | 96 | 44 | 51 | 81 | **<abbr title='Uses Assembly'>🖥</abbr><abbr title='Unchecked Blocks'>Σ</abbr>** |
-| 📝🎨 | **Totals** | **25** | **** | **4298**  | **4086** | **2665** | **1383** | **1487** | **<abbr title='Uses Assembly'>🖥</abbr><abbr title='Payable Functions'>💰</abbr><abbr title='DelegateCall'>👥</abbr><abbr title='Uses Hash-Functions'>🧮</abbr><abbr title='TryCatch Blocks'>♻️</abbr><abbr title='Unchecked Blocks'>Σ</abbr>** |
+| 📝🎨 | **Totals** | **25** | **** | **4345**  | **4133** | **2653** | **1442** | **1479** | **<abbr title='Uses Assembly'>🖥</abbr><abbr title='Payable Functions'>💰</abbr><abbr title='DelegateCall'>👥</abbr><abbr title='Uses Hash-Functions'>🧮</abbr><abbr title='TryCatch Blocks'>♻️</abbr><abbr title='Unchecked Blocks'>Σ</abbr>** |
 
 <sub>
 Legend: <a onclick="toggleVisibility('table-legend', this)">[➕]</a>
@@ -155,7 +155,7 @@ The analysis finished with **`0`** errors and **`0`** duplicate files.
 
 #### <span id=t-inline-documentation>Inline Documentation</span>
 
-- **Comment-to-Source Ratio:** On average there are`2.07` code lines per comment (lower=better).
+- **Comment-to-Source Ratio:** On average there are`1.98` code lines per comment (lower=better).
 - **ToDo's:** `0`
 
 #### <span id=t-components>Components</span>
@@ -170,11 +170,11 @@ This section lists functions that are explicitly declared public or payable. Ple
 
 | 🌐Public   | 💰Payable |
 | ---------- | --------- |
-| 116 | 36  |
+| 115 | 35  |
 
 | External   | Internal | Private | Pure | View |
 | ---------- | -------- | ------- | ---- | ---- |
-| 116 | 186  | 0 | 45 | 58 |
+| 115 | 184  | 0 | 45 | 58 |
 
 #### <span id=t-statevariables>StateVariables</span>
 
@@ -267,7 +267,7 @@ This section lists functions that are explicitly declared public or payable. Ple
 | contracts/Communis.sol | de4a61595174d19e1d92840ddb205330130fa05b |
 | contracts/CurrencyList.sol | 6edb2f225796c57dffe1044f49cb663b1ff8ebe4 |
 | contracts/EarningsOracle.sol | f2d45921d81672efea8d4d58106eaf0be37b2d53 |
-| contracts/EncodableSettings.sol | d67a9b5be2697e211d2f116001cfcddade65672f |
+| contracts/EncodableSettings.sol | 49898c08bc77f9e4c18d720418529c05e4a90825 |
 | contracts/ExistingStakeManager.sol | 645f443d16fe8ca9709e14c0d8759438f26e941a |
 | contracts/GoodAccounting.sol | 0e182bd47e07464c1b9a8bb2a0d7b3f8e407ab38 |
 | contracts/HSIStakeManager.sol | 03c948f9cef25761c8787785c54781219117d4f7 |
@@ -365,9 +365,7 @@ This section lists functions that are explicitly declared public or payable. Ple
 | └ | stakeIdSettings | External ❗️ |   |NO❗️ |
 | └ | decodeConsentAbilities | External ❗️ |   |NO❗️ |
 | └ | _decodeConsentAbilities | Internal 🔒 |   | |
-| └ | updateSettings | External ❗️ |  💵 |NO❗️ |
 | └ | updateSettingsEncoded | External ❗️ |  💵 |NO❗️ |
-| └ | _updateSettingsEncoded | Internal 🔒 | 🛑  | |
 | └ | _logPreservedSettingsUpdate | Internal 🔒 | 🛑  | |
 | └ | _logSettingsUpdate | Internal 🔒 | 🛑  | |
 | └ | readEncodedSettings | External ❗️ |   |NO❗️ |

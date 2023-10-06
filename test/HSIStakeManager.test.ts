@@ -157,14 +157,14 @@ describe('HSIStakeManager.sol', () => {
       const currentSettings = await x.existingStakeManager.stakeIdToSettings(stakeId)
       const decodedSettings = await x.existingStakeManager.decodeSettings(currentSettings)
       // this tells system to send any remaining tokens to staker
-      await Promise.all(x.hsiTargets.map(({ hsiAddress }) => (
-        x.existingStakeManager.updateSettings(hsiAddress, {
+      await Promise.all(x.hsiTargets.map(async ({ hsiAddress }) => (
+        x.existingStakeManager.updateSettingsEncoded(hsiAddress, await x.existingStakeManager.encodeSettings({
           ...fromStruct(decodedSettings),
           consentAbilities: {
             ...fromStruct(decodedSettings.consentAbilities),
             shouldSendTokensToStaker: true,
           },
-        })
+        }))
       )))
       const tx = await x.existingStakeManager.mintHedronRewards(_.map(x.hsiTargets, 'hsiAddress'))
       await expect(x.existingStakeManager.withdrawableBalanceOf(x.hedron.getAddress(), signer1.address))
@@ -343,11 +343,11 @@ describe('HSIStakeManager.sol', () => {
         ...settings,
         targetTip: zeroLinear,
       }
-      await expect(x.existingStakeManager.connect(signer2).updateSettings(firstStakeTarget.hsiAddress, updatedSettings))
+      const encodedUpdatedSettings = await x.existingStakeManager.encodeSettings(updatedSettings)
+      await expect(x.existingStakeManager.connect(signer2).updateSettingsEncoded(firstStakeTarget.hsiAddress, encodedUpdatedSettings))
         .to.revertedWithCustomError(x.existingStakeManager, 'StakeNotOwned')
         .withArgs(signer2.address, signer1.address)
-      const encodedUpdatedSettings = await x.existingStakeManager.encodeSettings(updatedSettings)
-      await expect(x.existingStakeManager.updateSettings(firstStakeTarget.hsiAddress, updatedSettings))
+      await expect(x.existingStakeManager.updateSettingsEncoded(firstStakeTarget.hsiAddress, encodedUpdatedSettings))
         .to.emit(x.existingStakeManager, 'UpdateSettings')
         .withArgs(firstStakeTarget.hsiAddress, encodedUpdatedSettings)
         // this line is required
