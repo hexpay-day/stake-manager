@@ -162,7 +162,7 @@ describe('SingletonCommunis.sol', () => {
           )
       })
     })
-    describe('claimStakeBonus', async () => {
+    describe('mintStakeBonus', async () => {
       it('collects stake bonuses for everyone as they accrue on communis', async () => {
         // move forward to end day
         await utils.moveForwardDays(366n, x)
@@ -186,7 +186,7 @@ describe('SingletonCommunis.sol', () => {
         await utils.moveForwardDays(1n, x) // first end stakeable day
         await expect(x.stakeManager.distributeStakeBonusByStakeId(stakeId, false))
           .to.revertedWithCustomError(x.stakeManager, 'NotAllowed')
-        await expect(x.stakeManager.claimStakeBonus())
+        await expect(x.stakeManager.mintStakeBonus())
           .to.emit(x.communis, 'Transfer')
           .withArgs(
             hre.ethers.ZeroAddress,
