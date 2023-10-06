@@ -23,7 +23,7 @@ describe('SingletonCommunis.sol', () => {
         stakeID: stk.stakeId,
       })
       let globalInfo = await x.hex.globalInfo()
-      let startBonusPayout = await x.communis.getStartBonusPayout(
+      const startBonusPayout = await x.communis.getStartBonusPayout(
         stk.stakedDays,
         stk.lockedDay,
         payoutResponse.maxPayout,
@@ -41,12 +41,13 @@ describe('SingletonCommunis.sol', () => {
 
       await expect(x.communis.stakeIdStartBonusPayout(stk.stakeId))
         .eventually.to.equal(startBonusPayout)
-      await expect(x.stakeManager.stakeIdStakedAmount(stk.stakeId))
+      // at this point, only the start bonus payout has been collected
+      await expect(x.stakeManager.stakeIdCommunisPayoutInfo(stk.stakeId))
         .eventually.to.equal(startBonusPayout)
 
-      await x.stakeManager.withdrawAmountByStakeId(startBonusPayout, stk.stakeId)
+      await x.stakeManager.withdrawAmountByStakeId(startBonusPayout, stk.stakeId, true)
 
-      await expect(x.stakeManager.stakeIdStakedAmount(stk.stakeId))
+      await expect(x.stakeManager.stakeIdCommunisPayoutInfo(stk.stakeId))
         .eventually.to.equal(0)
     })
   })
