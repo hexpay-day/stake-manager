@@ -7,7 +7,7 @@ import * as utils from './utils'
 import { EncodableSettings } from "../artifacts/types"
 import { fromStruct } from "../src/utils"
 
-describe("StakeManager", function () {
+describe("StakeEnder", function () {
   describe('UnderlyingStakeable', () => {
     it('should count its stakes', async () => {
       const x = await loadFixture(utils.deployFixture)
