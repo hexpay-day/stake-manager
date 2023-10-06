@@ -15,7 +15,8 @@ contract SingletonCommunis is StakeEnder {
   }
 
   mapping(uint256 stakeId => uint256 endBonusDebt) public stakeIdEndBonusDebt;
-  mapping(uint256 stakeId => uint256 stakedAmount) public stakeIdStakedAmount; 
+  mapping(uint256 stakeId => uint256 stakedAmount) public stakeIdStakedAmount;
+  mapping(uint256 stakeId => address formerOwner) public formerStakeOwner;
 
   /**
    * mint comm for staking
@@ -44,12 +45,11 @@ contract SingletonCommunis is StakeEnder {
 
               stakeIdStakedAmount[stakeId] += (stakeAmount << TWO) >> TWO;
 
-              bal = ERC20(COMM).balanceOf(address(this)) - bal;
               _attributeFunds({
                 settings: settings,
                 token: COMM,
                 staker: staker,
-                amount: bal
+                amount: ERC20(COMM).balanceOf(address(this)) - bal
               });
             }
           }
@@ -83,17 +83,19 @@ contract SingletonCommunis is StakeEnder {
         (uint256 index, address staker) = _stakeIdToInfo(stakeId);
         if (msg.sender == staker) {
           uint256 settings = stakeIdToSettings[stakeId];
+          formerStakeOwner[stakeId] = staker;
           Communis(COMM).mintEndBonus(index, stakeId, referrer, stakeAmount);
 
-          stakeIdStakedAmount[stakeId] += stakeAmount;
-          stakeIdEndBonusDebt[stakeId] = Communis(COMM).stakeIdEndBonusPayout(stakeId) / 2;
+          if (stakeAmount > ZERO) {
+            stakeIdStakedAmount[stakeId] += stakeAmount;
+          }
+          stakeIdEndBonusDebt[stakeId] = Communis(COMM).stakeIdEndBonusPayout(stakeId) / TWO;
 
-          bal = ERC20(COMM).balanceOf(address(this)) - bal;
           _attributeFunds({
             settings: settings,
             token: COMM,
             staker: staker,
-            amount: bal
+            amount: ERC20(COMM).balanceOf(address(this)) - bal
           });
         }
       }
@@ -102,11 +104,10 @@ contract SingletonCommunis is StakeEnder {
       // is rarely if ever going to be called so we are not going to do checks
       Communis(COMM).mintStakeBonus();
       if (referrer != address(0)) {
-        bal = ERC20(COMM).balanceOf(address(this)) - bal;
         _addToTokenWithdrawable({
           token: COMM,
           to: referrer,
-          amount: bal
+          amount: ERC20(COMM).balanceOf(address(this)) - bal
         });
       }
     }
@@ -134,64 +135,70 @@ contract SingletonCommunis is StakeEnder {
     UnderlyingStakeable.StakeStore memory stake
   ) internal override {
     uint256 stakeId = stake.stakeId;
-    if (Communis(COMM).stakeIdEndBonusPayout(stakeId) == ZERO) {
-      uint256 stakeAmount = futureStakeEndCommunisAmount[stakeId];
-      if (stakeAmount > ZERO) {
-        Communis.PayoutResponse memory res = Communis(COMM).getPayout(Communis.Stake(
-          stakeId,
-          stake.stakedHearts,
-          stake.stakeShares,
-          stake.lockedDay,
-          stake.stakedDays,
-          stake.unlockedDay
-        ));
-        if (res.maxPayout < stakeAmount) {
-          stakeAmount = res.maxPayout;
-        }
+    uint256 stakeAmount = futureStakeEndCommunisAmount[stakeId];
+    if (stakeAmount > ZERO) {
+      Communis.PayoutResponse memory res = Communis(COMM).getPayout(Communis.Stake(
+        stakeId,
+        stake.stakedHearts,
+        stake.stakeShares,
+        stake.lockedDay,
+        stake.stakedDays,
+        stake.unlockedDay
+      ));
+      uint256 maxPayout = res.maxPayout - Communis(COMM).stakeIdStartBonusPayout(stakeId);
+      if (maxPayout < stakeAmount) {
+        stakeAmount = maxPayout;
       }
-      uint256 bal = ERC20(COMM).balanceOf(address(this));
-      if (referrer == address(0)) {
-        referrer = address(this);
-      }
-      try Communis(COMM).mintEndBonus(index, stakeId, referrer, stakeAmount) {
-        if (stakeAmount > ZERO) {
-          futureStakeEndCommunisAmount[stakeId] = ZERO;
-        }
-      } catch {
-        // nothing if failure occurs
-        return;
-      }
-
-      stakeIdStakedAmount[stakeId] += stakeAmount;
-      stakeIdEndBonusDebt[stakeId] = Communis(COMM).stakeIdEndBonusPayout(stakeId) / 2;
-
-      bal = ERC20(COMM).balanceOf(address(this)) - bal;
-      _attributeFunds({
-        settings: settings,
-        token: COMM,
-        staker: staker,
-        amount: bal
-      });
+      futureStakeEndCommunisAmount[stakeId] = ZERO;
     }
+    uint256 bal = ERC20(COMM).balanceOf(address(this));
+    if (referrer == address(0)) {
+      referrer = address(this);
+    }
+    formerStakeOwner[stakeId] = staker;
+    try Communis(COMM).mintEndBonus(index, stakeId, referrer, stakeAmount) {
+    } catch {
+      // nothing if failure occurs
+      return;
+    }
+
+    stakeIdStakedAmount[stakeId] += stakeAmount;
+    stakeIdEndBonusDebt[stakeId] = Communis(COMM).stakeIdEndBonusPayout(stakeId) / TWO;
+
+    _attributeFunds({
+      settings: settings,
+      token: COMM,
+      staker: staker,
+      amount: ERC20(COMM).balanceOf(address(this)) - bal
+    });
   }
 
-  function withdrawAmountByStakeId(
-     uint256 withdrawAmount
-    ,UnderlyingStakeable.StakeStore memory stake
-  ) external {
-
-    uint256 stakeId = stake.stakeId;
-
+  function withdrawAmountByStakeId(uint256 withdrawAmount, uint256 stakeId) external payable {
+    address staker = formerStakeOwner[stakeId];
+    if (staker != msg.sender) {
+      staker = _stakeIdToOwner(stakeId);
+      if (staker != msg.sender) {
+        revert NotAllowed();
+      }
+    }
+    // we hold the staked amount on this contract in order to break it up
+    // between stakes - that way, everyone can get out what they put in
     uint256 stakedAmount = stakeIdStakedAmount[stakeId];
-    require(withdrawAmount <= stakedAmount, "Requested withdraw amount is more than Staked Amount");
+    if (withdrawAmount > stakedAmount) {
+      revert NotAllowed();
+    }
 
     uint256 stakedAmountAfterWithdraw = (stakedAmount - withdrawAmount);
-    require(stakedAmountAfterWithdraw >= stakeIdEndBonusDebt[stakeId], "Requested withdraw amount puts you into debt");
+    if (stakedAmountAfterWithdraw < stakeIdEndBonusDebt[stakeId]) {
+      revert NotAllowed();
+    }
 
     Communis(COMM).withdrawStakedCodeak(withdrawAmount);
-
     stakeIdStakedAmount[stakeId] = stakedAmountAfterWithdraw;
-
+    _addToTokenWithdrawable({
+      token: COMM,
+      to: staker,
+      amount: withdrawAmount
+    });
   }
-
 }

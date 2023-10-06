@@ -8,7 +8,7 @@ import { EncodableSettings } from "../artifacts/types"
 import { fromStruct } from "../src/utils"
 import { setNextBlockTimestamp } from "@nomicfoundation/hardhat-network-helpers/dist/src/helpers/time"
 
-describe("StakeManager", function () {
+describe("StakeEnder", function () {
   describe('UnderlyingStakeable', () => {
     it('should count its stakes', async () => {
       const x = await loadFixture(utils.deployFixture)
