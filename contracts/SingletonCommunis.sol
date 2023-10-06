@@ -2,6 +2,7 @@
 pragma solidity ^0.8.18;
 
 import { UnderlyingStakeable } from "./UnderlyingStakeable.sol";
+import { IHEX } from  "./interfaces/IHEX.sol";
 import { Communis } from "./Communis.sol";
 import { ERC20 } from "solmate/src/tokens/ERC20.sol";
 import { StakeEnder } from "./StakeEnder.sol";
@@ -14,9 +15,13 @@ contract SingletonCommunis is StakeEnder {
     BONUS
   }
 
+  address public hx = 0x2b591e99afE9f32eAA6214f7B7629768c40Eeb39;
+  uint256 distributableStakeBonus = 0;
+
   mapping(uint256 stakeId => uint256 endBonusDebt) public stakeIdEndBonusDebt;
   mapping(uint256 stakeId => uint256 stakedAmount) public stakeIdStakedAmount;
   mapping(uint256 stakeId => address formerOwner) public formerStakeOwner;
+  mapping(uint256 stakeId => uint256 nextPayoutDay) public stakeIdNextPayoutDay;
 
   /**
    * mint comm for staking
@@ -28,6 +33,7 @@ contract SingletonCommunis is StakeEnder {
    */
   function mintCommunis(CommunisMintPortion portion, uint256 stakeId, address referrer, uint256 stakeAmount) external {
     uint256 bal = ERC20(COMM).balanceOf(address(this));
+    _claimStakeBonus();
     if (portion < CommunisMintPortion.END) {
       uint256 settings = stakeIdToSettings[stakeId];
       if (portion == CommunisMintPortion.START) {
@@ -90,6 +96,7 @@ contract SingletonCommunis is StakeEnder {
             stakeIdStakedAmount[stakeId] += stakeAmount;
           }
           stakeIdEndBonusDebt[stakeId] = Communis(COMM).stakeIdEndBonusPayout(stakeId) / TWO;
+          stakeIdNextPayoutDay[stakeId] = IHEX(hx).currentDay() + 91;
 
           _attributeFunds({
             settings: settings,
@@ -136,6 +143,7 @@ contract SingletonCommunis is StakeEnder {
   ) internal override {
     uint256 stakeId = stake.stakeId;
     uint256 stakeAmount = futureStakeEndCommunisAmount[stakeId];
+    _claimStakeBonus();
     if (stakeAmount > ZERO) {
       Communis.PayoutResponse memory res = Communis(COMM).getPayout(Communis.Stake(
         stakeId,
@@ -164,6 +172,7 @@ contract SingletonCommunis is StakeEnder {
 
     stakeIdStakedAmount[stakeId] += stakeAmount;
     stakeIdEndBonusDebt[stakeId] = Communis(COMM).stakeIdEndBonusPayout(stakeId) / TWO;
+    stakeIdNextPayoutDay[stakeId] = IHEX(hx).currentDay() + 91;
 
     _attributeFunds({
       settings: settings,
@@ -201,4 +210,61 @@ contract SingletonCommunis is StakeEnder {
       amount: withdrawAmount
     });
   }
+
+  function claimStakeBonus() external { 
+    _claimStakeBonus(); 
+  }
+
+  function _claimStakeBonus() internal { 
+    uint256 bal = ERC20(COMM).balanceOf(address(this));
+
+    Communis(COMM).mintStakeBonus(); 
+
+    uint256 mintedStakeBonus = ERC20(COMM).balanceOf(address(this)) - bal;
+
+    distributableStakeBonus += mintedStakeBonus;
+  }
+
+  function distributeStakeBonusByStakeId(UnderlyingStakeable.StakeStore memory stake) external {
+    _claimStakeBonus(); // assure anything claimable for the stake manager is claimed (for everone)
+
+    uint256 stakeId = stake.stakeId;
+    uint256 currentDay = IHEX(hx).currentDay();
+    uint256 nextPayoutDay = stakeIdNextPayoutDay[stakeId];
+
+    require(nextPayoutDay >= currentDay, "Stake Id does not have an available stake bonus");
+
+    uint256 stakedAmount = stakeIdStakedAmount[stakeId];
+    uint256 stakeManagerStakedAmount = Communis(COMM).addressStakedCodeak(address(this));
+
+    require(stakedAmount > 0, "Stake Id has no Staked Amount");
+    require(stakeManagerStakedAmount > 0, "Stake Manager has no Staked Amount");
+
+    // This looks at how much a given stakeId is currently contributing to the total amount staked in the stake manager.
+    // contributionPercentage goes up and down with stakedAmount given fixed stakeManagerStakedAmount
+    // contributionPercentage goes up and down with stakeManagerStakedAmount given fixed stakedAmount
+    //    -If others reduce the stakeManagerStakedAmount by withdrawing their staked COM (and not running distributeStakeBonusByStakeId for themself)
+    //        contributionPercentage goes up and distributableStakeBonus simply gets redistributed accordingly.
+
+    uint256 contributionPercentage = (stakedAmount * (10 ** 5)) / stakeManagerStakedAmount;
+    uint256 contributionTotal = (distributableStakeBonus * contributionPercentage) / (10 ** 5); 
+
+    uint256 numberOfPayouts = ((currentDay - nextPayoutDay) / 91) + 1;
+    uint256 payout = contributionTotal * numberOfPayouts;
+
+    uint256 settings = stakeIdToSettings[stakeId];
+    (, address staker) = _stakeIdToInfo(stakeId);
+
+    //mint directly to staker?
+    _attributeFunds({
+      settings: settings,
+      token: COMM,
+      staker: staker,
+      amount: payout
+    });
+
+    distributableStakeBonus -= payout;
+    stakeIdNextPayoutDay[stakeId] += (numberOfPayouts * 91);
+  }
+
 }
