@@ -29,7 +29,7 @@ contract SingletonCommunis is StakeEnder {
    * @param stakeAmount a uint255 where the first (left most) bit is a flag for apply restake bonus when portion = START
    */
   function mintCommunis(CommunisMintPortion portion, uint256 stakeId, address referrer, uint256 stakeAmount) external payable {
-    (uint256 bal, ) = _claimStakeBonus();
+    (uint256 bal, ) = _mintStakeBonus();
     if (portion < CommunisMintPortion.END) {
       uint256 settings = stakeIdToSettings[stakeId];
       if (portion == CommunisMintPortion.START) {
@@ -154,7 +154,7 @@ contract SingletonCommunis is StakeEnder {
     uint256 stakeId = stake.stakeId;
     uint256 payoutInfo = stakeIdCommunisPayoutInfo[stakeId];
     uint256 stakeAmount = uint120(payoutInfo >> ONE_TWENTY);
-    (uint256 bal, ) = _claimStakeBonus();
+    (uint256 bal, ) = _mintStakeBonus();
     if (stakeAmount > ZERO) {
       Communis.PayoutResponse memory res = Communis(COMM).getPayout(Communis.Stake(
         stakeId,
@@ -239,8 +239,8 @@ contract SingletonCommunis is StakeEnder {
     }
   }
 
-  function claimStakeBonus() external payable {
-    _claimStakeBonus();
+  function mintStakeBonus() external payable {
+    _mintStakeBonus();
   }
 
   /**
@@ -248,7 +248,7 @@ contract SingletonCommunis is StakeEnder {
    * @return balance the amount of comm that this contract holds
    * @return distributableBonus the total bonus distributed to all stakers in this contract
    */
-  function _claimStakeBonus() internal returns(uint256 balance, uint256 distributableBonus) {
+  function _mintStakeBonus() internal returns(uint256 balance, uint256 distributableBonus) {
     uint256 bal = ERC20(COMM).balanceOf(address(this));
 
     try Communis(COMM).mintStakeBonus() {
@@ -281,7 +281,7 @@ contract SingletonCommunis is StakeEnder {
 
   function distributeStakeBonusByStakeId(uint256 stakeId, bool withdraw) external payable returns(uint256 payout) {
     address staker = _verifyOnlyStaker(stakeId);
-    (, uint256 distributableBonus) = _claimStakeBonus(); // assure anything claimable for the stake manager is claimed (for everone)
+    (, uint256 distributableBonus) = _mintStakeBonus(); // assure anything claimable for the stake manager is claimed (for everone)
 
     uint256 currentDay = IHEX(TARGET).currentDay();
     uint256 payoutInfo = stakeIdCommunisPayoutInfo[stakeId];
