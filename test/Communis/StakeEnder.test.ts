@@ -99,7 +99,7 @@ describe("StakeManager", function () {
         .to.emit(x.hex, 'StakeEnd')
         .withArgs(
           anyUint,
-          anyUint,
+          anyUint, // penalty!
           await x.stakeManager.getAddress(),
           nextStakeId
         )
