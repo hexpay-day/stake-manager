@@ -226,7 +226,7 @@ contract SingletonCommunis is StakeEnder {
   }
 
   function distributeStakeBonusByStakeId(UnderlyingStakeable.StakeStore memory stake) external {
-    _claimStakeBonus(); // assure anything claimable for the stake manager is claimed (for everone)
+    _claimStakeBonus(); // assure anything claimable for the stake manager is claimed (for everone )
 
     uint256 stakeId = stake.stakeId;
     uint256 currentDay = IHEX(hx).currentDay();
