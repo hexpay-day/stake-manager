@@ -88,7 +88,7 @@ contract SingletonMintManager is UnderlyingStakeManager {
     return Hedron(HEDRON).mintNative(index, uint40(stakeId));
   }
   function _communisStakeEndBonus(
-    uint256 settings,
+    uint256 settings, uint256 today,
     uint256 index, address staker, address referrer,
     UnderlyingStakeable.StakeStore memory stake) internal virtual {}
 }
