@@ -15,13 +15,8 @@ contract HSIStakeManager is StakeEnder {
    */
   uint256 private constant DEFAULT_ENCODED_SETTINGS
     = 0x000000000000000000000000000000000000000000000000000000000000000d;
-  function defaultEncodedSettings() external override pure returns(uint256) {
+  function _defaultEncodedSettings() internal override pure returns(uint256) {
     return DEFAULT_ENCODED_SETTINGS;
-  }
-  function _defaultSettings() internal override pure returns(Settings memory) {
-    return _decodeSettings({
-      encoded: DEFAULT_ENCODED_SETTINGS
-    });
   }
   /**
    * transfer stakes by their token ids

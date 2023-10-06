@@ -76,12 +76,87 @@ abstract contract EncodableSettings is StakeInfo {
    * @param settings the newly updated settings
    */
   event UpdateSettings(uint256 indexed stakeId, uint256 settings);
+  /**
+  Settings(
+    * by default, there is no hedron tip
+    * assume that stakers will manage their own stakes at bare minimum
+    Linear({
+      method: ZERO,
+      xFactor: ZERO,
+      x: 0,
+      yFactor: ZERO,
+      y: ZERO,
+      bFactor: ZERO,
+      b: 0
+    }),
+    * by default, there is no target (hex) tip
+    * assume that stakers will manage their own stakes at bare minimum
+    Linear({
+      method: ZERO,
+      xFactor: ZERO,
+      x: 0,
+      yFactor: ZERO,
+      y: ZERO,
+      bFactor: ZERO,
+      b: 0
+    }),
+    * by default, assume that all tokens minted from an end stake
+    * should go directly into a new stake
+    Linear({
+      method: TWO,
+      xFactor: ZERO,
+      x: 0,
+      yFactor: ZERO,
+      y: ZERO,
+      bFactor: ZERO,
+      b: 0
+    }),
+    * by default, assume that by using this contract, users want efficiency gains
+    * so by default, restarting their stakes are the most efficient means of managing tokens
+    uint8(TWO), uint16(ZERO),
+    uint8(MAX_UINT_7), restart forever
+     * stakes do not start with external tips
+     * tips can be added in the same tx via a multicall
+    false,
+    * by index: 00000001
+    * 7: signal to ender that tips exist to be collected (allows contract to avoid an SLOAD) (0)
+    * 6: should recreate external tips
+    * 5: give dominion over hedron after tip to staker (0)
+    * 4: give dominion over target after tip to staker (0)
+    * 3: do not allow end hedron mint (0)
+    * 2: do not allow continuous hedron mint (0)
+    * 1: do not allow early end (0)
+    * 0: allow end stake once days have been served (1)
+    *
+    * restarting is signalled by using settings above
+    * no funds are ever pulled from external address
+    * is ever allowed except by sender
+    *
+    * the reason why the hedron flags are 0 by default on the contract level is because
+    * it may be worthwhile for hedron developers to build on top of this contract
+    * and it is poor form to force people in the future to have to cancel out the past
+    * front ends may choose to send a different default (non 0) during stake start
+    ConsentAbilities({
+      canStakeEnd: true,
+      canEarlyStakeEnd: false,
+      canMintHedron: false,
+      canMintHedronAtEnd: false,
+      shouldSendTokensToStaker: false,
+      stakeIsTransferable: false,
+      copyExternalTips: false,
+      mintCommunisAtEnd: false
+    })
+  );
+  */
   uint256 private constant DEFAULT_ENCODED_SETTINGS
     = uint256(0x000000000000000000000000000000000000000000000000000002020000fe01);
   /**
    * @return the default encoded settings used by end stakers to tip and end stakes
    */
-  function defaultEncodedSettings() external virtual pure returns(uint256) {
+  function defaultEncodedSettings() external pure returns(uint256) {
+    return _defaultEncodedSettings();
+  }
+  function _defaultEncodedSettings() internal virtual pure returns(uint256) {
     return DEFAULT_ENCODED_SETTINGS;
   }
   /**
@@ -124,36 +199,11 @@ abstract contract EncodableSettings is StakeInfo {
     }
   }
   /**
-   * updates settings under a stake id to the provided settings struct
-   * @param stakeId the stake id to update
-   * @param settings the settings to update the stake id to
-   * @notice payable is only available to reduce costs, any native token
-   * sent to this method will be unattributed and claimable by anyone
-   */
-  function updateSettings(uint256 stakeId, Settings calldata settings) external virtual payable {
-    _updateSettingsEncoded({
-      stakeId: stakeId,
-      settings: _encodeSettings(settings)
-    });
-  }
-  /**
    * update a stake's settings by providing a new, encoded value
    * @param stakeId the stake id to update settings for
    * @param settings the settings value to update settings for
    */
   function updateSettingsEncoded(uint256 stakeId, uint256 settings) external virtual payable {
-    _updateSettingsEncoded({
-      stakeId: stakeId,
-      settings: settings
-    });
-  }
-  /**
-   * update a stake's setting by providing a uint256 encoded settings
-   * @param stakeId the stake id to update settings for
-   * @param settings the encoded settings to update to (7th index is maintained)
-   * @notice This method will validate that the msg.sender owns the stake
-   */
-  function _updateSettingsEncoded(uint256 stakeId, uint256 settings) internal {
     _verifyStakeOwnership({
       owner: msg.sender,
       stakeId: stakeId
@@ -323,97 +373,97 @@ abstract contract EncodableSettings is StakeInfo {
       );
     }
   }
-  /**
-   * gets default settings struct
-   * @return settings struct with default settings
-   */
-  function _defaultSettings() internal virtual pure returns(Settings memory settings) {
-    // 0x00000000000000000000000000000000000000000000020000000000000000020000ff01
-    unchecked {
-      return Settings(
-        /*
-        * by default, there is no hedron tip
-        * assume that stakers will manage their own stakes at bare minimum
-        */
-        Linear({
-          method: ZERO,
-          xFactor: ZERO,
-          x: 0,
-          yFactor: ZERO,
-          y: ZERO,
-          bFactor: ZERO,
-          b: 0
-        }),
-        /*
-        * by default, there is no target (hex) tip
-        * assume that stakers will manage their own stakes at bare minimum
-        */
-        Linear({
-          method: ZERO,
-          xFactor: ZERO,
-          x: 0,
-          yFactor: ZERO,
-          y: ZERO,
-          bFactor: ZERO,
-          b: 0
-        }),
-        /*
-        * by default, assume that all tokens minted from an end stake
-        * should go directly into a new stake
-        */
-        Linear({
-          method: TWO,
-          xFactor: ZERO,
-          x: 0,
-          yFactor: ZERO,
-          y: ZERO,
-          bFactor: ZERO,
-          b: 0
-        }),
-        /*
-        * by default, assume that by using this contract, users want efficiency gains
-        * so by default, restarting their stakes are the most efficient means of managing tokens
-        */
-        uint8(TWO), uint16(ZERO),
-        uint8(MAX_UINT_7), // restart forever
-        /**
-         * stakes do not start with external tips
-         * tips can be added in the same tx via a multicall
-         */
-        false,
-        /*
-        * by index: 00000001
-        * 7: signal to ender that tips exist to be collected (allows contract to avoid an SLOAD) (0)
-        * 6: should recreate external tips
-        * 5: give dominion over hedron after tip to staker (0)
-        * 4: give dominion over target after tip to staker (0)
-        * 3: do not allow end hedron mint (0)
-        * 2: do not allow continuous hedron mint (0)
-        * 1: do not allow early end (0)
-        * 0: allow end stake once days have been served (1)
-        *
-        * restarting is signalled by using settings above
-        * no funds are ever pulled from external address
-        * is ever allowed except by sender
-        *
-        * the reason why the hedron flags are 0 by default on the contract level is because
-        * it may be worthwhile for hedron developers to build on top of this contract
-        * and it is poor form to force people in the future to have to cancel out the past
-        * front ends may choose to send a different default (non 0) during stake start
-        */
-        ConsentAbilities({
-          canStakeEnd: true,
-          canEarlyStakeEnd: false,
-          canMintHedron: false,
-          canMintHedronAtEnd: false,
-          shouldSendTokensToStaker: false,
-          stakeIsTransferable: false,
-          copyExternalTips: false,
-          mintCommunisAtEnd: false
-        })
-      );
-    }
-  }
+  // /**
+  //  * gets default settings struct
+  //  * @return settings struct with default settings
+  //  */
+  // function _defaultSettings() internal virtual pure returns(Settings memory settings) {
+  //   // 0x00000000000000000000000000000000000000000000020000000000000000020000ff01
+  //   unchecked {
+  //     return Settings(
+  //       /*
+  //       * by default, there is no hedron tip
+  //       * assume that stakers will manage their own stakes at bare minimum
+  //       */
+  //       Linear({
+  //         method: ZERO,
+  //         xFactor: ZERO,
+  //         x: 0,
+  //         yFactor: ZERO,
+  //         y: ZERO,
+  //         bFactor: ZERO,
+  //         b: 0
+  //       }),
+  //       /*
+  //       * by default, there is no target (hex) tip
+  //       * assume that stakers will manage their own stakes at bare minimum
+  //       */
+  //       Linear({
+  //         method: ZERO,
+  //         xFactor: ZERO,
+  //         x: 0,
+  //         yFactor: ZERO,
+  //         y: ZERO,
+  //         bFactor: ZERO,
+  //         b: 0
+  //       }),
+  //       /*
+  //       * by default, assume that all tokens minted from an end stake
+  //       * should go directly into a new stake
+  //       */
+  //       Linear({
+  //         method: TWO,
+  //         xFactor: ZERO,
+  //         x: 0,
+  //         yFactor: ZERO,
+  //         y: ZERO,
+  //         bFactor: ZERO,
+  //         b: 0
+  //       }),
+  //       /*
+  //       * by default, assume that by using this contract, users want efficiency gains
+  //       * so by default, restarting their stakes are the most efficient means of managing tokens
+  //       */
+  //       uint8(TWO), uint16(ZERO),
+  //       uint8(MAX_UINT_7), // restart forever
+  //       /**
+  //        * stakes do not start with external tips
+  //        * tips can be added in the same tx via a multicall
+  //        */
+  //       false,
+  //       /*
+  //       * by index: 00000001
+  //       * 7: signal to ender that tips exist to be collected (allows contract to avoid an SLOAD) (0)
+  //       * 6: should recreate external tips
+  //       * 5: give dominion over hedron after tip to staker (0)
+  //       * 4: give dominion over target after tip to staker (0)
+  //       * 3: do not allow end hedron mint (0)
+  //       * 2: do not allow continuous hedron mint (0)
+  //       * 1: do not allow early end (0)
+  //       * 0: allow end stake once days have been served (1)
+  //       *
+  //       * restarting is signalled by using settings above
+  //       * no funds are ever pulled from external address
+  //       * is ever allowed except by sender
+  //       *
+  //       * the reason why the hedron flags are 0 by default on the contract level is because
+  //       * it may be worthwhile for hedron developers to build on top of this contract
+  //       * and it is poor form to force people in the future to have to cancel out the past
+  //       * front ends may choose to send a different default (non 0) during stake start
+  //       */
+  //       ConsentAbilities({
+  //         canStakeEnd: true,
+  //         canEarlyStakeEnd: false,
+  //         canMintHedron: false,
+  //         canMintHedronAtEnd: false,
+  //         shouldSendTokensToStaker: false,
+  //         stakeIsTransferable: false,
+  //         copyExternalTips: false,
+  //         mintCommunisAtEnd: false
+  //       })
+  //     );
+  //   }
+  // }
   /**
    * modify the second byteword from the right to appropriately decrement
    * the number of times that these settings should be copied
@@ -452,6 +502,6 @@ abstract contract EncodableSettings is StakeInfo {
    * @return a settings struct with default values
    */
   function defaultSettings() external virtual pure returns(Settings memory) {
-    return _defaultSettings();
+    return _decodeSettings(_defaultEncodedSettings());
   }
 }

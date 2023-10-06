@@ -90,13 +90,6 @@ abstract contract UnderlyingStakeable is MulticallExtension, IUnderlyingStakeabl
     return IUnderlyingStakeable(TARGET).currentDay();
   }
   /**
-   * retrieve the global info from the target contract (hex)
-   * updated at the first start or end stake on any given day
-   */
-  function globalInfo() external view returns(uint256[13] memory) {
-    return IUnderlyingStakeable(TARGET).globalInfo();
-  }
-  /**
    * check whether or not the stake is being ended early
    * @param lockedDay the day after the stake was locked
    * @param stakedDays the number of days that the stake is locked

@@ -48,11 +48,6 @@ interface IUnderlyingStakeable {
    */
   function stakeCount(address staker) external view returns (uint256 count);
   /**
-   * retrieve the global info from the target contract (hex)
-   * updated at the first start or end stake on any given day
-   */
-  function globalInfo() external view returns(uint256[13] memory);
-  /**
    * retrieve a stake at a staker's index given a staker address and an index
    * @param staker the staker in question
    * @param index the index to focus on

@@ -83,11 +83,6 @@ describe("StakeManager", function () {
       await expect(x.hex.currentDay())
         .eventually.to.equal(await x.stakeManager.currentDay())
     })
-    it('proxies to hex for global info', async () => {
-      const x = await loadFixture(utils.deployFixture)
-      await expect(x.hex.globalInfo())
-        .eventually.to.deep.equal(await x.stakeManager.globalInfo())
-    })
     it('has a utility for checking if the stake is ending', async () => {
       const x = await loadFixture(utils.deployFixture)
       await x.stakeManager.stakeStart(x.stakedAmount, 10)
@@ -462,7 +457,8 @@ describe("StakeManager", function () {
         ...fromStruct(settings),
         newStake: zeroLinear,
       }
-      await x.stakeManager.updateSettings(x.nextStakeId, updatedSettings)
+      const encodedSettings = await x.stakeManager.encodeSettings(updatedSettings)
+      await x.stakeManager.updateSettingsEncoded(x.nextStakeId, encodedSettings)
       await expect(x.stakeManager.withdrawableBalanceOf(x.hex.getAddress(), signer1.address))
         .eventually.to.be.equal(0)
       await expect(x.stakeManager.connect(signer2).stakeEndByConsentForMany([x.nextStakeId]))
@@ -525,7 +521,8 @@ describe("StakeManager", function () {
         ...fromStruct(settings),
         copyIterations: 1,
       }
-      await x.stakeManager.updateSettings(x.nextStakeId, updatedSettings)
+      const encodedSettings = await x.stakeManager.encodeSettings(updatedSettings)
+      await x.stakeManager.updateSettingsEncoded(x.nextStakeId, encodedSettings)
       await utils.moveForwardDays(4n, x)
       let lastStakeId = x.nextStakeId
       let nextStakeId = await utils.nextStakeId(x.hex)
@@ -566,7 +563,8 @@ describe("StakeManager", function () {
           y: oneHundredHex,
         },
       }
-      await expect(x.stakeManager.connect(signer2).updateSettings(nextStakeId, updatedSettings))
+      const encodedSettings = await x.stakeManager.encodeSettings(updatedSettings)
+      await expect(x.stakeManager.connect(signer2).updateSettingsEncoded(nextStakeId, encodedSettings))
         .revertedWithCustomError(x.stakeManager, 'StakeNotOwned')
         .withArgs(signer2.address, signer1.address)
     })
@@ -588,9 +586,10 @@ describe("StakeManager", function () {
           y: oneHundredHex,
         },
       }
-      await expect(x.stakeManager.updateSettings(nextStakeId, updatedSettings))
+      const encodedSettings = await x.stakeManager.encodeSettings(updatedSettings)
+      await expect(x.stakeManager.updateSettingsEncoded(nextStakeId, encodedSettings))
         .to.emit(x.stakeManager, 'UpdateSettings')
-        .withArgs(nextStakeId, await x.stakeManager.encodeSettings(updatedSettings))
+        .withArgs(nextStakeId, encodedSettings)
       // this is an underestimation since yield is also a factor in this case
       const endStakeAndCollect = x.stakeManager.connect(signer2).multicall([
         x.stakeManager.interface.encodeFunctionData('stakeEndByConsent', [nextStakeId]),
@@ -708,9 +707,10 @@ describe("StakeManager", function () {
           y: oneHundredHex,
         },
       }
-      await expect(x.stakeManager.updateSettings(nextStakeId, updatedSettings))
+      const encodedSettings = await x.stakeManager.encodeSettings(updatedSettings)
+      await expect(x.stakeManager.updateSettingsEncoded(nextStakeId, encodedSettings))
         .to.emit(x.stakeManager, 'UpdateSettings')
-        .withArgs(nextStakeId, await x.stakeManager.encodeSettings(updatedSettings))
+        .withArgs(nextStakeId, encodedSettings)
       await expect(x.stakeManager.withdrawableBalanceOf(x.hex.getAddress(), signer2.address))
         .eventually.to.equal(0)
       await x.stakeManager.connect(signer2).multicall([
@@ -1219,9 +1219,10 @@ describe("StakeManager", function () {
         },
         consentAbilities: await x.stakeManager.decodeConsentAbilities(parseInt('00001101', 2)).then(fromStruct),
       }
-      await expect(x.stakeManager.updateSettings(nextStakeId, updatedSettings))
+      const encodedSettings = await x.stakeManager.encodeSettings(updatedSettings)
+      await expect(x.stakeManager.updateSettingsEncoded(nextStakeId, encodedSettings))
         .to.emit(x.stakeManager, 'UpdateSettings')
-        .withArgs(nextStakeId, await x.stakeManager.encodeSettings(updatedSettings))
+        .withArgs(nextStakeId, encodedSettings)
       const encodedStoredSettings = await x.stakeManager.stakeIdToSettings(nextStakeId)
       const storedSettings = await x.stakeManager.decodeSettings(encodedStoredSettings)
       expect(storedSettings.hedronTip.y).to.equal(oneHundredHedron)
@@ -1252,9 +1253,10 @@ describe("StakeManager", function () {
         },
         consentAbilities: await x.stakeManager.decodeConsentAbilities(parseInt('00001101', 2)).then(fromStruct),
       }
-      await expect(x.stakeManager.updateSettings(nextStakeId, updatedSettings))
+      const encodedSettings = await x.stakeManager.encodeSettings(updatedSettings)
+      await expect(x.stakeManager.updateSettingsEncoded(nextStakeId, encodedSettings))
         .to.emit(x.stakeManager, 'UpdateSettings')
-        .withArgs(nextStakeId, await x.stakeManager.encodeSettings(updatedSettings))
+        .withArgs(nextStakeId, encodedSettings)
       const encodedStoredSettings = await x.stakeManager.stakeIdToSettings(nextStakeId)
       const storedSettings = await x.stakeManager.decodeSettings(encodedStoredSettings)
       expect(storedSettings.hedronTip.y).to.equal(oneHundredHedron)
@@ -1293,9 +1295,10 @@ describe("StakeManager", function () {
           y: oneHundredHex,
         },
       }
-      await expect(x.stakeManager.updateSettings(nextStakeId, updatedSettings))
+      const encodedSettings = await x.stakeManager.encodeSettings(updatedSettings)
+      await expect(x.stakeManager.updateSettingsEncoded(nextStakeId, encodedSettings))
         .to.emit(x.stakeManager, 'UpdateSettings')
-        .withArgs(nextStakeId, await x.stakeManager.encodeSettings(updatedSettings))
+        .withArgs(nextStakeId, encodedSettings)
       await expect(x.stakeManager.withdrawableBalanceOf(x.hex.getAddress(), signer2.address))
         .eventually.to.equal(0)
       await x.stakeManager.connect(signer2).stakeEndByConsent(nextStakeId)
@@ -1327,9 +1330,10 @@ describe("StakeManager", function () {
           y: oneHundredHex,
         },
       }
-      await expect(x.stakeManager.updateSettings(nextStakeId, updatedSettings))
+      const encodedSettings = await x.stakeManager.encodeSettings(updatedSettings)
+      await expect(x.stakeManager.updateSettingsEncoded(nextStakeId, encodedSettings))
         .to.emit(x.stakeManager, 'UpdateSettings')
-        .withArgs(nextStakeId, await x.stakeManager.encodeSettings(updatedSettings))
+        .withArgs(nextStakeId, encodedSettings)
       await expect(x.stakeManager.withdrawableBalanceOf(x.hex.getAddress(), signer2.address))
         .eventually.to.equal(0)
 
@@ -1417,9 +1421,9 @@ describe("StakeManager", function () {
         consentAbilities: await x.stakeManager.decodeConsentAbilities(parseInt('1101', 2)).then(fromStruct),
       }
       await expect(x.stakeManager.multicall([
-        x.stakeManager.interface.encodeFunctionData('updateSettings', [
+        x.stakeManager.interface.encodeFunctionData('updateSettingsEncoded', [
           nextStakeId,
-          updatedSettings,
+          await x.stakeManager.encodeSettings(updatedSettings),
         ]),
         x.stakeManager.interface.encodeFunctionData('stakeEndByConsent', [nextStakeId]),
       ], false))
@@ -1481,9 +1485,10 @@ describe("StakeManager", function () {
         ...fromStruct(settings),
         consentAbilities: await x.stakeManager.decodeConsentAbilities(parseInt('1111', 2)).then(fromStruct), // 2nd to last index in binary flags
       }
-      await expect(x.stakeManager.updateSettings(nextStakeId, updatedSettings))
+      const encodedSettings = await x.stakeManager.encodeSettings(updatedSettings)
+      await expect(x.stakeManager.updateSettingsEncoded(nextStakeId, encodedSettings))
         .to.emit(x.stakeManager, 'UpdateSettings')
-        .withArgs(nextStakeId, await x.stakeManager.encodeSettings(updatedSettings))
+        .withArgs(nextStakeId, encodedSettings)
       await expect(x.stakeManager.connect(signer2).stakeEndByConsent(nextStakeId))
         .to.emit(x.hex20, 'Transfer')
         .withArgs(hre.ethers.ZeroAddress, await x.stakeManager.getAddress(), anyUint)
