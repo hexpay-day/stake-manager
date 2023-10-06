@@ -43,14 +43,13 @@ This section lists files that are in scope for the metrics report.
 
 ### <span id=t-source-Units-in-Scope>Source Units in Scope</span>
 
-Source Units Analyzed: **`25`**<br>
-Source Units in Scope: **`25`** (**100%**)
+Source Units Analyzed: **`24`**<br>
+Source Units in Scope: **`24`** (**100%**)
 
 | Type | File   | Logic Contracts | Interfaces | Lines | nLines | nSLOC | Comment Lines | Complex. Score | Capabilities |
 | ---- | ------ | --------------- | ---------- | ----- | ------ | ----- | ------------- | -------------- | ------------ |
 | 🎨 | contracts/AuthorizationManager.sol | 1 | **** | 114 | 114 | 47 | 65 | 23 | **** |
 | 📝 | contracts/Bank.sol | 1 | **** | 310 | 300 | 182 | 114 | 93 | **<abbr title='Payable Functions'>💰</abbr><abbr title='Unchecked Blocks'>Σ</abbr>** |
-| 🎨 | contracts/Communis.sol | 1 | **** | 45 | 22 | 17 | 1 | 25 | **** |
 | 📝 | contracts/CurrencyList.sol | 1 | **** | 54 | 54 | 36 | 14 | 23 | **<abbr title='Payable Functions'>💰</abbr>** |
 | 📝 | contracts/EarningsOracle.sol | 1 | **** | 236 | 232 | 153 | 77 | 80 | **<abbr title='Payable Functions'>💰</abbr><abbr title='Unchecked Blocks'>Σ</abbr>** |
 | 🎨 | contracts/EncodableSettings.sol | 1 | **** | 416 | 402 | 202 | 206 | 105 | **<abbr title='Payable Functions'>💰</abbr><abbr title='Unchecked Blocks'>Σ</abbr>** |
@@ -73,7 +72,7 @@ Source Units in Scope: **`25`** (**100%**)
 | 📝 | contracts/UnderlyingStakeManager.sol | 1 | **** | 225 | 207 | 132 | 73 | 63 | **<abbr title='Payable Functions'>💰</abbr><abbr title='Unchecked Blocks'>Σ</abbr>** |
 | 🎨 | contracts/UnderlyingStakeable.sol | 1 | **** | 143 | 118 | 55 | 71 | 35 | **<abbr title='Unchecked Blocks'>Σ</abbr>** |
 | 📝 | contracts/Utils.sol | 1 | **** | 96 | 96 | 44 | 51 | 81 | **<abbr title='Uses Assembly'>🖥</abbr><abbr title='Unchecked Blocks'>Σ</abbr>** |
-| 📝🎨 | **Totals** | **25** | **** | **4489**  | **4268** | **2767** | **1461** | **1545** | **<abbr title='Uses Assembly'>🖥</abbr><abbr title='Payable Functions'>💰</abbr><abbr title='DelegateCall'>👥</abbr><abbr title='Uses Hash-Functions'>🧮</abbr><abbr title='TryCatch Blocks'>♻️</abbr><abbr title='Unchecked Blocks'>Σ</abbr>** |
+| 📝🎨 | **Totals** | **24** | **** | **4444**  | **4246** | **2750** | **1460** | **1520** | **<abbr title='Uses Assembly'>🖥</abbr><abbr title='Payable Functions'>💰</abbr><abbr title='DelegateCall'>👥</abbr><abbr title='Uses Hash-Functions'>🧮</abbr><abbr title='TryCatch Blocks'>♻️</abbr><abbr title='Unchecked Blocks'>Σ</abbr>** |
 
 <sub>
 Legend: <a onclick="toggleVisibility('table-legend', this)">[➕]</a>
@@ -135,9 +134,11 @@ Doppelganger Contracts: **`0`**
 
 ### Overview
 
-The analysis finished with **`0`** errors and **`0`** duplicate files.
+The analysis finished with **`1`** errors and **`0`** duplicate files.
 
+**Errors:**
 
+contracts/Communis.sol
 
 
 
@@ -155,14 +156,14 @@ The analysis finished with **`0`** errors and **`0`** duplicate files.
 
 #### <span id=t-inline-documentation>Inline Documentation</span>
 
-- **Comment-to-Source Ratio:** On average there are`2.04` code lines per comment (lower=better).
+- **Comment-to-Source Ratio:** On average there are`2.01` code lines per comment (lower=better).
 - **ToDo's:** `0`
 
 #### <span id=t-components>Components</span>
 
 | 📝Contracts   | 📚Libraries | 🔍Interfaces | 🎨Abstract |
 | ------------- | ----------- | ------------ | ---------- |
-| 19 | 0  | 0  | 6 |
+| 19 | 0  | 0  | 5 |
 
 #### <span id=t-exposed-functions>Exposed Functions</span>
 
@@ -170,11 +171,11 @@ This section lists functions that are explicitly declared public or payable. Ple
 
 | 🌐Public   | 💰Payable |
 | ---------- | --------- |
-| 118 | 40  |
+| 107 | 40  |
 
 | External   | Internal | Private | Pure | View |
 | ---------- | -------- | ------- | ---- | ---- |
-| 118 | 189  | 0 | 47 | 61 |
+| 107 | 184  | 0 | 45 | 57 |
 
 #### <span id=t-statevariables>StateVariables</span>
 
@@ -201,7 +202,7 @@ This section lists functions that are explicitly declared public or payable. Ple
 | Dependency / Import Path | Count  |
 | ------------------------ | ------ |
 | @openzeppelin/contracts/access/Ownable2Step.sol | 1 |
-| solmate/src/tokens/ERC20.sol | 5 |
+| solmate/src/tokens/ERC20.sol | 4 |
 | solmate/src/tokens/ERC721.sol | 1 |
 | solmate/src/utils/SafeTransferLib.sol | 3 |
 
@@ -264,7 +265,6 @@ This section lists functions that are explicitly declared public or payable. Ple
 |-------------|--------------|
 | contracts/AuthorizationManager.sol | 37c2c14a2d122806269d0ec2ba0ee987c36e0795 |
 | contracts/Bank.sol | dfd1c4473660c15b2395747618eb608484403002 |
-| contracts/Communis.sol | fad2401c8e50b86839eca58a50dd34231c6757c4 |
 | contracts/CurrencyList.sol | 6edb2f225796c57dffe1044f49cb663b1ff8ebe4 |
 | contracts/EarningsOracle.sol | f2d45921d81672efea8d4d58106eaf0be37b2d53 |
 | contracts/EncodableSettings.sol | 49898c08bc77f9e4c18d720418529c05e4a90825 |
@@ -325,19 +325,6 @@ This section lists functions that are explicitly declared public or payable. Ple
 | └ | depositTokenUnattributed | External ❗️ | 🛑  |NO❗️ |
 | └ | _withdrawTokenTo | Internal 🔒 | 🛑  | |
 | └ | _attributeFunds | Internal 🔒 | 🛑  | |
-||||||
-| **Communis** | Implementation | ERC20 |||
-| └ | mintEndBonus | External ❗️ | 🛑  |NO❗️ |
-| └ | mintGoodAccountingBonus | External ❗️ | 🛑  |NO❗️ |
-| └ | mintStakeBonus | External ❗️ | 🛑  |NO❗️ |
-| └ | mintStartBonus | External ❗️ | 🛑  |NO❗️ |
-| └ | stakeIdGoodAccountingBonusPayout | External ❗️ |   |NO❗️ |
-| └ | stakeIdEndBonusPayout | External ❗️ |   |NO❗️ |
-| └ | stakeIdStartBonusPayout | External ❗️ |   |NO❗️ |
-| └ | addressStakedCodeak | External ❗️ |   |NO❗️ |
-| └ | withdrawStakedCodeak | External ❗️ | 🛑  |NO❗️ |
-| └ | getPayout | External ❗️ |   |NO❗️ |
-| └ | getStartBonusPayout | External ❗️ |   |NO❗️ |
 ||||||
 | **CurrencyList** | Implementation | Utils |||
 | └ | addCurrencyToList | External ❗️ |  💵 |NO❗️ |
