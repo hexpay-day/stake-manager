@@ -401,7 +401,7 @@ contract SingletonCommunis is StakeEnder {
 
   function distributeStakeBonusByStakeId(uint256 stakeId, bool withdraw) external payable returns(uint256 payout) {
     address staker = _verifyOnlyStaker(stakeId);
-    (, uint256 distributableBonus) = _claimStakeBonus(); // assure anything claimable for the stake manager is claimed (for everone)
+    (, uint256 distributableBonus) = _mintStakeBonus(); // assure anything claimable for the stake manager is claimed (for everone)
 
     uint256 currentDay = IHEX(TARGET).currentDay();
     uint256 payoutInfo = stakeIdCommunisPayoutInfo[stakeId];
