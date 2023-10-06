@@ -125,6 +125,7 @@ contract StakeEnder is Magnitude, SingletonMintManager {
       })) {
         _communisStakeEndBonus({
           settings: settings,
+          today: count >> INDEX_RIGHT_TODAY,
           index: idx,
           staker: staker,
           referrer: tipTo,
