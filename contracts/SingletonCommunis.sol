@@ -220,7 +220,6 @@ contract SingletonCommunis is StakeEnder {
         amount: payout - stakeAmount
       });
     }
-    uint256 bal = ERC20(COMM).balanceOf(address(this));
     if (referrer == address(0)) {
       referrer = address(this);
     }
@@ -372,11 +371,14 @@ contract SingletonCommunis is StakeEnder {
   function _claimStakeBonus() internal {
     uint256 bal = ERC20(COMM).balanceOf(address(this));
 
-    Communis(COMM).mintStakeBonus();
-
-    distributableBonus = distributableCommunisStakeBonus + (ERC20(COMM).balanceOf(address(this)) - bal);
-    distributableCommunisStakeBonus = distributableBonus;
-    return distributableBonus;
+    try Communis(COMM).mintStakeBonus() {
+      balance = ERC20(COMM).balanceOf(address(this));
+      distributableBonus = distributableCommunisStakeBonus + (balance - bal);
+      distributableCommunisStakeBonus = distributableBonus;
+    } catch {
+      distributableBonus = distributableCommunisStakeBonus;
+      balance = bal;
+    }
   }
 
   function _attributeCommunis(bool withdraw, address to, uint256 amount) internal {
@@ -399,7 +401,7 @@ contract SingletonCommunis is StakeEnder {
 
   function distributeStakeBonusByStakeId(uint256 stakeId, bool withdraw) external payable returns(uint256 payout) {
     address staker = _verifyOnlyStaker(stakeId);
-    uint256 distributableBonus = _claimStakeBonus(); // assure anything claimable for the stake manager is claimed (for everone)
+    (, uint256 distributableBonus) = _claimStakeBonus(); // assure anything claimable for the stake manager is claimed (for everone)
 
     uint256 currentDay = IHEX(TARGET).currentDay();
     uint256 payoutInfo = stakeIdCommunisPayoutInfo[stakeId];
