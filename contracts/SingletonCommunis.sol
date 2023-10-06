@@ -231,16 +231,20 @@ contract SingletonCommunis is StakeEnder {
       return;
     }
 
-    stakeIdStakedAmount[stakeId] += stakeAmount;
-    stakeIdEndBonusDebt[stakeId] = Communis(COMM).stakeIdEndBonusPayout(stakeId) / TWO;
-    stakeIdNextPayoutDay[stakeId] = IHEX(hx).currentDay() + 91;
+    unchecked {
+      stakeIdCommunisPayoutInfo[stakeId] = _encodePayoutInfo({
+        nextPayoutDay: today + NINETY_ONE,
+        endBonusPayout: Communis(COMM).stakeIdEndBonusPayout(stakeId) / TWO,
+        stakeAmount: uint256(uint120(payoutInfo)) + stakeAmount
+      });
 
-    _attributeFunds({
-      settings: settings,
-      token: COMM,
-      staker: staker,
-      amount: ERC20(COMM).balanceOf(address(this)) - bal
-    });
+      _attributeFunds({
+        settings: settings,
+        token: COMM,
+        staker: staker,
+        amount: ERC20(COMM).balanceOf(address(this)) - bal
+      });
+    }
   }
 
   function _verifyOnlyStaker(uint256 stakeId) internal view returns(address staker) {
@@ -370,51 +374,69 @@ contract SingletonCommunis is StakeEnder {
 
     Communis(COMM).mintStakeBonus();
 
-    uint256 mintedStakeBonus = ERC20(COMM).balanceOf(address(this)) - bal;
-
-    distributableStakeBonus += mintedStakeBonus;
+    distributableBonus = distributableCommunisStakeBonus + (ERC20(COMM).balanceOf(address(this)) - bal);
+    distributableCommunisStakeBonus = distributableBonus;
+    return distributableBonus;
   }
 
-  function distributeStakeBonusByStakeId(UnderlyingStakeable.StakeStore memory stake) external {
-    _claimStakeBonus(); // assure anything claimable for the stake manager is claimed (for everone )
+  function _attributeCommunis(bool withdraw, address to, uint256 amount) internal {
+    if (amount > ZERO) {
+      if (withdraw) {
+        _withdrawTokenTo({
+          token: COMM,
+          to: to,
+          amount: amount
+        });
+      } else {
+        _addToTokenWithdrawable({
+          token: COMM,
+          to: to,
+          amount: amount
+        });
+      }
+    }
+  }
 
-    uint256 stakeId = stake.stakeId;
-    uint256 currentDay = IHEX(hx).currentDay();
-    uint256 nextPayoutDay = stakeIdNextPayoutDay[stakeId];
+  function distributeStakeBonusByStakeId(uint256 stakeId, bool withdraw) external payable returns(uint256 payout) {
+    address staker = _verifyOnlyStaker(stakeId);
+    uint256 distributableBonus = _claimStakeBonus(); // assure anything claimable for the stake manager is claimed (for everone)
 
-    require(nextPayoutDay >= currentDay, "Stake Id does not have an available stake bonus");
+    uint256 currentDay = IHEX(TARGET).currentDay();
+    uint256 payoutInfo = stakeIdCommunisPayoutInfo[stakeId];
 
-    uint256 stakedAmount = stakeIdStakedAmount[stakeId];
     uint256 stakeManagerStakedAmount = Communis(COMM).addressStakedCodeak(address(this));
 
-    require(stakedAmount > 0, "Stake Id has no Staked Amount");
-    require(stakeManagerStakedAmount > 0, "Stake Manager has no Staked Amount");
+    unchecked {
+      uint256 stakedAmount = uint256(uint120(payoutInfo));
+      if (stakedAmount == ZERO || stakeManagerStakedAmount == ZERO) {
+        revert NotAllowed();
+      }
+      uint256 nextPayoutDay = uint16(payoutInfo >> 240);
+      if (nextPayoutDay > currentDay) {
+        revert NotAllowed();
+      }
 
-    // This looks at how much a given stakeId is currently contributing to the total amount staked in the stake manager.
-    // contributionPercentage goes up and down with stakedAmount given fixed stakeManagerStakedAmount
-    // contributionPercentage goes up and down with stakeManagerStakedAmount given fixed stakedAmount
-    //    -If others reduce the stakeManagerStakedAmount by withdrawing their staked COM (and not running distributeStakeBonusByStakeId for themself)
-    //        contributionPercentage goes up and distributableStakeBonus simply gets redistributed accordingly.
+      // This looks at how much a given stakeId is currently contributing to the total amount staked in the stake manager.
+      // contributionPercentage goes up and down with stakedAmount given fixed stakeManagerStakedAmount
+      // contributionPercentage goes up and down with stakeManagerStakedAmount given fixed stakedAmount
+      //    - If others reduce the stakeManagerStakedAmount by withdrawing their
+      //      staked COM (and not running distributeStakeBonusByStakeId for themself)
+      //      contributionPercentage goes up and distributableCommunisStakeBonus simply gets redistributed accordingly.
 
-    uint256 contributionPercentage = (stakedAmount * (10 ** 5)) / stakeManagerStakedAmount;
-    uint256 contributionTotal = (distributableStakeBonus * contributionPercentage) / (10 ** 5);
+      uint256 contributionPercentage = (stakedAmount * (10 ** 5)) / stakeManagerStakedAmount;
+      uint256 contributionTotal = (distributableStakeBonus * contributionPercentage) / (10 ** 5);
 
-    uint256 numberOfPayouts = ((currentDay - nextPayoutDay) / 91) + 1;
-    uint256 payout = contributionTotal * numberOfPayouts;
-
-    uint256 settings = stakeIdToSettings[stakeId];
-    (, address staker) = _stakeIdToInfo(stakeId);
-
-    //mint directly to staker?
-    _attributeFunds({
-      settings: settings,
-      token: COMM,
-      staker: staker,
+      distributableCommunisStakeBonus = (distributableBonus - payout);
+      stakeIdCommunisPayoutInfo[stakeId] = _encodePayoutInfo({
+        nextPayoutDay: nextPayoutDay,
+        endBonusPayout: uint120(payoutInfo >> ONE_TWENTY),
+        stakeAmount: stakedAmount
+      });
+    }
+    _attributeCommunis({
+      withdraw: withdraw,
+      to: staker,
       amount: payout
     });
-
-    distributableStakeBonus -= payout;
-    stakeIdNextPayoutDay[stakeId] += (numberOfPayouts * 91);
   }
-
 }
