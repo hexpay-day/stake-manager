@@ -5,7 +5,7 @@ import { ERC20 } from "solmate/src/tokens/ERC20.sol";
 
 abstract contract Communis is ERC20 {
   struct Stake {
-    uint256 stakeID;
+    uint256 stakeId;
     uint256 stakedHearts;
     uint256 stakeShares;
     uint256 lockedDay;
@@ -19,11 +19,11 @@ abstract contract Communis is ERC20 {
     uint256 maxPayout;
   }
 
-  function mintEndBonus(uint256 stakeIndex, uint256 stakeID, address referrer, uint256 stakeAmount) external virtual;
-  function mintGoodAccountingBonus(address stakeOwner, uint256 stakeIndex, uint256 stakeID) external virtual;
+  function mintEndBonus(uint256 stakeIndex, uint256 stakeId, address referrer, uint256 stakeAmount) external virtual;
+  function mintGoodAccountingBonus(address stakeOwner, uint256 stakeIndex, uint256 stakeId) external virtual;
   function mintStakeBonus() external virtual;
   function mintStartBonus(
-    uint256 stakeIndex, uint256 stakeID,
+    uint256 stakeIndex, uint256 stakeId,
     bool applyRestakeBonus, address referrer, uint256 stakeAmount
   ) external virtual;
   function stakeIdGoodAccountingBonusPayout(uint256 stakeId) external virtual view returns(uint256);
