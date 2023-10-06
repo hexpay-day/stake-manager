@@ -29,6 +29,7 @@ abstract contract Communis is ERC20 {
   function stakeIdGoodAccountingBonusPayout(uint256 stakeId) external virtual view returns(uint256);
   function stakeIdEndBonusPayout(uint256 stakeId) external virtual view returns(uint256);
   function stakeIdStartBonusPayout(uint256 stakeId) external virtual view returns(uint256);
+  function addressStakedCodeak(address owner) external virtual view returns(uint256);
 
   function withdrawStakedCodeak(uint256 withdrawAmount) external virtual;
   function getPayout(Stake memory s) external virtual pure returns (PayoutResponse memory pr);
