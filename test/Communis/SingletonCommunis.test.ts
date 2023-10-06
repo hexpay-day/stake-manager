@@ -108,13 +108,16 @@ describe('SingletonCommunis.sol', () => {
         .not.to.emit(x.communis, 'Transfer')
     })
   })
-  describe('distributeStakeBonusByStakeId', async () => {
-    it('can distribute stake bonuses equitably', async () => {
-      const x = await loadFixture(utils.deployFixture)
+  describe('many stakers', () => {
+    let x!: Awaited<ReturnType<typeof utils.deployFixture>>
+    let stakeId!: bigint
+    let range!: number[]
+    beforeEach(async () => {
+      x = await loadFixture(utils.deployFixture)
       const [signer1, signer2, signer3] = x.signers
       // gives permission for anyone to end stake
       // requires comm minting at end
-      const stakeId = await utils.nextStakeId(x.hex)
+      stakeId = await utils.nextStakeId(x.hex)
       await x.stakeManager.stakeStartFromBalanceFor(signer1.address, x.stakedAmount, 365, parseInt('10000001'))
       await x.stakeManager.stakeStartFromBalanceFor(signer1.address, x.stakedAmount, 365, parseInt('10000001'))
       await x.stakeManager.connect(signer1).setFutureStakeEndCommunisAmount(stakeId + 1n, 1) // stake it all
@@ -124,36 +127,75 @@ describe('SingletonCommunis.sol', () => {
       await x.stakeManager.stakeStartFromBalanceFor(signer3.address, x.stakedAmount, 365, parseInt('10000001'))
       await x.stakeManager.stakeStartFromBalanceFor(signer3.address, x.stakedAmount, 365, parseInt('10000001'))
       await x.stakeManager.connect(signer3).setFutureStakeEndCommunisAmount(stakeId + 5n, 1) // stake it all
-
-      // move forward to end day
-      await utils.moveForwardDays(366n, x)
-      const range = _.range(Number(stakeId), Number(stakeId + 6n)) // exclusive range end
-      // staker 1 ends the stake + makes each staker their own referrer
-      await expect(x.stakeManager.stakeEndByConsentForMany(range))
-        .to.emit(x.hex, 'StakeEnd')
-        .withArgs(
-          anyUint, utils.anyUintNoPenalty,
-          await x.stakeManager.getAddress(),
-          stakeId
-        )
-          // should err out / skip due to previous end being called
+      range = _.range(Number(stakeId), Number(stakeId + 6n)) // exclusive range end
+    })
+    describe('distributeStakeBonusByStakeId', async () => {
+      it('can distribute stake bonuses equitably', async () => {
+        // move forward to end day
+        await utils.moveForwardDays(366n, x)
+        const range = _.range(Number(stakeId), Number(stakeId + 6n)) // exclusive range end
+        // staker 1 ends the stake + makes each staker their own referrer
+        await expect(x.stakeManager.stakeEndByConsentForMany(range))
+          .to.emit(x.hex, 'StakeEnd')
+          .withArgs(
+            anyUint, utils.anyUintNoPenalty,
+            await x.stakeManager.getAddress(),
+            stakeId
+          )
+            // should err out / skip due to previous end being called
+            .to.emit(x.communis, 'Transfer')
+            .withArgs(hre.ethers.ZeroAddress, await x.stakeManager.getAddress(), anyUint)
+        await utils.moveForwardDays(90n, x) // too soon
+        await expect(x.stakeManager.distributeStakeBonusByStakeId(stakeId, false))
+          .to.revertedWithCustomError(x.stakeManager, 'NotAllowed')
+        await expect(x.stakeManager.distributeStakeBonusByStakeId(stakeId + 1n, false))
+          .to.revertedWithCustomError(x.stakeManager, 'NotAllowed')
+        await utils.moveForwardDays(1n, x) // first end stakeable day
+        await expect(x.stakeManager.distributeStakeBonusByStakeId(stakeId, false))
+          .to.revertedWithCustomError(x.stakeManager, 'NotAllowed')
+        await expect(x.stakeManager.distributeStakeBonusByStakeId(stakeId + 1n, false))
           .to.emit(x.communis, 'Transfer')
-          .withArgs(hre.ethers.ZeroAddress, await x.stakeManager.getAddress(), anyUint)
-      await utils.moveForwardDays(90n, x) // too soon
-      await expect(x.stakeManager.distributeStakeBonusByStakeId(stakeId, false))
-        .to.revertedWithCustomError(x.stakeManager, 'NotAllowed')
-      await expect(x.stakeManager.distributeStakeBonusByStakeId(stakeId + 1n, false))
-        .to.revertedWithCustomError(x.stakeManager, 'NotAllowed')
-      await utils.moveForwardDays(1n, x) // first end stakeable day
-      await expect(x.stakeManager.distributeStakeBonusByStakeId(stakeId, false))
-        .to.revertedWithCustomError(x.stakeManager, 'NotAllowed')
-      await expect(x.stakeManager.distributeStakeBonusByStakeId(stakeId + 1n, false))
-        .to.emit(x.communis, 'Transfer')
-        .withArgs(
-          hre.ethers.ZeroAddress,
-          await x.stakeManager.getAddress(),
-          anyUint,
-        )
+          .withArgs(
+            hre.ethers.ZeroAddress,
+            await x.stakeManager.getAddress(),
+            anyUint,
+          )
+      })
+    })
+    describe('claimStakeBonus', async () => {
+      it('collects stake bonuses for everyone as they accrue on communis', async () => {
+        // move forward to end day
+        await utils.moveForwardDays(366n, x)
+        const range = _.range(Number(stakeId), Number(stakeId + 6n)) // exclusive range end
+        // staker 1 ends the stake + makes each staker their own referrer
+        await expect(x.stakeManager.stakeEndByConsentForMany(range))
+          .to.emit(x.hex, 'StakeEnd')
+          .withArgs(
+            anyUint, utils.anyUintNoPenalty,
+            await x.stakeManager.getAddress(),
+            stakeId
+          )
+            // should err out / skip due to previous end being called
+            .to.emit(x.communis, 'Transfer')
+            .withArgs(hre.ethers.ZeroAddress, await x.stakeManager.getAddress(), anyUint)
+        await utils.moveForwardDays(90n, x) // too soon
+        await expect(x.stakeManager.distributeStakeBonusByStakeId(stakeId, false))
+          .to.revertedWithCustomError(x.stakeManager, 'NotAllowed')
+        await expect(x.stakeManager.distributeStakeBonusByStakeId(stakeId + 1n, false))
+          .to.revertedWithCustomError(x.stakeManager, 'NotAllowed')
+        await utils.moveForwardDays(1n, x) // first end stakeable day
+        await expect(x.stakeManager.distributeStakeBonusByStakeId(stakeId, false))
+          .to.revertedWithCustomError(x.stakeManager, 'NotAllowed')
+        await expect(x.stakeManager.claimStakeBonus())
+          .to.emit(x.communis, 'Transfer')
+          .withArgs(
+            hre.ethers.ZeroAddress,
+            await x.stakeManager.getAddress(),
+            anyUint,
+          )
+        await expect(x.stakeManager.distributeStakeBonusByStakeId(stakeId + 1n, false))
+          .not.to.emit(x.communis, 'Transfer')
+      })
     })
   })
 })
