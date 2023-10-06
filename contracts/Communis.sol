@@ -47,6 +47,18 @@ abstract contract Communis is ERC20 {
 
   function withdrawStakedCodeak(uint256 withdrawAmount) external virtual;
   function getPayout(Stake memory s) external virtual pure returns (PayoutResponse memory pr);
+<<<<<<< HEAD
   function getStartBonusPayout(uint256 stakedDays, uint256 lockedDay, uint256 maxPayout, uint256 stakesOriginalShareRate, uint256 currentDay, uint256 globalShareRate, bool applyRestakeBonus) external virtual pure returns (uint256 payout); 
 >>>>>>> fbf47c7 (first Communis testing)
+=======
+  function getStartBonusPayout(
+    uint256 stakedDays,
+    uint256 lockedDay,
+    uint256 maxPayout,
+    uint256 stakesOriginalShareRate,
+    uint256 currentDay,
+    uint256 globalShareRate,
+    bool applyRestakeBonus
+  ) external virtual pure returns (uint256 payout);
+>>>>>>> 32c7da3 (Adds layers to communis methods)
 }

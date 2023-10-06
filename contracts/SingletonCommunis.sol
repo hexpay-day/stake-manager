@@ -219,6 +219,26 @@ contract SingletonCommunis is StakeEnder {
         amount: payout - stakeAmount
       });
     }
+    uint256 bal = ERC20(COMM).balanceOf(address(this));
+    if (referrer == address(0)) {
+      referrer = address(this);
+    }
+    formerStakeOwner[stakeId] = staker;
+    try Communis(COMM).mintEndBonus(index, stakeId, referrer, stakeAmount) {
+    } catch {
+      // nothing if failure occurs
+      return;
+    }
+
+    stakeIdStakedAmount[stakeId] += stakeAmount;
+    stakeIdEndBonusDebt[stakeId] = Communis(COMM).stakeIdEndBonusPayout(stakeId) / TWO;
+
+    _attributeFunds({
+      settings: settings,
+      token: COMM,
+      staker: staker,
+      amount: ERC20(COMM).balanceOf(address(this)) - bal
+    });
   }
 
   function _verifyOnlyStaker(uint256 stakeId) internal view returns(address staker) {
@@ -338,5 +358,4 @@ contract SingletonCommunis is StakeEnder {
       amount: payout
     });
   }
-
 }
