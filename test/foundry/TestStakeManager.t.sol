@@ -135,9 +135,9 @@ contract TestStakeManager is Test {
     IHEX(hx).stakeEnd(index, uint40(stakeId));
     vm.stopPrank();
   }
-  function _updateSettings(address stakeOwner, uint256 stakeId, EncodableSettings.Settings memory settings) internal {
+  function _updateSettings(address stakeOwner, uint256 stakeId, uint256 settings) internal {
     vm.startPrank(stakeOwner);
-    stkMngr.updateSettings(stakeId, settings);
+    stkMngr.updateSettingsEncoded(stakeId, settings);
     vm.stopPrank();
   }
   function _stakeInfo(uint256 input) internal view returns(address staker, uint256 amount, uint256 stakeDays) {
