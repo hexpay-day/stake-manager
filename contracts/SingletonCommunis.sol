@@ -89,6 +89,7 @@ contract SingletonCommunis is StakeEnder {
         if (msg.sender == staker) {
           uint256 settings = stakeIdToSettings[stakeId];
           formerStakeOwner[stakeId] = staker;
+          //need to assure stakeAmount is at least 50% of maxPayout
           Communis(COMM).mintEndBonus(index, stakeId, referrer, stakeAmount);
 
           unchecked {
@@ -306,13 +307,14 @@ contract SingletonCommunis is StakeEnder {
       //      contributionPercentage goes up and distributableCommunisStakeBonus simply gets redistributed accordingly.
 
       uint256 numberOfPayouts = ((currentDay - nextPayoutDay) / NINETY_ONE) + ONE;
+
       payout = ((
         distributableBonus * (stakedAmount * 100_000)
-      ) * numberOfPayouts) / (100_000 * stakeManagerStakedAmount);
+      )) / (100_000 * stakeManagerStakedAmount);
 
       distributableCommunisStakeBonus = (distributableBonus - payout);
       stakeIdCommunisPayoutInfo[stakeId] = _encodePayoutInfo({
-        nextPayoutDay: nextPayoutDay,
+        nextPayoutDay: nextPayoutDay + (numberOfPayouts * NINETY_ONE),
         endBonusPayout: uint120(payoutInfo >> ONE_TWENTY),
         stakeAmount: stakedAmount
       });
