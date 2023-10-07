@@ -366,6 +366,293 @@ describe('SingletonCommunis.sol', () => {
       })
     })
   })
+  describe('distributeStakeBonusByStakeId', () => {
+    it('Three com stakers claiming their contribution', async () => {
+      const x = await loadFixture(utils.deployFixture)
+      const [signer1, signer2, signer3] = x.signers
+
+      await x.stakeManager.connect(signer1).stakeStart(10000000, 365)
+      await x.stakeManager.connect(signer2).stakeStart(20000000, 365)
+      await x.stakeManager.connect(signer3).stakeStart(30000000, 365)
+
+      let addressStakeCount = await x.stakeManager.stakeCount(x.stakeManager.getAddress())
+
+      const stake1 = fromStruct(await x.hex.stakeLists(x.stakeManager.getAddress(), addressStakeCount - 3n))
+      const stake2 = fromStruct(await x.hex.stakeLists(x.stakeManager.getAddress(), addressStakeCount - 2n))
+      const stake3 = fromStruct(await x.hex.stakeLists(x.stakeManager.getAddress(), addressStakeCount - 1n))
+
+      await utils.moveForwardDays(366n, x)
+
+      let payoutResponseStake1 = await x.communis.getPayout(stake1)
+      await expect(x.stakeManager.connect(signer1).mintCommunis(
+        // end stake bonus
+        2n, stake1.stakeId,
+        hre.ethers.ZeroAddress,
+        payoutResponseStake1.maxPayout,
+      ))
+      .to.emit(x.communis, 'Transfer')
+
+      let payoutResponseStake2 = await x.communis.getPayout(stake2)
+      await expect(x.stakeManager.connect(signer2).mintCommunis(
+        // end stake bonus
+        2n, stake2.stakeId,
+        hre.ethers.ZeroAddress,
+        payoutResponseStake2.maxPayout,
+      ))
+      .to.emit(x.communis, 'Transfer')
+
+      let payoutResponseStake3 = await x.communis.getPayout(stake3)
+      await expect(x.stakeManager.connect(signer3).mintCommunis(
+        // end stake bonus
+        2n, stake3.stakeId,
+        hre.ethers.ZeroAddress,
+        payoutResponseStake3.maxPayout,
+      ))
+      .to.emit(x.communis, 'Transfer')
+
+      await utils.moveForwardDays(91n, x)
+
+      await x.stakeManager.mintStakeBonus();
+
+      await distributeStakeBonusByStakeId(stake1, signer1, x);
+      await distributeStakeBonusByStakeId(stake2, signer2, x);
+      await distributeStakeBonusByStakeId(stake3, signer3, x);
+
+    })
+    it('Three com stakers claiming their contribution different intervals', async () => {
+      const x = await loadFixture(utils.deployFixture)
+      const [signer1, signer2, signer3] = x.signers
+
+      await x.stakeManager.connect(signer1).stakeStart(10000000, 365)
+      let addressStakeCount = await x.stakeManager.stakeCount(x.stakeManager.getAddress())
+      const stake1 = fromStruct(await x.hex.stakeLists(x.stakeManager.getAddress(), addressStakeCount - 1n))
+
+      await utils.moveForwardDays(10n, x)
+
+      await x.stakeManager.connect(signer2).stakeStart(20000000, 365)
+      addressStakeCount = await x.stakeManager.stakeCount(x.stakeManager.getAddress())
+      const stake2 = fromStruct(await x.hex.stakeLists(x.stakeManager.getAddress(), addressStakeCount - 1n))
+
+      await utils.moveForwardDays(20n, x)
+
+      await x.stakeManager.connect(signer3).stakeStart(30000000, 365)
+      addressStakeCount = await x.stakeManager.stakeCount(x.stakeManager.getAddress())
+      const stake3 = fromStruct(await x.hex.stakeLists(x.stakeManager.getAddress(), addressStakeCount - 1n))
+
+      await utils.moveForwardDays(366n, x)
+
+      let payoutResponseStake1 = await x.communis.getPayout(stake1)
+      await expect(x.stakeManager.connect(signer1).mintCommunis(
+        // end stake bonus
+        2n, stake1.stakeId,
+        hre.ethers.ZeroAddress,
+        payoutResponseStake1.maxPayout,
+      ))
+      .to.emit(x.communis, 'Transfer')
+
+      let payoutResponseStake2 = await x.communis.getPayout(stake2)
+      await expect(x.stakeManager.connect(signer2).mintCommunis(
+        // end stake bonus
+        2n, stake2.stakeId,
+        hre.ethers.ZeroAddress,
+        payoutResponseStake2.maxPayout,
+      ))
+      .to.emit(x.communis, 'Transfer')
+
+      let payoutResponseStake3 = await x.communis.getPayout(stake3)
+      await expect(x.stakeManager.connect(signer3).mintCommunis(
+        // end stake bonus
+        2n, stake3.stakeId,
+        hre.ethers.ZeroAddress,
+        payoutResponseStake3.maxPayout,
+      ))
+      .to.emit(x.communis, 'Transfer')
+
+      await utils.moveForwardDays(182n, x)
+
+      await x.stakeManager.mintStakeBonus();
+
+      await distributeStakeBonusByStakeId(stake1, signer1, x);
+      await distributeStakeBonusByStakeId(stake2, signer2, x);
+      await distributeStakeBonusByStakeId(stake3, signer3, x);
+
+    })
+    it('Three com stakers claiming their contribution different intervals, multiple claims', async () => {
+      const x = await loadFixture(utils.deployFixture)
+      const [signer1, signer2, signer3] = x.signers
+
+      await x.stakeManager.connect(signer1).stakeStart(10000000, 365)
+      let addressStakeCount = await x.stakeManager.stakeCount(x.stakeManager.getAddress())
+      const stake1 = fromStruct(await x.hex.stakeLists(x.stakeManager.getAddress(), addressStakeCount - 1n))
+
+      await utils.moveForwardDays(366n, x)
+
+      let payoutResponseStake1 = await x.communis.getPayout(stake1)
+      await expect(x.stakeManager.connect(signer1).mintCommunis(
+        // end stake bonus
+        2n, stake1.stakeId,
+        hre.ethers.ZeroAddress,
+        payoutResponseStake1.maxPayout,
+      ))
+      .to.emit(x.communis, 'Transfer')
+
+      await utils.moveForwardDays(91n, x)
+      await x.stakeManager.mintStakeBonus();
+      await distributeStakeBonusByStakeId(stake1, signer1, x);
+
+      await x.stakeManager.connect(signer2).stakeStart(20000000, 365)
+      addressStakeCount = await x.stakeManager.stakeCount(x.stakeManager.getAddress())
+      const stake2 = fromStruct(await x.hex.stakeLists(x.stakeManager.getAddress(), addressStakeCount - 1n))
+
+      await utils.moveForwardDays(20n, x)
+
+      await x.stakeManager.connect(signer3).stakeStart(30000000, 365)
+      addressStakeCount = await x.stakeManager.stakeCount(x.stakeManager.getAddress())
+      const stake3 = fromStruct(await x.hex.stakeLists(x.stakeManager.getAddress(), addressStakeCount - 1n))
+
+      await utils.moveForwardDays(366n, x)
+
+      let payoutResponseStake2 = await x.communis.getPayout(stake2)
+      await expect(x.stakeManager.connect(signer2).mintCommunis(
+        // end stake bonus
+        2n, stake2.stakeId,
+        hre.ethers.ZeroAddress,
+        payoutResponseStake2.maxPayout,
+      ))
+      .to.emit(x.communis, 'Transfer')
+
+      let payoutResponseStake3 = await x.communis.getPayout(stake3)
+      await expect(x.stakeManager.connect(signer3).mintCommunis(
+        // end stake bonus
+        2n, stake3.stakeId,
+        hre.ethers.ZeroAddress,
+        payoutResponseStake3.maxPayout,
+      ))
+      .to.emit(x.communis, 'Transfer')
+
+      await utils.moveForwardDays(91n, x)
+
+      await x.stakeManager.mintStakeBonus();
+
+      await distributeStakeBonusByStakeId(stake1, signer1, x);
+      await distributeStakeBonusByStakeId(stake2, signer2, x);
+      await distributeStakeBonusByStakeId(stake3, signer3, x);
+
+    })
+    it('Three com stakers claiming their contribution different intervals, first never claims', async () => {
+      const x = await loadFixture(utils.deployFixture)
+      const [signer1, signer2, signer3] = x.signers
+
+      await x.stakeManager.connect(signer1).stakeStart(10000000, 365)
+      let addressStakeCount = await x.stakeManager.stakeCount(x.stakeManager.getAddress())
+      const stake1 = fromStruct(await x.hex.stakeLists(x.stakeManager.getAddress(), addressStakeCount - 1n))
+
+      await utils.moveForwardDays(366n, x)
+
+      let payoutResponseStake1 = await x.communis.getPayout(stake1)
+      await expect(x.stakeManager.connect(signer1).mintCommunis(
+        // end stake bonus
+        2n, stake1.stakeId,
+        hre.ethers.ZeroAddress,
+        payoutResponseStake1.maxPayout,
+      ))
+      .to.emit(x.communis, 'Transfer')
+
+      await utils.moveForwardDays(91n, x)
+      // await x.stakeManager.mintStakeBonus();
+      // await distributeStakeBonusByStakeId(stake1, signer1, x);
+
+      await x.stakeManager.connect(signer2).stakeStart(20000000, 365)
+      addressStakeCount = await x.stakeManager.stakeCount(x.stakeManager.getAddress())
+      const stake2 = fromStruct(await x.hex.stakeLists(x.stakeManager.getAddress(), addressStakeCount - 1n))
+
+      await utils.moveForwardDays(20n, x)
+
+      await x.stakeManager.connect(signer3).stakeStart(30000000, 365)
+      addressStakeCount = await x.stakeManager.stakeCount(x.stakeManager.getAddress())
+      const stake3 = fromStruct(await x.hex.stakeLists(x.stakeManager.getAddress(), addressStakeCount - 1n))
+
+      await utils.moveForwardDays(366n, x)
+
+      let payoutResponseStake2 = await x.communis.getPayout(stake2)
+      await expect(x.stakeManager.connect(signer2).mintCommunis(
+        // end stake bonus
+        2n, stake2.stakeId,
+        hre.ethers.ZeroAddress,
+        payoutResponseStake2.maxPayout,
+      ))
+      .to.emit(x.communis, 'Transfer')
+
+      let payoutResponseStake3 = await x.communis.getPayout(stake3)
+      await expect(x.stakeManager.connect(signer3).mintCommunis(
+        // end stake bonus
+        2n, stake3.stakeId,
+        hre.ethers.ZeroAddress,
+        payoutResponseStake3.maxPayout,
+      ))
+      .to.emit(x.communis, 'Transfer')
+
+      await utils.moveForwardDays(91n, x)
+
+      await x.stakeManager.mintStakeBonus();
+
+      await distributeStakeBonusByStakeId(stake1, signer1, x);
+      await distributeStakeBonusByStakeId(stake2, signer2, x);
+      await distributeStakeBonusByStakeId(stake3, signer3, x);
+
+    })
+    it('Two com stakers, first reduced by second', async () => {
+      //first signer stakes their com, but does not mint their stakeBonus until after a second signer stakes their com and mints their stakeBonus first.
+      //This reduces first signers payout since and redistributes to second.
+      const x = await loadFixture(utils.deployFixture)
+      const [signer1, signer2] = x.signers
+
+      //Stake 1
+      await x.stakeManager.connect(signer1).stakeStart(10000000, 365)
+      let addressStakeCount = await x.stakeManager.stakeCount(x.stakeManager.getAddress())
+      const stake1 = fromStruct(await x.hex.stakeLists(x.stakeManager.getAddress(), addressStakeCount - 1n))
+      await utils.moveForwardDays(366n, x)
+
+      let payoutResponseStake1 = await x.communis.getPayout(stake1)
+      await expect(x.stakeManager.connect(signer1).mintCommunis(
+        // end stake bonus
+        2n, stake1.stakeId,
+        hre.ethers.ZeroAddress,
+        payoutResponseStake1.maxPayout,
+      ))
+      .to.emit(x.communis, 'Transfer')
+
+      //Stake 2
+      await x.stakeManager.connect(signer2).stakeStart(10000000, 365)
+      addressStakeCount = await x.stakeManager.stakeCount(x.stakeManager.getAddress())
+      const stake2 = fromStruct(await x.hex.stakeLists(x.stakeManager.getAddress(), addressStakeCount - 1n))
+      await utils.moveForwardDays(366n, x)
+
+      let payoutResponseStake2 = await x.communis.getPayout(stake2)
+      await expect(x.stakeManager.connect(signer2).mintCommunis(
+        // end stake bonus
+        2n, stake2.stakeId,
+        hre.ethers.ZeroAddress,
+        payoutResponseStake2.maxPayout,
+      ))
+      .to.emit(x.communis, 'Transfer')
+
+      await utils.moveForwardDays(91n, x)
+
+      await x.stakeManager.mintStakeBonus();
+
+      await distributeStakeBonusByStakeId(stake2, signer2, x);
+
+      await distributeStakeBonusByStakeId(stake1, signer1, x);
+
+      const signer1Balance = await x.communis.balanceOf(signer1);
+      const signer2Balance = await x.communis.balanceOf(signer2);
+
+      expect(signer2Balance)
+        .to.greaterThan(signer1Balance);
+
+    })
+  })
   describe.only('distributeStakeBonusByStakeId', () => {
     it('Three com stakers claiming their contribution', async () => {
       const x = await loadFixture(utils.deployFixture)

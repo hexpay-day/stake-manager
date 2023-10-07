@@ -430,7 +430,7 @@ contract SingletonCommunis is StakeEnder {
 
       distributableCommunisStakeBonus = (distributableBonus - payout);
       stakeIdCommunisPayoutInfo[stakeId] = _encodePayoutInfo({
-        nextPayoutDay: nextPayoutDay,
+        nextPayoutDay: nextPayoutDay + (numberOfPayouts * NINETY_ONE),
         endBonusPayout: uint120(payoutInfo >> ONE_TWENTY),
         stakeAmount: stakedAmount
       });
