@@ -89,32 +89,39 @@ contract SingletonCommunis is StakeEnder {
         if (msg.sender == staker) {
           uint256 settings = stakeIdToSettings[stakeId];
           formerStakeOwner[stakeId] = staker;
-          //need to assure stakeAmount is at least 50% of maxPayout
-          Communis(COMM).mintEndBonus(index, stakeId, referrer, stakeAmount);
 
-          unchecked {
-            stakeIdCommunisPayoutInfo[stakeId] = _encodePayoutInfo({
-              nextPayoutDay: IHEX(TARGET).currentDay() + NINETY_ONE,
-              endBonusPayout: Communis(COMM).stakeIdEndBonusPayout(stakeId) / TWO,
-              stakeAmount: uint256(uint120(stakeIdCommunisPayoutInfo[stakeId]) + uint256(uint120(stakeAmount)))
-            });
-            _attributeFunds({
-              settings: settings,
-              token: COMM,
-              staker: staker,
-              amount: ERC20(COMM).balanceOf(address(this)) - bal
-            });
+          Communis(COMM).mintEndBonus(index, stakeId, referrer, stakeAmount);
+          // stakeAmount must be at least half of stakeIdEndBonusPayout. 
+          // Luckily stakeIdEndBonusPayout represents pr.maxPayout - stakeIdStartBonusPayout[stakeID] (from com.sol)
+          uint256 stakeIdEndBonusPayoutDebt = Communis(COMM).stakeIdEndBonusPayout(stakeId) / TWO;
+          if(stakeAmount >= stakeIdEndBonusPayoutDebt) {
+            unchecked {
+              stakeIdCommunisPayoutInfo[stakeId] = _encodePayoutInfo({
+                nextPayoutDay: IHEX(TARGET).currentDay() + NINETY_ONE,
+                endBonusPayoutDebt: stakeIdEndBonusPayoutDebt,
+                stakeAmount: uint256(uint120(stakeIdCommunisPayoutInfo[stakeId]) + uint256(uint120(stakeAmount)))
+              });
+              _attributeFunds({
+                settings: settings,
+                token: COMM,
+                staker: staker,
+                amount: ERC20(COMM).balanceOf(address(this)) - bal
+              });
+            }
+            else{
+              revert NotAllowed();
+            }
           }
         }
       }
     }
   }
 
-  function _encodePayoutInfo(uint256 nextPayoutDay, uint256 endBonusPayout, uint256 stakeAmount) internal pure returns(uint256) {
+  function _encodePayoutInfo(uint256 nextPayoutDay, uint256 endBonusPayoutDebt, uint256 stakeAmount) internal pure returns(uint256) {
     unchecked {
       return (
         nextPayoutDay << 240
-        | uint256(uint120(endBonusPayout)) << ONE_TWENTY
+        | uint256(uint120(endBonusPayoutDebt)) << ONE_TWENTY
         | uint256(uint120(stakeAmount))
       );
     }
@@ -135,7 +142,7 @@ contract SingletonCommunis is StakeEnder {
       uint256 current = stakeIdCommunisPayoutInfo[stakeId];
       stakeIdCommunisPayoutInfo[stakeId] = _encodePayoutInfo({
         nextPayoutDay: uint16(current >> 240),
-        endBonusPayout: futureEndStakeAmount, // 0 means do not stake, 1 means stake it all (1 offset)
+        endBonusPayoutDebt: futureEndStakeAmount, // 0 means do not stake, 1 means stake it all (1 offset)
         stakeAmount: uint120(current)
       });
     }
@@ -186,7 +193,7 @@ contract SingletonCommunis is StakeEnder {
     unchecked {
       stakeIdCommunisPayoutInfo[stakeId] = _encodePayoutInfo({
         nextPayoutDay: today + NINETY_ONE,
-        endBonusPayout: Communis(COMM).stakeIdEndBonusPayout(stakeId) / TWO,
+        endBonusPayoutDebt: Communis(COMM).stakeIdEndBonusPayout(stakeId) / TWO,
         stakeAmount: uint256(uint120(payoutInfo)) + stakeAmount
       });
 
@@ -229,7 +236,7 @@ contract SingletonCommunis is StakeEnder {
       Communis(COMM).withdrawStakedCodeak(withdrawAmount);
       stakeIdCommunisPayoutInfo[stakeId] = _encodePayoutInfo({
         nextPayoutDay: uint16(payoutInfo >> 240),
-        endBonusPayout: uint120(payoutInfo >> 120),
+        endBonusPayoutDebt: uint120(payoutInfo >> 120),
         stakeAmount: stakedAmountAfterWithdraw
       });
       _attributeCommunis({
@@ -315,7 +322,7 @@ contract SingletonCommunis is StakeEnder {
       distributableCommunisStakeBonus = (distributableBonus - payout);
       stakeIdCommunisPayoutInfo[stakeId] = _encodePayoutInfo({
         nextPayoutDay: nextPayoutDay + (numberOfPayouts * NINETY_ONE),
-        endBonusPayout: uint120(payoutInfo >> ONE_TWENTY),
+        endBonusPayoutDebt: uint120(payoutInfo >> ONE_TWENTY),
         stakeAmount: stakedAmount
       });
     }
