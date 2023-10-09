@@ -105,9 +105,9 @@ contract SingletonCommunis is StakeEnder {
                 amount: ERC20(COMM).balanceOf(address(this)) - bal
               });
             }
-            else{
+          }
+          else {
               revert NotAllowed();
-            }
           }
         }
       }
