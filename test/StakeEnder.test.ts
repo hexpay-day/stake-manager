@@ -1559,7 +1559,7 @@ describe("StakeManager", function () {
       await expect(doStakeEnd)
         .to.emit(x.hex, 'StakeEnd')
         .withArgs(anyUint, utils.anyUintNoPenalty, await x.stakeManager.getAddress(), nextStakeId)
-        .to.emit(x.hex, 'Transfer')
+        .to.emit(x.hex20, 'Transfer')
         .withArgs(hre.ethers.ZeroAddress, await x.stakeManager.getAddress(), anyUint)
       await expect(x.stakeManager.withdrawableBalanceOf(x.hex.getAddress(), signer2.address))
         .eventually.to.be.greaterThan(0)
