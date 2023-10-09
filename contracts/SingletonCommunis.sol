@@ -91,7 +91,7 @@ contract SingletonCommunis is StakeEnder {
           // stakeAmount must be at least half of stakeIdEndBonusPayout.
           // Luckily stakeIdEndBonusPayout represents pr.maxPayout - stakeIdStartBonusPayout[stakeID] (from com.sol)
           uint256 stakeIdEndBonusPayoutDebt = Communis(COMM).stakeIdEndBonusPayout(stakeId) / TWO;
-          if(stakeAmount >= stakeIdEndBonusPayoutDebt) {
+          if (stakeAmount >= stakeIdEndBonusPayoutDebt) {
             unchecked {
               stakeIdCommunisPayoutInfo[stakeId] = _encodePayoutInfo({
                 nextPayoutDay: IHEX(TARGET).currentDay() + NINETY_ONE,
@@ -105,9 +105,8 @@ contract SingletonCommunis is StakeEnder {
                 amount: ERC20(COMM).balanceOf(address(this)) - bal
               });
             }
-          }
-          else {
-              revert NotAllowed();
+          } else {
+            revert NotAllowed();
           }
         }
       }
