@@ -69,7 +69,7 @@ abstract contract UnderlyingStakeable is MulticallExtension, IUnderlyingStakeabl
    */
   function stakeLists(
     address staker, uint256 index
-  ) view external returns(StakeStore memory stake) {
+  ) external view returns(StakeStore memory stake) {
     return _getStake({
       custodian: staker,
       index: index
@@ -88,13 +88,6 @@ abstract contract UnderlyingStakeable is MulticallExtension, IUnderlyingStakeabl
    */
   function _currentDay() internal view returns(uint256) {
     return IUnderlyingStakeable(TARGET).currentDay();
-  }
-  /**
-   * retrieve the global info from the target contract (hex)
-   * updated at the first start or end stake on any given day
-   */
-  function globalInfo() external view returns(uint256[13] memory) {
-    return IUnderlyingStakeable(TARGET).globalInfo();
   }
   /**
    * check whether or not the stake is being ended early

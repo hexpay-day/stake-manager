@@ -21,7 +21,7 @@ import 'hardhat-gas-reporter'
 import 'hardhat-dependency-compiler'
 import 'solidity-docgen'
 import '@typechain/hardhat'
-import 'ethers'
+import 'hardhat-contract-sizer'
 import * as ethers from "ethers";
 
 import * as conf from './src/config'
@@ -96,6 +96,7 @@ const defaultNetwork = {
 
 const defaultHardhatNetwork: HardhatNetworkUserConfig = {
   allowBlocksWithSameTimestamp: true,
+  allowUnlimitedContractSize: true,
   accounts: {
     accountsBalance: ethers.parseEther((100_000_000_000).toString()).toString(),
     count: 5,
@@ -198,7 +199,7 @@ const networks: Record<string, NetworkUserConfig> = {
 const settings: SolcUserConfig["settings"] = {
   optimizer: {
     enabled: true,
-    runs: 600,
+    runs: 200,
     // details: {
     //   yul: true,
     //   yulDetails: {
@@ -321,6 +322,9 @@ const config: HardhatUserConfig = {
     pages: 'files',
     templates: 'docgen-templates',
     outputDir: 'docs/api',
+  },
+  contractSizer: {
+    except: ["ERC20"],
   },
 };
 

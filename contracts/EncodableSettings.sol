@@ -78,7 +78,17 @@ abstract contract EncodableSettings is StakeInfo {
   /**
    * @return the default encoded settings used by end stakers to tip and end stakes
    */
-  function defaultEncodedSettings() external virtual pure returns(uint256) {
+  function defaultEncodedSettings() external pure returns(uint256) {
+    return _defaultEncodedSettings();
+  }
+  /**
+   * exposes the default settings to external for ease of access
+   * @return a settings struct with default values
+   */
+  function defaultSettings() external pure returns(Settings memory) {
+    return _decodeSettings(_defaultEncodedSettings());
+  }
+  function _defaultEncodedSettings() internal virtual pure returns(uint256) {
     return DEFAULT_ENCODED_SETTINGS;
   }
   /**
@@ -319,92 +329,6 @@ abstract contract EncodableSettings is StakeInfo {
     }
   }
   /**
-   * gets default settings struct
-   * @return settings struct with default settings
-   */
-  function _defaultSettings() internal virtual pure returns(Settings memory settings) {
-    // 0x00000000000000000000000000000000000000000000020000000000000000020000ff01
-    unchecked {
-      return Settings(
-        /*
-        * by default, there is no hedron tip
-        * assume that stakers will manage their own stakes at bare minimum
-        */
-        Linear({
-          method: ZERO,
-          xFactor: ZERO,
-          x: 0,
-          yFactor: ZERO,
-          y: ZERO,
-          bFactor: ZERO,
-          b: 0
-        }),
-        /*
-        * by default, there is no target (hex) tip
-        * assume that stakers will manage their own stakes at bare minimum
-        */
-        Linear({
-          method: ZERO,
-          xFactor: ZERO,
-          x: 0,
-          yFactor: ZERO,
-          y: ZERO,
-          bFactor: ZERO,
-          b: 0
-        }),
-        /*
-        * by default, assume that all tokens minted from an end stake
-        * should go directly into a new stake
-        */
-        Linear({
-          method: TWO,
-          xFactor: ZERO,
-          x: 0,
-          yFactor: ZERO,
-          y: ZERO,
-          bFactor: ZERO,
-          b: 0
-        }),
-        /*
-        * by default, assume that by using this contract, users want efficiency gains
-        * so by default, restarting their stakes are the most efficient means of managing tokens
-        */
-        uint8(TWO), uint16(ZERO),
-        uint8(MAX_UINT_8), // restart forever
-        /*
-        * by index: 00000001
-        * 7: signal to ender that tips exist to be collected (allows contract to avoid an SLOAD) (0)
-        * 6: should recreate external tips
-        * 5: give dominion over hedron after tip to staker (0)
-        * 4: give dominion over target after tip to staker (0)
-        * 3: do not allow end hedron mint (0)
-        * 2: do not allow continuous hedron mint (0)
-        * 1: do not allow early end (0)
-        * 0: allow end stake once days have been served (1)
-        *
-        * restarting is signalled by using settings above
-        * no funds are ever pulled from external address
-        * is ever allowed except by sender
-        *
-        * the reason why the hedron flags are 0 by default on the contract level is because
-        * it may be worthwhile for hedron developers to build on top of this contract
-        * and it is poor form to force people in the future to have to cancel out the past
-        * front ends may choose to send a different default (non 0) during stake start
-        */
-        ConsentAbilities({
-          canStakeEnd: true,
-          canEarlyStakeEnd: false,
-          canMintHedron: false,
-          canMintHedronAtEnd: false,
-          shouldSendTokensToStaker: false,
-          stakeIsTransferable: false,
-          copyExternalTips: false,
-          hasExternalTips: false
-        })
-      );
-    }
-  }
-  /**
    * modify the second byteword from the right to appropriately decrement
    * the number of times that these settings should be copied
    * @param settings the settings to start with - only the 2nd byte from the right is modified
@@ -435,12 +359,5 @@ abstract contract EncodableSettings is StakeInfo {
         | uint8(settings)
       );
     }
-  }
-  /**
-   * exposes the default settings to external for ease of access
-   * @return a settings struct with default values
-   */
-  function defaultSettings() external virtual pure returns(Settings memory) {
-    return _defaultSettings();
   }
 }

@@ -15,20 +15,15 @@ contract HSIStakeManager is StakeEnder {
    */
   uint256 private constant DEFAULT_ENCODED_SETTINGS
     = 0x000000000000000000000000000000000000000000000000000000000000000d;
-  function defaultEncodedSettings() external override pure returns(uint256) {
+  function _defaultEncodedSettings() internal virtual override pure returns(uint256) {
     return DEFAULT_ENCODED_SETTINGS;
-  }
-  function _defaultSettings() internal override pure returns(Settings memory) {
-    return _decodeSettings({
-      encoded: DEFAULT_ENCODED_SETTINGS
-    });
   }
   /**
    * transfer stakes by their token ids
    * @param tokenId the token id to move to this contract
    * @dev requires approval to transfer hsi to this contract
    */
-  function depositHsi(uint256 tokenId, uint256 encodedSettings) external returns(address hsiAddress) {
+  function depositHsi(uint256 tokenId, uint256 encodedSettings) external payable returns(address hsiAddress) {
     address owner = _deposit721({
       token: HSIM,
       tokenId: tokenId
@@ -81,7 +76,7 @@ contract HSIStakeManager is StakeEnder {
    * @param hsiAddress the hsi address to withdraw from this contract
    * @dev caller must be logged as owner of hsi
    */
-  function withdrawHsi(address hsiAddress) external returns(uint256 tokenId) {
+  function withdrawHsi(address hsiAddress) external payable returns(uint256 tokenId) {
     uint256 stakeId = uint256(uint160(hsiAddress));
     _verifyStakeOwnership({
       owner: msg.sender,

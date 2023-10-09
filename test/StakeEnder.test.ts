@@ -83,11 +83,6 @@ describe("StakeManager", function () {
       await expect(x.hex.currentDay())
         .eventually.to.equal(await x.stakeManager.currentDay())
     })
-    it('proxies to hex for global info', async () => {
-      const x = await loadFixture(utils.deployFixture)
-      await expect(x.hex.globalInfo())
-        .eventually.to.deep.equal(await x.stakeManager.globalInfo())
-    })
     it('has a utility for checking if the stake is ending', async () => {
       const x = await loadFixture(utils.deployFixture)
       await x.stakeManager.stakeStart(x.stakedAmount, 10)

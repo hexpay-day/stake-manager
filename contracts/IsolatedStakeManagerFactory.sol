@@ -10,7 +10,7 @@ contract IsolatedStakeManagerFactory {
    * pointing to the address of the contract created by the stake manager
    */
   mapping(address originalOwner => address manager) public isolatedStakeManagers;
-  function createIsolatedManager(address staker) external returns(address existing) {
+  function createIsolatedManager(address staker) external payable returns(address existing) {
     existing = isolatedStakeManagers[staker];
     if (existing != address(0)) {
       return existing;

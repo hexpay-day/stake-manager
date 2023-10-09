@@ -135,7 +135,7 @@ contract EarningsOracle is Utils {
    * store a singular day, only the next day in the sequence is allowed
    * @param day the day to store
    */
-  function storeDay(uint256 day) external returns(Total memory total) {
+  function storeDay(uint256 day) external payable returns(Total memory total) {
     if (totals.length != day) {
       revert NotAllowed();
     }
@@ -147,7 +147,7 @@ contract EarningsOracle is Utils {
   /**
    * checks the current day and increments the stored days if not yet covered
    */
-  function incrementDay() external returns(Total memory total, uint256 day) {
+  function incrementDay() external payable returns(Total memory total, uint256 day) {
     uint256 size = totals.length;
     if (size >= IHEX(TARGET).currentDay()) {
       // no need to increment
@@ -188,7 +188,7 @@ contract EarningsOracle is Utils {
    * @param startDay the day to start storing day information
    * @param untilDay the day to stop storing day information. Until day is inclusive
    */
-  function storeDays(uint256 startDay, uint256 untilDay) external returns(Total memory total, uint256 day) {
+  function storeDays(uint256 startDay, uint256 untilDay) external payable returns(Total memory total, uint256 day) {
     uint256 size = totals.length;
     if (startDay != size) {
       startDay = size;
@@ -205,7 +205,7 @@ contract EarningsOracle is Utils {
    * catch up the contract by reading up to 1_000 days of payout information at a time
    * @param iterations the maximum number of days to iterate over - capped at 1_000 due to sload constraints
    */
-  function catchUpDays(uint256 iterations) external returns(Total memory total, uint256 day) {
+  function catchUpDays(uint256 iterations) external payable returns(Total memory total, uint256 day) {
     // constrain by gas costs
     iterations = iterations == ZERO || iterations > MAX_CATCH_UP_DAYS ? MAX_CATCH_UP_DAYS : iterations;
     uint256 startDay = totals.length;

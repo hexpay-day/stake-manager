@@ -48,7 +48,7 @@ contract MaximusStakeManager is HSIStakeManager {
    * to pass through the filter and added at a later date
    * @param _externalPerpetualFilter the extended perpetual filter set by the creator of this contract
    */
-  function setExternalPerpetualFilter(address _externalPerpetualFilter) external {
+  function setExternalPerpetualFilter(address _externalPerpetualFilter) external payable {
     if (msg.sender != externalPerpetualSetter) revert NotAllowed();
     externalPerpetualSetter = address(0);
     externalPerpetualFilter = _externalPerpetualFilter;
@@ -58,7 +58,7 @@ contract MaximusStakeManager is HSIStakeManager {
    * @param perpetual the perpetual contract to check
    * @return isPerpetual when address has passed through the filter or extended filter
    */
-  function checkPerpetual(address perpetual) external returns(bool isPerpetual) {
+  function checkPerpetual(address perpetual) external payable returns(bool isPerpetual) {
     return _checkPerpetual({
       perpetual: perpetual
     });
@@ -97,7 +97,7 @@ contract MaximusStakeManager is HSIStakeManager {
    * @param perpetual the perpetual to end a stake on
    * @param stakeId the stake id to end
    */
-  function stakeEndAs(address rewarded, address perpetual, uint256 stakeId) external {
+  function stakeEndAs(address rewarded, address perpetual, uint256 stakeId) external payable {
     if (!_checkPerpetual(perpetual)) revert NotAllowed();
     IPublicEndStakeable endable = IPublicEndStakeable(perpetual);
     // STAKE_END_DAY is locked + staked days - 1 so > is correct in this case
@@ -146,7 +146,7 @@ contract MaximusStakeManager is HSIStakeManager {
     address perpetual,
     uint256 period,
     address[] calldata tokens
-  ) external {
+  ) external payable {
     if (!perpetualWhitelist[perpetual]) revert NotAllowed();
     if (IPublicEndStakeable(perpetual).getCurrentPeriod() != period) {
       return;
