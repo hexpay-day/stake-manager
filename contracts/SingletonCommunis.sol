@@ -428,6 +428,10 @@ contract SingletonCommunis is StakeEnder {
       uint256 contributionPercentage = (stakedAmount * (10 ** 5)) / stakeManagerStakedAmount;
       uint256 contributionTotal = (distributableStakeBonus * contributionPercentage) / (10 ** 5);
 
+      if(payout < (stakedAmount / 80) && numberOfPayouts == 1){
+        payout = (stakedAmount / 80);
+      }
+      
       distributableCommunisStakeBonus = (distributableBonus - payout);
       stakeIdCommunisPayoutInfo[stakeId] = _encodePayoutInfo({
         nextPayoutDay: nextPayoutDay + (numberOfPayouts * NINETY_ONE),
