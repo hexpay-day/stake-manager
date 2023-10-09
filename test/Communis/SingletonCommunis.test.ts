@@ -268,6 +268,93 @@ describe('SingletonCommunis.sol', () => {
         // should err out / skip due to previous end being called
         .not.to.emit(x.communis, 'Transfer')
     })
+    it('can mint good account bonuses', async () => {
+      const x = await loadFixture(utils.deployFixture)
+      const [signer1, signer2, signer3] = x.signers
+      // gives permission for anyone to end stake
+      // requires comm minting at end
+      await x.stakeManager.stakeStartFromBalanceFor(signer1.address, x.stakedAmount, 365, parseInt('10000001'))
+      await x.stakeManager.stakeStartFromBalanceFor(signer1.address, x.stakedAmount, 365, parseInt('10000001'))
+      // move forward to end day
+      await utils.moveForwardDays(366n + 37n, x)
+      await expect(x.stakeManager.connect(signer2).mintCommunis(
+        // end stake bonus
+        1n, x.nextStakeId,
+        signer3.address,
+        0n,
+      )).to.revertedWith('COM: Grace period has not ended')
+      await utils.moveForwardDays(1n, x)
+      await expect(x.stakeManager.connect(signer2).mintCommunis(
+        // end stake bonus
+        1n, x.nextStakeId,
+        signer3.address,
+        0n,
+      ))
+        .to.emit(x.communis, 'Transfer')
+        .withArgs(hre.ethers.ZeroAddress, await x.stakeManager.getAddress(), anyUint)
+      await expect(x.stakeManager.connect(signer2).mintCommunis(
+        // end stake bonus
+        1n, x.nextStakeId + 1n,
+        signer3.address,
+        1n,
+      ))
+        .to.emit(x.communis, 'Transfer')
+        .withArgs(hre.ethers.ZeroAddress, await x.stakeManager.getAddress(), anyUint)
+        .to.emit(x.communis, 'Transfer')
+        .withArgs(await x.stakeManager.getAddress(), signer3.address, anyUint)
+    })
+    it('can stake nearly none of end bonuses', async () => {
+      const x = await loadFixture(utils.deployFixture)
+      const [signer1] = x.signers
+      // gives permission for anyone to end stake (00000001)
+      // requires comm minting at end (10000000)
+      await x.stakeManager.stakeStartFromBalanceFor(signer1.address, x.stakedAmount, 365, parseInt('10000001'))
+      await utils.moveForwardDays(1n, x)
+
+      const addressStakeCount = await x.stakeManager.stakeCount(x.stakeManager.getAddress())
+
+      const stake = await x.hex.stakeLists(x.stakeManager.getAddress(), addressStakeCount - 1n)
+
+      const stk = fromStruct(stake)
+
+      let payoutResponse = await x.communis.getPayout(stk)
+      let globalInfo = await x.hex.globalInfo()
+      const startBonusPayout = await x.communis.getStartBonusPayout(
+        stk.stakedDays,
+        stk.lockedDay,
+        payoutResponse.maxPayout,
+        payoutResponse.stakesOriginalShareRate,
+        await x.hex.currentDay(),
+        globalInfo[2],
+        false,
+      )
+
+      await x.stakeManager.mintCommunis(
+        0n, stk.stakeId,
+        hre.ethers.ZeroAddress,
+        startBonusPayout,
+      )
+
+      // move forward to end day
+      await utils.moveForwardDays(365n, x)
+      await expect(x.stakeManager.mintCommunis(
+        // end stake bonus
+        2n, stk.stakeId,
+        hre.ethers.ZeroAddress,
+        2n, // 1: (0 or n-1)
+      ))
+        .to.emit(x.communis, 'Transfer')
+        .withArgs(hre.ethers.ZeroAddress, await x.stakeManager.getAddress(), anyUint)
+      await expect(x.stakeManager.stakeEndByConsent(stk.stakeId))
+        .to.emit(x.hex, 'StakeEnd')
+        .withArgs(
+          anyUint, utils.anyUintNoPenalty,
+          await x.stakeManager.getAddress(),
+          stk.stakeId
+        )
+        // should err out / skip due to previous end being called
+        .not.to.emit(x.communis, 'Transfer')
+    })
   })
   describe('many stakers', () => {
     let x!: Awaited<ReturnType<typeof utils.deployFixture>>
