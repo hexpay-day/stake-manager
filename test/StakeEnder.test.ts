@@ -6,6 +6,7 @@ import { anyUint, anyValue } from '@nomicfoundation/hardhat-chai-matchers/withAr
 import * as utils from './utils'
 import { EncodableSettings } from "../artifacts/types"
 import { fromStruct } from "../src/utils"
+import { setNextBlockTimestamp } from "@nomicfoundation/hardhat-network-helpers/dist/src/helpers/time"
 
 describe("StakeManager", function () {
   describe('UnderlyingStakeable', () => {
@@ -1501,7 +1502,7 @@ describe("StakeManager", function () {
     it('can handle stakes that get no hex', async () => {
       const x = await loadFixture(utils.deployFixture)
       const nextStakeId = await utils.nextStakeId(x.hex)
-      const [signer1] = x.signers
+      const [signer1, signer2] = x.signers
       const defaultSettings = await x.stakeManager.defaultSettings().then(fromStruct)
       const encodedSettings = await x.stakeManager.encodeSettings({
         ...defaultSettings,
@@ -1510,11 +1511,12 @@ describe("StakeManager", function () {
           canEarlyStakeEnd: true,
         },
       })
+      await setNextBlockTimestamp(new Date())
       await x.stakeManager.stakeStartFromBalanceFor(signer1.address, x.stakedAmount, 5_555, encodedSettings)
       await utils.moveForwardDays(90n, x)
       await expect(x.stakeManager.stakeIdToOwner(nextStakeId))
         .eventually.to.equal(signer1.address)
-      const doStakeEnd = x.stakeManager.stakeEndById(nextStakeId)
+      const doStakeEnd = x.stakeManager.connect(signer2).stakeEndByConsent(nextStakeId)
       await expect(doStakeEnd)
         .to.emit(x.hex20, 'Transfer')
         .withArgs(hre.ethers.ZeroAddress, '0x9A6a414D6F3497c05E3b1De90520765fA1E07c03', anyUint)
@@ -1525,6 +1527,46 @@ describe("StakeManager", function () {
         .changeTokenBalances(x.hex20,
           [signer1, x.stakeManager],
           [0, 0],
+        )
+      await expect(x.stakeManager.stakeIdToOwner(nextStakeId))
+        .eventually.to.equal(hre.ethers.ZeroAddress)
+    })
+    it('can tip entire stack', async () => {
+      const x = await loadFixture(utils.deployFixture)
+      const nextStakeId = await utils.nextStakeId(x.hex)
+      const [signer1, signer2] = x.signers
+      const defaultSettings = await x.stakeManager.defaultSettings().then(fromStruct)
+      const encodedSettings = await x.stakeManager.encodeSettings({
+        ...defaultSettings,
+        targetTip: {
+          method: 2,
+          x: 0,
+          xFactor: 0,
+          y: 0,
+          yFactor: 0,
+          b: 0,
+          bFactor: 0,
+        },
+      })
+      await setNextBlockTimestamp(new Date())
+      await x.stakeManager.stakeStartFromBalanceFor(signer1.address, x.stakedAmount, 90, encodedSettings)
+      await utils.moveForwardDays(91n, x)
+      await expect(x.stakeManager.stakeIdToOwner(nextStakeId))
+        .eventually.to.equal(signer1.address)
+      await expect(x.stakeManager.withdrawableBalanceOf(x.hex.getAddress(), signer2.address))
+        .eventually.to.be.equal(0)
+      const doStakeEnd = x.stakeManager.connect(signer2).stakeEndByConsentWithTipTo(nextStakeId, signer2.address)
+      await expect(doStakeEnd)
+        .to.emit(x.hex, 'StakeEnd')
+        .withArgs(anyUint, utils.anyUintNoPenalty, await x.stakeManager.getAddress(), nextStakeId)
+        .to.emit(x.hex, 'Transfer')
+        .withArgs(hre.ethers.ZeroAddress, await x.stakeManager.getAddress(), anyUint)
+      await expect(x.stakeManager.withdrawableBalanceOf(x.hex.getAddress(), signer2.address))
+        .eventually.to.be.greaterThan(0)
+      await expect(doStakeEnd)
+        .changeTokenBalances(x.hex20,
+          [signer1, signer2],
+          [0n, 0n],
         )
       await expect(x.stakeManager.stakeIdToOwner(nextStakeId))
         .eventually.to.equal(hre.ethers.ZeroAddress)

@@ -196,15 +196,15 @@ contract StakeEnder is Magnitude, SingletonMintManager {
             }
           }
         }
-      }
-      if (delta > ZERO) {
-        // attribute leftover funds to staker
-        _attributeFunds({
-          settings: settings,
-          token: TARGET,
-          staker: staker,
-          amount: delta
-        });
+        if (delta > ZERO) {
+          // attribute leftover funds to staker
+          _attributeFunds({
+            settings: settings,
+            token: TARGET,
+            staker: staker,
+            amount: delta
+          });
+        }
       }
       if (_isOneAtIndex({
         settings: settings,
