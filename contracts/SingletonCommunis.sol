@@ -235,7 +235,7 @@ contract SingletonCommunis is StakeEnder {
       Communis(COMM).withdrawStakedCodeak(withdrawAmount);
       stakeIdCommunisPayoutInfo[stakeId] = _encodePayoutInfo({
         nextPayoutDay: uint16(payoutInfo >> 240),
-        endBonusPayout: uint120(payoutInfo >> ONE_TWENTY),
+        endBonusPayoutDebt: uint120(payoutInfo >> ONE_TWENTY),
         stakeAmount: stakedAmountAfterWithdraw
       });
       _attributeCommunis({
@@ -321,7 +321,7 @@ contract SingletonCommunis is StakeEnder {
       if(payout < (stakedAmount / 80) && numberOfPayouts == 1){
         payout = (stakedAmount / 80);
       }
-      
+
       distributableCommunisStakeBonus = (distributableBonus - payout);
       stakeIdCommunisPayoutInfo[stakeId] = _encodePayoutInfo({
         nextPayoutDay: nextPayoutDay + (numberOfPayouts * NINETY_ONE),
