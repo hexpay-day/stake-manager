@@ -18,18 +18,12 @@ function decodePayoutInfo(encodedValue: bigint): {nextPayoutDay: bigint, endBonu
 }
 
 function calculateExpectedPayout(
-  distributableCommunisStakeBonus: bigint,
   stakedAmount: bigint,
-  stakeManagerStakedAmount: bigint,
   numberOfPayouts: bigint
 ): bigint {
-  let expectedPayout = (
-    (distributableCommunisStakeBonus * (stakedAmount * 100000n))
-  ) / (100000n * stakeManagerStakedAmount);
 
-  if(expectedPayout < (stakedAmount / 80n) && numberOfPayouts == 1n){
-    expectedPayout = (stakedAmount / 80n);
-  }
+  let expectedPayout = (stakedAmount * numberOfPayouts) / 80n;
+ 
   return expectedPayout;
 }
 async function getExpectedPayout(stake : any, signer : any, x : any) {
@@ -43,9 +37,7 @@ async function getExpectedPayout(stake : any, signer : any, x : any) {
   const numberOfPayouts = ((currentDay - decodedPayoutInfo.nextPayoutDay) / 91n) + 1n;
 
   const expectedPayout = calculateExpectedPayout(
-    distributableCommunisStakeBonusBefore,
     decodedPayoutInfo.stakedAmount,
-    stakeManagerStakedAmount,
     numberOfPayouts
   );
 
@@ -76,27 +68,28 @@ async function distributeStakeBonusByStakeId(stake : any, signer : any, x : any)
     .to.equal(balanceBefore + expectedPayoutResponse.expectedPayout);
 
 }
-
-async function logPayoutDetails(signerIndex : any, signer : any, x : any, stakePayoutInfo : any, prevBalance : bigint) {
+async function expectPayoutDetails(signerIndex : any, signer : any, x : any, stakePayoutInfo : any, prevBalance : bigint) {
   
-  const stakePayoutPer91Days = stakePayoutInfo.stakedAmount / 80n;
-  const stakePayoutCount = (((BigInt(await x.hex.currentDay()) - stakePayoutInfo.nextPayoutDay) / 91n) + 1n) 
+  const currentDay = await x.hex.currentDay()
+  const numberOfPayouts = ((currentDay - BigInt(stakePayoutInfo.nextPayoutDay)) / 91n) + 1n;
+
+  const expectedPayout = calculateExpectedPayout(
+    stakePayoutInfo.stakedAmount,
+    numberOfPayouts
+  );
 
   const signerBalance = (BigInt(await x.communis.balanceOf(signer)) - prevBalance);
 
-  const expectedPayout = stakePayoutPer91Days * stakePayoutCount;
-  const difference = signerBalance - expectedPayout;
-  const percentageDifference = Number(difference * 100n / expectedPayout);
+  expect(expectedPayout)
+    .to.equal(signerBalance);
 
-  console.log(
-      "signer " + signerIndex +
-      " should earn " + stakePayoutPer91Days.toString() +
-      " * " + stakePayoutCount.toString() +
-      " = " + expectedPayout.toString() +
-      " but got " + signerBalance.toString() +
-      " which is a difference of " + difference.toString() +
-      " or " + percentageDifference + "%."
-  );
+  // console.log(
+  //     "signer " + signerIndex +
+  //     " should earn " + (stakePayoutInfo.stakedAmount / 80n).toString() +
+  //     " * " + numberOfPayouts.toString() +
+  //     " payouts = " + expectedPayout.toString() +
+  //     " and got " + signerBalance.toString()
+  // );
 }
 
 describe('SingletonCommunis.sol', () => {
@@ -431,10 +424,21 @@ describe('SingletonCommunis.sol', () => {
 
       await x.stakeManager.mintStakeBonus();
 
+      const stake1PayoutInfo = decodePayoutInfo(await x.stakeManager.stakeIdCommunisPayoutInfo(stake1.stakeId));
+      const stake2PayoutInfo = decodePayoutInfo(await x.stakeManager.stakeIdCommunisPayoutInfo(stake2.stakeId));
+      const stake3PayoutInfo = decodePayoutInfo(await x.stakeManager.stakeIdCommunisPayoutInfo(stake3.stakeId));
+
+      let prevBalance1 = await x.communis.balanceOf(signer1);
+      let prevBalance2 = await x.communis.balanceOf(signer2);
+      let prevBalance3 = await x.communis.balanceOf(signer3);
+
       await distributeStakeBonusByStakeId(stake1, signer1, x);
       await distributeStakeBonusByStakeId(stake2, signer2, x);
       await distributeStakeBonusByStakeId(stake3, signer3, x);
 
+      await expectPayoutDetails(1, signer1, x, stake1PayoutInfo, prevBalance1);
+      await expectPayoutDetails(2, signer2, x, stake2PayoutInfo, prevBalance2);
+      await expectPayoutDetails(3, signer3, x, stake3PayoutInfo, prevBalance3);
     })
     it('Three com stakers claiming their contribution different intervals', async () => {
       const x = await loadFixture(utils.deployFixture)
@@ -489,10 +493,21 @@ describe('SingletonCommunis.sol', () => {
 
       await x.stakeManager.mintStakeBonus();
 
+      const stake1PayoutInfo = decodePayoutInfo(await x.stakeManager.stakeIdCommunisPayoutInfo(stake1.stakeId));
+      const stake2PayoutInfo = decodePayoutInfo(await x.stakeManager.stakeIdCommunisPayoutInfo(stake2.stakeId));
+      const stake3PayoutInfo = decodePayoutInfo(await x.stakeManager.stakeIdCommunisPayoutInfo(stake3.stakeId));
+
+      let prevBalance1 = await x.communis.balanceOf(signer1);
+      let prevBalance2 = await x.communis.balanceOf(signer2);
+      let prevBalance3 = await x.communis.balanceOf(signer3);
+
       await distributeStakeBonusByStakeId(stake1, signer1, x);
       await distributeStakeBonusByStakeId(stake2, signer2, x);
       await distributeStakeBonusByStakeId(stake3, signer3, x);
 
+      await expectPayoutDetails(1, signer1, x, stake1PayoutInfo, prevBalance1);
+      await expectPayoutDetails(2, signer2, x, stake2PayoutInfo, prevBalance2);
+      await expectPayoutDetails(3, signer3, x, stake3PayoutInfo, prevBalance3);
     })
     it('Three com stakers claiming their contribution different intervals, multiple claims', async () => {
       const x = await loadFixture(utils.deployFixture)
@@ -551,10 +566,21 @@ describe('SingletonCommunis.sol', () => {
 
       await x.stakeManager.mintStakeBonus();
 
+      const stake1PayoutInfo = decodePayoutInfo(await x.stakeManager.stakeIdCommunisPayoutInfo(stake1.stakeId));
+      const stake2PayoutInfo = decodePayoutInfo(await x.stakeManager.stakeIdCommunisPayoutInfo(stake2.stakeId));
+      const stake3PayoutInfo = decodePayoutInfo(await x.stakeManager.stakeIdCommunisPayoutInfo(stake3.stakeId));
+
+      let prevBalance1 = await x.communis.balanceOf(signer1);
+      let prevBalance2 = await x.communis.balanceOf(signer2);
+      let prevBalance3 = await x.communis.balanceOf(signer3);
+
       await distributeStakeBonusByStakeId(stake1, signer1, x);
       await distributeStakeBonusByStakeId(stake2, signer2, x);
       await distributeStakeBonusByStakeId(stake3, signer3, x);
 
+      await expectPayoutDetails(1, signer1, x, stake1PayoutInfo, prevBalance1);
+      await expectPayoutDetails(2, signer2, x, stake2PayoutInfo, prevBalance2);
+      await expectPayoutDetails(3, signer3, x, stake3PayoutInfo, prevBalance3);
     })
     it('Three com stakers claiming their contribution different intervals, first never claims', async () => {
       const x = await loadFixture(utils.deployFixture)
@@ -575,9 +601,7 @@ describe('SingletonCommunis.sol', () => {
       ))
       .to.emit(x.communis, 'Transfer')
 
-      await utils.moveForwardDays(91n, x)
-      // await x.stakeManager.mintStakeBonus();
-      // await distributeStakeBonusByStakeId(stake1, signer1, x);
+      await utils.moveForwardDays(91n, x);
 
       await x.stakeManager.connect(signer2).stakeStart(20000000, 365)
       addressStakeCount = await x.stakeManager.stakeCount(x.stakeManager.getAddress())
@@ -613,18 +637,27 @@ describe('SingletonCommunis.sol', () => {
 
       await x.stakeManager.mintStakeBonus();
 
-      await distributeStakeBonusByStakeId(stake1, signer1, x);
+      const stake2PayoutInfo = decodePayoutInfo(await x.stakeManager.stakeIdCommunisPayoutInfo(stake2.stakeId));
+      const stake3PayoutInfo = decodePayoutInfo(await x.stakeManager.stakeIdCommunisPayoutInfo(stake3.stakeId));
+
+      let prevBalance1 = await x.communis.balanceOf(signer1);
+      let prevBalance2 = await x.communis.balanceOf(signer2);
+      let prevBalance3 = await x.communis.balanceOf(signer3);
+
       await distributeStakeBonusByStakeId(stake2, signer2, x);
       await distributeStakeBonusByStakeId(stake3, signer3, x);
 
+      expect(prevBalance1)
+        .to.equal(0n);
+
+      await expectPayoutDetails(2, signer2, x, stake2PayoutInfo, prevBalance2);
+      await expectPayoutDetails(3, signer3, x, stake3PayoutInfo, prevBalance3);
     })
-    it('Two com stakers, first not reduced by second', async () => {
+    it('Two com stakers, different stakeAmount sizes', async () => {
       const x = await loadFixture(utils.deployFixture)
       const [signer1, signer2] = x.signers
 
       const stakeManagerStakedAmount = await x.communis.addressStakedCodeak(x.stakeManager.getAddress());
-
-      console.log("stakeManagerStakedAmount1", stakeManagerStakedAmount);
 
       //Stake 1
       await x.stakeManager.connect(signer1).stakeStart(10000000, 365)
@@ -652,7 +685,7 @@ describe('SingletonCommunis.sol', () => {
         // end stake bonus
         2n, stake2.stakeId,
         hre.ethers.ZeroAddress,
-        payoutResponseStake2.maxPayout,
+        payoutResponseStake2.maxPayout / 2n,
       ))
       .to.emit(x.communis, 'Transfer')
 
@@ -660,9 +693,17 @@ describe('SingletonCommunis.sol', () => {
 
       await x.stakeManager.mintStakeBonus();
 
-      await distributeStakeBonusByStakeId(stake1, signer1, x);
+      const stake1PayoutInfo = decodePayoutInfo(await x.stakeManager.stakeIdCommunisPayoutInfo(stake1.stakeId));
+      const stake2PayoutInfo = decodePayoutInfo(await x.stakeManager.stakeIdCommunisPayoutInfo(stake2.stakeId));
 
+      let prevBalance1 = await x.communis.balanceOf(signer1);
+      let prevBalance2 = await x.communis.balanceOf(signer2);
+
+      await distributeStakeBonusByStakeId(stake1, signer1, x);
       await distributeStakeBonusByStakeId(stake2, signer2, x);
+
+      await expectPayoutDetails(1, signer1, x, stake1PayoutInfo, prevBalance1);
+      await expectPayoutDetails(2, signer2, x, stake2PayoutInfo, prevBalance2);
 
       const signer1Balance = await x.communis.balanceOf(signer1);
       const signer2Balance = await x.communis.balanceOf(signer2);
@@ -670,15 +711,11 @@ describe('SingletonCommunis.sol', () => {
       expect(signer1Balance)
         .to.greaterThan(signer2Balance);
     })
-    it('Two com stakers, first reduced by second', async () => {
+    it('Two com stakers, signer2 claims before signer1, no change in payouts for signer1', async () => {
       //first signer stakes their com, but does not mint their stakeBonus until after a second signer stakes their com and mints their stakeBonus first.
       //This reduces first signers payout since and redistributes to second.
       const x = await loadFixture(utils.deployFixture)
       const [signer1, signer2] = x.signers
-
-      const stakeManagerStakedAmount = await x.communis.addressStakedCodeak(x.stakeManager.getAddress());
-
-      console.log("stakeManagerStakedAmount2", stakeManagerStakedAmount);
 
       //Stake 1
       await x.stakeManager.connect(signer1).stakeStart(10000000, 365)
@@ -714,17 +751,25 @@ describe('SingletonCommunis.sol', () => {
 
       await x.stakeManager.mintStakeBonus();
 
-      await distributeStakeBonusByStakeId(stake2, signer2, x);
+      const stake1PayoutInfo = decodePayoutInfo(await x.stakeManager.stakeIdCommunisPayoutInfo(stake1.stakeId));
+      const stake2PayoutInfo = decodePayoutInfo(await x.stakeManager.stakeIdCommunisPayoutInfo(stake2.stakeId));
 
+      let prevBalance1 = await x.communis.balanceOf(signer1);
+      let prevBalance2 = await x.communis.balanceOf(signer2);
+
+      await distributeStakeBonusByStakeId(stake2, signer2, x);
       await distributeStakeBonusByStakeId(stake1, signer1, x);
+
+      await expectPayoutDetails(1, signer1, x, stake1PayoutInfo, prevBalance1);
+      await expectPayoutDetails(2, signer2, x, stake2PayoutInfo, prevBalance2);
 
       const signer1Balance = await x.communis.balanceOf(signer1);
       const signer2Balance = await x.communis.balanceOf(signer2);
 
-      expect(signer2Balance)
-        .to.greaterThan(signer1Balance);
+      expect(signer1Balance)
+        .to.greaterThan(signer2Balance);
     })
-    it('Three com stakers, signer1 misses 5 payouts, signer2 + signer3 get more until signer1 returns to claim.', async () => {
+    it('Three com stakers, long time frame / multiple payout rounds', async () => {
       const x = await loadFixture(utils.deployFixture)
       const [signer1, signer2, signer3] = x.signers
 
@@ -744,7 +789,6 @@ describe('SingletonCommunis.sol', () => {
         payoutResponseStake1.maxPayout,
       ))
       .to.emit(x.communis, 'Transfer')
-
 
       //Stake 2
       await x.stakeManager.connect(signer2).stakeStart(10000000, 365)
@@ -776,21 +820,11 @@ describe('SingletonCommunis.sol', () => {
         payoutResponseStake3.maxPayout,
       ))
       .to.emit(x.communis, 'Transfer') 
-      
-      // console.log("stake 1 decodedPayoutInfo", decodePayoutInfo(await x.stakeManager.stakeIdCommunisPayoutInfo(stake1.stakeId)))
-      // console.log("stake 2 decodedPayoutInfo", decodePayoutInfo(await x.stakeManager.stakeIdCommunisPayoutInfo(stake2.stakeId)))
-      // console.log("stake 3 decodedPayoutInfo", decodePayoutInfo(await x.stakeManager.stakeIdCommunisPayoutInfo(stake3.stakeId)))
 
       //Round 1
       await utils.moveForwardDays(91n, x)
 
       await x.stakeManager.mintStakeBonus();
- 
-      // console.log("stakeManagerStakedAmount 1", await x.communis.addressStakedCodeak(x.stakeManager.getAddress()));
-     
-      // console.log("distributableCommunisStakeBonus1", await x.stakeManager.distributableCommunisStakeBonus())
-
-      // console.log("Round 1 claiming distributions day ", await x.hex.currentDay());
 
       let stake1PayoutInfo = decodePayoutInfo(await x.stakeManager.stakeIdCommunisPayoutInfo(stake1.stakeId));
       let stake2PayoutInfo = decodePayoutInfo(await x.stakeManager.stakeIdCommunisPayoutInfo(stake2.stakeId));
@@ -804,11 +838,9 @@ describe('SingletonCommunis.sol', () => {
       await distributeStakeBonusByStakeId(stake2, signer2, x);
       await distributeStakeBonusByStakeId(stake3, signer3, x);
  
-      await logPayoutDetails(1, signer1, x, stake1PayoutInfo, prevBalance1);
-      await logPayoutDetails(2, signer2, x, stake2PayoutInfo, prevBalance2);
-      await logPayoutDetails(3, signer3, x, stake3PayoutInfo, prevBalance3);
-      
-      // console.log("Round 1 Distributable Communis left over", await x.stakeManager.distributableCommunisStakeBonus())
+      await expectPayoutDetails(1, signer1, x, stake1PayoutInfo, prevBalance1);
+      await expectPayoutDetails(2, signer2, x, stake2PayoutInfo, prevBalance2);
+      await expectPayoutDetails(3, signer3, x, stake3PayoutInfo, prevBalance3);
 
       let signer1Balance = await x.communis.balanceOf(signer1);
       let signer2Balance = await x.communis.balanceOf(signer2);
@@ -817,14 +849,12 @@ describe('SingletonCommunis.sol', () => {
       expect(signer1Balance)
         .to.greaterThan(signer2Balance);
       expect(signer2Balance)
-        .to.greaterThan(signer3Balance);
+        .to.equal(signer3Balance);
 
       //Round 2
       await utils.moveForwardDays(91n, x)
       
       await x.stakeManager.mintStakeBonus();
-      
-      // console.log("Round 2 claiming distributions day ", await x.hex.currentDay());
       
       stake1PayoutInfo = decodePayoutInfo(await x.stakeManager.stakeIdCommunisPayoutInfo(stake1.stakeId));
       stake2PayoutInfo = decodePayoutInfo(await x.stakeManager.stakeIdCommunisPayoutInfo(stake2.stakeId));
@@ -838,9 +868,9 @@ describe('SingletonCommunis.sol', () => {
       await distributeStakeBonusByStakeId(stake2, signer2, x);
       await distributeStakeBonusByStakeId(stake3, signer3, x);
 
-      await logPayoutDetails(1, signer1, x, stake1PayoutInfo, prevBalance1);
-      await logPayoutDetails(2, signer2, x, stake2PayoutInfo, prevBalance2);
-      await logPayoutDetails(3, signer3, x, stake3PayoutInfo, prevBalance3);
+      await expectPayoutDetails(1, signer1, x, stake1PayoutInfo, prevBalance1);
+      await expectPayoutDetails(2, signer2, x, stake2PayoutInfo, prevBalance2);
+      await expectPayoutDetails(3, signer3, x, stake3PayoutInfo, prevBalance3);
 
       signer1Balance = await x.communis.balanceOf(signer1);
       signer2Balance = await x.communis.balanceOf(signer2);
@@ -849,9 +879,7 @@ describe('SingletonCommunis.sol', () => {
       expect(signer1Balance)
         .to.greaterThan(signer2Balance);
       expect(signer2Balance)
-        .to.greaterThan(signer3Balance);
-
-      // console.log("Round 2 Distributable Communis left over", await x.stakeManager.distributableCommunisStakeBonus())
+        .to.equal(signer3Balance);
 
       //Round 3
       await utils.moveForwardDays(91n, x)
@@ -870,15 +898,9 @@ describe('SingletonCommunis.sol', () => {
       await distributeStakeBonusByStakeId(stake2, signer2, x);
       await distributeStakeBonusByStakeId(stake3, signer3, x);
 
-      // console.log("Last day claiming distributions ", await x.hex.currentDay());
-     
-      await logPayoutDetails(1, signer1, x, stake1PayoutInfo, prevBalance1);
-      await logPayoutDetails(2, signer2, x, stake2PayoutInfo, prevBalance2);
-      await logPayoutDetails(3, signer3, x, stake3PayoutInfo, prevBalance3);
-
-      // console.log("signer1 Final Balance ", await x.communis.balanceOf(signer1))
-      // console.log("signer1 Final Balance ", await x.communis.balanceOf(signer2))
-      // console.log("signer1 Final Balance ", await x.communis.balanceOf(signer3)) 
+      await expectPayoutDetails(1, signer1, x, stake1PayoutInfo, prevBalance1);
+      await expectPayoutDetails(2, signer2, x, stake2PayoutInfo, prevBalance2);
+      await expectPayoutDetails(3, signer3, x, stake3PayoutInfo, prevBalance3);
 
       signer1Balance = await x.communis.balanceOf(signer1);
       signer2Balance = await x.communis.balanceOf(signer2);
@@ -886,11 +908,14 @@ describe('SingletonCommunis.sol', () => {
 
       expect(signer1Balance)
         .to.greaterThan(signer2Balance);
-      expect(signer2Balance)
+      expect(signer1Balance)
         .to.greaterThan(signer3Balance);
 
-      // console.log("Round 3 Distributable Communis left over", await x.stakeManager.distributableCommunisStakeBonus())
-      
+      const balanceLeft = await x.stakeManager.distributableCommunisStakeBonus();
+
+      expect(balanceLeft)
+        .to.lessThan(10); // solidity rounding down (truncating) from distributeStakeBonusByStakeId payout division
+
     })
   })
   // describe('#withdrawAmountByStakeId', () => {
