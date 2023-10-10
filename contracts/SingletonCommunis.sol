@@ -305,21 +305,12 @@ contract SingletonCommunis is StakeEnder {
         revert NotAllowed();
       }
 
-      // This looks at how much a given stakeId is currently contributing to the total amount staked in the stake manager.
-      // contributionPercentage goes up and down with stakedAmount given fixed stakeManagerStakedAmount
-      // contributionPercentage goes up and down with stakeManagerStakedAmount given fixed stakedAmount
-      //    - If others reduce the stakeManagerStakedAmount by withdrawing their
-      //      staked COM (and not running distributeStakeBonusByStakeId for themself)
-      //      contributionPercentage goes up and distributableCommunisStakeBonus simply gets redistributed accordingly.
-
       uint256 numberOfPayouts = ((currentDay - nextPayoutDay) / NINETY_ONE) + ONE;
 
-      payout = ((
-        distributableBonus * (stakedAmount * 100_000)
-      )) / (100_000 * stakeManagerStakedAmount);
+      payout = (stakedAmount * numberOfPayouts) / 80;
 
-      if(payout < (stakedAmount / 80) && numberOfPayouts == 1){
-        payout = (stakedAmount / 80);
+      if (payout > distributableBonus) {
+          payout = distributableBonus; // Ensure you don't try to pay out more than the distributableBonus
       }
 
       distributableCommunisStakeBonus = (distributableBonus - payout);
