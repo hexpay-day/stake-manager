@@ -844,6 +844,10 @@ describe("StakeEnder", function () {
           [signer1, x.stakeManager],
           [tipAmount * -1n, tipAmount],
         )
+      const stakeSetting = await x.stakeManager.stakeIdToSettings(nextStakeId)
+      const decodedSettings = await x.stakeManager.decodeSettings(stakeSetting)
+      await expect(x.stakeManager.encodeSettings(fromStruct(decodedSettings)))
+        .eventually.to.equal(stakeSetting)
       await expect(x.stakeManager.withdrawableBalanceOf(hre.ethers.ZeroAddress, signer2.address))
         .eventually.to.equal(0)
       await expect(x.stakeManager.withdrawableBalanceOf(hre.ethers.ZeroAddress, signer1.address))
