@@ -2,7 +2,6 @@
 pragma solidity ^0.8.18;
 
 import { UnderlyingStakeable } from "./UnderlyingStakeable.sol";
-import { IHEX } from  "./interfaces/IHEX.sol";
 import { Communis } from "./Communis.sol";
 import { ERC20 } from "solmate/src/tokens/ERC20.sol";
 import { HEX } from "./interfaces/HEX.sol";
@@ -428,8 +427,8 @@ contract SingletonCommunis is StakeEnder {
       uint256 contributionPercentage = (stakedAmount * (10 ** 5)) / stakeManagerStakedAmount;
       uint256 contributionTotal = (distributableStakeBonus * contributionPercentage) / (10 ** 5);
 
-      if(payout < (stakedAmount / 80) && numberOfPayouts == 1){
-        payout = (stakedAmount / 80);
+      if (payout > distributableBonus) {
+          payout = distributableBonus; // Ensure you don't try to pay out more than the distributableBonus
       }
 
       distributableCommunisStakeBonus = (distributableBonus - payout);
