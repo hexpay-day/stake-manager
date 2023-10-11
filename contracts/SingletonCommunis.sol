@@ -226,16 +226,11 @@ contract SingletonCommunis is StakeEnder {
         revert NotAllowed();
       }
 
-      uint256 stakedAmountAfterWithdraw = (stakedAmount - withdrawAmount);
-      if (stakedAmountAfterWithdraw < uint120(payoutInfo >> ONE_TWENTY)) {
-        revert NotAllowed();
-      }
-
       Communis(COMM).withdrawStakedCodeak(withdrawAmount);
       stakeIdCommunisPayoutInfo[stakeId] = _encodePayoutInfo({
         nextPayoutDay: uint16(payoutInfo >> 240),
         endBonusPayoutDebt: uint120(payoutInfo >> ONE_TWENTY),
-        stakeAmount: stakedAmountAfterWithdraw
+        stakeAmount: (stakedAmount - withdrawAmount)
       });
       _attributeCommunis({
         withdraw: withdraw,
