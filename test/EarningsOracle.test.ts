@@ -4,11 +4,11 @@ import * as hre from 'hardhat'
 import { expect } from "chai"
 import * as config from '../src/config'
 import _ from 'lodash'
-import { ERC20, EarningsOracle, EarningsOracle__factory, IHEX } from "../artifacts/types"
+import { EarningsOracle__factory, HEX } from "../artifacts/types"
 
 describe('EarningsOracle.sol', () => {
   const deployOracle = async (min: ethers.BigNumberish, untilDay: ethers.BigNumberish) => {
-    const EarningsOracle = await hre.ethers.getContractFactory('EarningsOracle') as EarningsOracle__factory
+    const EarningsOracle = await hre.ethers.getContractFactory('EarningsOracle') as unknown as EarningsOracle__factory
     const oracle = await EarningsOracle.deploy(min, untilDay)
     await oracle.deploymentTransaction()?.wait()
     return oracle
@@ -16,11 +16,9 @@ describe('EarningsOracle.sol', () => {
   const launch = (untilDay: ethers.BigNumberish) =>
     async function launchEarningsOracle() {
       const oracle = await deployOracle(1, untilDay)
-      const hex = await hre.ethers.getContractAt('IHEX', config.hexAddress) as IHEX
-      const hex20 = await hre.ethers.getContractAt('ERC20', config.hexAddress) as ERC20
+      const hex = await hre.ethers.getContractAt('HEX', config.hexAddress) as unknown as HEX
       return {
         hex,
-        hex20,
         oracle,
       }
     }

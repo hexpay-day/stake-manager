@@ -1,14 +1,13 @@
 import { SignerWithAddress } from "@nomicfoundation/hardhat-ethers/signers"
 import { loadFixture, time } from "@nomicfoundation/hardhat-network-helpers"
 import { days } from "@nomicfoundation/hardhat-network-helpers/dist/src/helpers/time/duration"
-import type { IHEX } from "../artifacts/types/contracts/interfaces/IHEX"
 import * as hre from 'hardhat'
 import * as ethers from 'ethers'
 import _ from "lodash"
 import * as Chai from "chai"
 import * as config from '../src/config'
-import { ERC721, IHedron, IHEXStakeInstanceManager } from "../artifacts/types"
-import { HSIStartEvent } from "../artifacts/types/contracts/interfaces/IHEXStakeInstanceManager"
+import { Hedron, HEXStakeInstanceManager, IsolatedStakeManagerFactory__factory, ExistingStakeManager__factory, TransferReceiver__factory, StakeManager__factory, Utils__factory, MockExternalPerpetualFilter__factory, HEX } from "../artifacts/types"
+import { HSIStartEvent } from "../artifacts/types/contracts/interfaces/HEXStakeInstanceManager"
 import { anyUint } from "@nomicfoundation/hardhat-chai-matchers/withArgs"
 import { ERC20 } from "../artifacts/types/solmate/src/tokens"
 
@@ -44,54 +43,51 @@ Chai.Assertion.addMethod('printGasUsage', function (this: any, throws = true) {
 type X = Awaited<ReturnType<typeof deployFixture>>
 
 export const deployFixture = async () => {
-  const Utils = await hre.ethers.getContractFactory('Utils')
+  const Utils = await hre.ethers.getContractFactory('Utils') as unknown as Utils__factory
   const utils = await Utils.deploy()
-  const StakeManager = await hre.ethers.getContractFactory('StakeManager')
+  const StakeManager = await hre.ethers.getContractFactory('StakeManager') as unknown as StakeManager__factory
   const stakeManager = await StakeManager.deploy()
   await stakeManager.deploymentTransaction()?.wait()
   const _signers = await hre.ethers.getSigners()
   const signers = _signers.slice(0, 20)
   const [signer] = signers
-  const hex = await hre.ethers.getContractAt('contracts/interfaces/IHEX.sol:IHEX', config.hexAddress) as unknown as IHEX
-  const hex20 = await hre.ethers.getContractAt('solmate/src/tokens/ERC20.sol:ERC20', config.hexAddress) as unknown as ERC20
-  const hedron = await hre.ethers.getContractAt('contracts/interfaces/IHedron.sol:IHedron', config.hedronAddress) as unknown as IHedron
-  const hedron20 = await hre.ethers.getContractAt('solmate/src/tokens/ERC20.sol:ERC20', config.hedronAddress) as unknown as ERC20
-  const hsim = await hre.ethers.getContractAt('IHEXStakeInstanceManager', await hedron.hsim()) as unknown as IHEXStakeInstanceManager
-  const hsim721 = await hre.ethers.getContractAt('solmate/src/tokens/ERC721.sol:ERC721', await hedron.hsim()) as unknown as ERC721
-  const TransferReceiver = await hre.ethers.getContractFactory('TransferReceiver')
+  const hex = await hre.ethers.getContractAt('HEX', config.hexAddress) as unknown as HEX
+  const hedron = await hre.ethers.getContractAt('Hedron', config.hedronAddress) as unknown as Hedron
+  const hsim = await hre.ethers.getContractAt('HEXStakeInstanceManager', await hedron.hsim()) as unknown as HEXStakeInstanceManager
+  const TransferReceiver = await hre.ethers.getContractFactory('TransferReceiver') as unknown as TransferReceiver__factory
   const transferReceiver = await TransferReceiver.deploy()
-  const ExistingStakeManager = await hre.ethers.getContractFactory('ExistingStakeManager')
+  const ExistingStakeManager = await hre.ethers.getContractFactory('ExistingStakeManager') as unknown as ExistingStakeManager__factory
   const existingStakeManager = await ExistingStakeManager.deploy()
   const maximusStakeManager = existingStakeManager
-  const decimals = await hex20.decimals()
+  const decimals = await hex.decimals()
   const oneMillion = hre.ethers.parseUnits('1000000', decimals)
-  const hexWhale = await config.hexWhale(hex20)
+  const hexWhale = await config.hexWhale(hex)
   await hre.vizor.impersonate(hexWhale, async (swa) => {
-    const h = hex20.connect(swa as unknown as ethers.Signer)
+    const h = hex.connect(swa as unknown as ethers.Signer)
     await Promise.all(signers.map(async (signer) => {
       await Promise.all([
         // allow infinite flow
-        hex20.connect(signer as unknown as ethers.Signer)
+        hex.connect(signer as unknown as ethers.Signer)
           .approve(stakeManager.getAddress(), hre.ethers.MaxUint256),
-        hex20.connect(signer as unknown as ethers.Signer).approve(hsim.getAddress(), hre.ethers.MaxUint256),
+        hex.connect(signer as unknown as ethers.Signer).approve(hsim.getAddress(), hre.ethers.MaxUint256),
         h.transfer(signer.address, oneMillion),
       ])
     }))
   })
-  const IsolatedStakeManagerFactory = await hre.ethers.getContractFactory('IsolatedStakeManagerFactory')
+  const IsolatedStakeManagerFactory = await hre.ethers.getContractFactory('IsolatedStakeManagerFactory') as unknown as IsolatedStakeManagerFactory__factory
   const isolatedStakeManagerFactory = await IsolatedStakeManagerFactory.deploy()
   await isolatedStakeManagerFactory.deploymentTransaction()?.wait()
   await isolatedStakeManagerFactory.createIsolatedManager(signer.address)
   const isolatedStakeManagerAddress = await isolatedStakeManagerFactory.isolatedStakeManagers(signer.address)
   const isolatedStakeManager = await hre.ethers.getContractAt('IsolatedStakeManager', isolatedStakeManagerAddress)
-  const tx = await hex20.connect(signer as unknown as ethers.Signer).approve(isolatedStakeManager.getAddress(), oneMillion)
+  const tx = await hex.connect(signer as unknown as ethers.Signer).approve(isolatedStakeManager.getAddress(), oneMillion)
   await tx.wait()
   const base = '0xe9f84d418B008888A992Ff8c6D22389C2C3504e0'
   const stakedAmount = oneMillion / 10n
   const usdcAddress = '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48'
   const usdc = await hre.ethers.getContractAt('solmate/src/tokens/ERC20.sol:ERC20', usdcAddress) as unknown as ERC20
   const multicall = await hre.ethers.getContractAt('IMulticall3', '0xcA11bde05977b3631167028862bE2a173976CA11')
-  const MockExternalPerpetualFilter = await hre.ethers.getContractFactory('MockExternalPerpetualFilter')
+  const MockExternalPerpetualFilter = await hre.ethers.getContractFactory('MockExternalPerpetualFilter') as unknown as MockExternalPerpetualFilter__factory
   const externalPerpetualFilter = await MockExternalPerpetualFilter.deploy()
   await externalPerpetualFilter.deploymentTransaction()?.wait()
   const MockPerpetual = await hre.ethers.getContractFactory('MockPerpetual')
@@ -113,8 +109,7 @@ export const deployFixture = async () => {
     nextStakeId: stakeIdBN + 1n,
     oneEther: hre.ethers.parseEther('1'),
     hex,
-    hex20,
-    hedron20,
+    hedron,
     decimals,
     oneMillion,
     signers,
@@ -125,14 +120,12 @@ export const deployFixture = async () => {
     utils,
     maximusStakeManager,
     base,
-    hedron,
     hsim,
-    hsim721,
     existingStakeManager,
   }
 }
 
-export const nextStakeId = async (hex: IHEX) => {
+export const nextStakeId = async (hex: HEX) => {
   const [, , , , , , stakeIdBN] = await hex.globalInfo()
   return stakeIdBN + 1n
 }
@@ -251,7 +244,7 @@ export const procureHSIFixture = async (x: X, nxtStkId: bigint) => {
       hsiIndex: addrToId.get(target.hsiAddress) as bigint,
     } as HSITarget
   }))
-  await x.hsim721.setApprovalForAll(x.existingStakeManager.getAddress(), true)
+  await x.hsim.setApprovalForAll(x.existingStakeManager.getAddress(), true)
   return {
     ...x,
     hsiTargets: hsiTargets.reverse(),
@@ -259,7 +252,7 @@ export const procureHSIFixture = async (x: X, nxtStkId: bigint) => {
 }
 
 interface MinimalX {
-  hex: IHEX;
+  hex: HEX;
   signers: SignerWithAddress[];
 }
 
@@ -310,7 +303,7 @@ export const absMinInt16 = 2n**15n // zero point for int16
 
 export const DAY = 1000*60*60*24
 
-export const receiptToHsiAddress = async (hsim: IHEXStakeInstanceManager, tx: ethers.TransactionResponse) => {
+export const receiptToHsiAddress = async (hsim: HEXStakeInstanceManager, tx: ethers.TransactionResponse) => {
   const receipt = await tx.wait()
   if (!receipt) throw new Error('unable to find receipt')
   const stakeStartEvent = _(receipt.logs)

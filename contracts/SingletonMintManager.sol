@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.18;
 
-import { IHedron } from "./interfaces/IHedron.sol";
+import { Hedron } from "./interfaces/Hedron.sol";
 import { UnderlyingStakeManager } from "./UnderlyingStakeManager.sol";
 
 contract SingletonMintManager is UnderlyingStakeManager {
@@ -82,6 +82,6 @@ contract SingletonMintManager is UnderlyingStakeManager {
     }
   }
   function _mintHedron(uint256 index, uint256 stakeId) internal virtual returns(uint256 amount) {
-    return IHedron(HEDRON).mintNative(index, uint40(stakeId));
+    return Hedron(HEDRON).mintNative(index, uint40(stakeId));
   }
 }

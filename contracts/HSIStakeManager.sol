@@ -3,9 +3,8 @@ pragma solidity ^0.8.18;
 
 import { ERC721 } from "solmate/src/tokens/ERC721.sol";
 import { ERC20 } from "solmate/src/tokens/ERC20.sol";
-import { IHedron } from "./interfaces/IHedron.sol";
-import { IHEXStakeInstanceManager } from "./interfaces/IHEXStakeInstanceManager.sol";
-import { IHEX } from "./interfaces/IHEX.sol";
+import { Hedron } from "./interfaces/Hedron.sol";
+import { HEXStakeInstanceManager } from "./interfaces/HEXStakeInstanceManager.sol";
 import { IUnderlyingStakeable } from "./interfaces/IUnderlyingStakeable.sol";
 import { StakeEnder } from "./StakeEnder.sol";
 
@@ -31,7 +30,7 @@ contract HSIStakeManager is StakeEnder {
     uint256 index = _hsiCount({
       staker: address(this)
     });
-    hsiAddress = IHEXStakeInstanceManager(HSIM).hexStakeDetokenize(tokenId);
+    hsiAddress = HEXStakeInstanceManager(HSIM).hexStakeDetokenize(tokenId);
     uint256 stakeId = uint256(uint160(hsiAddress));
     // erc721 is burned - no owner - only hsi address remains
     stakeIdInfo[stakeId] = _encodeInfo({
@@ -120,7 +119,7 @@ contract HSIStakeManager is StakeEnder {
     });
   }
   function _hsiCount(address staker) internal view returns(uint256 count) {
-    return IHEXStakeInstanceManager(HSIM).hsiCount(staker);
+    return HEXStakeInstanceManager(HSIM).hsiCount(staker);
   }
   function _getStakeCount(address staker) internal view override returns(uint256 count) {
     return _hsiCount({
@@ -134,7 +133,7 @@ contract HSIStakeManager is StakeEnder {
    * @param hsiAddress the hsi address (contract) that the stake is being custodied by
    */
   function _withdraw721(uint256 index, address owner, address hsiAddress) internal returns(uint256 tokenId) {
-    tokenId = IHEXStakeInstanceManager(HSIM).hexStakeTokenize(index, hsiAddress);
+    tokenId = HEXStakeInstanceManager(HSIM).hexStakeTokenize(index, hsiAddress);
     ERC721(HSIM).transferFrom(address(this), owner, tokenId);
   }
   function hsiStakeEndMany(address[] calldata hsiAddresses) external payable {
@@ -205,7 +204,7 @@ contract HSIStakeManager is StakeEnder {
     uint256 stakeId,
     uint256 hsiCountAfter
   ) internal override returns(uint256 targetReward) {
-    targetReward = IHEXStakeInstanceManager(HSIM)
+    targetReward = HEXStakeInstanceManager(HSIM)
       .hexStakeEnd(index, address(uint160(stakeId)));
     // move around the indexes for future stake ends
     if (hsiCountAfter > index) {
@@ -215,7 +214,7 @@ contract HSIStakeManager is StakeEnder {
     }
   }
   function _rewriteIndex(uint256 index) internal {
-    address movedHsiAddress = IHEXStakeInstanceManager(HSIM)
+    address movedHsiAddress = HEXStakeInstanceManager(HSIM)
       .hsiLists(address(this), index);
     (, address movedOwner) = _stakeIdToInfo({
       stakeId: uint256(uint160(movedHsiAddress))
@@ -239,7 +238,7 @@ contract HSIStakeManager is StakeEnder {
     uint256 index
   ) internal override returns(uint256 stakeId) {
     ERC20(TARGET).approve(HSIM, newStakeAmount);
-    address hsiAddress = IHEXStakeInstanceManager(HSIM)
+    address hsiAddress = HEXStakeInstanceManager(HSIM)
       .hexStakeStart(newStakeAmount, newStakeDays);
     stakeId = uint160(hsiAddress);
     stakeIdInfo[stakeId] = _encodeInfo({
@@ -253,7 +252,7 @@ contract HSIStakeManager is StakeEnder {
    * @param stakeId the stake id or in this case, hsi address
    */
   function _mintHedron(uint256 index, uint256 stakeId) internal override returns(uint256) {
-    return IHedron(HEDRON).mintInstanced(index, address(uint160(stakeId)));
+    return Hedron(HEDRON).mintInstanced(index, address(uint160(stakeId)));
   }
   /**
    * check that this contract is the custodian of this hsi (nft was depostied and detokenized)

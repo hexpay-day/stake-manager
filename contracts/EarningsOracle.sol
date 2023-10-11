@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.18;
 
-import { IHEX } from './interfaces/IHEX.sol';
+import { HEX } from './interfaces/HEX.sol';
 import { Utils } from './Utils.sol';
 
 contract EarningsOracle is Utils {
@@ -98,7 +98,7 @@ contract EarningsOracle is Utils {
       uint256 dayPayoutTotal,
       uint256 dayStakeSharesTotal,
       // uint256 dayUnclaimedSatoshisTotal
-    ) = IHEX(TARGET).dailyData({
+    ) = HEX(TARGET).dailyData({
       day: day
     });
     if (day > lastZeroDay) {
@@ -149,7 +149,7 @@ contract EarningsOracle is Utils {
    */
   function incrementDay() external payable returns(Total memory total, uint256 day) {
     uint256 size = totals.length;
-    if (size >= IHEX(TARGET).currentDay()) {
+    if (size >= HEX(TARGET).currentDay()) {
       // no need to increment
       return (total, ZERO);
     }
@@ -164,7 +164,7 @@ contract EarningsOracle is Utils {
    * @param untilDay the day to stop storing day information
    */
   function _storeDays(uint256 startDay, uint256 untilDay) internal returns(Total memory total, uint256 day) {
-    uint256[] memory range = IHEX(TARGET).dailyDataRange(startDay, untilDay);
+    uint256[] memory range = HEX(TARGET).dailyDataRange(startDay, untilDay);
     uint256 len = range.length;
     uint256 payout;
     uint256 shares;
@@ -210,7 +210,7 @@ contract EarningsOracle is Utils {
     iterations = iterations == ZERO || iterations > MAX_CATCH_UP_DAYS ? MAX_CATCH_UP_DAYS : iterations;
     uint256 startDay = totals.length;
     // constrain by size
-    uint256 limit = IHEX(TARGET).currentDay();
+    uint256 limit = HEX(TARGET).currentDay();
     uint256 untilDay = startDay + iterations;
     if (untilDay > limit) {
       untilDay = limit;

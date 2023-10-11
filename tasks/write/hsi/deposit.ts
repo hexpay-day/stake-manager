@@ -1,7 +1,7 @@
 import { HardhatRuntimeEnvironment } from "hardhat/types"
 import * as addresses from '../../../src/addresses'
 import * as utils from '../../../src/utils'
-import { ERC721, IHEXStakeInstanceManager, IHedron } from "../../../artifacts/types"
+import { HEXStakeInstanceManager, Hedron } from "../../../artifacts/types"
 import _ from "lodash"
 
 type Input = {
@@ -12,9 +12,8 @@ type Input = {
 export const main = async (args: Input, hre: HardhatRuntimeEnvironment) => {
   const [signer] = await hre.ethers.getSigners()
   console.log('signer %o', signer.address)
-  const hedron = await hre.ethers.getContractAt('contracts/interfaces/IHedron.sol:IHedron', addresses.Hedron) as unknown as IHedron
-  const hsim = await hre.ethers.getContractAt('IHEXStakeInstanceManager', await hedron.hsim()) as IHEXStakeInstanceManager
-  const hsim721 = await hre.ethers.getContractAt('solmate/src/tokens/ERC721.sol', await hedron.hsim()) as unknown as ERC721
+  const hedron = await hre.ethers.getContractAt('Hedron', addresses.Hedron) as unknown as Hedron
+  const hsim = await hre.ethers.getContractAt('HEXStakeInstanceManager', await hedron.hsim()) as unknown as HEXStakeInstanceManager
   const { tokenized, detokenized } = await hre.run('read:hsi:count', {
     address: signer.address,
   }) as { tokenized: bigint; detokenized: bigint; }
@@ -33,7 +32,7 @@ export const main = async (args: Input, hre: HardhatRuntimeEnvironment) => {
   if (!approvalInfo.all) {
     if (!args.approveIndividual) {
       await utils.printTx(
-        hsim721.setApprovalForAll(addresses.ExistingStakeManager, true),
+        hsim.setApprovalForAll(addresses.ExistingStakeManager, true),
         'giving wide approval for %o',
         [addresses.ExistingStakeManager],
       )
@@ -41,7 +40,7 @@ export const main = async (args: Input, hre: HardhatRuntimeEnvironment) => {
       const needsApproval = tokenIds.filter((tokenId) => !!approvalInfo.tokenIdToApproval.get(tokenId))
       for (const tokenId of needsApproval) {
         await utils.printTx(
-          hsim721.approve(addresses.ExistingStakeManager, tokenId),
+          hsim.approve(addresses.ExistingStakeManager, tokenId),
           'giving individual approval to %o for token id %o',
           [addresses.ExistingStakeManager, tokenId],
         )

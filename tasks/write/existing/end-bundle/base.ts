@@ -3,12 +3,12 @@ export const main = async () => {}
 // import * as config from '../../../../src/config'
 // import * as addresses from '../../../../src/addresses'
 // import * as utils from '../../../../src/utils'
-// import { ExistingStakeManager, IHEX, IHEXStakeInstanceManager, IMulticall3 } from "../../../../artifacts/types";
+// import { ExistingStakeManager, IHEX, HEXStakeInstanceManager, IMulticall3 } from "../../../../artifacts/types";
 // import _ from "lodash";
 // import { Wallet, ethers } from "ethers";
 // import { setNextBlockTimestamp } from "@nomicfoundation/hardhat-network-helpers/dist/src/helpers/time";
 // import { StakeEndEvent, TransferEvent } from "../../../../artifacts/types/contracts/interfaces/IHEX";
-// import { HSIEndEvent } from "../../../../artifacts/types/contracts/interfaces/IHEXStakeInstanceManager";
+// import { HSIEndEvent } from "../../../../artifacts/types/contracts/interfaces/HEXStakeInstanceManager";
 // import { FlashbotsBundleProvider, FlashbotsBundleTransaction } from '@flashbots/ethers-provider-bundle'
 // import { setTimeout } from "timers/promises";
 
@@ -44,7 +44,7 @@ export const main = async () => {}
 //   const runner = hre.ethers.Wallet.fromMnemonic(config.args.mnemonic, "m/44'/60'/0'/0/1").connect(hre.ethers.provider)
 //   const balance = await runner.getBalance()
 //   console.log('signer %o, balance %o', runner.address, hre.ethers.utils.formatEther(balance))
-//   const hsim = await hre.ethers.getContractAt('IHEXStakeInstanceManager', addresses.HSIM, runner) as IHEXStakeInstanceManager
+//   const hsim = await hre.ethers.getContractAt('HEXStakeInstanceManager', addresses.HSIM, runner) as HEXStakeInstanceManager
 //   const multicall = await hre.ethers.getContractAt('IMulticall3', addresses.Multicall, runner) as IMulticall3
 //   const hex = await hre.ethers.getContractAt('IHEX', addresses.Hex, runner) as IHEX
 //   const existingStakeManager = await hre.ethers.getContractAt('ExistingStakeManager', addresses.ExistingStakeManager, runner)
@@ -114,7 +114,7 @@ export const main = async () => {}
 // type Contracts = {
 //   existingStakeManager: ExistingStakeManager;
 //   hex: IHEX;
-//   hsim: IHEXStakeInstanceManager;
+//   hsim: HEXStakeInstanceManager;
 // }
 
 // type SendTx = {

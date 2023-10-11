@@ -3,8 +3,6 @@ pragma solidity ^0.8.18;
 
 import { ERC20 } from "solmate/src/tokens/ERC20.sol";
 import { IUnderlyingStakeable } from "./interfaces/IUnderlyingStakeable.sol";
-import { IHedron } from "./interfaces/IHedron.sol";
-import { IHEX } from  "./interfaces/IHEX.sol";
 import { MulticallExtension } from "./MulticallExtension.sol";
 import { Utils } from "./Utils.sol";
 

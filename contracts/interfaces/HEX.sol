@@ -2,8 +2,9 @@
 pragma solidity ^0.8.18;
 
 import { IUnderlyingStakeable } from "./IUnderlyingStakeable.sol";
+import { ERC20 } from "solmate/src/tokens/ERC20.sol";
 
-interface IHEX is IUnderlyingStakeable {
+abstract contract HEX is IUnderlyingStakeable, ERC20 {
   /*  XfLobbyEnter      (auto-generated event)
 
       uint40            timestamp       -->  data0 [ 39:  0]
@@ -150,17 +151,17 @@ interface IHEX is IUnderlyingStakeable {
     uint256 data0,
     uint40 indexed stakeId
   );
-  function stakeLists(address staker, uint256 index) view external returns(StakeStore memory);
-  function currentDay() external view returns (uint256);
-  function globalInfo() external view returns(uint256[13] memory);
+  function stakeLists(address staker, uint256 index) view external virtual returns(StakeStore memory);
+  function currentDay() external virtual view returns (uint256);
+  function globalInfo() external virtual view returns(uint256[13] memory);
 
-  function dailyData(uint256 day) external view returns(
+  function dailyData(uint256 day) external virtual view returns(
     uint72 dayPayoutTotal,
     uint72 dayStakeSharesTotal,
     uint56 dayUnclaimedSatoshisTotal
   );
   function dailyDataRange(uint256 beginDay, uint256 endDay)
-    external
+    external virtual
     view
     returns (uint256[] memory list);
 }

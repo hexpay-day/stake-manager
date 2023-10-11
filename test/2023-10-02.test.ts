@@ -5,6 +5,7 @@ import * as hre from "hardhat"
 import * as utils from './utils'
 import { anyUint } from '@nomicfoundation/hardhat-chai-matchers/withArgs'
 import { ethers } from 'ethers'
+import { ExistingStakeManager } from '../artifacts/types'
 
 describe("2023-10-02 utc", function () {
   it('can end base and hsi', async function () {
@@ -44,10 +45,10 @@ describe("2023-10-02 utc", function () {
       }
     })))
     await hre.vizor.impersonate(execAddress, async (swa) => {
-      const execStakeManager = x.existingStakeManager.connect(swa)
+      const execStakeManager = x.existingStakeManager.connect(swa) as ExistingStakeManager
       if (_.now() < depositTime) {
         await time.setNextBlockTimestamp(depositTime - 1)
-        await x.hsim721.connect(swa as unknown as ethers.Signer).setApprovalForAll(execStakeManager.getAddress(), true)
+        await x.hsim.connect(swa as unknown as ethers.Signer).setApprovalForAll(execStakeManager.getAddress(), true)
         await time.setNextBlockTimestamp(depositTime)
         // const defaultSettings = await x.existingStakeManager.defaultEncodedSettings()
         // await expect(execStakeManager.multicall(_.map(hsis, (target) => (

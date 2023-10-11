@@ -56,7 +56,7 @@ describe('MaximusStakeManager.sol', () => {
         value: oneEther,
         to: x.gasReimberser.getAddress(),
       })
-      await x.hex20.connect(signerC as unknown as ethers.Signer).transfer(x.gasReimberser.getAddress(), x.stakedAmount)
+      await x.hex.connect(signerC as unknown as ethers.Signer).transfer(x.gasReimberser.getAddress(), x.stakedAmount)
       await expect(x.maximusStakeManager.flush(x.gasReimberser.getAddress(), signerB.address, currentPeriod + 1n, [x.hex.getAddress()]))
         .to.revertedWithCustomError(x.maximusStakeManager, 'NotAllowed')
       const doFlush = x.maximusStakeManager.flush(x.gasReimberser.getAddress(), x.base, currentPeriod + 1n, [x.hex.getAddress()])
@@ -71,13 +71,13 @@ describe('MaximusStakeManager.sol', () => {
       await expect(x.maximusStakeManager.rewardsTo(x.base, currentPeriod + 1n))
         .eventually.to.equal(signerA.address)
       await expect(x.maximusStakeManager.flush(x.gasReimberser.getAddress(), x.base, currentPeriod, [x.hex.getAddress()]))
-        .changeTokenBalances(x.hex20,
+        .changeTokenBalances(x.hex,
           [x.gasReimberser, x.maximusStakeManager, signerA],
           [x.stakedAmount * -1n, x.stakedAmount, 0],
         )
       const balanceNative = await signerA.provider?.getBalance(x.maximusStakeManager.getAddress())
       const bal = balanceNative || 0n
-      const balanceToken = await x.hex20.balanceOf(x.maximusStakeManager.getAddress())
+      const balanceToken = await x.hex.balanceOf(x.maximusStakeManager.getAddress())
       const balToken = balanceToken
       const doWithdraw = x.maximusStakeManager.multicall([
         x.existingStakeManager.interface.encodeFunctionData('withdrawTokenTo', [
@@ -97,7 +97,7 @@ describe('MaximusStakeManager.sol', () => {
           [bal * -1n, bal],
         )
       await expect(doWithdraw)
-        .changeTokenBalances(x.hex20,
+        .changeTokenBalances(x.hex,
           [x.maximusStakeManager, signerA],
           [balToken * -1n, balToken],
         )
@@ -116,7 +116,7 @@ describe('MaximusStakeManager.sol', () => {
       it('allows the whitelist to be set which calls endStakeHEX', async () => {
         const x = await loadFixture(utils.deployFixture)
         const [signer1, signer2] = x.signers
-        await x.hex20.transfer(x.mockPerpetual.getAddress(), x.oneMillion / 10n)
+        await x.hex.transfer(x.mockPerpetual.getAddress(), x.oneMillion / 10n)
         await x.mockPerpetual.startStakeHEX();
         await utils.moveForwardDays(2n, x) // we can now end the stake
         const args = [signer1.address, x.mockPerpetual.getAddress(), x.nextStakeId] as const

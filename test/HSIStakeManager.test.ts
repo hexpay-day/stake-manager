@@ -17,7 +17,7 @@ describe('HSIStakeManager.sol', () => {
           0,
         ]),
       ])), false))
-        .to.emit(x.hsim721, 'Transfer')
+        .to.emit(x.hsim, 'Transfer')
         .to.emit(x.hsim, 'HSIDetokenize')
     })
   })
@@ -28,7 +28,7 @@ describe('HSIStakeManager.sol', () => {
       await expect(x.existingStakeManager.multicall(_.map(x.hsiTargets, (target) => (
         x.existingStakeManager.interface.encodeFunctionData('depositHsi', [target.tokenId, 0])
       )), false))
-        .to.emit(x.hsim721, 'Transfer')
+        .to.emit(x.hsim, 'Transfer')
         .to.emit(x.hsim, 'HSIDetokenize')
       await expect(x.existingStakeManager.connect(signer2).withdrawHsi(x.hsiTargets[0].hsiAddress))
         .to.revertedWithCustomError(x.existingStakeManager, 'StakeNotOwned')
@@ -54,7 +54,7 @@ describe('HSIStakeManager.sol', () => {
       await expect(x.existingStakeManager.multicall(_.flatMap(x.hsiTargets, (target) => ([
         x.existingStakeManager.interface.encodeFunctionData('depositHsi', [target.tokenId, 0]),
       ])), false))
-        .to.emit(x.hsim721, 'Transfer')
+        .to.emit(x.hsim, 'Transfer')
         .to.emit(x.hsim, 'HSIDetokenize')
       const currencyIndex = await x.stakeManager.currencyListSize()
       const amount = hre.ethers.parseUnits('10', await x.usdc.decimals())
@@ -102,7 +102,7 @@ describe('HSIStakeManager.sol', () => {
       await expect(x.existingStakeManager.multicall(_.flatMap(x.hsiTargets, (target) => ([
         x.existingStakeManager.interface.encodeFunctionData('depositHsi', [target.tokenId, 0]),
       ])), false))
-        .to.emit(x.hsim721, 'Transfer')
+        .to.emit(x.hsim, 'Transfer')
         .to.emit(x.hsim, 'HSIDetokenize')
       await expect(x.existingStakeManager.hsiCount(x.existingStakeManager.getAddress()))
         .eventually.to.equal(x.hsiTargets.length)
@@ -116,7 +116,7 @@ describe('HSIStakeManager.sol', () => {
       await expect(x.existingStakeManager.multicall(_.flatMap(x.hsiTargets, (target) => ([
         x.existingStakeManager.interface.encodeFunctionData('depositHsi', [target.tokenId, 0]),
       ])), false))
-        .to.emit(x.hsim721, 'Transfer')
+        .to.emit(x.hsim, 'Transfer')
         .to.emit(x.hsim, 'HSIDetokenize')
       await expect(x.existingStakeManager.connect(signer2).removeAllTips(x.hsiTargets[0].hsiAddress))
         .to.revertedWithCustomError(x.existingStakeManager, 'StakeNotOwned')
@@ -142,12 +142,12 @@ describe('HSIStakeManager.sol', () => {
       ])), false)
       await utils.moveForwardDays(1n, x)
       await expect(x.existingStakeManager.mintHedronRewards(_.map(x.hsiTargets, 'hsiAddress')))
-        .not.to.emit(x.hedron20, 'Transfer')
+        .not.to.emit(x.hedron, 'Transfer')
       await utils.moveForwardDays(10n, x)
       await expect(x.existingStakeManager.withdrawableBalanceOf(x.hedron.getAddress(), signer1.address))
         .eventually.to.equal(0)
       await expect(x.existingStakeManager.mintHedronRewards(_.map(x.hsiTargets, 'hsiAddress')))
-        .to.emit(x.hedron20, 'Transfer')
+        .to.emit(x.hedron, 'Transfer')
         .withArgs(hre.ethers.ZeroAddress, await x.existingStakeManager.getAddress(), anyUint)
         // .printGasUsage()
       const withdrawable = await x.existingStakeManager.withdrawableBalanceOf(x.hedron.getAddress(), signer1.address)
@@ -170,10 +170,10 @@ describe('HSIStakeManager.sol', () => {
       await expect(x.existingStakeManager.withdrawableBalanceOf(x.hedron.getAddress(), signer1.address))
         .eventually.to.equal(withdrawable)
       expect(tx)
-        .to.emit(x.hedron20, 'Transfer')
+        .to.emit(x.hedron, 'Transfer')
         .withArgs(hre.ethers.ZeroAddress, await x.existingStakeManager.getAddress(), anyUint)
       expect(tx)
-        .to.emit(x.hedron20, 'Transfer')
+        .to.emit(x.hedron, 'Transfer')
         .withArgs(await x.existingStakeManager.getAddress(), signer1.address, anyUint)
       // extra mint in the same day
       await x.existingStakeManager.mintHedronRewards(_.map(x.hsiTargets, 'hsiAddress'))
@@ -187,7 +187,7 @@ describe('HSIStakeManager.sol', () => {
       const [, signerB] = x.signers
       await utils.moveForwardDays(10n, x)
       await expect(x.existingStakeManager.connect(signerB).mintHedronRewards(_.map(x.hsiTargets, 'hsiAddress')))
-        .to.emit(x.hedron20, 'Transfer')
+        .to.emit(x.hedron, 'Transfer')
         .withArgs(hre.ethers.ZeroAddress, await x.existingStakeManager.getAddress(), anyUint)
     })
     it('end deposited stakes', async () => {
@@ -197,7 +197,7 @@ describe('HSIStakeManager.sol', () => {
         x.existingStakeManager.interface.encodeFunctionData('depositHsi', [target.tokenId, defaultEncodedSettings]),
       ]))
       await expect(x.existingStakeManager.multicall(deposits, false))
-        .to.emit(x.hsim721, 'Transfer')
+        .to.emit(x.hsim, 'Transfer')
         .to.emit(x.hsim, 'HSIDetokenize')
       await utils.moveForwardDays(30n, x)
       // 30 day stake is in last
@@ -206,9 +206,9 @@ describe('HSIStakeManager.sol', () => {
         .to.emit(x.hex, 'StakeEnd')
         .withArgs(anyUint, utils.anyUintNoPenalty, targetStakeIdAsHsi.hsiAddress, targetStakeIdAsHsi.stakeId)
         .to.emit(x.hsim, 'HSIEnd')
-        .to.emit(x.hex20, 'Transfer')
+        .to.emit(x.hex, 'Transfer')
         .withArgs(hre.ethers.ZeroAddress, targetStakeIdAsHsi.hsiAddress, anyUint)
-        .to.emit(x.hex20, 'Transfer')
+        .to.emit(x.hex, 'Transfer')
         .withArgs(targetStakeIdAsHsi.hsiAddress, await x.existingStakeManager.getAddress(), anyUint)
     })
     it('end deposited stakes and automatically attribute tips', async () => {
@@ -219,7 +219,7 @@ describe('HSIStakeManager.sol', () => {
         x.existingStakeManager.interface.encodeFunctionData('depositHsi', [target.tokenId, defaultEncodedSettings]),
       ]))
       await expect(x.existingStakeManager.multicall(deposits, false))
-        .to.emit(x.hsim721, 'Transfer')
+        .to.emit(x.hsim, 'Transfer')
         .to.emit(x.hsim, 'HSIDetokenize')
       await utils.moveForwardDays(30n, x)
       // 30 day stake is in last
@@ -240,9 +240,9 @@ describe('HSIStakeManager.sol', () => {
         .to.emit(x.hex, 'StakeEnd')
         .withArgs(anyUint, utils.anyUintNoPenalty, targetStakeIdAsHsi.hsiAddress, targetStakeIdAsHsi.stakeId)
         .to.emit(x.hsim, 'HSIEnd')
-        .to.emit(x.hex20, 'Transfer')
+        .to.emit(x.hex, 'Transfer')
         .withArgs(hre.ethers.ZeroAddress, targetStakeIdAsHsi.hsiAddress, anyUint)
-        .to.emit(x.hex20, 'Transfer')
+        .to.emit(x.hex, 'Transfer')
         .withArgs(targetStakeIdAsHsi.hsiAddress, await x.existingStakeManager.getAddress(), anyUint)
         .to.emit(x.existingStakeManager, 'Tip')
         .withArgs(
@@ -261,7 +261,7 @@ describe('HSIStakeManager.sol', () => {
         x.existingStakeManager.interface.encodeFunctionData('depositHsi', [target.tokenId, defaultEncodedSettings]),
       ]))
       await expect(x.existingStakeManager.multicall(deposits, false))
-        .to.emit(x.hsim721, 'Transfer')
+        .to.emit(x.hsim, 'Transfer')
         .to.emit(x.hsim, 'HSIDetokenize')
       await utils.moveForwardDays(90n, x)
       // 30 day stake is in last
@@ -273,11 +273,11 @@ describe('HSIStakeManager.sol', () => {
         .to.emit(x.hex, 'StakeEnd')
         .withArgs(anyUint, utils.anyUintNoPenalty, x.hsiTargets[2].hsiAddress, x.hsiTargets[2].stakeId)
         .to.emit(x.hsim, 'HSIEnd')
-        .to.emit(x.hex20, 'Transfer')
+        .to.emit(x.hex, 'Transfer')
         .withArgs(hre.ethers.ZeroAddress, x.hsiTargets[0].hsiAddress, anyUint)
-        .to.emit(x.hex20, 'Transfer')
+        .to.emit(x.hex, 'Transfer')
         .withArgs(x.hsiTargets[0].hsiAddress, await x.existingStakeManager.getAddress(), anyUint)
-        .to.emit(x.hedron20, 'Transfer')
+        .to.emit(x.hedron, 'Transfer')
         .withArgs(hre.ethers.ZeroAddress, await x.existingStakeManager.getAddress(), anyUint)
     })
   })
@@ -325,7 +325,7 @@ describe('HSIStakeManager.sol', () => {
           target === lastHsiTarget ? defaultEncoded : encodedSettings,
         ])
       )), false))
-        .to.emit(x.hsim721, 'Transfer')
+        .to.emit(x.hsim, 'Transfer')
         .to.emit(x.hsim, 'HSIDetokenize')
         // .printGasUsage()
       await expect(x.existingStakeManager.stakeIdToSettings(firstStakeTarget.hsiAddress))
@@ -360,7 +360,7 @@ describe('HSIStakeManager.sol', () => {
       // mints hedron rewards before hsi is ended so that we have a case
       // where 0 is the amount
       await expect(x.existingStakeManager.mintHedronRewards([x.hsiTargets[1].hsiAddress]))
-        .to.emit(x.hedron20, 'Transfer')
+        .to.emit(x.hedron, 'Transfer')
         .withArgs(hre.ethers.ZeroAddress, await x.existingStakeManager.getAddress(), anyUint)
       await expect(x.existingStakeManager.connect(signer2).hsiStakeEndMany([x.hsiTargets[1].hsiAddress]))
         .to.emit(x.hex, 'StakeEnd')
@@ -389,7 +389,7 @@ describe('HSIStakeManager.sol', () => {
         x.existingStakeManager.interface.encodeFunctionData('depositHsi', [target.tokenId, encodedSettings]),
       ]))
       await expect(x.existingStakeManager.multicall(deposits, false))
-        .to.emit(x.hsim721, 'Transfer')
+        .to.emit(x.hsim, 'Transfer')
         .to.emit(x.hsim, 'HSIDetokenize')
       await utils.moveForwardDays(30n, x)
       const nextStakeId = await utils.nextStakeId(x.hex)
@@ -420,7 +420,7 @@ describe('HSIStakeManager.sol', () => {
         x.existingStakeManager.interface.encodeFunctionData('depositHsi', [target.tokenId, encodedSettings]),
       ]))
       await expect(x.existingStakeManager.multicall(deposits, false))
-        .to.emit(x.hsim721, 'Transfer')
+        .to.emit(x.hsim, 'Transfer')
         .to.emit(x.hsim, 'HSIDetokenize')
       await utils.moveForwardDays(30n, x)
       const nextStakeId = await utils.nextStakeId(x.hex)
@@ -437,9 +437,9 @@ describe('HSIStakeManager.sol', () => {
       await expect(x.existingStakeManager.withdrawHsi(hsiAddress))
         .to.emit(x.hsim, 'HSITokenize')
         .withArgs(anyUint, anyUint, hsiAddress, await x.existingStakeManager.getAddress())
-        .to.emit(x.hsim721, 'Transfer') // mint
+        .to.emit(x.hsim, 'Transfer') // mint
         .withArgs(hre.ethers.ZeroAddress, await x.existingStakeManager.getAddress(), anyUint)
-        .to.emit(x.hsim721, 'Transfer') // transfer to tracked owner
+        .to.emit(x.hsim, 'Transfer') // transfer to tracked owner
         .withArgs(await x.existingStakeManager.getAddress(), signer1.address, anyUint)
     })
   })
@@ -450,7 +450,7 @@ describe('HSIStakeManager.sol', () => {
       await expect(x.existingStakeManager.multicall(_.map(x.hsiTargets, (target) => (
         x.existingStakeManager.interface.encodeFunctionData('depositHsi', [target.tokenId, 0])
       )), false))
-        .to.emit(x.hsim721, 'Transfer')
+        .to.emit(x.hsim, 'Transfer')
         .to.emit(x.hsim, 'HSIDetokenize')
       await utils.moveForwardDays(30n, x)
       // 30 day stake is in last
@@ -466,9 +466,9 @@ describe('HSIStakeManager.sol', () => {
       await expect(x.existingStakeManager.withdrawHsi(restartedHsiAddress))
         .to.emit(x.hsim, 'HSITokenize') // mint
         .withArgs(anyUint, anyUint, restartedHsiAddress, await x.existingStakeManager.getAddress())
-        .to.emit(x.hsim721, 'Transfer') // mint
+        .to.emit(x.hsim, 'Transfer') // mint
         .withArgs(hre.ethers.ZeroAddress, await x.existingStakeManager.getAddress(), anyUint)
-        .to.emit(x.hsim721, 'Transfer') // transfer to tracked owner
+        .to.emit(x.hsim, 'Transfer') // transfer to tracked owner
         .withArgs(await x.existingStakeManager.getAddress(), signer1.address, anyUint)
     })
   })

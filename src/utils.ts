@@ -1,6 +1,6 @@
 import { Result, ethers } from "ethers";
 import { setTimeout } from "timers/promises";
-import { ERC721, IHEX, IHEXStakeInstanceManager, IMulticall3, IUnderlyingStakeable } from "../artifacts/types";
+import { IHEX, HEXStakeInstanceManager, IMulticall3, IUnderlyingStakeable } from "../artifacts/types";
 import _ from "lodash";
 import * as addresses from './addresses'
 
@@ -42,9 +42,9 @@ export const printTx = async (txPromise: Promise<ethers.ContractTransactionRespo
   console.log(`${log} @ %o`, ...logInputs, receipt?.hash)
 }
 
-export const countHsi = async (address: string, hsim: IHEXStakeInstanceManager, hsim721: ERC721) => {
+export const countHsi = async (address: string, hsim: HEXStakeInstanceManager) => {
   const [tokenized, detokenized] = await Promise.all([
-    hsim721.balanceOf(address),
+    hsim.balanceOf(address),
     hsim.hsiCount(address),
   ])
   return {
@@ -53,7 +53,7 @@ export const countHsi = async (address: string, hsim: IHEXStakeInstanceManager, 
   }
 }
 
-export const getHsiApprovals = async (owner: string, operator: string, hsim: IHEXStakeInstanceManager, tokenIds: bigint[] = []) => {
+export const getHsiApprovals = async (owner: string, operator: string, hsim: HEXStakeInstanceManager, tokenIds: bigint[] = []) => {
   const approvedForAll = await hsim.isApprovedForAll(owner, operator)
   const approvals = await Promise.all(tokenIds.map(async (tokenId) => {
     return ethers.getAddress(await hsim.getApproved(tokenId)) === operator
@@ -69,7 +69,7 @@ export const getHsiApprovals = async (owner: string, operator: string, hsim: IHE
 
 
 export const loadHsiFrom = async (account: string, { hsim, multicall, hex }: {
-  hsim: IHEXStakeInstanceManager;
+  hsim: HEXStakeInstanceManager;
   multicall: IMulticall3;
   hex: IHEX;
 }) => {

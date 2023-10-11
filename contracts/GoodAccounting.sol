@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.18;
 
-import { IHEX } from "./interfaces/IHEX.sol";
+import { HEX } from "./interfaces/HEX.sol";
 import { UnderlyingStakeable } from "./UnderlyingStakeable.sol";
 import { Bank } from "./Bank.sol";
 import { Tipper } from "./Tipper.sol";
@@ -71,7 +71,7 @@ abstract contract GoodAccounting is Tipper {
     uint256 index,
     uint256 stakeId
   ) internal view returns(GoodAccountingStatus) {
-    uint256 count = IHEX(TARGET).stakeCount(staker);
+    uint256 count = HEX(TARGET).stakeCount(staker);
     if (index >= count) {
       return GoodAccountingStatus.MISCOUNT;
     }
@@ -86,7 +86,7 @@ abstract contract GoodAccounting is Tipper {
     if (_isEarlyEnding({
       lockedDay: stake.lockedDay,
       stakedDays: stake.stakedDays,
-      targetDay: IHEX(TARGET).currentDay()
+      targetDay: HEX(TARGET).currentDay()
     })) {
       // return if it is too early to run good accounting
       return GoodAccountingStatus.EARLY;
