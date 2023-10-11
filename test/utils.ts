@@ -52,7 +52,6 @@ export const deployFixture = async () => {
   const _signers = await hre.ethers.getSigners()
   const signers = _signers.slice(0, 20)
   const [signer] = signers
-  // const IHEX = await hre.ethers.getContractAt()
   const hex = await hre.ethers.getContractAt('contracts/interfaces/IHEX.sol:IHEX', config.hexAddress) as unknown as IHEX
   const hex20 = await hre.ethers.getContractAt('solmate/src/tokens/ERC20.sol:ERC20', config.hexAddress) as unknown as ERC20
   const hedron = await hre.ethers.getContractAt('contracts/interfaces/IHedron.sol:IHedron', config.hedronAddress) as unknown as IHedron
