@@ -29,7 +29,6 @@ contract SingletonCommunis is StakeEnder {
    * @param stakeAmount a uint255 where the first (left most) bit is a flag for apply restake bonus when portion = START
    */
   function mintCommunis(CommunisMintPortion portion, uint256 stakeId, address referrer, uint256 stakeAmount) external payable {
-    (uint256 bal, ) = _mintStakeBonus();
     if (portion < CommunisMintPortion.END) {
       uint256 settings = stakeIdToSettings[stakeId];
       if (portion == CommunisMintPortion.START) {
@@ -38,6 +37,7 @@ contract SingletonCommunis is StakeEnder {
           if (Communis(COMM).stakeIdEndBonusPayout(stakeId) == ZERO) {
             (uint256 index, address staker) = _stakeIdToInfo(stakeId);
             if (msg.sender == staker) {
+              uint256 bal = ERC20(COMM).balanceOf(address(this));
               unchecked {
                 bool applyRestakeBonus = (stakeAmount >> MAX_UINT_8) == ONE;
                 stakeAmount = uint256(uint120(stakeAmount));
@@ -67,6 +67,7 @@ contract SingletonCommunis is StakeEnder {
           index: index,
           stakeId: stakeId
         }) == GoodAccountingStatus.READY) {
+          uint256 bal = ERC20(COMM).balanceOf(address(this));
           Communis(COMM).mintGoodAccountingBonus(address(this), index, stakeId);
           unchecked {
             _attributeCommunis({
@@ -87,24 +88,26 @@ contract SingletonCommunis is StakeEnder {
           uint256 settings = stakeIdToSettings[stakeId];
           formerStakeOwner[stakeId] = staker;
           UnderlyingStakeable.StakeStore memory stake = _getStake(address(this), index);
-          uint256 minStakeAmount = (_maxPayout(stake) - Communis(COMM).stakeIdStartBonusPayout(stakeId)) / TWO;
-          if (minStakeAmount > stakeAmount) {
-            stakeAmount = minStakeAmount;
-          }
+          uint256 payout;
+          (stakeAmount, referrer, payout) = _stakeAmountFromInputs({
+            requestedStakeAmount: stakeAmount,
+            referrer: referrer,
+            stake: stake
+          });
           Communis(COMM).mintEndBonus(index, stakeId, referrer, stakeAmount);
           // stakeAmount must be at least half of stakeIdEndBonusPayout.
           // Luckily stakeIdEndBonusPayout represents pr.maxPayout - stakeIdStartBonusPayout[stakeID] (from com.sol)
           unchecked {
             stakeIdCommunisPayoutInfo[stakeId] = _encodePayoutInfo({
               nextPayoutDay: IHEX(TARGET).currentDay() + NINETY_ONE,
-              endBonusPayoutDebt: minStakeAmount,
-              stakeAmount: uint256(uint120(stakeIdCommunisPayoutInfo[stakeId]) + uint256(uint120(stakeAmount)))
+              endBonusPayoutDebt: payout / TWO,
+              stakeAmount: uint256(uint120(stakeIdCommunisPayoutInfo[stakeId])) + stakeAmount
             });
             _attributeFunds({
               settings: settings,
               token: COMM,
               staker: staker,
-              amount: ERC20(COMM).balanceOf(address(this)) - bal
+              amount: payout - stakeAmount
             });
           }
         }
@@ -125,7 +128,7 @@ contract SingletonCommunis is StakeEnder {
   /**
    * sets a stake amount to use in the future - when the stake may be ended by others
    * @param stakeId the stake id to target
-   * @param futureEndStakeAmount the 1 offset amount to stake. 0 = do not stake, 1 = stake it all, n - 1 are the remaining options
+   * @param futureEndStakeAmount the amount to stake in the future. 0 = stake it all, debt will be used as a staking floor
    */
   function setFutureStakeEndCommunisAmount(uint256 stakeId, uint256 futureEndStakeAmount) external payable {
     // flag to signal that minting has not yet occurred for this stake id (when 0)
@@ -137,7 +140,7 @@ contract SingletonCommunis is StakeEnder {
       uint256 current = stakeIdCommunisPayoutInfo[stakeId];
       stakeIdCommunisPayoutInfo[stakeId] = _encodePayoutInfo({
         nextPayoutDay: uint16(current >> 240),
-        endBonusPayoutDebt: futureEndStakeAmount, // 0 means do not stake, 1 means stake it all (1 offset)
+        endBonusPayoutDebt: futureEndStakeAmount,
         stakeAmount: uint120(current)
       });
     }
@@ -151,6 +154,28 @@ contract SingletonCommunis is StakeEnder {
       stake.stakedDays,
       stake.unlockedDay
     )).maxPayout;
+  }
+  function _stakeAmountFromInputs(
+    uint256 requestedStakeAmount, address referrer,
+    UnderlyingStakeable.StakeStore memory stake
+  ) internal view returns(uint256 stakeAmount, address, uint256 payout) {
+    unchecked {
+      payout = _maxPayout(stake) - Communis(COMM).stakeIdStartBonusPayout(stake.stakeId);
+      if (referrer == address(0) || referrer == address(this)) {
+        payout += (payout / 100);
+        referrer = address(this);
+      }
+      stakeAmount = _clamp({
+        // this is where the 1 offset comes into play: zero means match max value
+        amount: requestedStakeAmount,
+        // can't underflow, but if it were to, you're staking it all :)
+        max: payout
+      });
+      if (stakeAmount < payout / TWO) {
+        stakeAmount = payout / TWO;
+      }
+    }
+    return (stakeAmount, referrer, payout);
   }
   /**
    * mint end bonus before ending a hex stake
@@ -166,21 +191,13 @@ contract SingletonCommunis is StakeEnder {
   ) internal override {
     uint256 stakeId = stake.stakeId;
     uint256 payoutInfo = stakeIdCommunisPayoutInfo[stakeId];
-    uint256 stakeAmount = uint120(payoutInfo >> ONE_TWENTY);
-    (uint256 bal, ) = _mintStakeBonus();
-    if (stakeAmount > ZERO) {
-      unchecked {
-        stakeAmount = _clamp({
-          // this is where the 1 offset comes into play: zero means match max value
-          amount: stakeAmount - ONE,
-          // can't underflow, but if it were to, you're staking it all :)
-          max: (_maxPayout(stake) - Communis(COMM).stakeIdStartBonusPayout(stakeId)) // / TWO
-        });
-      }
-    }
-    if (referrer == address(0)) {
-      referrer = address(this);
-    }
+    uint256 stakeAmount;
+    uint256 payout;
+    (stakeAmount, referrer, payout) = _stakeAmountFromInputs({
+      requestedStakeAmount: uint120(payoutInfo >> ONE_TWENTY),
+      referrer: referrer,
+      stake: stake
+    });
     formerStakeOwner[stakeId] = staker;
     try Communis(COMM).mintEndBonus(index, stakeId, referrer, stakeAmount) {
     } catch {
@@ -191,7 +208,7 @@ contract SingletonCommunis is StakeEnder {
     unchecked {
       stakeIdCommunisPayoutInfo[stakeId] = _encodePayoutInfo({
         nextPayoutDay: today + NINETY_ONE,
-        endBonusPayoutDebt: Communis(COMM).stakeIdEndBonusPayout(stakeId) / TWO,
+        endBonusPayoutDebt: payout / TWO,
         stakeAmount: uint256(uint120(payoutInfo)) + stakeAmount
       });
 
@@ -199,7 +216,7 @@ contract SingletonCommunis is StakeEnder {
         settings: settings,
         token: COMM,
         staker: staker,
-        amount: ERC20(COMM).balanceOf(address(this)) - bal
+        amount: payout - stakeAmount
       });
     }
   }
@@ -304,7 +321,8 @@ contract SingletonCommunis is StakeEnder {
       payout = (stakedAmount * numberOfPayouts) / 80;
 
       if (payout > distributableBonus) {
-          payout = distributableBonus; // Ensure you don't try to pay out more than the distributableBonus
+        // Ensure you don't try to pay out more than the distributableBonus
+        payout = distributableBonus;
       }
 
       distributableCommunisStakeBonus = (distributableBonus - payout);
