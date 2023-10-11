@@ -82,7 +82,7 @@
     "typescript": "^5.0.4",
     "yargs": "^17.7.2"
   },
-  "version": "1.0.18",
+  "version": "1.0.19",
   "dependencies": {
     "debug": "^4.3.4",
     "ethers": "^6.7.1",
