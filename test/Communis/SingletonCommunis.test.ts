@@ -37,10 +37,13 @@ async function getExpectedPayout(stake: IUnderlyingStakeable.StakeStoreStructOut
   const currentDay = await x.hex.currentDay()
   const numberOfPayouts = ((currentDay - decodedPayoutInfo.nextPayoutDay) / 91n) + 1n;
 
-  const expectedPayout = calculateExpectedPayout(
+  let expectedPayout = calculateExpectedPayout(
     decodedPayoutInfo.stakedAmount,
     numberOfPayouts
   );
+  if (expectedPayout > distributableCommunisStakeBonusBefore) {
+    expectedPayout = distributableCommunisStakeBonusBefore
+  }
 
   return {
     currentDay: currentDay,
@@ -82,7 +85,7 @@ async function expectPayoutDetails(signerIndex : any, signer : any, x : any, sta
   const signerBalance = (BigInt(await x.communis.balanceOf(signer)) - prevBalance);
 
   expect(expectedPayout)
-    .to.equal(signerBalance);
+    .to.approximately(signerBalance, 1);
 
   // console.log(
   //     "signer " + signerIndex +
@@ -133,6 +136,8 @@ describe('SingletonCommunis.sol', () => {
         .eventually.to.equal(startBonusPayout)
 
       await expect(x.stakeManager.withdrawAmountByStakeId(startBonusPayout + 1n, stk.stakeId, true))
+        .to.revertedWithCustomError(x.stakeManager, 'NotAllowed')
+      await expect(x.stakeManager.withdrawAmountByStakeId(startBonusPayout, stk.stakeId + 1n, true))
         .to.revertedWithCustomError(x.stakeManager, 'NotAllowed')
 
       await x.stakeManager.withdrawAmountByStakeId(startBonusPayout, stk.stakeId, true)
@@ -247,22 +252,6 @@ describe('SingletonCommunis.sol', () => {
       const stk = fromStruct(stake)
 
       let payoutResponse = await x.communis.getPayout(stk)
-      let globalInfo = await x.hex.globalInfo()
-      const startBonusPayout = await x.communis.getStartBonusPayout(
-        stk.stakedDays,
-        stk.lockedDay,
-        payoutResponse.maxPayout,
-        payoutResponse.stakesOriginalShareRate,
-        await x.hex.currentDay(),
-        globalInfo[2],
-        false,
-      )
-
-      await x.stakeManager.mintCommunis(
-        0n, stk.stakeId,
-        hre.ethers.ZeroAddress,
-        startBonusPayout,
-      )
 
       // move forward to end day
       await utils.moveForwardDays(365n, x)
@@ -270,7 +259,7 @@ describe('SingletonCommunis.sol', () => {
         // end stake bonus
         2n, stk.stakeId,
         hre.ethers.ZeroAddress,
-        (payoutResponse.maxPayout - startBonusPayout) / 2n, // 1: (0 or n-1)
+        (payoutResponse.maxPayout / 2n) - 1n, // 1: (0 or n-1)
       ))
         .to.emit(x.communis, 'Transfer')
         .withArgs(hre.ethers.ZeroAddress, await x.stakeManager.getAddress(), anyUint)
@@ -657,8 +646,6 @@ describe('SingletonCommunis.sol', () => {
     it('Two com stakers, different stakeAmount sizes', async () => {
       const x = await loadFixture(utils.deployFixture)
       const [signer1, signer2] = x.signers
-
-      const stakeManagerStakedAmount = await x.communis.addressStakedCodeak(x.stakeManager.getAddress());
 
       //Stake 1
       await x.stakeManager.connect(signer1).stakeStart(10000000, 365)

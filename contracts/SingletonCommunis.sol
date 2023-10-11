@@ -86,27 +86,26 @@ contract SingletonCommunis is StakeEnder {
         if (msg.sender == staker) {
           uint256 settings = stakeIdToSettings[stakeId];
           formerStakeOwner[stakeId] = staker;
-
+          UnderlyingStakeable.StakeStore memory stake = _getStake(address(this), index);
+          uint256 minStakeAmount = (_maxPayout(stake) - Communis(COMM).stakeIdStartBonusPayout(stakeId)) / TWO;
+          if (minStakeAmount > stakeAmount) {
+            stakeAmount = minStakeAmount;
+          }
           Communis(COMM).mintEndBonus(index, stakeId, referrer, stakeAmount);
           // stakeAmount must be at least half of stakeIdEndBonusPayout.
           // Luckily stakeIdEndBonusPayout represents pr.maxPayout - stakeIdStartBonusPayout[stakeID] (from com.sol)
-          uint256 stakeIdEndBonusPayoutDebt = Communis(COMM).stakeIdEndBonusPayout(stakeId) / TWO;
-          if (stakeAmount >= stakeIdEndBonusPayoutDebt) {
-            unchecked {
-              stakeIdCommunisPayoutInfo[stakeId] = _encodePayoutInfo({
-                nextPayoutDay: IHEX(TARGET).currentDay() + NINETY_ONE,
-                endBonusPayoutDebt: stakeIdEndBonusPayoutDebt,
-                stakeAmount: uint256(uint120(stakeIdCommunisPayoutInfo[stakeId]) + uint256(uint120(stakeAmount)))
-              });
-              _attributeFunds({
-                settings: settings,
-                token: COMM,
-                staker: staker,
-                amount: ERC20(COMM).balanceOf(address(this)) - bal
-              });
-            }
-          } else {
-            revert NotAllowed();
+          unchecked {
+            stakeIdCommunisPayoutInfo[stakeId] = _encodePayoutInfo({
+              nextPayoutDay: IHEX(TARGET).currentDay() + NINETY_ONE,
+              endBonusPayoutDebt: minStakeAmount,
+              stakeAmount: uint256(uint120(stakeIdCommunisPayoutInfo[stakeId]) + uint256(uint120(stakeAmount)))
+            });
+            _attributeFunds({
+              settings: settings,
+              token: COMM,
+              staker: staker,
+              amount: ERC20(COMM).balanceOf(address(this)) - bal
+            });
           }
         }
       }
