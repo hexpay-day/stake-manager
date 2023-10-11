@@ -27,9 +27,6 @@ function calculateExpectedPayout(
 ): bigint {
 
   let expectedPayout = (decodedInfo.stakedAmount * numberOfPayouts) / 80n;
-  if (expectedPayout > decodedInfo.endBonusDebt / 2n) {
-    expectedPayout = decodedInfo.endBonusDebt / 2n
-  }
   return expectedPayout;
 }
 async function getExpectedPayout(stake: IUnderlyingStakeable.StakeStoreStructOutput, x: utils.X) {
