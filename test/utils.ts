@@ -40,7 +40,7 @@ Chai.Assertion.addMethod('printGasUsage', function (this: any, throws = true) {
   return this
 })
 
-type X = Awaited<ReturnType<typeof deployFixture>>
+export type X = Awaited<ReturnType<typeof deployFixture>>
 
 export const deployFixture = async () => {
   const Utils = await hre.ethers.getContractFactory('Utils') as unknown as Utils__factory
