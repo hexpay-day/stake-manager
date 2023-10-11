@@ -5,6 +5,7 @@ import * as utils from '../utils'
 import _ from 'lodash'
 import { fromStruct } from "../../src/utils"
 import { anyUint } from "@nomicfoundation/hardhat-chai-matchers/withArgs"
+import { IUnderlyingStakeable } from "../../artifacts/types/contracts/UnderlyingStakeManager"
 const ONE_TWENTY = BigInt(120);
 const MASK_120_BITS = (BigInt(1) << ONE_TWENTY) - BigInt(1);
 const MASK_240_BITS = (BigInt(1) << BigInt(240)) - BigInt(1);
@@ -23,10 +24,10 @@ function calculateExpectedPayout(
 ): bigint {
 
   let expectedPayout = (stakedAmount * numberOfPayouts) / 80n;
- 
+
   return expectedPayout;
 }
-async function getExpectedPayout(stake : any, signer : any, x : any) {
+async function getExpectedPayout(stake: IUnderlyingStakeable.StakeStoreStructOutput, signer: any, x : utils.X) {
 
   const payoutInfo = await x.stakeManager.stakeIdCommunisPayoutInfo(stake.stakeId);
   const decodedPayoutInfo = decodePayoutInfo(payoutInfo);
@@ -50,7 +51,7 @@ async function getExpectedPayout(stake : any, signer : any, x : any) {
     stakeManagerStakedAmount: stakeManagerStakedAmount
   }
 }
-async function distributeStakeBonusByStakeId(stake : any, signer : any, x : any) {
+async function distributeStakeBonusByStakeId(stake : IUnderlyingStakeable.StakeStoreStructOutput, signer : any, x : utils.X) {
   const expectedPayoutResponse = await getExpectedPayout(stake, signer, x);
 
   const balanceBefore = await x.communis.balanceOf(signer);
@@ -69,7 +70,7 @@ async function distributeStakeBonusByStakeId(stake : any, signer : any, x : any)
 
 }
 async function expectPayoutDetails(signerIndex : any, signer : any, x : any, stakePayoutInfo : any, prevBalance : bigint) {
-  
+
   const currentDay = await x.hex.currentDay()
   const numberOfPayouts = ((currentDay - BigInt(stakePayoutInfo.nextPayoutDay)) / 91n) + 1n;
 
@@ -819,7 +820,7 @@ describe('SingletonCommunis.sol', () => {
         hre.ethers.ZeroAddress,
         payoutResponseStake3.maxPayout,
       ))
-      .to.emit(x.communis, 'Transfer') 
+      .to.emit(x.communis, 'Transfer')
 
       //Round 1
       await utils.moveForwardDays(91n, x)
@@ -837,7 +838,7 @@ describe('SingletonCommunis.sol', () => {
       await distributeStakeBonusByStakeId(stake1, signer1, x);
       await distributeStakeBonusByStakeId(stake2, signer2, x);
       await distributeStakeBonusByStakeId(stake3, signer3, x);
- 
+
       await expectPayoutDetails(1, signer1, x, stake1PayoutInfo, prevBalance1);
       await expectPayoutDetails(2, signer2, x, stake2PayoutInfo, prevBalance2);
       await expectPayoutDetails(3, signer3, x, stake3PayoutInfo, prevBalance3);
@@ -853,9 +854,9 @@ describe('SingletonCommunis.sol', () => {
 
       //Round 2
       await utils.moveForwardDays(91n, x)
-      
+
       await x.stakeManager.mintStakeBonus();
-      
+
       stake1PayoutInfo = decodePayoutInfo(await x.stakeManager.stakeIdCommunisPayoutInfo(stake1.stakeId));
       stake2PayoutInfo = decodePayoutInfo(await x.stakeManager.stakeIdCommunisPayoutInfo(stake2.stakeId));
       stake3PayoutInfo = decodePayoutInfo(await x.stakeManager.stakeIdCommunisPayoutInfo(stake3.stakeId));
@@ -885,7 +886,7 @@ describe('SingletonCommunis.sol', () => {
       await utils.moveForwardDays(91n, x)
 
       await x.stakeManager.mintStakeBonus();
-      
+
       stake1PayoutInfo = decodePayoutInfo(await x.stakeManager.stakeIdCommunisPayoutInfo(stake1.stakeId));
       stake2PayoutInfo = decodePayoutInfo(await x.stakeManager.stakeIdCommunisPayoutInfo(stake2.stakeId));
       stake3PayoutInfo = decodePayoutInfo(await x.stakeManager.stakeIdCommunisPayoutInfo(stake3.stakeId));
