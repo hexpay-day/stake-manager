@@ -232,7 +232,7 @@ contract SingletonCommunis is StakeEnder {
     unchecked {
       stakeIdCommunisPayoutInfo[stakeId] = _encodePayoutInfo({
         nextPayoutDay: today + NINETY_ONE,
-        endBonusPayoutDebt: Communis(COMM).stakeIdEndBonusPayout(stakeId) / TWO,
+        endBonusPayoutDebt: payout / TWO,
         stakeAmount: uint256(uint120(payoutInfo)) + stakeAmount
       });
 
@@ -240,7 +240,7 @@ contract SingletonCommunis is StakeEnder {
         settings: settings,
         token: COMM,
         staker: staker,
-        amount: ERC20(COMM).balanceOf(address(this)) - bal
+        amount: payout - stakeAmount
       });
     }
   }
