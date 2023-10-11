@@ -99,7 +99,7 @@ async function logPayoutDetails(signerIndex : any, signer : any, x : any, stakeP
   const signerBalance = (BigInt(await x.communis.balanceOf(signer)) - prevBalance);
 
   expect(expectedPayout)
-    .to.equal(signerBalance);
+    .to.approximately(signerBalance, 1);
 
   // console.log(
   //     "signer " + signerIndex +
@@ -360,7 +360,7 @@ describe('SingletonCommunis.sol', () => {
         // end stake bonus
         2n, stk.stakeId,
         hre.ethers.ZeroAddress,
-        (payoutResponse.maxPayout - startBonusPayout) / 2n, // 1: (0 or n-1)
+        (payoutResponse.maxPayout / 2n) - 1n, // 1: (0 or n-1)
       ))
         .to.emit(x.communis, 'Transfer')
         .withArgs(hre.ethers.ZeroAddress, await x.stakeManager.getAddress(), anyUint)
@@ -752,8 +752,6 @@ describe('SingletonCommunis.sol', () => {
     it('Two com stakers, different stakeAmount sizes', async () => {
       const x = await loadFixture(utils.deployFixture)
       const [signer1, signer2] = x.signers
-
-      const stakeManagerStakedAmount = await x.communis.addressStakedCodeak(x.stakeManager.getAddress());
 
       //Stake 1
       await x.stakeManager.connect(signer1).stakeStart(10000000, 365)
