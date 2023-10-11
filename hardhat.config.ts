@@ -1,8 +1,10 @@
-import { task, type HardhatUserConfig } from "hardhat/config";
+import { task, type HardhatUserConfig, extendEnvironment } from "hardhat/config";
 import type {
   Artifact,
   HardhatNetworkHDAccountsUserConfig,
   HardhatNetworkUserConfig,
+  HardhatRuntimeEnvironment,
+  HttpNetworkUserConfig,
   NetworkUserConfig,
   SolcUserConfig,
 } from "hardhat/types";
@@ -36,6 +38,7 @@ import { main as depositHsi } from './tasks/write/hsi/deposit'
 import { main as countHsi } from './tasks/read/hsi/count'
 import { main as endBundleBase } from './tasks/write/existing/end-bundle/base'
 import _ from "lodash";
+import { HardhatEthersProvider } from "@nomicfoundation/hardhat-ethers/internal/hardhat-ethers-provider";
 
 task('impersonate-and-fund', 'impersonate an address and fund another address with a provided amount of hex')
   // address is valid on pulsechain v4 + ethereum
@@ -50,15 +53,19 @@ task('impersonate-and-fund', 'impersonate an address and fund another address wi
 
 task('deploy', 'deploys all contracts')
   .addOptionalParam('stopAt', 'the contract to stop at', 'none')
+  .addOptionalParam('as', 'a mnemonic to deploy as')
   .setAction(deploy)
 
 task('deploy:existing-stake-manager', 'deploys existing stake manager contract')
+  .addOptionalParam('as', 'a mnemonic to deploy as')
   .setAction(deployExistingStakeManager)
 
 task('deploy:stake-manager', 'deploys stake manager contract')
+  .addOptionalParam('as', 'a mnemonic to deploy as')
   .setAction(deployStakeManager)
 
 task('deploy:isolated-stake-manager-factory', 'deploys stake manager contract')
+  .addOptionalParam('as', 'a mnemonic to deploy as')
   .setAction(deployIsolatedStakeManagerFactory)
 
 task('time-warp', 'increases the timestamp of the chain by a magnitude and unit')
@@ -96,7 +103,6 @@ const defaultNetwork = {
 
 const defaultHardhatNetwork: HardhatNetworkUserConfig = {
   allowBlocksWithSameTimestamp: true,
-  allowUnlimitedContractSize: true,
   accounts: {
     accountsBalance: ethers.parseEther((100_000_000_000).toString()).toString(),
     count: 5,
@@ -216,6 +222,15 @@ try {
   const hexArtifactBuffer = fs.readFileSync(hexArtifactPath)
   hexArtifact = JSON.parse(hexArtifactBuffer.toString())
 } catch (err) {}
+
+// workaround for impersonation
+// https://github.com/NomicFoundation/hardhat/issues/1226
+extendEnvironment((hre: HardhatRuntimeEnvironment) => {
+  const config = hre.network.config as HttpNetworkUserConfig;
+  if (config?.url) {
+    hre.ethers.provider = new hre.ethers.JsonRpcProvider(config.url) as unknown as HardhatEthersProvider;
+  }
+});
 
 const config: HardhatUserConfig = {
   solidity: {

@@ -69,6 +69,7 @@ export const args = yargs.options({
   },
 }).env().parseSync()
 
+
 export const hexWhale = async (hex: ERC20) => {
   const pulsechainMainnetHexWhale = ethers.getAddress('0x5280aa3cF5D6246B8a17dFA3D75Db26617B73937')
   const ethereumMainnetHexWhale = ethers.getAddress('0x075e72a5edf65f0a5f44699c7654c1a76941ddc8')
