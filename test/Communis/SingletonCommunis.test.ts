@@ -133,7 +133,7 @@ describe('SingletonCommunis.sol', () => {
   describe('mintCommunis end', async () => {
     it('can mint end bonuses', async () => {
       const x = await loadFixture(utils.deployFixture)
-      const [signer1] = x.signers
+      const [signer1, signer2] = x.signers
       // gives permission for anyone to end stake
       // requires comm minting at end
       await x.stakeManager.stakeStartFromBalanceFor(signer1.address, x.stakedAmount, 365, parseInt('10000001'))
@@ -165,6 +165,13 @@ describe('SingletonCommunis.sol', () => {
 
       // move forward to end day
       await utils.moveForwardDays(365n, x)
+      await expect(x.stakeManager.connect(signer2).mintCommunis(
+        // end stake bonus
+        2n, stk.stakeId,
+        hre.ethers.ZeroAddress,
+        0, // Minumum stake amount allowed
+      ))
+        .to.revertedWithCustomError(x.stakeManager, 'NotAllowed')
       await expect(x.stakeManager.mintCommunis(
         // end stake bonus
         2n, stk.stakeId,
@@ -232,7 +239,7 @@ describe('SingletonCommunis.sol', () => {
 
       const stk = fromStruct(stake)
 
-      let payoutResponse = await x.communis.getPayout(stk)
+      // let payoutResponse = await x.communis.getPayout(stk)
 
       // move forward to end day
       await utils.moveForwardDays(365n, x)
@@ -240,10 +247,18 @@ describe('SingletonCommunis.sol', () => {
         // end stake bonus
         2n, stk.stakeId,
         hre.ethers.ZeroAddress,
-        (payoutResponse.maxPayout / 2n) - 1n, // 1: (0 or n-1)
+        1, // Minumum stake amount allowed
       ))
         .to.emit(x.communis, 'Transfer')
         .withArgs(hre.ethers.ZeroAddress, await x.stakeManager.getAddress(), anyUint)
+      // while calling this could trigger a transfer from _mintStakeBonus, no payout will be
+      // minted from the start stake call
+      await expect(x.stakeManager.mintCommunis(
+        0n, stk.stakeId,
+        hre.ethers.ZeroAddress,
+        0n,
+      ))
+      .not.to.emit(x.communis, 'Transfer')
       await expect(x.stakeManager.stakeEndByConsent(stk.stakeId))
         .to.emit(x.hex, 'StakeEnd')
         .withArgs(
@@ -288,6 +303,12 @@ describe('SingletonCommunis.sol', () => {
         .withArgs(hre.ethers.ZeroAddress, await x.stakeManager.getAddress(), anyUint)
         .to.emit(x.communis, 'Transfer')
         .withArgs(await x.stakeManager.getAddress(), signer3.address, anyUint)
+      await expect(x.stakeManager.connect(signer2).mintCommunis(
+        // end stake bonus
+        1n, x.nextStakeId + 1n,
+        signer3.address,
+        1n,
+      )).to.not.reverted
     })
     it('can stake nearly none of end bonuses', async () => {
       const x = await loadFixture(utils.deployFixture)
@@ -304,22 +325,6 @@ describe('SingletonCommunis.sol', () => {
       const stk = fromStruct(stake)
 
       let payoutResponse = await x.communis.getPayout(stk)
-      let globalInfo = await x.hex.globalInfo()
-      const startBonusPayout = await x.communis.getStartBonusPayout(
-        stk.stakedDays,
-        stk.lockedDay,
-        payoutResponse.maxPayout,
-        payoutResponse.stakesOriginalShareRate,
-        await x.hex.currentDay(),
-        globalInfo[2],
-        false,
-      )
-
-      await x.stakeManager.mintCommunis(
-        0n, stk.stakeId,
-        hre.ethers.ZeroAddress,
-        startBonusPayout,
-      )
 
       // move forward to end day
       await utils.moveForwardDays(365n, x)
@@ -327,10 +332,17 @@ describe('SingletonCommunis.sol', () => {
         // end stake bonus
         2n, stk.stakeId,
         hre.ethers.ZeroAddress,
-        (payoutResponse.maxPayout / 2n) - 1n, // 1: (0 or n-1)
+        (payoutResponse.maxPayout / 2n) - 1n,
       ))
         .to.emit(x.communis, 'Transfer')
         .withArgs(hre.ethers.ZeroAddress, await x.stakeManager.getAddress(), anyUint)
+      // does not fail if stake end is called 2x or stake end by consent calls
+      await expect(x.stakeManager.mintCommunis(
+        // end stake bonus
+        2n, stk.stakeId,
+        hre.ethers.ZeroAddress,
+        (payoutResponse.maxPayout / 2n) - 1n,
+      )).not.to.reverted
       await expect(x.stakeManager.stakeEndByConsent(stk.stakeId))
         .to.emit(x.hex, 'StakeEnd')
         .withArgs(
@@ -380,6 +392,12 @@ describe('SingletonCommunis.sol', () => {
           // should err out / skip due to previous end being called
           .to.emit(x.communis, 'Transfer')
           .withArgs(hre.ethers.ZeroAddress, await x.stakeManager.getAddress(), anyUint)
+      await expect(x.stakeManager.mintCommunis(
+        // end stake bonus
+        2n, stakeId,
+        hre.ethers.ZeroAddress,
+        0,
+      )).not.to.reverted
       await utils.moveForwardDays(90n, x) // too soon
       await expect(x.stakeManager.distributeStakeBonusByStakeId(stakeId, false))
         .to.revertedWithCustomError(x.stakeManager, 'NotAllowed')
@@ -438,6 +456,33 @@ describe('SingletonCommunis.sol', () => {
     })
   })
   describe('distributeStakeBonusByStakeId', () => {
+    it('cannot distribute if it has nothing to give', async () => {
+      const x = await loadFixture(utils.deployFixture)
+      const nextStakeId = await utils.nextStakeId(x.hex)
+      await x.stakeManager.stakeStart(x.stakedAmount, 365)
+      await utils.moveForwardDays(366n, x)
+      await expect(x.stakeManager.distributeStakeBonusByStakeId(nextStakeId, true))
+        .to.revertedWithCustomError(x.stakeManager, 'NotAllowed')
+      await expect(x.stakeManager.mintCommunis(
+        // end stake bonus
+        2n, nextStakeId,
+        hre.ethers.ZeroAddress,
+        1,
+      ))
+      .to.emit(x.communis, 'Transfer')
+
+      // staker 1 ends the stake + makes each staker their own referrer
+      await expect(x.stakeManager.stakeEndById(nextStakeId))
+        .to.emit(x.hex, 'StakeEnd')
+        .withArgs(
+          anyUint, utils.anyUintNoPenalty,
+          await x.stakeManager.getAddress(),
+          nextStakeId
+        )
+      await utils.moveForwardDays(91n, x)
+      await expect(x.stakeManager.distributeStakeBonusByStakeId(nextStakeId, true))
+        .to.emit(x.communis, 'Transfer')
+    })
     it.skip('single staker rounding error correction - attempt to increase coverage', async () => {
       const x = await loadFixture(utils.deployFixture)
       const [signer1] = x.signers
