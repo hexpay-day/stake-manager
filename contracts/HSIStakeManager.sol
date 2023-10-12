@@ -110,14 +110,6 @@ contract HSIStakeManager is StakeEnder {
       settings: settings
     });
   }
-  /**
-   * the count or length of hsi's attributed to this contract
-   */
-  function hsiCount(address staker) external view returns(uint256 count) {
-    return _hsiCount({
-      staker: staker
-    });
-  }
   function _hsiCount(address staker) internal view returns(uint256 count) {
     return HEXStakeInstanceManager(HSIM).hsiCount(staker);
   }

@@ -33,7 +33,7 @@ describe('HSIStakeManager.sol', () => {
       await expect(x.existingStakeManager.connect(signer2).withdrawHsi(x.hsiTargets[0].hsiAddress))
         .to.revertedWithCustomError(x.existingStakeManager, 'StakeNotOwned')
         .withArgs(signer2.address, signer1.address)
-      await expect(x.existingStakeManager.hsiCount(x.existingStakeManager.getAddress()))
+      await expect(x.hsim.hsiCount(x.existingStakeManager.getAddress()))
         .eventually.to.equal(3)
       await expect(x.existingStakeManager.stakeIdInfo(x.hsiTargets[2].hsiAddress))
         .eventually.to.equal((2n << 160n) | BigInt(signer1.address)) // index 0
@@ -96,7 +96,7 @@ describe('HSIStakeManager.sol', () => {
   describe('hsiCount', () => {
     it('returns the count of hsis deposited in the hsi stake manager', async () => {
       const x = await loadFixture(utils.deployAndProcureHSIFixture)
-      await expect(x.existingStakeManager.hsiCount(x.existingStakeManager.getAddress()))
+      await expect(x.hsim.hsiCount(x.existingStakeManager.getAddress()))
         .eventually.to.equal(0)
 
       await expect(x.existingStakeManager.multicall(_.flatMap(x.hsiTargets, (target) => ([
@@ -104,7 +104,7 @@ describe('HSIStakeManager.sol', () => {
       ])), false))
         .to.emit(x.hsim, 'Transfer')
         .to.emit(x.hsim, 'HSIDetokenize')
-      await expect(x.existingStakeManager.hsiCount(x.existingStakeManager.getAddress()))
+      await expect(x.hsim.hsiCount(x.existingStakeManager.getAddress()))
         .eventually.to.equal(x.hsiTargets.length)
     })
   })
