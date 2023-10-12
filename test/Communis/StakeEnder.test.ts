@@ -35,6 +35,7 @@ describe("StakeManager", function () {
   describe('SingletonCommunis', () => {
     it('can mint during an end stake', async () => {
       const x = await loadFixture(utils.deployFixture)
+      await time.setNextBlockTimestamp(new Date())
       const nextStakeId = await utils.nextStakeId(x.hex)
       const tooFewDays = 364n
       const enoughDays = 365n
@@ -43,6 +44,9 @@ describe("StakeManager", function () {
       const commEnabledSettings = defaultSettings | (1n << 7n)
       await x.stakeManager.stakeStartFromBalanceFor(signer1.address, x.stakedAmount, tooFewDays, commEnabledSettings)
       await x.stakeManager.stakeStartFromBalanceFor(signer1.address, x.stakedAmount, enoughDays, commEnabledSettings)
+      // mint what you can to the stake manager
+      await x.stakeManager.setFutureStakeEndCommunisAmount(nextStakeId, 1)
+      await x.stakeManager.setFutureStakeEndCommunisAmount(nextStakeId + 1n, 1)
       await utils.moveForwardDays(tooFewDays + 1n, x)
       await checkStakeEnd(x, nextStakeId, false, x.stakeManager.connect(signer2).stakeEndByConsent(nextStakeId))
       await utils.moveForwardDays(1n, x)
@@ -65,6 +69,9 @@ describe("StakeManager", function () {
       const justEnough = tooLittle + (tooLittle / 100n)
       await x.stakeManager.stakeStartFromBalanceFor(signer1.address, tooLittle, days, commEnabledSettings)
       await x.stakeManager.stakeStartFromBalanceFor(signer1.address, justEnough, days, commEnabledSettings)
+      // mint what you can to the stake manager
+      await x.stakeManager.setFutureStakeEndCommunisAmount(nextStakeId, 1)
+      await x.stakeManager.setFutureStakeEndCommunisAmount(nextStakeId + 1n, 1)
       const stk1 = await x.hex.stakeLists(x.stakeManager.getAddress(), 1)
       expect(stk1.stakeShares).to.be.lessThan(10_000, 'stake shares not low enough')
       const stk2 = await x.hex.stakeLists(x.stakeManager.getAddress(), 2)

@@ -55,7 +55,7 @@ export const args = yargs.options({
   blockNumber: {
     type: 'number',
     require: false,
-    default: 18057421,
+    default: 18335216,
   },
   mnemonic: {
     type: 'string',
@@ -68,7 +68,6 @@ export const args = yargs.options({
     default: 'abc',
   },
 }).env().parseSync()
-
 
 export const hexWhale = async (hex: ERC20) => {
   const pulsechainMainnetHexWhale = ethers.getAddress('0x5280aa3cF5D6246B8a17dFA3D75Db26617B73937')

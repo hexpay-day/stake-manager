@@ -207,7 +207,10 @@ contract EarningsOracle is Utils {
    */
   function catchUpDays(uint256 iterations) external payable returns(Total memory total, uint256 day) {
     // constrain by gas costs
-    iterations = iterations == ZERO || iterations > MAX_CATCH_UP_DAYS ? MAX_CATCH_UP_DAYS : iterations;
+    iterations = _clamp({
+      amount: iterations,
+      max: MAX_CATCH_UP_DAYS
+    });
     uint256 startDay = totals.length;
     // constrain by size
     uint256 limit = HEX(TARGET).currentDay();

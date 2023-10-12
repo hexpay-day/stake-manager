@@ -86,7 +86,6 @@ async function expectPayoutDetails(signer: SignerWithAddress, x : utils.X, stake
 
   const signerBalance = (BigInt(await x.communis.balanceOf(signer)) - prevBalance);
 
-  console.log(expectedPayout, signerBalance)
   expect(expectedPayout)
     .to.approximately(signerBalance, 1);
 }
@@ -391,42 +390,40 @@ describe('SingletonCommunis.sol', () => {
       await x.stakeManager.stakeStartFromBalanceFor(signer3.address, x.stakedAmount, 365, parseInt('10000001'))
       range = _.range(Number(stakeId), Number(stakeId + 6n)) // exclusive range end
     })
-    describe('distributeStakeBonusByStakeId', async () => {
-      it('can distribute stake bonuses equitably', async () => {
-        // move forward to end day
-        await utils.moveForwardDays(366n, x)
-        // staker 1 ends the stake + makes each staker their own referrer
-        await expect(x.stakeManager.stakeEndByConsentForMany(range))
-          .to.emit(x.hex, 'StakeEnd')
-          .withArgs(
-            anyUint, utils.anyUintNoPenalty,
-            await x.stakeManager.getAddress(),
-            stakeId
-          )
-            // should err out / skip due to previous end being called
-            .to.emit(x.communis, 'Transfer')
-            .withArgs(hre.ethers.ZeroAddress, await x.stakeManager.getAddress(), anyUint)
-        await utils.moveForwardDays(90n, x) // too soon
-        await expect(x.stakeManager.distributeStakeBonusByStakeId(stakeId, false))
-          .to.revertedWithCustomError(x.stakeManager, 'NotAllowed')
-        await expect(x.stakeManager.distributeStakeBonusByStakeId(stakeId + 1n, false))
-          .to.revertedWithCustomError(x.stakeManager, 'NotAllowed')
-        await utils.moveForwardDays(1n, x) // first end stakeable day
-        // await expect(x.stakeManager.distributeStakeBonusByStakeId(stakeId, false))
-        //   .to.emit(x.communis, 'Transfer')
-        //   .withArgs(
-        //     hre.ethers.ZeroAddress,
-        //     await x.stakeManager.getAddress(),
-        //     anyUint,
-        //   )
-        await expect(x.stakeManager.distributeStakeBonusByStakeId(stakeId + 1n, false))
+    it('can distribute stake bonuses equitably', async () => {
+      // move forward to end day
+      await utils.moveForwardDays(366n, x)
+      // staker 1 ends the stake + makes each staker their own referrer
+      await expect(x.stakeManager.stakeEndByConsentForMany(range))
+        .to.emit(x.hex, 'StakeEnd')
+        .withArgs(
+          anyUint, utils.anyUintNoPenalty,
+          await x.stakeManager.getAddress(),
+          stakeId
+        )
+          // should err out / skip due to previous end being called
           .to.emit(x.communis, 'Transfer')
-          .withArgs(
-            hre.ethers.ZeroAddress,
-            await x.stakeManager.getAddress(),
-            anyUint,
-          )
-      })
+          .withArgs(hre.ethers.ZeroAddress, await x.stakeManager.getAddress(), anyUint)
+      await utils.moveForwardDays(90n, x) // too soon
+      await expect(x.stakeManager.distributeStakeBonusByStakeId(stakeId, false))
+        .to.revertedWithCustomError(x.stakeManager, 'NotAllowed')
+      await expect(x.stakeManager.distributeStakeBonusByStakeId(stakeId + 1n, false))
+        .to.revertedWithCustomError(x.stakeManager, 'NotAllowed')
+      await utils.moveForwardDays(1n, x) // first end stakeable day
+      // await expect(x.stakeManager.distributeStakeBonusByStakeId(stakeId, false))
+      //   .to.emit(x.communis, 'Transfer')
+      //   .withArgs(
+      //     hre.ethers.ZeroAddress,
+      //     await x.stakeManager.getAddress(),
+      //     anyUint,
+      //   )
+      await expect(x.stakeManager.distributeStakeBonusByStakeId(stakeId + 1n, false))
+        .to.emit(x.communis, 'Transfer')
+        .withArgs(
+          hre.ethers.ZeroAddress,
+          await x.stakeManager.getAddress(),
+          anyUint,
+        )
     })
     describe('mintStakeBonus', async () => {
       it('collects stake bonuses for everyone as they accrue on communis', async () => {
@@ -464,7 +461,7 @@ describe('SingletonCommunis.sol', () => {
       })
     })
   })
-  describe.only('distributeStakeBonusByStakeId', () => {
+  describe('distributeStakeBonusByStakeId', () => {
     it('Three com stakers claiming their contribution', async () => {
       const x = await loadFixture(utils.deployFixture)
       const [signer1, signer2, signer3] = x.signers

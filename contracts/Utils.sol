@@ -93,4 +93,30 @@ contract Utils {
       revert(add(32, data), mload(data))
     }
   }
+  /**
+   * given a provided input amount, clamp the input to a maximum, using maximum if 0 provided
+   * @param amount the requested or input amount
+   * @param max the maximum amount that the value can be
+   * @return clamped the clamped value that is set to the limit if
+   * 0 or a number above the limit is passed
+   */
+  function clamp(uint256 amount, uint256 max) external pure returns(uint256 clamped) {
+    return _clamp({
+      amount: amount,
+      max: max
+    });
+  }
+  /**
+   * clamp a given amount to the maximum amount
+   * use the maximum amount if no amount is requested
+   * @param amount the amount requested by another function
+   * @param max the limit that the value can be
+   * @return clamped the clamped value that is set to the limit if
+   * 0 or a number above the limit is passed
+   */
+  function _clamp(uint256 amount, uint256 max) internal pure returns(uint256 clamped) {
+    unchecked {
+      return amount == ZERO || amount > max ? max : amount;
+    }
+  }
 }
