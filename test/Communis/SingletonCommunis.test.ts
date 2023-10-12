@@ -78,6 +78,30 @@ async function expectPayoutDetails(signer: SignerWithAddress, x : utils.X, stake
 }
 
 describe('SingletonCommunis.sol', () => {
+  describe('mintCommunis', () => {
+    it('can trigger the start stake bonus from staker', async () => {
+      const x = await loadFixture(utils.deployFixture)
+      const [, signer2] = x.signers
+      const stakeId = await utils.nextStakeId(x.hex)
+      // gives permission for anyone to end stake
+      // requires comm minting at end
+      await x.stakeManager.stakeStart(x.stakedAmount, 180)
+      await utils.moveForwardDays(1n, x)
+
+      await expect(x.stakeManager.connect(signer2).mintCommunis(
+        0n, stakeId,
+        hre.ethers.ZeroAddress,
+        0n,
+      ))
+      .to.revertedWithCustomError(x.stakeManager, 'NotAllowed')
+      await expect(x.stakeManager.mintCommunis(
+        0n, stakeId,
+        hre.ethers.ZeroAddress,
+        0n,
+      ))
+      .to.emit(x.communis, 'Transfer')
+    })
+  })
   describe('withdrawAmountByStakeId', () => {
     it('Communis withdraw', async () => {
       const x = await loadFixture(utils.deployFixture)
@@ -398,6 +422,8 @@ describe('SingletonCommunis.sol', () => {
         hre.ethers.ZeroAddress,
         0,
       )).not.to.reverted
+      await expect(x.stakeManager.setFutureStakeEndCommunisAmount(stakeId, 1))
+        .to.revertedWithCustomError(x.stakeManager, 'NotAllowed')
       await utils.moveForwardDays(90n, x) // too soon
       await expect(x.stakeManager.distributeStakeBonusByStakeId(stakeId, false))
         .to.revertedWithCustomError(x.stakeManager, 'NotAllowed')

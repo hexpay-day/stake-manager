@@ -27,7 +27,8 @@ contract SingletonCommunis is StakeEnder {
    * @param portion an enum corresponding to a method to be called for minting $COMM
    * @param stakeId the stake id to target - first call must be run by owner
    * @param referrer the referrer of the mint
-   * @param stakeAmount a uint255 where the first (left most) bit is a flag for apply restake bonus when portion = START
+   * @param stakeAmount the amount of the start bonus to stake. the left-most bit designated as a boolean for applying restake bonus
+   * @notice during stake good accounting, stakeAmount is used as a boolean 1 = withdraw, anything else = custody in contract
    */
   function mintCommunis(CommunisMintPortion portion, uint256 stakeId, address referrer, uint256 stakeAmount) external payable {
     _mintStakeBonus();
@@ -136,18 +137,19 @@ contract SingletonCommunis is StakeEnder {
    */
   function setFutureStakeEndCommunisAmount(uint256 stakeId, uint256 futureEndStakeAmount) external payable {
     // flag to signal that minting has not yet occurred for this stake id (when 0)
-    if (Communis(COMM).stakeIdEndBonusPayout(stakeId) == ZERO) { // must be a stake that has not received end bonus payout
-      (, address staker) = _stakeIdToInfo(stakeId); // must be an unended stake
-      if (staker != msg.sender) { // permissioned call
-        revert NotAllowed();
-      }
-      uint256 current = stakeIdCommunisPayoutInfo[stakeId];
-      stakeIdCommunisPayoutInfo[stakeId] = _encodePayoutInfo({
-        nextPayoutDay: uint16(current >> TWO_FOURTY),
-        endBonusPayoutDebt: futureEndStakeAmount,
-        stakeAmount: uint120(current)
-      });
+    if (Communis(COMM).stakeIdEndBonusPayout(stakeId) != ZERO) { // must be a stake that has not received end bonus payout
+      revert NotAllowed();
     }
+    (, address staker) = _stakeIdToInfo(stakeId); // must be an unended stake
+    if (staker != msg.sender) { // permissioned call
+      revert NotAllowed();
+    }
+    uint256 current = stakeIdCommunisPayoutInfo[stakeId];
+    stakeIdCommunisPayoutInfo[stakeId] = _encodePayoutInfo({
+      nextPayoutDay: uint16(current >> TWO_FOURTY),
+      endBonusPayoutDebt: futureEndStakeAmount,
+      stakeAmount: uint120(current)
+    });
   }
   function _maxPayout(UnderlyingStakeable.StakeStore memory stake) internal pure returns(uint256 maxPayout) {
     return Communis(COMM).getPayout(Communis.Stake(
