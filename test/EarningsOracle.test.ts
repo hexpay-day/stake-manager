@@ -51,7 +51,7 @@ describe('EarningsOracle.sol', () => {
   }
   const launchCurrentSub1 = async () => launchUpTo(1n)
   // const launchCurrent = async () => launchUpTo()
-  describe('IHEX', () => {
+  describe('HEX', () => {
     let x!: Awaited<ReturnType<typeof launchZero>>
     beforeEach(async () => {
       x = await loadFixture(launchZero)

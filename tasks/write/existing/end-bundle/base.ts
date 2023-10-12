@@ -3,11 +3,11 @@ export const main = async () => {}
 // import * as config from '../../../../src/config'
 // import * as addresses from '../../../../src/addresses'
 // import * as utils from '../../../../src/utils'
-// import { ExistingStakeManager, IHEX, HEXStakeInstanceManager, IMulticall3 } from "../../../../artifacts/types";
+// import { ExistingStakeManager, HEX, HEXStakeInstanceManager, IMulticall3 } from "../../../../artifacts/types";
 // import _ from "lodash";
 // import { Wallet, ethers } from "ethers";
 // import { setNextBlockTimestamp } from "@nomicfoundation/hardhat-network-helpers/dist/src/helpers/time";
-// import { StakeEndEvent, TransferEvent } from "../../../../artifacts/types/contracts/interfaces/IHEX";
+// import { StakeEndEvent, TransferEvent } from "../../../../artifacts/types/contracts/interfaces/HEX";
 // import { HSIEndEvent } from "../../../../artifacts/types/contracts/interfaces/HEXStakeInstanceManager";
 // import { FlashbotsBundleProvider, FlashbotsBundleTransaction } from '@flashbots/ethers-provider-bundle'
 // import { setTimeout } from "timers/promises";
@@ -46,7 +46,7 @@ export const main = async () => {}
 //   console.log('signer %o, balance %o', runner.address, hre.ethers.utils.formatEther(balance))
 //   const hsim = await hre.ethers.getContractAt('HEXStakeInstanceManager', addresses.HSIM, runner) as HEXStakeInstanceManager
 //   const multicall = await hre.ethers.getContractAt('IMulticall3', addresses.Multicall, runner) as IMulticall3
-//   const hex = await hre.ethers.getContractAt('IHEX', addresses.Hex, runner) as IHEX
+//   const hex = await hre.ethers.getContractAt('HEX', addresses.Hex, runner) as HEX
 //   const existingStakeManager = await hre.ethers.getContractAt('ExistingStakeManager', addresses.ExistingStakeManager, runner)
 //   const contracts = {
 //     hex,
@@ -113,7 +113,7 @@ export const main = async () => {}
 
 // type Contracts = {
 //   existingStakeManager: ExistingStakeManager;
-//   hex: IHEX;
+//   hex: HEX;
 //   hsim: HEXStakeInstanceManager;
 // }
 

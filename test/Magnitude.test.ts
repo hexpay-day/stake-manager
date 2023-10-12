@@ -3,7 +3,7 @@ import { expect } from "chai"
 import * as hre from "hardhat"
 import _ from 'lodash'
 import * as utils from './utils'
-import { IUnderlyingStakeable } from '../artifacts/types/contracts/interfaces/IHEX'
+import { IUnderlyingStakeable } from '../artifacts/types/contracts/interfaces/HEX'
 
 describe('Magnitude.sol', () => {
   const principle = hre.ethers.parseUnits('100', 8)

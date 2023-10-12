@@ -1,6 +1,6 @@
 import { Result, ethers } from "ethers";
 import { setTimeout } from "timers/promises";
-import { IHEX, HEXStakeInstanceManager, IMulticall3, IUnderlyingStakeable } from "../artifacts/types";
+import { HEX, HEXStakeInstanceManager, IMulticall3, IUnderlyingStakeable } from "../artifacts/types";
 import _ from "lodash";
 import * as addresses from './addresses'
 
@@ -71,7 +71,7 @@ export const getHsiApprovals = async (owner: string, operator: string, hsim: HEX
 export const loadHsiFrom = async (account: string, { hsim, multicall, hex }: {
   hsim: HEXStakeInstanceManager;
   multicall: IMulticall3;
-  hex: IHEX;
+  hex: HEX;
 }) => {
   const createCall = (target: string) => (callData: string) => ({
     target,

@@ -6,7 +6,7 @@ import { ERC20 } from "solmate/src/tokens/ERC20.sol";
 import { StakeManager } from "contracts/StakeManager.sol";
 import { EncodableSettings } from "contracts/EncodableSettings.sol";
 import { MulticallExtension } from "contracts/MulticallExtension.sol";
-import { IHEX } from "contracts/interfaces/IHEX.sol";
+import { HEX } from "contracts/interfaces/HEX.sol";
 
 contract TestStakeManager is Test {
   StakeManager public stkMngr;
@@ -40,7 +40,7 @@ contract TestStakeManager is Test {
       ERC20(hx).approve(address(stkMngr), type(uint256).max);
       vm.stopPrank();
     }
-    uint256[13] memory globalInfo = IHEX(hx).globalInfo();
+    uint256[13] memory globalInfo = HEX(hx).globalInfo();
     // [, , , , , , stakeIdBN]
     nextStakeId = globalInfo[6] + 1;
     assertEq(ERC20(hx).balanceOf(vm.addr(1)), startingBalance);
@@ -50,7 +50,7 @@ contract TestStakeManager is Test {
     while (numDays > 0) {
       skip(24*60*60);
       vm.startPrank(marcher);
-      IHEX(hx).stakeStart(1 * decimalShift, 5555);
+      HEX(hx).stakeStart(1 * decimalShift, 5555);
       vm.stopPrank();
       numDays = numDays - 1;
     }
@@ -127,12 +127,12 @@ contract TestStakeManager is Test {
   }
   function _directStakeStart(address sender, uint256 amount, uint256 daysStaked) internal {
     vm.startPrank(sender);
-    IHEX(hx).stakeStart(amount, daysStaked);
+    HEX(hx).stakeStart(amount, daysStaked);
     vm.stopPrank();
   }
   function _directStakeEnd(address sender, uint256 index, uint256 stakeId) internal {
     vm.startPrank(sender);
-    IHEX(hx).stakeEnd(index, uint40(stakeId));
+    HEX(hx).stakeEnd(index, uint40(stakeId));
     vm.stopPrank();
   }
   function _updateSettings(address stakeOwner, uint256 stakeId, EncodableSettings.Settings memory settings) internal {

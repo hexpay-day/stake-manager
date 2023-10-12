@@ -4,12 +4,12 @@ pragma solidity ^0.8.18;
 import { Test } from "forge-std/Test.sol";
 import { EarningsOracle } from "contracts/EarningsOracle.sol";
 import { Utils } from 'contracts/Utils.sol';
-import { IHEX } from "contracts/interfaces/IHEX.sol";
+import { HEX } from "contracts/interfaces/HEX.sol";
 
 contract TestEarningsOracle is Test {
   EarningsOracle public immutable eo;
   EarningsOracle public immutable eoMiss;
-  IHEX public hx = IHEX(0x2b591e99afE9f32eAA6214f7B7629768c40Eeb39);
+  HEX public hx = HEX(0x2b591e99afE9f32eAA6214f7B7629768c40Eeb39);
   constructor() {
     eo = new EarningsOracle(1, 0);
     eoMiss = new EarningsOracle(0, 0);
