@@ -43,6 +43,8 @@ contract Utils {
   uint256 internal constant FOUR = uint256(4);
   /** @notice a uint256 as 8 in a constant */
   uint256 internal constant EIGHT = uint256(8);
+  /** @notice a uint256 as 16 in a constant */
+  uint256 internal constant SIXTEEN = uint256(16);
   /** @notice a uint256 as 24 in a constant */
   uint256 internal constant TWENTY_FOUR = uint256(24);
   /** @notice a uint256 as 32 in a constant */

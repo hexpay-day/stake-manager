@@ -71,9 +71,11 @@ contract SingletonCommunis is StakeEnder {
           uint256 bal = ERC20(COMM).balanceOf(address(this));
           Communis(COMM).mintGoodAccountingBonus(address(this), index, stakeId);
           unchecked {
-            _attributeCommunis({
-              withdraw: stakeAmount == ONE,
-              to: referrer,
+            _attributeFunds({
+              // 16 always yields true for the 4th index
+              settings: stakeAmount == ONE ? SIXTEEN : ZERO,
+              staker: referrer,
+              token: COMM,
               amount: ERC20(COMM).balanceOf(address(this)) - bal
             });
           }
@@ -279,9 +281,10 @@ contract SingletonCommunis is StakeEnder {
         endBonusPayoutDebt: uint120(payoutInfo >> ONE_TWENTY),
         stakeAmount: (stakedAmount - withdrawAmount)
       });
-      _attributeCommunis({
-        withdraw: withdraw,
-        to: staker,
+      _attributeFunds({
+        settings: withdraw ? SIXTEEN : ZERO,
+        staker: staker,
+        token: COMM,
         amount: withdrawAmount
       });
     }
@@ -315,24 +318,6 @@ contract SingletonCommunis is StakeEnder {
     } catch {
       distributableBonus = distributableCommunisStakeBonus;
       balance = bal;
-    }
-  }
-
-  function _attributeCommunis(bool withdraw, address to, uint256 amount) internal {
-    if (amount > ZERO) {
-      if (withdraw) {
-        _withdrawTokenTo({
-          token: COMM,
-          to: to,
-          amount: amount
-        });
-      } else {
-        _addToTokenWithdrawable({
-          token: COMM,
-          to: to,
-          amount: amount
-        });
-      }
     }
   }
 
@@ -373,10 +358,21 @@ contract SingletonCommunis is StakeEnder {
         stakeAmount: stakedAmount
       });
     }
-    _attributeCommunis({
-      withdraw: withdraw,
-      to: staker,
-      amount: payout
-    });
+    if (withdraw) {
+      attributed[COMM] -= payout;
+      // withdrawal does not reduce accounting so we must do it here
+      _attributeFunds({
+        settings: SIXTEEN,
+        staker: staker,
+        token: COMM,
+        amount: payout
+      });
+    } else {
+      unchecked {
+        // accounting has attributed funds to the contract
+        // but it has not yet attributed funds to a staker
+        withdrawableBalanceOf[COMM][staker] += payout;
+      }
+    }
   }
 }
