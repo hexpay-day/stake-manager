@@ -35,7 +35,6 @@ describe("StakeManager", function () {
   describe('SingletonCommunis', () => {
     it('can mint during an end stake', async () => {
       const x = await loadFixture(utils.deployFixture)
-      await time.setNextBlockTimestamp(new Date())
       const nextStakeId = await utils.nextStakeId(x.hex)
       const tooFewDays = 364n
       const enoughDays = 365n

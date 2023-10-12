@@ -49,10 +49,10 @@ Source Units in Scope: **`25`** (**100%**)
 | Type | File   | Logic Contracts | Interfaces | Lines | nLines | nSLOC | Comment Lines | Complex. Score | Capabilities |
 | ---- | ------ | --------------- | ---------- | ----- | ------ | ----- | ------------- | -------------- | ------------ |
 | 🎨 | contracts/AuthorizationManager.sol | 1 | **** | 114 | 114 | 47 | 65 | 23 | **** |
-| 📝 | contracts/Bank.sol | 1 | **** | 310 | 300 | 182 | 114 | 93 | **<abbr title='Payable Functions'>💰</abbr><abbr title='Unchecked Blocks'>Σ</abbr>** |
+| 📝 | contracts/Bank.sol | 1 | **** | 284 | 274 | 171 | 99 | 89 | **<abbr title='Payable Functions'>💰</abbr><abbr title='Unchecked Blocks'>Σ</abbr>** |
 | 🎨 | contracts/Communis.sol | 1 | **** | 45 | 22 | 17 | 1 | 25 | **** |
 | 📝 | contracts/CurrencyList.sol | 1 | **** | 54 | 54 | 36 | 14 | 23 | **<abbr title='Payable Functions'>💰</abbr>** |
-| 📝 | contracts/EarningsOracle.sol | 1 | **** | 236 | 232 | 153 | 77 | 80 | **<abbr title='Payable Functions'>💰</abbr><abbr title='Unchecked Blocks'>Σ</abbr>** |
+| 📝 | contracts/EarningsOracle.sol | 1 | **** | 239 | 235 | 156 | 77 | 80 | **<abbr title='Payable Functions'>💰</abbr><abbr title='Unchecked Blocks'>Σ</abbr>** |
 | 🎨 | contracts/EncodableSettings.sol | 1 | **** | 416 | 402 | 202 | 206 | 105 | **<abbr title='Payable Functions'>💰</abbr><abbr title='Unchecked Blocks'>Σ</abbr>** |
 | 📝 | contracts/ExistingStakeManager.sol | 1 | **** | 7 | 7 | 3 | 2 | 3 | **** |
 | 🎨 | contracts/GoodAccounting.sol | 1 | **** | 137 | 129 | 91 | 36 | 38 | **** |
@@ -62,7 +62,7 @@ Source Units in Scope: **`25`** (**100%**)
 | 📝 | contracts/Magnitude.sol | 1 | **** | 239 | 223 | 151 | 78 | 89 | **<abbr title='Unchecked Blocks'>Σ</abbr>** |
 | 📝 | contracts/MaximusStakeManager.sol | 1 | **** | 179 | 174 | 101 | 76 | 78 | **<abbr title='Payable Functions'>💰</abbr><abbr title='Unchecked Blocks'>Σ</abbr>** |
 | 📝 | contracts/MulticallExtension.sol | 1 | **** | 99 | 88 | 59 | 27 | 25 | **<abbr title='DelegateCall'>👥</abbr><abbr title='Unchecked Blocks'>Σ</abbr>** |
-| 📝 | contracts/SingletonCommunis.sol | 1 | **** | 448 | 441 | 355 | 54 | 214 | **<abbr title='Payable Functions'>💰</abbr><abbr title='TryCatch Blocks'>♻️</abbr><abbr title='Unchecked Blocks'>Σ</abbr>** |
+| 📝 | contracts/SingletonCommunis.sol | 1 | **** | 382 | 375 | 300 | 53 | 174 | **<abbr title='Payable Functions'>💰</abbr><abbr title='TryCatch Blocks'>♻️</abbr><abbr title='Unchecked Blocks'>Σ</abbr>** |
 | 📝 | contracts/SingletonMintManager.sol | 1 | **** | 94 | 91 | 76 | 13 | 30 | **<abbr title='Unchecked Blocks'>Σ</abbr>** |
 | 📝 | contracts/StakeEnder.sol | 1 | **** | 303 | 293 | 251 | 41 | 103 | **<abbr title='Payable Functions'>💰</abbr><abbr title='Unchecked Blocks'>Σ</abbr>** |
 | 📝 | contracts/StakeInfo.sol | 1 | **** | 145 | 145 | 59 | 84 | 35 | **<abbr title='Unchecked Blocks'>Σ</abbr>** |
@@ -72,8 +72,8 @@ Source Units in Scope: **`25`** (**100%**)
 | 📝 | contracts/TransferableStakeManager.sol | 1 | **** | 110 | 110 | 76 | 33 | 37 | **<abbr title='Payable Functions'>💰</abbr><abbr title='Unchecked Blocks'>Σ</abbr>** |
 | 📝 | contracts/UnderlyingStakeManager.sol | 1 | **** | 225 | 207 | 132 | 73 | 63 | **<abbr title='Payable Functions'>💰</abbr><abbr title='Unchecked Blocks'>Σ</abbr>** |
 | 🎨 | contracts/UnderlyingStakeable.sol | 1 | **** | 143 | 118 | 55 | 71 | 35 | **<abbr title='Unchecked Blocks'>Σ</abbr>** |
-| 📝 | contracts/Utils.sol | 1 | **** | 96 | 96 | 44 | 51 | 81 | **<abbr title='Uses Assembly'>🖥</abbr><abbr title='Unchecked Blocks'>Σ</abbr>** |
-| 📝🎨 | **Totals** | **25** | **** | **4595**  | **4374** | **2853** | **1470** | **1597** | **<abbr title='Uses Assembly'>🖥</abbr><abbr title='Payable Functions'>💰</abbr><abbr title='DelegateCall'>👥</abbr><abbr title='Uses Hash-Functions'>🧮</abbr><abbr title='TryCatch Blocks'>♻️</abbr><abbr title='Unchecked Blocks'>Σ</abbr>** |
+| 📝 | contracts/Utils.sol | 1 | **** | 122 | 122 | 55 | 66 | 85 | **<abbr title='Uses Assembly'>🖥</abbr><abbr title='Unchecked Blocks'>Σ</abbr>** |
+| 📝🎨 | **Totals** | **25** | **** | **4532**  | **4311** | **2801** | **1469** | **1557** | **<abbr title='Uses Assembly'>🖥</abbr><abbr title='Payable Functions'>💰</abbr><abbr title='DelegateCall'>👥</abbr><abbr title='Uses Hash-Functions'>🧮</abbr><abbr title='TryCatch Blocks'>♻️</abbr><abbr title='Unchecked Blocks'>Σ</abbr>** |
 
 <sub>
 Legend: <a onclick="toggleVisibility('table-legend', this)">[➕]</a>
@@ -155,7 +155,7 @@ The analysis finished with **`0`** errors and **`0`** duplicate files.
 
 #### <span id=t-inline-documentation>Inline Documentation</span>
 
-- **Comment-to-Source Ratio:** On average there are`2.08` code lines per comment (lower=better).
+- **Comment-to-Source Ratio:** On average there are`2.05` code lines per comment (lower=better).
 - **ToDo's:** `0`
 
 #### <span id=t-components>Components</span>
@@ -170,11 +170,11 @@ This section lists functions that are explicitly declared public or payable. Ple
 
 | 🌐Public   | 💰Payable |
 | ---------- | --------- |
-| 120 | 41  |
+| 118 | 40  |
 
 | External   | Internal | Private | Pure | View |
 | ---------- | -------- | ------- | ---- | ---- |
-| 120 | 194  | 0 | 47 | 61 |
+| 118 | 189  | 0 | 47 | 61 |
 
 #### <span id=t-statevariables>StateVariables</span>
 
@@ -263,10 +263,10 @@ This section lists functions that are explicitly declared public or payable. Ple
 |  File Name  |  SHA-1 Hash  |
 |-------------|--------------|
 | contracts/AuthorizationManager.sol | 37c2c14a2d122806269d0ec2ba0ee987c36e0795 |
-| contracts/Bank.sol | dfd1c4473660c15b2395747618eb608484403002 |
+| contracts/Bank.sol | 23c7c09198b81f848f42d06b3da3d9362c290a23 |
 | contracts/Communis.sol | fad2401c8e50b86839eca58a50dd34231c6757c4 |
 | contracts/CurrencyList.sol | 6edb2f225796c57dffe1044f49cb663b1ff8ebe4 |
-| contracts/EarningsOracle.sol | f2d45921d81672efea8d4d58106eaf0be37b2d53 |
+| contracts/EarningsOracle.sol | 2ac064b4c30a5c2d42f84df7846f193d0ad0db54 |
 | contracts/EncodableSettings.sol | 49898c08bc77f9e4c18d720418529c05e4a90825 |
 | contracts/ExistingStakeManager.sol | 645f443d16fe8ca9709e14c0d8759438f26e941a |
 | contracts/GoodAccounting.sol | 0e182bd47e07464c1b9a8bb2a0d7b3f8e407ab38 |
@@ -276,7 +276,7 @@ This section lists functions that are explicitly declared public or payable. Ple
 | contracts/Magnitude.sol | 44450908a79f5f9d4ccccac03730ed3c57d4c7d3 |
 | contracts/MaximusStakeManager.sol | c3261cd6d8c35f54b13c575582372abcdc68d0df |
 | contracts/MulticallExtension.sol | 88034c4f27d20ae95cc1edcee8b721908409325f |
-| contracts/SingletonCommunis.sol | 95bc4e3f86d9dbf8b8d1874970dc6ae2aa0ca53f |
+| contracts/SingletonCommunis.sol | ddc8357988ce7444bd6da0404c8f9ee657ef179b |
 | contracts/SingletonMintManager.sol | 0361c8592fba995c64441d912f872e4639e9af5b |
 | contracts/StakeEnder.sol | b72c78fe3f65077cc18f5bd8613952211e4a60e8 |
 | contracts/StakeInfo.sol | a29b9828acaf1e8335ddb8732fe799f0fc40c001 |
@@ -286,7 +286,7 @@ This section lists functions that are explicitly declared public or payable. Ple
 | contracts/TransferableStakeManager.sol | 2454a6bc6d44dab7ba97dca18e8e35d316000171 |
 | contracts/UnderlyingStakeManager.sol | 6c4788310b9983a94e71e9238362857805ba64ab |
 | contracts/UnderlyingStakeable.sol | 0fa69704662e0ee14bfff25bfc4e2b4b5d94009d |
-| contracts/Utils.sol | a1781e4a3cd34555673c7db2cf9be694abfd9535 |
+| contracts/Utils.sol | 82d7439eea451026f1173cbaac34eb0d9af0e9f5 |
 
 
  Contracts Description Table
@@ -309,8 +309,6 @@ This section lists functions that are explicitly declared public or payable. Ple
 | └ | _getUnattributed | Internal 🔒 |   | |
 | └ | _getBalance | Internal 🔒 |   | |
 | └ | getUnattributed | External ❗️ |   |NO❗️ |
-| └ | clamp | External ❗️ |   |NO❗️ |
-| └ | _clamp | Internal 🔒 |   | |
 | └ | depositToken | External ❗️ |  💵 |NO❗️ |
 | └ | depositTokenTo | External ❗️ |  💵 |NO❗️ |
 | └ | _depositTokenTo | Internal 🔒 | 🛑  | |
@@ -475,10 +473,6 @@ This section lists functions that are explicitly declared public or payable. Ple
 | └ | _mintStakeBonus | Internal 🔒 | 🛑  | |
 | └ | _attributeCommunis | Internal 🔒 | 🛑  | |
 | └ | distributeStakeBonusByStakeId | External ❗️ |  💵 |NO❗️ |
-| └ | claimStakeBonus | External ❗️ | 🛑  |NO❗️ |
-| └ | _claimStakeBonus | Internal 🔒 | 🛑  | |
-| └ | _attributeCommunis | Internal 🔒 | 🛑  | |
-| └ | distributeStakeBonusByStakeId | External ❗️ |  💵 |NO❗️ |
 ||||||
 | **SingletonMintManager** | Implementation | UnderlyingStakeManager |||
 | └ | createTo | External ❗️ |   |NO❗️ |
@@ -579,6 +573,8 @@ This section lists functions that are explicitly declared public or payable. Ple
 | └ | isOneAtIndex | External ❗️ |   |NO❗️ |
 | └ | _isOneAtIndex | Internal 🔒 |   | |
 | └ | _bubbleRevert | Internal 🔒 |   | |
+| └ | clamp | External ❗️ |   |NO❗️ |
+| └ | _clamp | Internal 🔒 |   | |
 
 
  Legend
