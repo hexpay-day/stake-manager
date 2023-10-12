@@ -146,3 +146,17 @@ export const fromStruct = (struct: any): any => {
       : val
   ))
 }
+
+export type DecodedCommunisPayoutInfo = ReturnType<typeof decodeCommunisPayoutInfo>
+
+const ONE_TWENTY = 120n;
+const MASK_120_BITS = (1n << ONE_TWENTY) - 1n;
+const MASK_240_BITS = (1n << 240n) - 1n;
+
+export const decodeCommunisPayoutInfo = (encodedValue: bigint) => {
+  const nextPayoutDay = (encodedValue >> BigInt(240));
+  const endBonusDebt = ((encodedValue & MASK_240_BITS) >> ONE_TWENTY);
+  const stakedAmount = (encodedValue & MASK_120_BITS);
+
+  return { nextPayoutDay, endBonusDebt, stakedAmount };
+}

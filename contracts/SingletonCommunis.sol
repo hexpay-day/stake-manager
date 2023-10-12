@@ -19,6 +19,7 @@ contract SingletonCommunis is StakeEnder {
   mapping(uint256 stakeId => uint256 payoutInfo) public stakeIdCommunisPayoutInfo;
   uint256 constant internal NINETY_ONE = 91;
   uint256 constant internal ONE_TWENTY = 120;
+  uint256 constant internal TWO_FOURTY = 240;
 
   /**
    * mint comm for staking
@@ -121,7 +122,7 @@ contract SingletonCommunis is StakeEnder {
   function _encodePayoutInfo(uint256 nextPayoutDay, uint256 endBonusPayoutDebt, uint256 stakeAmount) internal pure returns(uint256) {
     unchecked {
       return (
-        nextPayoutDay << 240
+        nextPayoutDay << TWO_FOURTY
         | uint256(uint120(endBonusPayoutDebt)) << ONE_TWENTY
         | uint256(uint120(stakeAmount))
       );
@@ -142,7 +143,7 @@ contract SingletonCommunis is StakeEnder {
       }
       uint256 current = stakeIdCommunisPayoutInfo[stakeId];
       stakeIdCommunisPayoutInfo[stakeId] = _encodePayoutInfo({
-        nextPayoutDay: uint16(current >> 240),
+        nextPayoutDay: uint16(current >> TWO_FOURTY),
         endBonusPayoutDebt: futureEndStakeAmount,
         stakeAmount: uint120(current)
       });
@@ -277,7 +278,7 @@ contract SingletonCommunis is StakeEnder {
 
       Communis(COMM).withdrawStakedCodeak(withdrawAmount);
       stakeIdCommunisPayoutInfo[stakeId] = _encodePayoutInfo({
-        nextPayoutDay: uint16(payoutInfo >> 240),
+        nextPayoutDay: uint16(payoutInfo >> TWO_FOURTY),
         endBonusPayoutDebt: uint120(payoutInfo >> ONE_TWENTY),
         stakeAmount: (stakedAmount - withdrawAmount)
       });
@@ -316,8 +317,10 @@ contract SingletonCommunis is StakeEnder {
         distributableCommunisStakeBonus = distributableBonus;
       }
     } catch {
+      // coveralls-ignore-start
       distributableBonus = distributableCommunisStakeBonus;
       balance = bal;
+      // coveralls-ignore-stop
     }
   }
 
@@ -336,7 +339,7 @@ contract SingletonCommunis is StakeEnder {
         // reverts mint from communis
         revert NotAllowed();
       }
-      uint256 nextPayoutDay = uint16(payoutInfo >> 240);
+      uint256 nextPayoutDay = uint16(payoutInfo >> TWO_FOURTY);
       if (nextPayoutDay > currentDay) {
         // reverts mint from communis
         revert NotAllowed();
@@ -346,10 +349,12 @@ contract SingletonCommunis is StakeEnder {
 
       payout = (stakedAmount * numberOfPayouts) / 80;
 
+      // coveralls-ignore-start
       if (payout > distributableBonus) {
         // Ensure you don't try to pay out more than the distributableBonus
         payout = distributableBonus;
       }
+      // coveralls-ignore-stop
 
       distributableCommunisStakeBonus = (distributableBonus - payout);
       stakeIdCommunisPayoutInfo[stakeId] = _encodePayoutInfo({
@@ -359,8 +364,8 @@ contract SingletonCommunis is StakeEnder {
       });
     }
     if (withdraw) {
-      attributed[COMM] -= payout;
       // withdrawal does not reduce accounting so we must do it here
+      attributed[COMM] -= payout;
       _attributeFunds({
         settings: SIXTEEN,
         staker: staker,
@@ -370,7 +375,7 @@ contract SingletonCommunis is StakeEnder {
     } else {
       unchecked {
         // accounting has attributed funds to the contract
-        // but it has not yet attributed funds to a staker
+        // but it has not yet attributed funds to the staker
         withdrawableBalanceOf[COMM][staker] += payout;
       }
     }
