@@ -259,42 +259,6 @@ abstract contract EncodableSettings is StakeInfo {
     });
   }
   /**
-   * read a single property from encoded settings
-   * @notice most useful for other contracts to pull out 1 property without
-   * needing logic for parsing
-   * @param settings the settings number to read 1 property from
-   * @param fromEnd the index from the end to start at
-   * @param length the number of bits to read
-   */
-  function readEncodedSettings(
-    uint256 settings,
-    uint256 fromEnd,
-    uint256 length
-  ) external pure returns(uint256) {
-    return _readEncodedSettings({
-      settings: settings,
-      fromEnd: fromEnd,
-      length: length
-    });
-  }
-  /**
-   * parse out a single value from an encoded settings uint Only useful
-   * if you do not want the whole settings struct to be decoded
-   * @param settings the settings value to parse out
-   * @param fromEnd the index (from left) to start at. Left most is 0
-   * @param length the number of bits to retain after the fromEnd param
-   * @return the uint retained by the fromEnd and length arguments of settings
-   */
-  function _readEncodedSettings(
-    uint256 settings,
-    uint256 fromEnd,
-    uint256 length
-  ) internal pure returns(uint256) {
-    unchecked {
-      return settings << fromEnd >> (SLOTS - length);
-    }
-  }
-  /**
    * encode a settings struct into it's number
    * @param settings the settings struct to be encoded into a number
    * @return encoded a uint256 expression of settings struct
@@ -402,7 +366,7 @@ abstract contract EncodableSettings is StakeInfo {
         return uint8(settings);
       }
       // allow settings to perist indefinitely
-      if (copyIterations == 127) {
+      if (copyIterations == MAX_UINT_7) {
         return settings;
       }
       --copyIterations;

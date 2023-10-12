@@ -39,27 +39,6 @@ describe('EncodableSettings.sol', () => {
         .eventually.to.deep.equal(settings)
     })
   })
-  describe('parsing values', () => {
-    it('has a method for that', async () => {
-      const defaultEncodedSettings = await x.stakeManager.defaultEncodedSettings()
-      const defaultSettings = await x.stakeManager.defaultSettings()
-      const struct = utils.fromStruct(defaultSettings.consentAbilities) as EncodableSettings.ConsentAbilitiesStruct
-      await expect(x.stakeManager.readEncodedSettings(defaultEncodedSettings, 208, 8))
-        .eventually.to.equal(defaultSettings.newStake.method)
-        .eventually.to.equal(2)
-      await expect(x.stakeManager.readEncodedSettings(defaultEncodedSettings, 216, 8))
-        .eventually.to.equal(defaultSettings.newStakeDaysMethod)
-        .eventually.to.equal(2)
-      await expect(x.stakeManager.readEncodedSettings(defaultEncodedSettings, 240, 7))
-        .eventually.to.equal(defaultSettings.copyIterations)
-        .eventually.to.equal(127n)
-
-      const encodedConsentAbilities = await x.stakeManager.encodeConsentAbilities(struct)
-      await expect(x.stakeManager.readEncodedSettings(defaultEncodedSettings, 248, 8))
-        .eventually.to.equal(encodedConsentAbilities)
-        .eventually.to.equal(1)
-    })
-  })
   describe('encode/decodeConsentAbilities', () => {
     it('can encode and decode consent abilities', async () => {
       const abilities = {
