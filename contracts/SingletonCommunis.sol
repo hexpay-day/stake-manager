@@ -29,6 +29,7 @@ contract SingletonCommunis is StakeEnder {
    * @param stakeAmount a uint255 where the first (left most) bit is a flag for apply restake bonus when portion = START
    */
   function mintCommunis(CommunisMintPortion portion, uint256 stakeId, address referrer, uint256 stakeAmount) external payable {
+    _mintStakeBonus();
     if (portion < CommunisMintPortion.END) {
       uint256 settings = stakeIdToSettings[stakeId];
       if (portion == CommunisMintPortion.START) {
@@ -198,6 +199,7 @@ contract SingletonCommunis is StakeEnder {
       referrer: referrer,
       stake: stake
     });
+    _mintStakeBonus();
     formerStakeOwner[stakeId] = staker;
     try Communis(COMM).mintEndBonus(index, stakeId, referrer, stakeAmount) {
     } catch {
