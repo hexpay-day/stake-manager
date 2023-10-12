@@ -44,21 +44,22 @@ export type X = Awaited<ReturnType<typeof deployFixture>>
 
 export const deployFixture = async () => {
   const Utils = await hre.ethers.getContractFactory('Utils') as unknown as Utils__factory
-  const utils = await Utils.deploy()
   const StakeManager = await hre.ethers.getContractFactory('StakeManager') as unknown as StakeManager__factory
+  const hex = await hre.ethers.getContractAt('HEX', config.hexAddress) as unknown as HEX
+  const hedron = await hre.ethers.getContractAt('Hedron', config.hedronAddress) as unknown as Hedron
+  const hsim = await hre.ethers.getContractAt('HEXStakeInstanceManager', await hedron.hsim()) as unknown as HEXStakeInstanceManager
+  const TransferReceiver = await hre.ethers.getContractFactory('TransferReceiver') as unknown as TransferReceiver__factory
+  const communis = await hre.ethers.getContractAt('Communis', config.communisAddress) as unknown as Communis
+  const ExistingStakeManager = await hre.ethers.getContractFactory('ExistingStakeManager') as unknown as ExistingStakeManager__factory
+  const IsolatedStakeManagerFactory = await hre.ethers.getContractFactory('IsolatedStakeManagerFactory') as unknown as IsolatedStakeManagerFactory__factory
+  const MockExternalPerpetualFilter = await hre.ethers.getContractFactory('MockExternalPerpetualFilter') as unknown as MockExternalPerpetualFilter__factory
+  const utils = await Utils.deploy()
   const stakeManager = await StakeManager.deploy()
   await stakeManager.deploymentTransaction()?.wait()
   const _signers = await hre.ethers.getSigners()
   const signers = _signers.slice(0, 20)
   const [signer] = signers
-  const hex = await hre.ethers.getContractAt('HEX', config.hexAddress) as unknown as HEX
-  const hedron = await hre.ethers.getContractAt('Hedron', config.hedronAddress) as unknown as Hedron
-  const hsim = await hre.ethers.getContractAt('HEXStakeInstanceManager', await hedron.hsim()) as unknown as HEXStakeInstanceManager
-  const TransferReceiver = await hre.ethers.getContractFactory('TransferReceiver') as unknown as TransferReceiver__factory
-  // const IHEX = await hre.ethers.getContractAt()
-  const communis = await hre.ethers.getContractAt('contracts/Communis.sol:Communis', config.communisAddress) as unknown as Communis
   const transferReceiver = await TransferReceiver.deploy()
-  const ExistingStakeManager = await hre.ethers.getContractFactory('ExistingStakeManager') as unknown as ExistingStakeManager__factory
   const existingStakeManager = await ExistingStakeManager.deploy()
   const maximusStakeManager = existingStakeManager
   const decimals = await hex.decimals()
@@ -76,7 +77,6 @@ export const deployFixture = async () => {
       ])
     }))
   })
-  const IsolatedStakeManagerFactory = await hre.ethers.getContractFactory('IsolatedStakeManagerFactory') as unknown as IsolatedStakeManagerFactory__factory
   const isolatedStakeManagerFactory = await IsolatedStakeManagerFactory.deploy()
   await isolatedStakeManagerFactory.deploymentTransaction()?.wait()
   await isolatedStakeManagerFactory.createIsolatedManager(signer.address)
@@ -89,7 +89,6 @@ export const deployFixture = async () => {
   const usdcAddress = '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48'
   const usdc = await hre.ethers.getContractAt('solmate/src/tokens/ERC20.sol:ERC20', usdcAddress) as unknown as ERC20
   const multicall = await hre.ethers.getContractAt('IMulticall3', '0xcA11bde05977b3631167028862bE2a173976CA11')
-  const MockExternalPerpetualFilter = await hre.ethers.getContractFactory('MockExternalPerpetualFilter') as unknown as MockExternalPerpetualFilter__factory
   const externalPerpetualFilter = await MockExternalPerpetualFilter.deploy()
   await externalPerpetualFilter.deploymentTransaction()?.wait()
   const MockPerpetual = await hre.ethers.getContractFactory('MockPerpetual')

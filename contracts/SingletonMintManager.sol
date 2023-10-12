@@ -4,7 +4,7 @@ pragma solidity ^0.8.18;
 import { Hedron } from "./interfaces/Hedron.sol";
 import { UnderlyingStakeManager } from "./UnderlyingStakeManager.sol";
 import { UnderlyingStakeable } from "./UnderlyingStakeable.sol";
-import { Communis } from "./Communis.sol";
+import { Communis } from "./interfaces/Communis.sol";
 import { ERC20 } from "solmate/src/tokens/ERC20.sol";
 
 contract SingletonMintManager is UnderlyingStakeManager {

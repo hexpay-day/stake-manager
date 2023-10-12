@@ -153,6 +153,27 @@ describe('SingletonCommunis.sol', () => {
       await expect(x.stakeManager.distributeStakeBonusByStakeId(stk.stakeId, true))
         .to.revertedWithCustomError(x.stakeManager, 'NotAllowed')
     })
+    it('disallows withdrawals beyond debt', async () => {
+
+      const x = await loadFixture(utils.deployFixture)
+      const stakeId = await utils.nextStakeId(x.hex)
+      // gives permission for anyone to end stake
+      // requires comm minting at end
+      await x.stakeManager.stakeStart(x.stakedAmount, 365)
+      await utils.moveForwardDays(366n, x)
+
+      await x.stakeManager.mintCommunis(
+        2n, stakeId,
+        hre.ethers.ZeroAddress,
+        1, // stake minimum
+      )
+      await x.stakeManager.stakeEndById(stakeId)
+      await utils.moveForwardDays(91n, x)
+
+      // already at debt limit because minimum (50%) was staked
+      await expect(x.stakeManager.withdrawAmountByStakeId(2n, stakeId, true))
+        .to.revertedWithCustomError(x.stakeManager, 'NotAllowed')
+    })
   })
   describe('mintCommunis end', async () => {
     it('can mint end bonuses', async () => {
