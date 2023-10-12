@@ -119,7 +119,9 @@ contract Bank is Utils {
       transferOut: transferOut,
       to: to,
       amount: amount,
-      max: _getUnattributed(token)
+      max: _getUnattributed({
+        token: token
+      })
     });
   }
   function _collectUnattributed(
@@ -164,9 +166,17 @@ contract Bank is Utils {
     address token, bool transferOut, address payable recipient,
     uint256 basisPoints
   ) external payable returns(uint256 amount) {
-    uint256 unattributed = _getUnattributed(token);
+    uint256 unattributed = _getUnattributed({
+      token: token
+    });
     amount = (unattributed * basisPoints) / TEN_K;
-    _collectUnattributed(token, transferOut, recipient, amount, unattributed);
+    _collectUnattributed({
+      token: token,
+      transferOut: transferOut,
+      to: recipient,
+      amount: amount,
+      max: unattributed
+    });
   }
   /**
    * transfer an amount of tokens currently attributed to the withdrawable balance of the sender
