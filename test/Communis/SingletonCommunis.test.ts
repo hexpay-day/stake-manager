@@ -191,7 +191,7 @@ describe('SingletonCommunis.sol', () => {
 
       await x.stakeManager.mintCommunis(
         2n, stakeId,
-        x.stakeManager.getAddress(),
+        signer.address,
         0, // stake maximum
       )
       await x.stakeManager.stakeEndById(stakeId)
