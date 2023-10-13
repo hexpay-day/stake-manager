@@ -30,6 +30,7 @@ contract Utils {
   int256 constant internal MIN_INT_16 = int256(type(int16).min);
   /** @notice the max value that can fit in a uint8 slot (255) */
   uint256 internal constant MAX_UINT_8 = uint256(type(uint8).max);
+  uint256 internal constant MAX_UINT_7 = MAX_UINT_8 / TWO;
   /** @notice a uint256 as 0 in a constant */
   uint256 internal constant ZERO = uint256(0);
   /** @notice a uint256 as 1 in a constant */
@@ -54,8 +55,6 @@ contract Utils {
   uint256 internal constant FIFTY_SIX = uint256(56);
   /** @notice a uint256 as 64 in a constant */
   uint256 internal constant SIXTY_FOUR = uint256(64);
-  /** @notice a uint256 as 72 in a constant */
-  uint256 internal constant SEVENTY_TWO = uint256(72);
   /** @notice the hedron contract to interact with and mint hedron tokens from */
   address public constant HEDRON = 0x3819f64f282bf135d62168C1e513280dAF905e06;
   /**
@@ -63,6 +62,10 @@ contract Utils {
    * to interact with and transfer hsi tokens from and end stakes through
    */
   address public constant HSIM = 0x8BD3d1472A656e312E94fB1BbdD599B8C51D18e3;
+  /**
+   * @notice the address to mint communis tokens
+   */
+  address public constant COMM = 0x5A9780Bfe63f3ec57f01b087cD65BD656C9034A8;
   /**
    * check if the number, in binary form, has a 1 at the provided index
    * @param settings the settings number that holds up to 256 flags as 1/0
@@ -90,6 +93,32 @@ contract Utils {
     if (data.length == ZERO) revert();
     assembly {
       revert(add(32, data), mload(data))
+    }
+  }
+  /**
+   * given a provided input amount, clamp the input to a maximum, using maximum if 0 provided
+   * @param amount the requested or input amount
+   * @param max the maximum amount that the value can be
+   * @return clamped the clamped value that is set to the limit if
+   * 0 or a number above the limit is passed
+   */
+  function clamp(uint256 amount, uint256 max) external pure returns(uint256 clamped) {
+    return _clamp({
+      amount: amount,
+      max: max
+    });
+  }
+  /**
+   * clamp a given amount to the maximum amount
+   * use the maximum amount if no amount is requested
+   * @param amount the amount requested by another function
+   * @param max the limit that the value can be
+   * @return clamped the clamped value that is set to the limit if
+   * 0 or a number above the limit is passed
+   */
+  function _clamp(uint256 amount, uint256 max) internal pure returns(uint256 clamped) {
+    unchecked {
+      return amount == ZERO || amount > max ? max : amount;
     }
   }
 }

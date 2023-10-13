@@ -2,7 +2,7 @@
 pragma solidity ^0.8.18;
 
 import { IPublicEndStakeable } from "./interfaces/IPublicEndStakeable.sol";
-import { IExternalPerpetualFilter } from "./interfaces/IExternalPerpetualFilter.sol";
+import { ExternalPerpetualFilter } from "./interfaces/ExternalPerpetualFilter.sol";
 import { HSIStakeManager } from "./HSIStakeManager.sol";
 import { IGasReimberser } from './interfaces/IGasReimberser.sol';
 
@@ -73,7 +73,7 @@ contract MaximusStakeManager is HSIStakeManager {
     if (perpetualWhitelist[perpetual]) return true;
     address _externalPerpetualFilter = externalPerpetualFilter;
     if (_externalPerpetualFilter == address(0)) return false;
-    bool result = IExternalPerpetualFilter(_externalPerpetualFilter).verifyPerpetual({
+    bool result = ExternalPerpetualFilter(_externalPerpetualFilter).verifyPerpetual({
       perpetual: perpetual
     });
     if (result) {

@@ -103,6 +103,7 @@ const defaultNetwork = {
 
 const defaultHardhatNetwork: HardhatNetworkUserConfig = {
   allowBlocksWithSameTimestamp: true,
+  allowUnlimitedContractSize: true,
   accounts: {
     accountsBalance: ethers.parseEther((100_000_000_000).toString()).toString(),
     count: 5,

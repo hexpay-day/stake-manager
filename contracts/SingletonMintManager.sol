@@ -3,6 +3,9 @@ pragma solidity ^0.8.18;
 
 import { Hedron } from "./interfaces/Hedron.sol";
 import { UnderlyingStakeManager } from "./UnderlyingStakeManager.sol";
+import { UnderlyingStakeable } from "./UnderlyingStakeable.sol";
+import { Communis } from "./interfaces/Communis.sol";
+import { ERC20 } from "solmate/src/tokens/ERC20.sol";
 
 contract SingletonMintManager is UnderlyingStakeManager {
   /**
@@ -84,4 +87,8 @@ contract SingletonMintManager is UnderlyingStakeManager {
   function _mintHedron(uint256 index, uint256 stakeId) internal virtual returns(uint256 amount) {
     return Hedron(HEDRON).mintNative(index, uint40(stakeId));
   }
+  function _communisStakeEndBonus(
+    uint256 settings, uint256 today,
+    uint256 index, address staker, address referrer,
+    UnderlyingStakeable.StakeStore memory stake) internal virtual {}
 }

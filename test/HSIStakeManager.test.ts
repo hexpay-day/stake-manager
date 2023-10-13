@@ -33,7 +33,7 @@ describe('HSIStakeManager.sol', () => {
       await expect(x.existingStakeManager.connect(signer2).withdrawHsi(x.hsiTargets[0].hsiAddress))
         .to.revertedWithCustomError(x.existingStakeManager, 'StakeNotOwned')
         .withArgs(signer2.address, signer1.address)
-      await expect(x.existingStakeManager.hsiCount(x.existingStakeManager.getAddress()))
+      await expect(x.hsim.hsiCount(x.existingStakeManager.getAddress()))
         .eventually.to.equal(3)
       await expect(x.existingStakeManager.stakeIdInfo(x.hsiTargets[2].hsiAddress))
         .eventually.to.equal((2n << 160n) | BigInt(signer1.address)) // index 0
@@ -96,7 +96,7 @@ describe('HSIStakeManager.sol', () => {
   describe('hsiCount', () => {
     it('returns the count of hsis deposited in the hsi stake manager', async () => {
       const x = await loadFixture(utils.deployAndProcureHSIFixture)
-      await expect(x.existingStakeManager.hsiCount(x.existingStakeManager.getAddress()))
+      await expect(x.hsim.hsiCount(x.existingStakeManager.getAddress()))
         .eventually.to.equal(0)
 
       await expect(x.existingStakeManager.multicall(_.flatMap(x.hsiTargets, (target) => ([
@@ -104,7 +104,7 @@ describe('HSIStakeManager.sol', () => {
       ])), false))
         .to.emit(x.hsim, 'Transfer')
         .to.emit(x.hsim, 'HSIDetokenize')
-      await expect(x.existingStakeManager.hsiCount(x.existingStakeManager.getAddress()))
+      await expect(x.hsim.hsiCount(x.existingStakeManager.getAddress()))
         .eventually.to.equal(x.hsiTargets.length)
     })
   })
@@ -157,14 +157,14 @@ describe('HSIStakeManager.sol', () => {
       const currentSettings = await x.existingStakeManager.stakeIdToSettings(stakeId)
       const decodedSettings = await x.existingStakeManager.decodeSettings(currentSettings)
       // this tells system to send any remaining tokens to staker
-      await Promise.all(x.hsiTargets.map(({ hsiAddress }) => (
-        x.existingStakeManager.updateSettings(hsiAddress, {
+      await Promise.all(x.hsiTargets.map(async ({ hsiAddress }) => (
+        x.existingStakeManager.updateSettingsEncoded(hsiAddress, await x.existingStakeManager.encodeSettings({
           ...fromStruct(decodedSettings),
           consentAbilities: {
             ...fromStruct(decodedSettings.consentAbilities),
             shouldSendTokensToStaker: true,
           },
-        })
+        }))
       )))
       const tx = await x.existingStakeManager.mintHedronRewards(_.map(x.hsiTargets, 'hsiAddress'))
       await expect(x.existingStakeManager.withdrawableBalanceOf(x.hedron.getAddress(), signer1.address))
@@ -314,6 +314,7 @@ describe('HSIStakeManager.sol', () => {
         newStakeDaysMethod: 0,
         newStakeDaysMagnitude: 0,
         copyIterations: 0,
+        hasExternalTips: false,
       }
       const encodedSettings = await x.existingStakeManager.encodeSettings(settings)
       const firstStakeTarget = x.hsiTargets[0]
@@ -342,11 +343,11 @@ describe('HSIStakeManager.sol', () => {
         ...settings,
         targetTip: zeroLinear,
       }
-      await expect(x.existingStakeManager.connect(signer2).updateSettings(firstStakeTarget.hsiAddress, updatedSettings))
+      const encodedUpdatedSettings = await x.existingStakeManager.encodeSettings(updatedSettings)
+      await expect(x.existingStakeManager.connect(signer2).updateSettingsEncoded(firstStakeTarget.hsiAddress, encodedUpdatedSettings))
         .to.revertedWithCustomError(x.existingStakeManager, 'StakeNotOwned')
         .withArgs(signer2.address, signer1.address)
-      const encodedUpdatedSettings = await x.existingStakeManager.encodeSettings(updatedSettings)
-      await expect(x.existingStakeManager.updateSettings(firstStakeTarget.hsiAddress, updatedSettings))
+      await expect(x.existingStakeManager.updateSettingsEncoded(firstStakeTarget.hsiAddress, encodedUpdatedSettings))
         .to.emit(x.existingStakeManager, 'UpdateSettings')
         .withArgs(firstStakeTarget.hsiAddress, encodedUpdatedSettings)
         // this line is required
@@ -383,6 +384,7 @@ describe('HSIStakeManager.sol', () => {
         newStakeDaysMethod: 2,
         newStakeDaysMagnitude: 0,
         copyIterations: 0,
+        hasExternalTips: false,
       }
       const encodedSettings = await x.stakeManager.encodeSettings(settings)
       const deposits = _.flatMap(x.hsiTargets, (target) => ([
@@ -414,6 +416,7 @@ describe('HSIStakeManager.sol', () => {
         newStakeDaysMethod: 2,
         newStakeDaysMagnitude: 0,
         copyIterations: 0,
+        hasExternalTips: false,
       }
       const encodedSettings = await x.stakeManager.encodeSettings(settings)
       const deposits = _.flatMap(x.hsiTargets, (target) => ([
@@ -470,6 +473,20 @@ describe('HSIStakeManager.sol', () => {
         .withArgs(hre.ethers.ZeroAddress, await x.existingStakeManager.getAddress(), anyUint)
         .to.emit(x.hsim, 'Transfer') // transfer to tracked owner
         .withArgs(await x.existingStakeManager.getAddress(), signer1.address, anyUint)
+    })
+  })
+  describe('communis setting', () => {
+    it('can set the communis setting, but will not mint any communis', async () => {
+      const x = await loadFixture(utils.deployAndProcureHSIFixture)
+      await expect(x.existingStakeManager.multicall(_.map(x.hsiTargets, (target) => (
+        x.existingStakeManager.interface.encodeFunctionData('depositHsi', [target.tokenId, parseInt('10000001', 2)])
+      )), false))
+        .to.emit(x.hsim, 'Transfer')
+        .to.emit(x.hsim, 'HSIDetokenize')
+      await utils.moveForwardDays(30n, x)
+      const targetStakeIdAsHsi = x.hsiTargets[0]
+      await expect(x.existingStakeManager.hsiStakeEndMany([targetStakeIdAsHsi.hsiAddress]))
+        .not.to.reverted
     })
   })
 })

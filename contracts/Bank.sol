@@ -61,32 +61,6 @@ contract Bank is Utils {
     });
   }
   /**
-   * given a provided input amount, clamp the input to a maximum, using maximum if 0 provided
-   * @param amount the requested or input amount
-   * @param max the maximum amount that the value can be
-   * @return clamped the clamped value that is set to the limit if
-   * 0 or a number above the limit is passed
-   */
-  function clamp(uint256 amount, uint256 max) external pure returns(uint256 clamped) {
-    return _clamp({
-      amount: amount,
-      max: max
-    });
-  }
-  /**
-   * clamp a given amount to the maximum amount
-   * use the maximum amount if no amount is requested
-   * @param amount the amount requested by another function
-   * @param max the limit that the value can be
-   * @return clamped the clamped value that is set to the limit if
-   * 0 or a number above the limit is passed
-   */
-  function _clamp(uint256 amount, uint256 max) internal pure returns(uint256 clamped) {
-    unchecked {
-      return amount == ZERO || amount > max ? max : amount;
-    }
-  }
-  /**
    * transfer a given number of tokens to the contract to be used by the contract's methods
    * @param amount the number of tokens to transfer to the contract
    * @notice an extra layer of protection is provided by this method
@@ -145,7 +119,9 @@ contract Bank is Utils {
       transferOut: transferOut,
       to: to,
       amount: amount,
-      max: _getUnattributed(token)
+      max: _getUnattributed({
+        token: token
+      })
     });
   }
   function _collectUnattributed(
@@ -190,9 +166,17 @@ contract Bank is Utils {
     address token, bool transferOut, address payable recipient,
     uint256 basisPoints
   ) external payable returns(uint256 amount) {
-    uint256 unattributed = _getUnattributed(token);
+    uint256 unattributed = _getUnattributed({
+      token: token
+    });
     amount = (unattributed * basisPoints) / TEN_K;
-    _collectUnattributed(token, transferOut, recipient, amount, unattributed);
+    _collectUnattributed({
+      token: token,
+      transferOut: transferOut,
+      to: recipient,
+      amount: amount,
+      max: unattributed
+    });
   }
   /**
    * transfer an amount of tokens currently attributed to the withdrawable balance of the sender

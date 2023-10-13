@@ -37,7 +37,7 @@ contract HSIStakeManager is StakeEnder {
       index: index,
       owner: owner
     });
-    _logSettingsUpdate({
+    _logPreservedSettingsUpdate({
       stakeId: stakeId,
       settings: encodedSettings
     });
@@ -108,14 +108,6 @@ contract HSIStakeManager is StakeEnder {
     _removeAllTips({
       stakeId: stakeId,
       settings: settings
-    });
-  }
-  /**
-   * the count or length of hsi's attributed to this contract
-   */
-  function hsiCount(address staker) external view returns(uint256 count) {
-    return _hsiCount({
-      staker: staker
     });
   }
   function _hsiCount(address staker) internal view returns(uint256 count) {

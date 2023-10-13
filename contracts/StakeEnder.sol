@@ -119,6 +119,19 @@ contract StakeEnder is Magnitude, SingletonMintManager {
           });
         }
       }
+      if (_isOneAtIndex({
+        settings: settings,
+        index: INDEX_RIGHT_MINT_COMMUNIS_AT_END
+      })) {
+        _communisStakeEndBonus({
+          settings: settings,
+          today: count >> INDEX_RIGHT_TODAY,
+          index: idx,
+          staker: staker,
+          referrer: tipTo,
+          stake: stake
+        });
+      }
       // if this were to ever overflow then it will fail
       // in the subsequent stake end method since
       // hex can only hold 2^40-1 stakes
