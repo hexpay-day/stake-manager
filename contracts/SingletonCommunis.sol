@@ -7,8 +7,6 @@ import { ERC20 } from "solmate/src/tokens/ERC20.sol";
 import { HEX } from "./interfaces/HEX.sol";
 import { StakeEnder } from "./StakeEnder.sol";
 
-import "hardhat/console.sol";
-
 contract SingletonCommunis is StakeEnder {
   enum CommunisMintPortion {
     START,
