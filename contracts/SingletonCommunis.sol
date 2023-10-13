@@ -112,6 +112,15 @@ contract SingletonCommunis is StakeEnder {
         // stakeAmount must be at least half of stakeIdEndBonusPayout.
         // Luckily stakeIdEndBonusPayout represents pr.maxPayout - stakeIdStartBonusPayout[stakeID] (from com.sol)
         unchecked {
+          // stake has not yet ended, so we can tell whoever ends the stake
+          // to not try to mint communis
+          uint256 updatedSettings = (
+            ((settings >> INDEX_RIGHT_HAS_EXTERNAL_TIPS) << INDEX_RIGHT_HAS_EXTERNAL_TIPS)
+            | (uint8(settings << ONE) >> ONE)
+          );
+          if (updatedSettings != settings) {
+            stakeIdToSettings[stakeId] = updatedSettings;
+          }
           stakeIdCommunisPayoutInfo[stakeId] = _encodePayoutInfo({
             nextPayoutDay: HEX(TARGET).currentDay() + NINETY_ONE,
             endBonusPayoutDebt: payout / TWO,
