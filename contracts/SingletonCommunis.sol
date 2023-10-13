@@ -302,12 +302,13 @@ contract SingletonCommunis is StakeEnder {
       if (withdrawAmount > uint120(payoutInfo)) {
         withdrawAmount = uint120(payoutInfo);
       }
+      // has been ended
+      if (uint16(payoutInfo >> TWO_FOURTY) == ZERO) {
+        return ZERO;
+      }
 
       // debt
       uint256 endBonusPayoutDebt = uint120(payoutInfo >> ONE_TWENTY);
-      if (endBonusPayoutDebt == ZERO) {
-        return ZERO;
-      }
       uint256 amountAfter = uint120(payoutInfo) - withdrawAmount;
       if (amountAfter < endBonusPayoutDebt) {
         withdrawAmount = uint120(payoutInfo) - endBonusPayoutDebt;
