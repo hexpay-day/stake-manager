@@ -164,7 +164,7 @@ describe('SingletonCommunis.sol', () => {
 
       await x.stakeManager.mintCommunis(
         2n, stakeId,
-        hre.ethers.ZeroAddress,
+        x.stakeManager.getAddress(),
         1, // stake minimum
       )
       await x.stakeManager.stakeEndById(stakeId)
