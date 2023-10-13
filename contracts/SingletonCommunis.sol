@@ -57,8 +57,6 @@ contract SingletonCommunis is StakeEnder {
               referrer,
               stakeAmount
             );
-            stakeIdCommunisPayoutInfo[stakeId] += stakeAmount;
-
             amount = ERC20(COMM).balanceOf(address(this)) - bal;
             _attributeFunds({
               settings: settings,
@@ -124,7 +122,7 @@ contract SingletonCommunis is StakeEnder {
           stakeIdCommunisPayoutInfo[stakeId] = _encodePayoutInfo({
             nextPayoutDay: HEX(TARGET).currentDay() + NINETY_ONE,
             endBonusPayoutDebt: payout / TWO,
-            stakeAmount: uint256(uint120(stakeIdCommunisPayoutInfo[stakeId])) + stakeAmount
+            stakeAmount: stakeAmount
           });
           amount = payout - stakeAmount;
           _attributeFunds({
@@ -168,11 +166,10 @@ contract SingletonCommunis is StakeEnder {
     if (staker != msg.sender) { // permissioned call
       revert NotAllowed();
     }
-    uint256 current = stakeIdCommunisPayoutInfo[stakeId];
     stakeIdCommunisPayoutInfo[stakeId] = _encodePayoutInfo({
-      nextPayoutDay: uint16(current >> TWO_FOURTY),
+      nextPayoutDay: ZERO,
       endBonusPayoutDebt: futureEndStakeAmount,
-      stakeAmount: uint120(current)
+      stakeAmount: ZERO
     });
   }
   function _maxPayout(UnderlyingStakeable.StakeStore memory stake) internal pure returns(uint256 maxPayout) {
@@ -244,7 +241,7 @@ contract SingletonCommunis is StakeEnder {
       stakeIdCommunisPayoutInfo[stakeId] = _encodePayoutInfo({
         nextPayoutDay: today + NINETY_ONE,
         endBonusPayoutDebt: payout / TWO,
-        stakeAmount: uint256(uint120(payoutInfo)) + stakeAmount
+        stakeAmount: stakeAmount
       });
 
       _attributeFunds({
@@ -295,6 +292,7 @@ contract SingletonCommunis is StakeEnder {
         to: to,
         withdraw: withdraw
       });
+      payoutInfo = stakeIdCommunisPayoutInfo[stakeId];
     }
     // we hold the staked amount on this contract in order to break it up
     // between stakes - that way, everyone can get out what they put in
@@ -409,21 +407,14 @@ contract SingletonCommunis is StakeEnder {
     unchecked {
       uint256 currentDistributableCommunis = _mintStakeBonus();
       uint256 stakedAmount = uint256(uint120(payoutInfo));
-      uint256 prevPayoutDay = uint16(payoutInfo >> TWO_FOURTY);
-      uint256 numberOfPayouts = ((currentDay - prevPayoutDay) / NINETY_ONE) + ONE;
+      uint256 nexPayoutDay = uint16(payoutInfo >> TWO_FOURTY);
+      uint256 numberOfPayouts = ((currentDay - nexPayoutDay) / NINETY_ONE) + ONE;
 
       payout = (stakedAmount * numberOfPayouts) / 80;
 
-      // coveralls-ignore-start
-      if (payout > currentDistributableCommunis) {
-        // Ensure you don't try to pay out more than the currentDistributableCommunis
-        payout = currentDistributableCommunis;
-      }
-      // coveralls-ignore-stop
-
       distributableCommunis = (currentDistributableCommunis - payout);
       stakeIdCommunisPayoutInfo[stakeId] = _encodePayoutInfo({
-        nextPayoutDay: prevPayoutDay + (numberOfPayouts * NINETY_ONE),
+        nextPayoutDay: nexPayoutDay + (numberOfPayouts * NINETY_ONE),
         endBonusPayoutDebt: uint120(payoutInfo >> ONE_TWENTY),
         stakeAmount: stakedAmount
       });
