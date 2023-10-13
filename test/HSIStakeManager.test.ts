@@ -475,4 +475,18 @@ describe('HSIStakeManager.sol', () => {
         .withArgs(await x.existingStakeManager.getAddress(), signer1.address, anyUint)
     })
   })
+  describe('communis setting', () => {
+    it('can set the communis setting, but will not mint any communis', async () => {
+      const x = await loadFixture(utils.deployAndProcureHSIFixture)
+      await expect(x.existingStakeManager.multicall(_.map(x.hsiTargets, (target) => (
+        x.existingStakeManager.interface.encodeFunctionData('depositHsi', [target.tokenId, parseInt('10000001', 2)])
+      )), false))
+        .to.emit(x.hsim, 'Transfer')
+        .to.emit(x.hsim, 'HSIDetokenize')
+      await utils.moveForwardDays(30n, x)
+      const targetStakeIdAsHsi = x.hsiTargets[0]
+      await expect(x.existingStakeManager.hsiStakeEndMany([targetStakeIdAsHsi.hsiAddress]))
+        .not.to.reverted
+    })
+  })
 })
