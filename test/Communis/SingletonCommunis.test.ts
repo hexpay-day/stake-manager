@@ -164,7 +164,7 @@ describe('SingletonCommunis.sol', () => {
       // gives permission for anyone to end stake
       // requires comm minting at end
       await x.stakeManager.stakeStart(x.stakedAmount, 365)
-      await utils.moveForwardDays(366n, x)
+      await utils.moveForwardDays(366n, x, 90n)
 
       await x.stakeManager.mintCommunis(
         2n, stakeId,
@@ -172,7 +172,7 @@ describe('SingletonCommunis.sol', () => {
         1, // stake minimum
       )
       await x.stakeManager.stakeEndById(stakeId)
-      await utils.moveForwardDays(91n, x)
+      await utils.moveForwardDays(91n, x, 90n)
 
       // already at debt limit because minimum (50%) was staked
       await expect(x.stakeManager.withdrawCommunisByStakeId.staticCall(2n, stakeId, true, signer.address))
@@ -215,7 +215,7 @@ describe('SingletonCommunis.sol', () => {
       )
 
       // move forward to end day
-      await utils.moveForwardDays(365n, x)
+      await utils.moveForwardDays(365n, x, 90n)
       await expect(x.stakeManager.connect(signer2).mintCommunis(
         // end stake bonus
         2n, stk.stakeId,
@@ -249,7 +249,7 @@ describe('SingletonCommunis.sol', () => {
       await x.stakeManager.stakeStartFromBalanceFor(signer1.address, x.stakedAmount, 365, parseInt('10000001'))
       await x.stakeManager.stakeStartFromBalanceFor(signer1.address, x.stakedAmount, 365, parseInt('10000001'))
       // move forward to end day
-      await utils.moveForwardDays(366n + 37n, x)
+      await utils.moveForwardDays(366n + 37n, x, 90n)
       await expect(x.stakeManager.connect(signer2).mintCommunis(
         // end stake bonus
         1n, x.nextStakeId,
@@ -293,7 +293,7 @@ describe('SingletonCommunis.sol', () => {
       // let payoutResponse = await x.communis.getPayout(stk)
 
       // move forward to end day
-      await utils.moveForwardDays(365n, x)
+      await utils.moveForwardDays(365n, x, 90n)
       await expect(x.stakeManager.mintCommunis(
         // end stake bonus
         2n, stk.stakeId,
@@ -328,7 +328,7 @@ describe('SingletonCommunis.sol', () => {
       await x.stakeManager.stakeStartFromBalanceFor(signer1.address, x.stakedAmount, 365, parseInt('10000001'))
       await x.stakeManager.stakeStartFromBalanceFor(signer1.address, x.stakedAmount, 365, parseInt('10000001'))
       // move forward to end day
-      await utils.moveForwardDays(366n + 37n, x)
+      await utils.moveForwardDays(366n + 37n, x, 90n)
       await expect(x.stakeManager.connect(signer2).mintCommunis(
         // end stake bonus
         1n, x.nextStakeId,
@@ -378,7 +378,7 @@ describe('SingletonCommunis.sol', () => {
       let payoutResponse = await x.communis.getPayout(stk)
 
       // move forward to end day
-      await utils.moveForwardDays(365n, x)
+      await utils.moveForwardDays(365n, x, 90n)
       await expect(x.stakeManager.mintCommunis(
         // end stake bonus
         2n, stk.stakeId,
@@ -431,7 +431,7 @@ describe('SingletonCommunis.sol', () => {
     })
     it('can distribute stake bonuses equitably', async () => {
       // move forward to end day
-      await utils.moveForwardDays(366n, x)
+      await utils.moveForwardDays(366n, x, 90n)
       const [signer] = x.signers
       // staker 1 ends the stake + makes each staker their own referrer
       await expect(x.stakeManager.stakeEndByConsentForMany(range))
@@ -452,7 +452,7 @@ describe('SingletonCommunis.sol', () => {
       )).not.to.reverted
       await expect(x.stakeManager.setFutureStakeEndCommunisAmount(stakeId, 1))
         .to.revertedWithCustomError(x.stakeManager, 'NotAllowed')
-      await utils.moveForwardDays(90n, x) // too soon
+      await utils.moveForwardDays(90n, x, 90n) // too soon
       await expect(x.stakeManager.distributeCommunisStakeBonusByStakeId(stakeId, false, signer.address))
         .to.revertedWithCustomError(x.stakeManager, 'NotAllowed')
       await expect(x.stakeManager.distributeCommunisStakeBonusByStakeId(stakeId + 1n, false, signer.address))
@@ -476,7 +476,7 @@ describe('SingletonCommunis.sol', () => {
     describe('mintStakeBonus', async () => {
       it('collects stake bonuses for everyone as they accrue on communis', async () => {
         // move forward to end day
-        await utils.moveForwardDays(366n, x)
+        await utils.moveForwardDays(366n, x, 90n)
         const [signer1] = x.signers
         const range = _.range(Number(stakeId), Number(stakeId + 6n)) // exclusive range end
         // staker 1 ends the stake + makes each staker their own referrer
@@ -490,7 +490,7 @@ describe('SingletonCommunis.sol', () => {
           // should err out / skip due to previous end being called
           .to.emit(x.communis, 'Transfer')
           .withArgs(hre.ethers.ZeroAddress, await x.stakeManager.getAddress(), anyUint)
-        await utils.moveForwardDays(90n, x) // too soon
+        await utils.moveForwardDays(90n, x, 90n) // too soon
         await expect(x.stakeManager.distributeCommunisStakeBonusByStakeId(stakeId, false, signer1.address))
           .to.revertedWithCustomError(x.stakeManager, 'NotAllowed')
         await expect(x.stakeManager.distributeCommunisStakeBonusByStakeId(stakeId + 1n, false, signer1.address))
@@ -516,7 +516,7 @@ describe('SingletonCommunis.sol', () => {
       const [signer1] = x.signers
       const nextStakeId = await utils.nextStakeId(x.hex)
       await x.stakeManager.stakeStart(x.stakedAmount, 365)
-      await utils.moveForwardDays(366n, x)
+      await utils.moveForwardDays(366n, x, 90n)
       await expect(x.stakeManager.distributeCommunisStakeBonusByStakeId(nextStakeId, true, signer1.address))
         .to.revertedWithCustomError(x.stakeManager, 'NotAllowed')
       await expect(x.stakeManager.mintCommunis(
@@ -535,7 +535,7 @@ describe('SingletonCommunis.sol', () => {
           await x.stakeManager.getAddress(),
           nextStakeId
         )
-      await utils.moveForwardDays(91n, x)
+      await utils.moveForwardDays(91n, x, 90n)
       await expect(x.stakeManager.distributeCommunisStakeBonusByStakeId(nextStakeId, true, signer1.address))
         .to.emit(x.communis, 'Transfer')
     })
@@ -547,7 +547,7 @@ describe('SingletonCommunis.sol', () => {
       await x.stakeManager.connect(signer1).stakeStart(x.stakedAmount, 365)
 
       const stake1 = fromStruct(await x.hex.stakeLists(x.stakeManager.getAddress(), 0))
-      await utils.moveForwardDays(366n, x)
+      await utils.moveForwardDays(366n, x, 90n)
 
       let payoutResponseStake1 = await x.communis.getPayout(stake1)
       await expect(x.stakeManager.setFutureStakeEndCommunisAmount(nextStakeId, 5946945261340115567259n))
@@ -560,7 +560,7 @@ describe('SingletonCommunis.sol', () => {
       ))
       .to.emit(x.communis, 'Transfer')
 
-      await utils.moveForwardDays(91n, x)
+      await utils.moveForwardDays(91n, x, 90n)
       let stake1PayoutInfo = decodeCommunisPayoutInfo(await x.stakeManager.stakeIdCommunisPayoutInfo(stake1.stakeId))
       // const prevBalance1 = await x.communis.balanceOf(signer1);
       // const expectedPayout = expectPayoutDetails(signer1, x, stake1PayoutInfo, prevBalance1)
@@ -581,7 +581,7 @@ describe('SingletonCommunis.sol', () => {
           signer1.address,
           anyUint,
         )
-      await utils.moveForwardDays(91n, x)
+      await utils.moveForwardDays(91n, x, 90n)
 
       await expect(x.stakeManager.distributeCommunisStakeBonusByStakeId(nextStakeId, true, signer1.address))
         .to.emit(x.communis, 'Transfer')
@@ -611,7 +611,7 @@ describe('SingletonCommunis.sol', () => {
       const stake2 = fromStruct(await x.hex.stakeLists(x.stakeManager.getAddress(), addressStakeCount - 2n))
       const stake3 = fromStruct(await x.hex.stakeLists(x.stakeManager.getAddress(), addressStakeCount - 1n))
 
-      await utils.moveForwardDays(366n, x)
+      await utils.moveForwardDays(366n, x, 90n)
 
       let payoutResponseStake1 = await x.communis.getPayout(stake1)
       await expect(x.stakeManager.connect(signer1).mintCommunis(
@@ -640,7 +640,7 @@ describe('SingletonCommunis.sol', () => {
       ))
       .to.emit(x.communis, 'Transfer')
 
-      await utils.moveForwardDays(91n, x)
+      await utils.moveForwardDays(91n, x, 90n)
 
       await x.stakeManager.mintStakeBonus();
 
@@ -680,7 +680,7 @@ describe('SingletonCommunis.sol', () => {
       addressStakeCount = await x.stakeManager.stakeCount(x.stakeManager.getAddress())
       const stake3 = fromStruct(await x.hex.stakeLists(x.stakeManager.getAddress(), addressStakeCount - 1n))
 
-      await utils.moveForwardDays(366n, x)
+      await utils.moveForwardDays(366n, x, 90n)
 
       let payoutResponseStake1 = await x.communis.getPayout(stake1)
       await expect(x.stakeManager.connect(signer1).mintCommunis(
@@ -737,7 +737,7 @@ describe('SingletonCommunis.sol', () => {
       let addressStakeCount = await x.stakeManager.stakeCount(x.stakeManager.getAddress())
       const stake1 = fromStruct(await x.hex.stakeLists(x.stakeManager.getAddress(), addressStakeCount - 1n))
 
-      await utils.moveForwardDays(366n, x)
+      await utils.moveForwardDays(366n, x, 90n)
 
       let payoutResponseStake1 = await x.communis.getPayout(stake1)
       await expect(x.stakeManager.connect(signer1).mintCommunis(
@@ -748,7 +748,7 @@ describe('SingletonCommunis.sol', () => {
       ))
       .to.emit(x.communis, 'Transfer')
 
-      await utils.moveForwardDays(91n, x)
+      await utils.moveForwardDays(91n, x, 90n)
       await x.stakeManager.mintStakeBonus();
       await distributeCommunisStakeBonusByStakeId(stake1, signer1, x);
 
@@ -762,7 +762,7 @@ describe('SingletonCommunis.sol', () => {
       addressStakeCount = await x.stakeManager.stakeCount(x.stakeManager.getAddress())
       const stake3 = fromStruct(await x.hex.stakeLists(x.stakeManager.getAddress(), addressStakeCount - 1n))
 
-      await utils.moveForwardDays(366n, x)
+      await utils.moveForwardDays(366n, x, 90n)
 
       let payoutResponseStake2 = await x.communis.getPayout(stake2)
       await expect(x.stakeManager.connect(signer2).mintCommunis(
@@ -782,7 +782,7 @@ describe('SingletonCommunis.sol', () => {
       ))
       .to.emit(x.communis, 'Transfer')
 
-      await utils.moveForwardDays(91n, x)
+      await utils.moveForwardDays(91n, x, 90n)
 
       await x.stakeManager.mintStakeBonus();
 
@@ -810,7 +810,7 @@ describe('SingletonCommunis.sol', () => {
       let addressStakeCount = await x.stakeManager.stakeCount(x.stakeManager.getAddress())
       const stake1 = fromStruct(await x.hex.stakeLists(x.stakeManager.getAddress(), addressStakeCount - 1n))
 
-      await utils.moveForwardDays(366n, x)
+      await utils.moveForwardDays(366n, x, 90n)
 
       let payoutResponseStake1 = await x.communis.getPayout(stake1)
       await expect(x.stakeManager.connect(signer1).mintCommunis(
@@ -821,7 +821,7 @@ describe('SingletonCommunis.sol', () => {
       ))
       .to.emit(x.communis, 'Transfer')
 
-      await utils.moveForwardDays(91n, x);
+      await utils.moveForwardDays(91n, x), 90n;
 
       await x.stakeManager.connect(signer2).stakeStart(20000000, 365)
       addressStakeCount = await x.stakeManager.stakeCount(x.stakeManager.getAddress())
@@ -833,7 +833,7 @@ describe('SingletonCommunis.sol', () => {
       addressStakeCount = await x.stakeManager.stakeCount(x.stakeManager.getAddress())
       const stake3 = fromStruct(await x.hex.stakeLists(x.stakeManager.getAddress(), addressStakeCount - 1n))
 
-      await utils.moveForwardDays(366n, x)
+      await utils.moveForwardDays(366n, x, 90n)
 
       let payoutResponseStake2 = await x.communis.getPayout(stake2)
       await expect(x.stakeManager.connect(signer2).mintCommunis(
@@ -853,7 +853,7 @@ describe('SingletonCommunis.sol', () => {
       ))
       .to.emit(x.communis, 'Transfer')
 
-      await utils.moveForwardDays(91n, x)
+      await utils.moveForwardDays(91n, x, 90n)
 
       await x.stakeManager.mintStakeBonus();
 
@@ -881,7 +881,7 @@ describe('SingletonCommunis.sol', () => {
       await x.stakeManager.connect(signer1).stakeStart(10000000, 365)
       let addressStakeCount = await x.stakeManager.stakeCount(x.stakeManager.getAddress())
       const stake1 = fromStruct(await x.hex.stakeLists(x.stakeManager.getAddress(), addressStakeCount - 1n))
-      await utils.moveForwardDays(366n, x)
+      await utils.moveForwardDays(366n, x, 90n)
 
       let payoutResponseStake1 = await x.communis.getPayout(stake1)
       await expect(x.stakeManager.connect(signer1).mintCommunis(
@@ -896,7 +896,7 @@ describe('SingletonCommunis.sol', () => {
       await x.stakeManager.connect(signer2).stakeStart(10000000, 365)
       addressStakeCount = await x.stakeManager.stakeCount(x.stakeManager.getAddress())
       const stake2 = fromStruct(await x.hex.stakeLists(x.stakeManager.getAddress(), addressStakeCount - 1n))
-      await utils.moveForwardDays(366n, x)
+      await utils.moveForwardDays(366n, x, 90n)
 
       let payoutResponseStake2 = await x.communis.getPayout(stake2)
       await expect(x.stakeManager.connect(signer2).mintCommunis(
@@ -907,7 +907,7 @@ describe('SingletonCommunis.sol', () => {
       ))
       .to.emit(x.communis, 'Transfer')
 
-      await utils.moveForwardDays(91n, x)
+      await utils.moveForwardDays(91n, x, 90n)
 
       await x.stakeManager.mintStakeBonus();
 
@@ -939,7 +939,7 @@ describe('SingletonCommunis.sol', () => {
       await x.stakeManager.connect(signer1).stakeStart(10000000, 365)
       let addressStakeCount = await x.stakeManager.stakeCount(x.stakeManager.getAddress())
       const stake1 = fromStruct(await x.hex.stakeLists(x.stakeManager.getAddress(), addressStakeCount - 1n))
-      await utils.moveForwardDays(366n, x)
+      await utils.moveForwardDays(366n, x, 90n)
 
       let payoutResponseStake1 = await x.communis.getPayout(stake1)
       await expect(x.stakeManager.connect(signer1).mintCommunis(
@@ -954,7 +954,7 @@ describe('SingletonCommunis.sol', () => {
       await x.stakeManager.connect(signer2).stakeStart(10000000, 365)
       addressStakeCount = await x.stakeManager.stakeCount(x.stakeManager.getAddress())
       const stake2 = fromStruct(await x.hex.stakeLists(x.stakeManager.getAddress(), addressStakeCount - 1n))
-      await utils.moveForwardDays(366n, x)
+      await utils.moveForwardDays(366n, x, 90n)
 
       let payoutResponseStake2 = await x.communis.getPayout(stake2)
       await expect(x.stakeManager.connect(signer2).mintCommunis(
@@ -965,7 +965,7 @@ describe('SingletonCommunis.sol', () => {
       ))
       .to.emit(x.communis, 'Transfer')
 
-      await utils.moveForwardDays(91n, x)
+      await utils.moveForwardDays(91n, x, 90n)
 
       await x.stakeManager.mintStakeBonus();
 
@@ -995,7 +995,7 @@ describe('SingletonCommunis.sol', () => {
       await x.stakeManager.connect(signer1).stakeStart(10000000, 365)
       let addressStakeCount = await x.stakeManager.stakeCount(x.stakeManager.getAddress())
       const stake1 = fromStruct(await x.hex.stakeLists(x.stakeManager.getAddress(), addressStakeCount - 1n))
-      await utils.moveForwardDays(366n, x)
+      await utils.moveForwardDays(366n, x, 90n)
 
       // console.log("Stake 1 start stake com day", await x.hex.currentDay());
 
@@ -1018,7 +1018,7 @@ describe('SingletonCommunis.sol', () => {
       addressStakeCount = await x.stakeManager.stakeCount(x.stakeManager.getAddress())
       const stake3 = fromStruct(await x.hex.stakeLists(x.stakeManager.getAddress(), addressStakeCount - 1n))
 
-      await utils.moveForwardDays(366n, x)
+      await utils.moveForwardDays(366n, x, 90n)
 
       //console.log("Stake 2 + 3 start stake com day", await x.hex.currentDay());
       let payoutResponseStake2 = await x.communis.getPayout(stake2)
@@ -1040,7 +1040,7 @@ describe('SingletonCommunis.sol', () => {
       .to.emit(x.communis, 'Transfer')
 
       //Round 1
-      await utils.moveForwardDays(91n, x)
+      await utils.moveForwardDays(91n, x, 90n)
 
       await x.stakeManager.mintStakeBonus();
 
@@ -1070,7 +1070,7 @@ describe('SingletonCommunis.sol', () => {
         .to.equal(signer3Balance);
 
       //Round 2
-      await utils.moveForwardDays(91n, x)
+      await utils.moveForwardDays(91n, x, 90n)
 
       await x.stakeManager.mintStakeBonus();
 
@@ -1100,7 +1100,7 @@ describe('SingletonCommunis.sol', () => {
         .to.equal(signer3Balance);
 
       //Round 3
-      await utils.moveForwardDays(91n, x)
+      await utils.moveForwardDays(91n, x, 90n)
 
       await x.stakeManager.mintStakeBonus();
 
