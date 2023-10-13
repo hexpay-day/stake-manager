@@ -497,7 +497,7 @@ describe('SingletonCommunis.sol', () => {
         await expect(x.stakeManager.distributeCommunisStakeBonusByStakeId(stakeId + 1n, false, signer1.address))
           .to.revertedWithCustomError(x.stakeManager, 'NotAllowed')
         await utils.moveForwardDays(1n, x) // first end stakeable day
-        await expect(x.stakeManager.distributeCommunisStakeBonusByStakeId(stakeId, false, signer1.address))
+        await expect(x.stakeManager.distributeCommunisStakeBonusByStakeId(stakeId, false, x.stakeManager.getAddress()))
           .to.emit(x.communis, 'Transfer')
           .withArgs(
             hre.ethers.ZeroAddress,
