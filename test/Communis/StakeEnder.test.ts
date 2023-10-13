@@ -46,7 +46,7 @@ describe("StakeManager", function () {
       // mint what you can to the stake manager
       await x.stakeManager.setFutureStakeEndCommunisAmount(nextStakeId, 1)
       await x.stakeManager.setFutureStakeEndCommunisAmount(nextStakeId + 1n, 1)
-      await utils.moveForwardDays(tooFewDays + 1n, x)
+      await utils.moveForwardDays(tooFewDays + 1n, x, 90n)
       await checkStakeEnd(x, nextStakeId, false, x.stakeManager.connect(signer2).stakeEndByConsent(nextStakeId))
       await utils.moveForwardDays(1n, x)
       await checkStakeEnd(x, nextStakeId + 1n, true, x.stakeManager.connect(signer2).stakeEndByConsent(nextStakeId + 1n))
@@ -75,7 +75,7 @@ describe("StakeManager", function () {
       expect(stk1.stakeShares).to.be.lessThan(10_000, 'stake shares not low enough')
       const stk2 = await x.hex.stakeLists(x.stakeManager.getAddress(), 2)
       expect(stk2.stakeShares).to.be.greaterThanOrEqual(10_000, 'stake shares not high enough')
-      await utils.moveForwardDays(days + 1n, x)
+      await utils.moveForwardDays(days + 1n, x, 90n)
       await checkStakeEnd(x, nextStakeId, false, x.stakeManager.connect(signer2).stakeEndByConsent(nextStakeId))
       await checkStakeEnd(x, nextStakeId + 1n, true, x.stakeManager.connect(signer2).stakeEndByConsent(nextStakeId + 1n))
     })
@@ -90,7 +90,7 @@ describe("StakeManager", function () {
       const commEnabledSettingsEarlyEndable = commEnabledSettings | (1n << 1n)
       // console.log(BigInt.asUintN(8, commEnabledSettingsEarlyEndable).toString(2))
       await x.stakeManager.stakeStartFromBalanceFor(signer1.address, x.stakedAmount, days, commEnabledSettings)
-      await utils.moveForwardDays(days, x) // 1 too few
+      await utils.moveForwardDays(days, x, 90n) // 1 too few
       let doEnd = x.stakeManager.connect(signer2).stakeEndByConsent(nextStakeId)
       await expect(doEnd)
         .not.to.emit(x.hex, 'StakeEnd')
