@@ -231,7 +231,7 @@ describe('SingletonCommunis.sol', () => {
       ))
         .to.emit(x.communis, 'Transfer')
         .withArgs(hre.ethers.ZeroAddress, await x.stakeManager.getAddress(), anyUint)
-      await expect(x.stakeManager.stakeEndByConsent(stk.stakeId))
+      await expect(x.stakeManager.stakeEndByConsentWithTipTo(stk.stakeId, x.stakeManager.getAddress()))
         .to.emit(x.hex, 'StakeEnd')
         .withArgs(
           anyUint, utils.anyUintNoPenalty,
