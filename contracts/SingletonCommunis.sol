@@ -392,7 +392,8 @@ contract SingletonCommunis is StakeEnder {
     uint256 payoutInfo, uint256 currentDay
   ) internal pure returns(bool canDistribute) {
     unchecked {
-      return (uint120(payoutInfo) > ZERO) && (uint16(payoutInfo >> TWO_FOURTY) <= currentDay);
+      uint256 nexPayoutDay = uint16(payoutInfo >> TWO_FOURTY);
+      return (uint120(payoutInfo) > ZERO) && (nexPayoutDay <= currentDay) && (nexPayoutDay != ZERO);
     }
   }
   /**
