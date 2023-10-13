@@ -4,7 +4,7 @@ import { expect } from "chai"
 import * as hre from 'hardhat'
 import { anyUint } from "@nomicfoundation/hardhat-chai-matchers/withArgs"
 import { EncodableSettings } from "../artifacts/types"
-import { fromStruct } from '../src/utils'
+import { fromStruct, isOneAtIndex } from '../src/utils'
 
 describe('TransferableStakeManager.sol', () => {
   let x!: Awaited<ReturnType<typeof utils.deployFixture>>
@@ -36,12 +36,9 @@ describe('TransferableStakeManager.sol', () => {
       await expect(x.stakeManager.removeTransferrability(x.nextStakeId))
         .to.emit(x.stakeManager, 'UpdateSettings')
         .withArgs(x.nextStakeId, removedEncoded)
-      await expect(x.stakeManager.isOneAtIndex(removedEncoded, 5))
-        .eventually.to.be.false
-      await expect(x.stakeManager.isOneAtIndex(removedEncoded, 6))
-        .eventually.to.be.true
-      await expect(x.stakeManager.isOneAtIndex(removedEncoded, 4))
-        .eventually.to.be.true
+      expect(isOneAtIndex(removedEncoded, 5)).to.be.false
+      expect(isOneAtIndex(removedEncoded, 6)).to.be.true
+      expect(isOneAtIndex(removedEncoded, 4)).to.be.true
     })
   })
   describe('stakeTransfer', () => {

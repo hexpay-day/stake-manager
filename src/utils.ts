@@ -160,3 +160,7 @@ export const decodeCommunisPayoutInfo = (encodedValue: bigint) => {
 
   return { nextPayoutDay, endBonusDebt, stakedAmount };
 }
+
+export const isOneAtIndex = (setting: bigint | number, index: bigint | number) => {
+  return BigInt.asUintN(1, BigInt(setting) >> BigInt(index)) === 1n
+}

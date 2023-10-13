@@ -4,7 +4,6 @@ import * as hre from "hardhat"
 import { deployFixture } from './utils'
 import * as utils from '../src/utils'
 import _ from 'lodash'
-import { EncodableSettings } from "../artifacts/types"
 
 describe('EncodableSettings.sol', () => {
   let x!: Awaited<ReturnType<typeof deployFixture>>
@@ -52,14 +51,14 @@ describe('EncodableSettings.sol', () => {
         canStakeEnd: true,
       }
       const encoded = await x.stakeManager.encodeConsentAbilities(abilities)
-      await expect(x.stakeManager.isOneAtIndex(encoded, 7)).eventually.to.equal(false)
-      await expect(x.stakeManager.isOneAtIndex(encoded, 6)).eventually.to.equal(true)
-      await expect(x.stakeManager.isOneAtIndex(encoded, 5)).eventually.to.equal(false)
-      await expect(x.stakeManager.isOneAtIndex(encoded, 4)).eventually.to.equal(true)
-      await expect(x.stakeManager.isOneAtIndex(encoded, 3)).eventually.to.equal(false)
-      await expect(x.stakeManager.isOneAtIndex(encoded, 2)).eventually.to.equal(true)
-      await expect(x.stakeManager.isOneAtIndex(encoded, 1)).eventually.to.equal(false)
-      await expect(x.stakeManager.isOneAtIndex(encoded, 0)).eventually.to.equal(true)
+      expect(utils.isOneAtIndex(encoded, 7)).to.equal(false)
+      expect(utils.isOneAtIndex(encoded, 6)).to.equal(true)
+      expect(utils.isOneAtIndex(encoded, 5)).to.equal(false)
+      expect(utils.isOneAtIndex(encoded, 4)).to.equal(true)
+      expect(utils.isOneAtIndex(encoded, 3)).to.equal(false)
+      expect(utils.isOneAtIndex(encoded, 2)).to.equal(true)
+      expect(utils.isOneAtIndex(encoded, 1)).to.equal(false)
+      expect(utils.isOneAtIndex(encoded, 0)).to.equal(true)
       await expect(x.stakeManager.decodeConsentAbilities(encoded).then(utils.fromStruct))
         .eventually.to.deep.equal(abilities)
     })
