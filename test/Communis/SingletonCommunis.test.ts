@@ -175,9 +175,9 @@ describe('SingletonCommunis.sol', () => {
       await utils.moveForwardDays(91n, x, 90n)
 
       // already at debt limit because minimum (50%) was staked
-      await expect(x.stakeManager.withdrawCommunisByStakeId.staticCall(2n, stakeId, true, signer.address))
+      await expect(x.stakeManager.withdrawCommunisByStakeId.staticCall(2n, stakeId, true, x.stakeManager.getAddress()))
         .eventually.to.equal(0n)
-      await expect(x.stakeManager.withdrawCommunisByStakeId(2n, stakeId, true, signer.address))
+      await expect(x.stakeManager.withdrawCommunisByStakeId(2n, stakeId, true, x.stakeManager.getAddress()))
         .not.to.reverted
     })
   })

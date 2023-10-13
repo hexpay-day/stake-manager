@@ -282,12 +282,10 @@ contract SingletonCommunis is StakeEnder {
     address staker = _verifyOnlyStaker(stakeId);
     to = to == address(0) ? staker : to;
     uint256 payoutInfo = stakeIdCommunisPayoutInfo[stakeId];
-    uint256 stakeManagerStakedAmount = Communis(COMM).addressStakedCodeak(address(this));
     uint256 currentDay = HEX(TARGET).currentDay();
     if (_checkDistribute({
       payoutInfo: payoutInfo,
-      currentDay: currentDay,
-      stakeManagerStakedAmount: stakeManagerStakedAmount
+      currentDay: currentDay
     })) {
       // assure anything claimable for the stake manager is claimed (for everone)
       _doDistribute({
@@ -343,21 +341,17 @@ contract SingletonCommunis is StakeEnder {
    */
   function _mintStakeBonus() internal returns(uint256 currentDistributableCommunis) {
     uint256 bal = ERC20(COMM).balanceOf(address(this));
-
-    try Communis(COMM).mintStakeBonus() {
-      unchecked {
-        uint256 delta = ERC20(COMM).balanceOf(address(this)) - bal;
-        if (delta > ZERO) {
-          attributed[COMM] += delta;
-        }
+    Communis(COMM).mintStakeBonus();
+    unchecked {
+      uint256 delta = ERC20(COMM).balanceOf(address(this)) - bal;
+      if (delta > ZERO) {
+        attributed[COMM] += delta;
         // need this to be outside of if statement so that it can be used downstream
         currentDistributableCommunis = distributableCommunis + delta;
         distributableCommunis = currentDistributableCommunis;
+      } else {
+        currentDistributableCommunis = distributableCommunis;
       }
-    } catch {
-      // coveralls-ignore-start
-      currentDistributableCommunis = distributableCommunis;
-      // coveralls-ignore-stop
     }
   }
 
@@ -374,13 +368,10 @@ contract SingletonCommunis is StakeEnder {
     to = to == address(0) ? staker : to;
     uint256 payoutInfo = stakeIdCommunisPayoutInfo[stakeId];
 
-    uint256 stakeManagerStakedAmount = Communis(COMM).addressStakedCodeak(address(this));
-
     // call external because we need this method for other checks
     uint256 currentDay = HEX(TARGET).currentDay();
     if (_checkDistribute({
       payoutInfo: payoutInfo,
-      stakeManagerStakedAmount: stakeManagerStakedAmount,
       currentDay: currentDay
     })) {
       return _doDistribute({
@@ -398,25 +389,13 @@ contract SingletonCommunis is StakeEnder {
    * check if a given set of payout info is available to be distributed to from stake
    * @param payoutInfo the payout info being checked for ability to distribute
    * @param currentDay the current hex day
-   * @param stakeManagerStakedAmount the amount staked from this address - held on communis contract
    */
   function _checkDistribute(
-    uint256 payoutInfo, uint256 currentDay,
-    uint256 stakeManagerStakedAmount
+    uint256 payoutInfo, uint256 currentDay
   ) internal pure returns(bool canDistribute) {
     unchecked {
-      uint256 stakedAmount = uint120(payoutInfo);
-      if (stakedAmount == ZERO || stakeManagerStakedAmount == ZERO) {
-        // reverts mint from communis
-        return false;
-      }
-      uint256 nextPayoutDay = uint16(payoutInfo >> TWO_FOURTY);
-      if (nextPayoutDay > currentDay) {
-        // reverts mint from communis
-        return false;
-      }
+      return (uint120(payoutInfo) > ZERO) && (uint16(payoutInfo >> TWO_FOURTY) <= currentDay);
     }
-    return true;
   }
   /**
    * does the distribution for a given stake given their payout info
