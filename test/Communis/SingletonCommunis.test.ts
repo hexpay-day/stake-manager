@@ -756,7 +756,7 @@ describe('SingletonCommunis.sol', () => {
       addressStakeCount = await x.stakeManager.stakeCount(x.stakeManager.getAddress())
       const stake2 = fromStruct(await x.hex.stakeLists(x.stakeManager.getAddress(), addressStakeCount - 1n))
 
-      await utils.moveForwardDays(20n, x)
+      await utils.moveForwardDays(20n, x, 20n)
 
       await x.stakeManager.connect(signer3).stakeStart(30000000, 365)
       addressStakeCount = await x.stakeManager.stakeCount(x.stakeManager.getAddress())
