@@ -314,7 +314,7 @@ contract SingletonCommunis is StakeEnder {
         revert NotAllowed();
       }
       uint256 nextPayoutDay = uint16(payoutInfo >> 240);
-      if (nextPayoutDay > currentDay) {
+      if (nextPayoutDay == ZERO || nextPayoutDay > currentDay) {
         revert NotAllowed();
       }
 

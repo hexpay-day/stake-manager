@@ -37,12 +37,15 @@ async function getExpectedPayout(stake: IUnderlyingStakeable.StakeStoreStructOut
   const distributableCommunisStakeBonusBefore = await x.stakeManager.distributableCommunisStakeBonus();
 
   const currentDay = await x.hex.currentDay()
-  const numberOfPayouts = ((currentDay - decodedPayoutInfo.nextPayoutDay) / 91n) + 1n;
+  let numberOfPayouts = ((currentDay - decodedPayoutInfo.nextPayoutDay) / 91n) + 1n;
+
+  if(decodedPayoutInfo.nextPayoutDay === 0n) numberOfPayouts = 0n;
 
   let expectedPayout = calculateExpectedPayout(
     decodedPayoutInfo,
     numberOfPayouts
   );
+
   if (expectedPayout > distributableCommunisStakeBonusBefore) {
     expectedPayout = distributableCommunisStakeBonusBefore
   }
@@ -77,7 +80,9 @@ async function distributeStakeBonusByStakeId(stake: IUnderlyingStakeable.StakeSt
 async function expectPayoutDetails(signer: SignerWithAddress, x : utils.X, stakePayoutInfo: ReturnType<typeof decodePayoutInfo>, prevBalance : bigint) {
 
   const currentDay = await x.hex.currentDay()
-  const numberOfPayouts = ((currentDay - BigInt(stakePayoutInfo.nextPayoutDay)) / 91n) + 1n;
+  let numberOfPayouts = ((currentDay - BigInt(stakePayoutInfo.nextPayoutDay)) / 91n) + 1n;
+
+  if(stakePayoutInfo.nextPayoutDay === 0n) numberOfPayouts = 0n;
 
   const expectedPayout = calculateExpectedPayout(
     stakePayoutInfo,
@@ -904,6 +909,70 @@ describe('SingletonCommunis.sol', () => {
       expect(balanceLeft)
         .to.lessThan(10); // solidity rounding down (truncating) from distributeStakeBonusByStakeId payout division
 
+    })
+    it('cant mint com distribution from only start bonus', async () => {
+      const x = await loadFixture(utils.deployFixture)
+          const [signer1, signer2] = x.signers
+    
+          await x.stakeManager.connect(signer1).stakeStart(10000000, 365)
+    
+          let addressStakeCount = await x.stakeManager.stakeCount(x.stakeManager.getAddress())
+    
+          await utils.moveForwardDays(366n, x)
+
+          const stake1 = fromStruct(await x.hex.stakeLists(x.stakeManager.getAddress(), addressStakeCount - 1n))
+
+          let payoutResponseStake1 = await x.communis.getPayout(stake1)
+          await expect(x.stakeManager.connect(signer1).mintCommunis(
+            // end stake bonus
+            2n, stake1.stakeId,
+            hre.ethers.ZeroAddress,
+            payoutResponseStake1.maxPayout,
+          ))
+          .to.emit(x.communis, 'Transfer')
+     
+          await x.stakeManager.connect(signer2).stakeStart(10000000, 365)
+
+          addressStakeCount = await x.stakeManager.stakeCount(x.stakeManager.getAddress())
+          const stake2 = fromStruct(await x.hex.stakeLists(x.stakeManager.getAddress(), addressStakeCount - 1n))
+
+          await utils.moveForwardDays(1n, x)
+
+          let payoutResponse = await x.communis.getPayout(stake2)
+          let globalInfo = await x.hex.globalInfo()
+          const startBonusPayout = await x.communis.getStartBonusPayout(
+            stake2.stakedDays,
+            stake2.lockedDay,
+            payoutResponse.maxPayout,
+            payoutResponse.stakesOriginalShareRate,
+            await x.hex.currentDay(),
+            globalInfo[2],
+            false,
+          )
+          
+          await x.stakeManager.connect(signer2).mintCommunis(
+            // start stake bonus
+            0n, stake2.stakeId,
+            hre.ethers.ZeroAddress,
+            startBonusPayout,
+          )
+          
+          await utils.moveForwardDays(91n, x)
+    
+          await x.stakeManager.mintStakeBonus();
+    
+          const stake1PayoutInfo = decodePayoutInfo(await x.stakeManager.stakeIdCommunisPayoutInfo(stake1.stakeId));
+          const stake2PayoutInfo = decodePayoutInfo(await x.stakeManager.stakeIdCommunisPayoutInfo(stake2.stakeId));
+
+          let prevBalance1 = await x.communis.balanceOf(signer1);
+          let prevBalance2 = await x.communis.balanceOf(signer2);
+    
+          await distributeStakeBonusByStakeId(stake1, signer1, x);
+          await expect(distributeStakeBonusByStakeId(stake2, signer2, x))
+            .to.revertedWithCustomError(x.stakeManager, 'NotAllowed'); //Can't get distribution if only had a start bonus
+          
+          await expectPayoutDetails(signer1, x, stake1PayoutInfo, prevBalance1);
+          await expectPayoutDetails(signer2, x, stake2PayoutInfo, prevBalance2);
     })
   })
   // describe('#withdrawAmountByStakeId', () => {
