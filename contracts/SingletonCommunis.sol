@@ -14,7 +14,7 @@ contract SingletonCommunis is StakeEnder {
     END
   }
 
-  uint256 public distributableCommunisStakeBonus;
+  uint256 public distributableCommunis;
   mapping(uint256 stakeId => address formerOwner) public formerStakeOwner;
   mapping(uint256 stakeId => uint256 payoutInfo) public stakeIdCommunisPayoutInfo;
   uint256 constant internal NINETY_ONE = 91;
@@ -27,10 +27,16 @@ contract SingletonCommunis is StakeEnder {
    * @param portion an enum corresponding to a method to be called for minting $COMM
    * @param stakeId the stake id to target - first call must be run by owner
    * @param referrer the referrer of the mint
-   * @param stakeAmount the amount of the start bonus to stake. the left-most bit designated as a boolean for applying restake bonus
-   * @notice during stake good accounting, stakeAmount is used as a boolean 1 = withdraw, anything else = custody in contract
+   * @param stakeAmount the amount of the start bonus to stake.
+   * the left-most bit designated as a boolean for applying restake bonus
+   * @notice during stake good accounting, stakeAmount is used
+   * as a boolean 1 = withdraw, anything else = custody in contract
    */
-  function mintCommunis(CommunisMintPortion portion, uint256 stakeId, address referrer, uint256 stakeAmount) external payable {
+  function mintCommunis(
+    CommunisMintPortion portion,
+    uint256 stakeId, address referrer,
+    uint256 stakeAmount
+  ) external payable returns(uint256 amount) {
     _mintStakeBonus();
     if (portion < CommunisMintPortion.END) {
       uint256 settings = stakeIdToSettings[stakeId];
@@ -53,11 +59,12 @@ contract SingletonCommunis is StakeEnder {
             );
             stakeIdCommunisPayoutInfo[stakeId] += stakeAmount;
 
+            amount = ERC20(COMM).balanceOf(address(this)) - bal;
             _attributeFunds({
               settings: settings,
               token: COMM,
               staker: staker,
-              amount: ERC20(COMM).balanceOf(address(this)) - bal
+              amount: amount
             });
           }
         }
@@ -72,12 +79,13 @@ contract SingletonCommunis is StakeEnder {
           uint256 bal = ERC20(COMM).balanceOf(address(this));
           Communis(COMM).mintGoodAccountingBonus(address(this), index, stakeId);
           unchecked {
+            amount = ERC20(COMM).balanceOf(address(this)) - bal;
             _attributeFunds({
               // 16 always yields true for the 4th index
               settings: stakeAmount == ONE ? SIXTEEN : ZERO,
               staker: referrer,
               token: COMM,
-              amount: ERC20(COMM).balanceOf(address(this)) - bal
+              amount: amount
             });
           }
         }
@@ -109,18 +117,23 @@ contract SingletonCommunis is StakeEnder {
             endBonusPayoutDebt: payout / TWO,
             stakeAmount: uint256(uint120(stakeIdCommunisPayoutInfo[stakeId])) + stakeAmount
           });
+          amount = payout - stakeAmount;
           _attributeFunds({
             settings: settings,
             token: COMM,
             staker: staker,
-            amount: payout - stakeAmount
+            amount: amount
           });
         }
       }
     }
   }
 
-  function _encodePayoutInfo(uint256 nextPayoutDay, uint256 endBonusPayoutDebt, uint256 stakeAmount) internal pure returns(uint256) {
+  function _encodePayoutInfo(
+    uint256 nextPayoutDay,
+    uint256 endBonusPayoutDebt,
+    uint256 stakeAmount
+  ) internal pure returns(uint256) {
     unchecked {
       return (
         nextPayoutDay << TWO_FOURTY
@@ -244,10 +257,19 @@ contract SingletonCommunis is StakeEnder {
   }
 
   /**
-   * withdraws a stake up to the
+   * withdraws a stake up to the debt limit
+   * @param withdrawAmount the desired amount to withdraw - can be truncated if debt cannot cover
+   * @param stakeId the stake id to target - this is a permissioned method - caller must be owner or previous owner
+   * @param withdraw the funds should be withdrawn to the address, otherwise custodied by this contract
    */
-  function withdrawAmountByStakeId(uint256 withdrawAmount, uint256 stakeId, bool withdraw) external payable {
+  function withdrawCommunisByStakeId(
+    uint256 withdrawAmount,
+    uint256 stakeId,
+    bool withdraw,
+    address to
+  ) external payable returns(uint256 amount) {
     address staker = _verifyOnlyStaker(stakeId);
+    to = to == address(0) ? staker : to;
     uint256 payoutInfo = stakeIdCommunisPayoutInfo[stakeId];
     uint256 stakeManagerStakedAmount = Communis(COMM).addressStakedCodeak(address(this));
     uint256 currentDay = HEX(TARGET).currentDay();
@@ -261,47 +283,54 @@ contract SingletonCommunis is StakeEnder {
         payoutInfo: payoutInfo,
         currentDay: currentDay,
         stakeId: stakeId,
-        staker: staker,
+        to: to,
         withdraw: withdraw
       });
     }
     // we hold the staked amount on this contract in order to break it up
     // between stakes - that way, everyone can get out what they put in
     unchecked {
-      uint256 stakedAmount = uint120(payoutInfo);
-      if (withdrawAmount > stakedAmount) {
-        revert NotAllowed();
+      if (withdrawAmount > uint120(payoutInfo)) {
+        withdrawAmount = uint120(payoutInfo);
       }
 
-      uint256 stakedAmountAfterWithdraw = (stakedAmount - withdrawAmount);
-      if (stakedAmountAfterWithdraw < uint120(payoutInfo >> ONE_TWENTY)) {
-        revert NotAllowed();
+      uint256 minStaked = uint120(payoutInfo >> ONE_TWENTY);
+      uint256 amountAfter = uint120(payoutInfo) - withdrawAmount;
+      if (amountAfter < minStaked) {
+        withdrawAmount = uint120(payoutInfo) - minStaked;
+        amountAfter = minStaked;
       }
 
-      Communis(COMM).withdrawStakedCodeak(withdrawAmount);
-      stakeIdCommunisPayoutInfo[stakeId] = _encodePayoutInfo({
-        nextPayoutDay: uint16(payoutInfo >> TWO_FOURTY),
-        endBonusPayoutDebt: uint120(payoutInfo >> ONE_TWENTY),
-        stakeAmount: (stakedAmount - withdrawAmount)
-      });
-      _attributeFunds({
-        settings: withdraw ? SIXTEEN : ZERO,
-        staker: staker,
-        token: COMM,
-        amount: (stakedAmount - withdrawAmount)
-      });
+      if (withdrawAmount > ZERO) {
+        Communis(COMM).withdrawStakedCodeak(withdrawAmount);
+        stakeIdCommunisPayoutInfo[stakeId] = _encodePayoutInfo({
+          nextPayoutDay: uint16(payoutInfo >> TWO_FOURTY),
+          endBonusPayoutDebt: uint120(payoutInfo >> ONE_TWENTY),
+          stakeAmount: amountAfter
+        });
+        _attributeFunds({
+          settings: withdraw ? SIXTEEN : ZERO,
+          staker: to,
+          token: COMM,
+          amount: withdrawAmount
+        });
+        return withdrawAmount;
+      }
     }
   }
 
-  function mintStakeBonus() external payable returns(uint256 distributableBonus) {
+  /**
+   * mint the stake bonus for the stake manager contract - useful for keeping accounting up to date
+   */
+  function mintStakeBonus() external payable returns(uint256 currentDistributableCommunis) {
     return _mintStakeBonus();
   }
 
   /**
    * claims stake bonus for everyone staking through stake manager contract
-   * @return distributableBonus the total bonus distributed to all stakers in this contract
+   * @return currentDistributableCommunis the total bonus distributed to all stakers in this contract
    */
-  function _mintStakeBonus() internal returns(uint256 distributableBonus) {
+  function _mintStakeBonus() internal returns(uint256 currentDistributableCommunis) {
     uint256 bal = ERC20(COMM).balanceOf(address(this));
 
     try Communis(COMM).mintStakeBonus() {
@@ -311,18 +340,24 @@ contract SingletonCommunis is StakeEnder {
           attributed[COMM] += delta;
         }
         // need this to be outside of if statement so that it can be used downstream
-        distributableBonus = distributableCommunisStakeBonus + delta;
-        distributableCommunisStakeBonus = distributableBonus;
+        currentDistributableCommunis = distributableCommunis + delta;
+        distributableCommunis = currentDistributableCommunis;
       }
     } catch {
       // coveralls-ignore-start
-      distributableBonus = distributableCommunisStakeBonus;
+      currentDistributableCommunis = distributableCommunis;
       // coveralls-ignore-stop
     }
   }
 
-  function distributeStakeBonusByStakeId(uint256 stakeId, bool withdraw) external payable returns(uint256 payout) {
+  /**
+   *
+   * @param stakeId the stake id to use to apply limits to the distribution
+   * @param withdraw whether or not the funds should be transferred to the stake owner
+   */
+  function distributeCommunisStakeBonusByStakeId(uint256 stakeId, bool withdraw, address to) external payable returns(uint256 payout) {
     address staker = _verifyOnlyStaker(stakeId);
+    to = to == address(0) ? staker : to;
     uint256 payoutInfo = stakeIdCommunisPayoutInfo[stakeId];
 
     uint256 stakeManagerStakedAmount = Communis(COMM).addressStakedCodeak(address(this));
@@ -338,7 +373,7 @@ contract SingletonCommunis is StakeEnder {
         payoutInfo: payoutInfo,
         currentDay: currentDay,
         stakeId: stakeId,
-        staker: staker,
+        to: to,
         withdraw: withdraw
       });
     } else {
@@ -351,7 +386,10 @@ contract SingletonCommunis is StakeEnder {
    * @param currentDay the current hex day
    * @param stakeManagerStakedAmount the amount staked from this address - held on communis contract
    */
-  function _checkDistribute(uint256 payoutInfo, uint256 currentDay, uint256 stakeManagerStakedAmount) internal pure returns(bool) {
+  function _checkDistribute(
+    uint256 payoutInfo, uint256 currentDay,
+    uint256 stakeManagerStakedAmount
+  ) internal pure returns(bool canDistribute) {
     unchecked {
       uint256 stakedAmount = uint120(payoutInfo);
       if (stakedAmount == ZERO || stakeManagerStakedAmount == ZERO) {
@@ -373,10 +411,10 @@ contract SingletonCommunis is StakeEnder {
    */
   function _doDistribute(
     uint256 payoutInfo, uint256 currentDay,
-    uint256 stakeId, address staker, bool withdraw
+    uint256 stakeId, address to, bool withdraw
   ) internal returns(uint256 payout) {
     unchecked {
-      uint256 distributableBonus = _mintStakeBonus();
+      uint256 currentDistributableCommunis = _mintStakeBonus();
       uint256 stakedAmount = uint256(uint120(payoutInfo));
       uint256 prevPayoutDay = uint16(payoutInfo >> TWO_FOURTY);
       uint256 numberOfPayouts = ((currentDay - prevPayoutDay) / NINETY_ONE) + ONE;
@@ -384,13 +422,13 @@ contract SingletonCommunis is StakeEnder {
       payout = (stakedAmount * numberOfPayouts) / 80;
 
       // coveralls-ignore-start
-      if (payout > distributableBonus) {
-        // Ensure you don't try to pay out more than the distributableBonus
-        payout = distributableBonus;
+      if (payout > currentDistributableCommunis) {
+        // Ensure you don't try to pay out more than the currentDistributableCommunis
+        payout = currentDistributableCommunis;
       }
       // coveralls-ignore-stop
 
-      distributableCommunisStakeBonus = (distributableBonus - payout);
+      distributableCommunis = (currentDistributableCommunis - payout);
       stakeIdCommunisPayoutInfo[stakeId] = _encodePayoutInfo({
         nextPayoutDay: prevPayoutDay + (numberOfPayouts * NINETY_ONE),
         endBonusPayoutDebt: uint120(payoutInfo >> ONE_TWENTY),
@@ -402,15 +440,15 @@ contract SingletonCommunis is StakeEnder {
       attributed[COMM] -= payout;
       _attributeFunds({
         settings: SIXTEEN,
-        staker: staker,
+        staker: to,
         token: COMM,
         amount: payout
       });
     } else {
       unchecked {
         // accounting has attributed funds to the contract
-        // but it has not yet attributed funds to the staker
-        withdrawableBalanceOf[COMM][staker] += payout;
+        // but it has not yet attributed funds to the account
+        withdrawableBalanceOf[COMM][to] += payout;
       }
     }
   }
