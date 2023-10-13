@@ -155,11 +155,13 @@ contract SingletonCommunis is StakeEnder {
   /**
    * sets a stake amount to use in the future - when the stake may be ended by others
    * @param stakeId the stake id to target
-   * @param futureEndStakeAmount the amount to stake in the future. 0 = stake it all, debt will be used as a staking floor
+   * @param futureEndStakeAmount the amount to stake in the future
+   * 0 = stake it all, debt will be used as a staking floor
    */
   function setFutureStakeEndCommunisAmount(uint256 stakeId, uint256 futureEndStakeAmount) external payable {
     // flag to signal that minting has not yet occurred for this stake id (when 0)
-    if (Communis(COMM).stakeIdEndBonusPayout(stakeId) != ZERO) { // must be a stake that has not received end bonus payout
+    if (Communis(COMM).stakeIdEndBonusPayout(stakeId) != ZERO) {
+      // must be a stake that has not received end bonus payout
       revert NotAllowed();
     }
     (, address staker) = _stakeIdToInfo(stakeId); // must be an unended stake
@@ -364,7 +366,10 @@ contract SingletonCommunis is StakeEnder {
    * @param stakeId the stake id to use to apply limits to the distribution
    * @param withdraw whether or not the funds should be transferred to the stake owner
    */
-  function distributeCommunisStakeBonusByStakeId(uint256 stakeId, bool withdraw, address to) external payable returns(uint256 payout) {
+  function distributeCommunisStakeBonusByStakeId(
+    uint256 stakeId,
+    bool withdraw, address to
+  ) external payable returns(uint256 payout) {
     address staker = _verifyOnlyStaker(stakeId);
     to = to == address(0) ? staker : to;
     uint256 payoutInfo = stakeIdCommunisPayoutInfo[stakeId];

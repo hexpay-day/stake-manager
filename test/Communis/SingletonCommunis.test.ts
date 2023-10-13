@@ -141,9 +141,9 @@ describe('SingletonCommunis.sol', () => {
       await expect(x.stakeManager.stakeIdCommunisPayoutInfo(stk.stakeId))
         .eventually.to.equal(startBonusPayout)
 
-      await expect(x.stakeManager.withdrawCommunisByStakeId.staticCall(startBonusPayout + 1n, stk.stakeId, true, signer.address))
+      await expect(x.stakeManager.withdrawCommunisByStakeId.staticCall(startBonusPayout + 1n, stk.stakeId, true, hre.ethers.ZeroAddress))
         .eventually.to.equal(startBonusPayout)
-      await expect(x.stakeManager.withdrawCommunisByStakeId(startBonusPayout + 1n, stk.stakeId, true, signer.address))
+      await expect(x.stakeManager.withdrawCommunisByStakeId(startBonusPayout + 1n, stk.stakeId, true, hre.ethers.ZeroAddress))
         .not.to.reverted
       await expect(x.stakeManager.withdrawCommunisByStakeId(startBonusPayout, stk.stakeId + 1n, true, signer.address))
         .to.revertedWithCustomError(x.stakeManager, 'NotAllowed')
@@ -448,8 +448,9 @@ describe('SingletonCommunis.sol', () => {
         // end stake bonus
         2n, stakeId,
         hre.ethers.ZeroAddress,
-        0,
+        0, // stake everything
       )).not.to.reverted
+      // cannot set future stake end after - should be done days before end is even possible
       await expect(x.stakeManager.setFutureStakeEndCommunisAmount(stakeId, 1))
         .to.revertedWithCustomError(x.stakeManager, 'NotAllowed')
       await utils.moveForwardDays(90n, x, 90n) // too soon
@@ -465,7 +466,7 @@ describe('SingletonCommunis.sol', () => {
       //     await x.stakeManager.getAddress(),
       //     anyUint,
       //   )
-      await expect(x.stakeManager.distributeCommunisStakeBonusByStakeId(stakeId + 1n, false, signer.address))
+      await expect(x.stakeManager.distributeCommunisStakeBonusByStakeId(stakeId + 1n, false, hre.ethers.ZeroAddress))
         .to.emit(x.communis, 'Transfer')
         .withArgs(
           hre.ethers.ZeroAddress,
