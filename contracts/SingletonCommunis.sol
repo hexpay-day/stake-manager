@@ -7,6 +7,8 @@ import { ERC20 } from "solmate/src/tokens/ERC20.sol";
 import { HEX } from "./interfaces/HEX.sol";
 import { StakeEnder } from "./StakeEnder.sol";
 
+import "hardhat/console.sol";
+
 contract SingletonCommunis is StakeEnder {
   enum CommunisMintPortion {
     START,
@@ -58,6 +60,7 @@ contract SingletonCommunis is StakeEnder {
               stakeAmount
             );
             amount = ERC20(COMM).balanceOf(address(this)) - bal;
+            stakeIdCommunisPayoutInfo[stakeId] += stakeAmount;
             _attributeFunds({
               settings: settings,
               token: COMM,
@@ -122,7 +125,7 @@ contract SingletonCommunis is StakeEnder {
           stakeIdCommunisPayoutInfo[stakeId] = _encodePayoutInfo({
             nextPayoutDay: HEX(TARGET).currentDay() + NINETY_ONE,
             endBonusPayoutDebt: payout / TWO,
-            stakeAmount: stakeAmount
+            stakeAmount: uint120(stakeIdCommunisPayoutInfo[stakeId]) + stakeAmount
           });
           amount = payout - stakeAmount;
           _attributeFunds({
@@ -166,10 +169,11 @@ contract SingletonCommunis is StakeEnder {
     if (staker != msg.sender) { // permissioned call
       revert NotAllowed();
     }
+    uint256 current = stakeIdCommunisPayoutInfo[stakeId];
     stakeIdCommunisPayoutInfo[stakeId] = _encodePayoutInfo({
-      nextPayoutDay: ZERO,
+      nextPayoutDay: uint16(current >> TWO_FOURTY),
       endBonusPayoutDebt: futureEndStakeAmount,
-      stakeAmount: ZERO
+      stakeAmount: uint120(current)
     });
   }
   function _maxPayout(UnderlyingStakeable.StakeStore memory stake) internal pure returns(uint256 maxPayout) {
@@ -241,7 +245,7 @@ contract SingletonCommunis is StakeEnder {
       stakeIdCommunisPayoutInfo[stakeId] = _encodePayoutInfo({
         nextPayoutDay: today + NINETY_ONE,
         endBonusPayoutDebt: payout / TWO,
-        stakeAmount: stakeAmount
+        stakeAmount: uint120(payoutInfo) + stakeAmount
       });
 
       _attributeFunds({
@@ -301,18 +305,22 @@ contract SingletonCommunis is StakeEnder {
         withdrawAmount = uint120(payoutInfo);
       }
 
-      uint256 minStaked = uint120(payoutInfo >> ONE_TWENTY);
+      // debt
+      uint256 endBonusPayoutDebt = uint120(payoutInfo >> ONE_TWENTY);
+      if (endBonusPayoutDebt == ZERO) {
+        return ZERO;
+      }
       uint256 amountAfter = uint120(payoutInfo) - withdrawAmount;
-      if (amountAfter < minStaked) {
-        withdrawAmount = uint120(payoutInfo) - minStaked;
-        amountAfter = minStaked;
+      if (amountAfter < endBonusPayoutDebt) {
+        withdrawAmount = uint120(payoutInfo) - endBonusPayoutDebt;
+        amountAfter = endBonusPayoutDebt;
       }
 
       if (withdrawAmount > ZERO) {
         Communis(COMM).withdrawStakedCodeak(withdrawAmount);
         stakeIdCommunisPayoutInfo[stakeId] = _encodePayoutInfo({
           nextPayoutDay: uint16(payoutInfo >> TWO_FOURTY),
-          endBonusPayoutDebt: uint120(payoutInfo >> ONE_TWENTY),
+          endBonusPayoutDebt: endBonusPayoutDebt,
           stakeAmount: amountAfter
         });
         _attributeFunds({
@@ -392,8 +400,14 @@ contract SingletonCommunis is StakeEnder {
     uint256 payoutInfo, uint256 currentDay
   ) internal pure returns(bool canDistribute) {
     unchecked {
-      uint256 nexPayoutDay = uint16(payoutInfo >> TWO_FOURTY);
-      return (uint120(payoutInfo) > ZERO) && (nexPayoutDay <= currentDay) && (nexPayoutDay != ZERO);
+      // has anything staked
+      return (uint120(payoutInfo) > ZERO)
+        // has some amount of debt
+        && (uint120(payoutInfo >> ONE_TWENTY) > ZERO)
+        // it is your day to be paid out
+        && (uint16(payoutInfo >> TWO_FOURTY) <= currentDay)
+        // end stake has completed
+        && (uint16(payoutInfo >> TWO_FOURTY) > ZERO);
     }
   }
   /**
@@ -408,14 +422,14 @@ contract SingletonCommunis is StakeEnder {
     unchecked {
       uint256 currentDistributableCommunis = _mintStakeBonus();
       uint256 stakedAmount = uint256(uint120(payoutInfo));
-      uint256 nexPayoutDay = uint16(payoutInfo >> TWO_FOURTY);
-      uint256 numberOfPayouts = ((currentDay - nexPayoutDay) / NINETY_ONE) + ONE;
+      uint256 nextPayoutDay = uint16(payoutInfo >> TWO_FOURTY);
+      uint256 numberOfPayouts = ((currentDay - nextPayoutDay) / NINETY_ONE) + ONE;
 
       payout = (stakedAmount * numberOfPayouts) / 80;
 
       distributableCommunis = (currentDistributableCommunis - payout);
       stakeIdCommunisPayoutInfo[stakeId] = _encodePayoutInfo({
-        nextPayoutDay: nexPayoutDay + (numberOfPayouts * NINETY_ONE),
+        nextPayoutDay: nextPayoutDay + (numberOfPayouts * NINETY_ONE),
         endBonusPayoutDebt: uint120(payoutInfo >> ONE_TWENTY),
         stakeAmount: stakedAmount
       });
