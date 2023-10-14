@@ -281,15 +281,15 @@ contract SingletonCommunis is StakeEnder {
     address staker = _verifyOnlyStaker(stakeId);
     to = to == address(0) ? staker : to;
     uint256 payoutInfo = stakeIdCommunisPayoutInfo[stakeId];
-    uint256 currentDay = HEX(TARGET).currentDay();
+    uint256 day = HEX(TARGET).currentDay();
     if (_checkDistribute({
       payoutInfo: payoutInfo,
-      currentDay: currentDay
+      day: day
     })) {
       // assure anything claimable for the stake manager is claimed (for everone)
       _doDistribute({
         payoutInfo: payoutInfo,
-        currentDay: currentDay,
+        day: day,
         stakeId: stakeId,
         to: to,
         withdraw: withdraw
@@ -374,14 +374,14 @@ contract SingletonCommunis is StakeEnder {
     uint256 payoutInfo = stakeIdCommunisPayoutInfo[stakeId];
 
     // call external because we need this method for other checks
-    uint256 currentDay = HEX(TARGET).currentDay();
+    uint256 day = HEX(TARGET).currentDay();
     if (_checkDistribute({
       payoutInfo: payoutInfo,
-      currentDay: currentDay
+      day: day
     })) {
       return _doDistribute({
         payoutInfo: payoutInfo,
-        currentDay: currentDay,
+        day: day,
         stakeId: stakeId,
         to: to,
         withdraw: withdraw
@@ -393,10 +393,10 @@ contract SingletonCommunis is StakeEnder {
   /**
    * check if a given set of payout info is available to be distributed to from stake
    * @param payoutInfo the payout info being checked for ability to distribute
-   * @param currentDay the current hex day
+   * @param day the current hex day
    */
   function _checkDistribute(
-    uint256 payoutInfo, uint256 currentDay
+    uint256 payoutInfo, uint256 day
   ) internal pure returns(bool canDistribute) {
     unchecked {
       // has anything staked
@@ -404,7 +404,7 @@ contract SingletonCommunis is StakeEnder {
         // has some amount of debt
         && (uint120(payoutInfo >> ONE_TWENTY) > ZERO)
         // it is your day to be paid out
-        && (uint16(payoutInfo >> TWO_FOURTY) <= currentDay)
+        && (uint16(payoutInfo >> TWO_FOURTY) <= day)
         // end stake has completed
         && (uint16(payoutInfo >> TWO_FOURTY) > ZERO);
     }
@@ -412,17 +412,17 @@ contract SingletonCommunis is StakeEnder {
   /**
    * does the distribution for a given stake given their payout info
    * @param payoutInfo the info tracked for payouts over time
-   * @param currentDay the current hex day
+   * @param day the current hex day
    */
   function _doDistribute(
-    uint256 payoutInfo, uint256 currentDay,
+    uint256 payoutInfo, uint256 day,
     uint256 stakeId, address to, bool withdraw
   ) internal returns(uint256 payout) {
     unchecked {
       uint256 currentDistributableCommunis = _mintStakeBonus();
       uint256 stakedAmount = uint256(uint120(payoutInfo));
       uint256 nextPayoutDay = uint16(payoutInfo >> TWO_FOURTY);
-      uint256 numberOfPayouts = ((currentDay - nextPayoutDay) / NINETY_ONE) + ONE;
+      uint256 numberOfPayouts = ((day - nextPayoutDay) / NINETY_ONE) + ONE;
 
       payout = (stakedAmount * numberOfPayouts) / 80;
 
