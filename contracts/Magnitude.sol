@@ -162,12 +162,15 @@ contract Magnitude is Utils {
       uint256 method = uint8(encodedLinear);
       linear.xFactor = method / X_OPTIONS;
       linear.method = method % X_OPTIONS;
+      // these lines are no longer needed as they are only called when method >= 3
+      // which means that xFactor is always greater than 0
+
       // when xFactor is 0, nothing below makes a difference except y
-      if (linear.xFactor == ZERO) {
-        // y is being used because it is the only uint
-        linear.y = (uint256(uint56(encodedLinear >> EIGHT)) << uint8(encodedLinear >> SIXTY_FOUR));
-        return linear;
-      }
+      // if (linear.xFactor == ZERO) {
+      //   // y is being used because it is the only uint
+      //   linear.y = (uint256(uint56(encodedLinear >> EIGHT)) << uint8(encodedLinear >> SIXTY_FOUR));
+      //   return linear;
+      // }
       // numerator
       linear.x = int16(uint16(encodedLinear >> FIFTY_SIX)) + int16(-MIN_INT_16);
       // denominator - uint

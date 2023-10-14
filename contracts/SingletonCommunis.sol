@@ -341,6 +341,10 @@ contract SingletonCommunis is StakeEnder {
     bool withdraw, address to
   ) external payable returns(uint256) {
     uint256 payoutInfo = stakeIdCommunisPayoutInfo[stakeId];
+    if (uint16(payoutInfo >> TWO_FOURTY) == ZERO) {
+      return ZERO;
+    }
+
     address staker = _verifyOnlyStaker(stakeId);
     to = to == address(0) ? staker : to;
     {
@@ -362,10 +366,6 @@ contract SingletonCommunis is StakeEnder {
       uint256 stakedAmount = uint256(uint120(payoutInfo) >> ONE);
       if (withdrawAmount > stakedAmount) {
         withdrawAmount = stakedAmount;
-      }
-
-      if (uint16(payoutInfo >> TWO_FOURTY) == ZERO) {
-        return ZERO;
       }
 
       // debt
@@ -442,6 +442,12 @@ contract SingletonCommunis is StakeEnder {
     address staker = _verifyOnlyStaker(stakeId);
     to = to == address(0) ? staker : to;
     uint256 payoutInfo = stakeIdCommunisPayoutInfo[stakeId];
+    unchecked {
+      if (uint16(payoutInfo >> TWO_FOURTY) == ZERO) {
+        return ZERO;
+      }
+    }
+
     // call external because we need this method for other checks
     uint256 day = HEX(TARGET).currentDay();
     (payout, payoutInfo, ) = _distributeCommunisStakeBonusByStakeId({
