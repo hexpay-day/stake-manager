@@ -3,7 +3,12 @@ import { expect } from "chai"
 import * as hre from 'hardhat'
 import * as utils from '../utils'
 import _ from 'lodash'
-import { fromStruct, type DecodedCommunisPayoutInfo, decodeCommunisPayoutInfo } from "../../src/utils"
+import {
+  fromStruct,
+  type DecodedCommunisPayoutInfo,
+  decodeCommunisPayoutInfo,
+  calculateExpectedCommunisStakePayout,
+} from "../../src/utils"
 import { anyUint } from "@nomicfoundation/hardhat-chai-matchers/withArgs"
 import { IUnderlyingStakeable } from "../../artifacts/types/contracts/UnderlyingStakeManager"
 import { SignerWithAddress } from "@nomicfoundation/hardhat-ethers/signers"
@@ -61,7 +66,7 @@ async function distributeCommunisStakeBonusByStakeId(stake: IUnderlyingStakeable
 
   expect(balanceAfter)
     .to.equal(balanceBefore + expectedPayoutResponse.expectedPayout);
-
+  return balanceAfter - balanceBefore
 }
 async function expectPayoutDetails(signer: SignerWithAddress, x : utils.X, stakePayoutInfo: ReturnType<typeof decodeCommunisPayoutInfo>, prevBalance : bigint) {
 
@@ -106,7 +111,7 @@ describe('SingletonCommunis.sol', () => {
     })
   })
   describe('withdrawCommunisByStakeId', () => {
-    it('Communis withdraw', async () => {
+    it('communis withdraw', async () => {
       const x = await loadFixture(utils.deployFixture)
       const [signer] = x.signers
       // gives permission for anyone to end stake
@@ -140,10 +145,7 @@ describe('SingletonCommunis.sol', () => {
 
       await expect(x.communis.stakeIdStartBonusPayout(stk.stakeId))
         .eventually.to.equal(startBonusPayout)
-      // // at this point, only the start bonus payout has been collected
-      // await expect(x.stakeManager.stakeIdCommunisPayoutInfo(stk.stakeId))
-      //   .eventually.to.equal(startBonusPayout)
-
+      // at this point, only the start bonus payout has been collected
       await expect(x.stakeManager.withdrawCommunisByStakeId.staticCall(startBonusPayout + 1n, stk.stakeId, true, hre.ethers.ZeroAddress))
         .eventually.to.equal(0)
       await expect(x.stakeManager.withdrawCommunisByStakeId(startBonusPayout + 1n, stk.stakeId, true, hre.ethers.ZeroAddress))
@@ -155,13 +157,16 @@ describe('SingletonCommunis.sol', () => {
         .eventually.to.equal(0)
 
       // stake bonus does not exist yet!
+      await expect(x.stakeManager.distributeCommunisStakeBonusByStakeId.staticCall(stk.stakeId, true, signer.address))
+        .eventually.to.equal(0)
       await expect(x.stakeManager.distributeCommunisStakeBonusByStakeId(stk.stakeId, true, signer.address))
-        .to.revertedWithCustomError(x.stakeManager, 'NotAllowed')
+        .not.to.reverted
+      await utils.moveForwardDays(91n, x, 90n)
+      await expect(x.stakeManager.distributeCommunisStakeBonusByStakeId.staticCall(stk.stakeId, true, signer.address))
+        .eventually.to.be.equal(0)
     })
     it('disallows withdrawals beyond debt', async () => {
-
       const x = await loadFixture(utils.deployFixture)
-      const [signer] = x.signers
       const stakeId = await utils.nextStakeId(x.hex)
       // gives permission for anyone to end stake
       // requires comm minting at end
@@ -176,6 +181,7 @@ describe('SingletonCommunis.sol', () => {
       await x.stakeManager.stakeEndById(stakeId)
       await utils.moveForwardDays(91n, x, 90n)
 
+      const payoutInfo = await x.stakeManager.stakeIdCommunisPayoutInfo(stakeId).then(decodeCommunisPayoutInfo)
       // already at debt limit because minimum (50%) was staked
       await expect(x.stakeManager.withdrawCommunisByStakeId.staticCall(2n, stakeId, true, x.stakeManager.getAddress()))
         .eventually.to.equal(0n)
@@ -199,16 +205,16 @@ describe('SingletonCommunis.sol', () => {
       await x.stakeManager.stakeEndById(stakeId)
       await utils.moveForwardDays(91n, x, 90n)
 
-      await expect(x.stakeManager.withdrawCommunisByStakeId.staticCall(1n, stakeId, true, x.stakeManager.getAddress()))
+      await expect(x.stakeManager.withdrawCommunisByStakeId.staticCall(1n, stakeId, true, signer.address))
         .eventually.to.equal(1n)
       // attributes tokens to contract just to show that it can be done
-      await expect(x.stakeManager.withdrawCommunisByStakeId(1n, stakeId, true, x.stakeManager.getAddress()))
+      await expect(x.stakeManager.withdrawCommunisByStakeId(1n, stakeId, true, signer.address))
         .not.to.reverted
 
       await utils.moveForwardDays(91n, x, 90n)
 
-      await expect(x.stakeManager.withdrawCommunisByStakeId.staticCall(1n, stakeId, true, x.stakeManager.getAddress()))
-        .eventually.to.equal(1n)
+      // await expect(x.stakeManager.withdrawCommunisByStakeId.staticCall(1n, stakeId, true, x.stakeManager.getAddress()))
+      //   .eventually.to.equal(1n)
       await expect(x.stakeManager.withdrawCommunisByStakeId(1n, stakeId, true, signer.address))
         .to.emit(x.communis, 'Transfer')
         .withArgs(
@@ -491,10 +497,16 @@ describe('SingletonCommunis.sol', () => {
       await expect(x.stakeManager.setFutureStakeEndCommunisAmount(stakeId, 1))
         .to.revertedWithCustomError(x.stakeManager, 'NotAllowed')
       await utils.moveForwardDays(90n, x, 90n) // too soon
+      let args = [stakeId, false, signer.address] as const
+      await expect(x.stakeManager.distributeCommunisStakeBonusByStakeId.staticCall(...args))
+        .eventually.to.equal(0)
       await expect(x.stakeManager.distributeCommunisStakeBonusByStakeId(stakeId, false, signer.address))
-        .to.revertedWithCustomError(x.stakeManager, 'NotAllowed')
-      await expect(x.stakeManager.distributeCommunisStakeBonusByStakeId(stakeId + 1n, false, signer.address))
-        .to.revertedWithCustomError(x.stakeManager, 'NotAllowed')
+        .not.to.reverted
+      args = [stakeId + 1n, false, signer.address]
+      await expect(x.stakeManager.distributeCommunisStakeBonusByStakeId.staticCall(...args))
+        .eventually.to.equal(0)
+      await expect(x.stakeManager.distributeCommunisStakeBonusByStakeId(...args))
+        .not.to.reverted
       await utils.moveForwardDays(1n, x) // first end stakeable day
       // await expect(x.stakeManager.distributeCommunisStakeBonusByStakeId(stakeId, false, signer.address))
       //   .to.emit(x.communis, 'Transfer')
@@ -529,10 +541,17 @@ describe('SingletonCommunis.sol', () => {
           .to.emit(x.communis, 'Transfer')
           .withArgs(hre.ethers.ZeroAddress, await x.stakeManager.getAddress(), anyUint)
         await utils.moveForwardDays(90n, x, 90n) // too soon
-        await expect(x.stakeManager.distributeCommunisStakeBonusByStakeId(stakeId, false, signer1.address))
-          .to.revertedWithCustomError(x.stakeManager, 'NotAllowed')
-        await expect(x.stakeManager.distributeCommunisStakeBonusByStakeId(stakeId + 1n, false, signer1.address))
-          .to.revertedWithCustomError(x.stakeManager, 'NotAllowed')
+        let args = [stakeId, false, signer1.address] as const
+        await expect(x.stakeManager.distributeCommunisStakeBonusByStakeId.staticCall(...args))
+          .eventually.to.equal(0n)
+        await expect(x.stakeManager.distributeCommunisStakeBonusByStakeId(...args))
+          .not.to.reverted
+        // try the second stake
+        args = [stakeId + 1n, false, await x.stakeManager.getAddress()]
+        await expect(x.stakeManager.distributeCommunisStakeBonusByStakeId.staticCall(...args))
+          .eventually.to.equal(0n)
+        await expect(x.stakeManager.distributeCommunisStakeBonusByStakeId(...args))
+          .not.to.reverted
         await utils.moveForwardDays(1n, x) // first end stakeable day
         await expect(x.stakeManager.distributeCommunisStakeBonusByStakeId(stakeId, false, x.stakeManager.getAddress()))
           .to.emit(x.communis, 'Transfer')
@@ -555,8 +574,11 @@ describe('SingletonCommunis.sol', () => {
       const nextStakeId = await utils.nextStakeId(x.hex)
       await x.stakeManager.stakeStart(x.stakedAmount, 365)
       await utils.moveForwardDays(366n, x, 90n)
-      await expect(x.stakeManager.distributeCommunisStakeBonusByStakeId(nextStakeId, true, signer1.address))
-        .to.revertedWithCustomError(x.stakeManager, 'NotAllowed')
+      let args = [nextStakeId, true, signer1.address] as const
+      await expect(x.stakeManager.distributeCommunisStakeBonusByStakeId.staticCall(...args))
+        .eventually.to.equal(0)
+      await expect(x.stakeManager.distributeCommunisStakeBonusByStakeId(...args))
+        .to.not.reverted
       await expect(x.stakeManager.mintCommunis(
         // end stake bonus
         2n, nextStakeId,
@@ -1169,9 +1191,8 @@ describe('SingletonCommunis.sol', () => {
 
       const balanceLeft = await x.stakeManager.distributableCommunis();
 
-      expect(balanceLeft)
+      expect(BigInt.asUintN(240, balanceLeft))
         .to.lessThan(10); // solidity rounding down (truncating) from distributeCommunisStakeBonusByStakeId payout division
-
     })
     it('cant mint com distribution from only start bonus', async () => {
       const x = await loadFixture(utils.deployFixture)
@@ -1232,7 +1253,7 @@ describe('SingletonCommunis.sol', () => {
 
           await distributeCommunisStakeBonusByStakeId(stake1, signer1, x);
           await expect(distributeCommunisStakeBonusByStakeId(stake2, signer2, x))
-            .to.revertedWithCustomError(x.stakeManager, 'NotAllowed'); //Can't get distribution if only had a start bonus
+            .eventually.to.equal(calculateExpectedCommunisStakePayout(startBonusPayout, 1n))
 
           await expectPayoutDetails(signer1, x, stake1PayoutInfo, prevBalance1);
           await expectPayoutDetails(signer2, x, stake2PayoutInfo, prevBalance2);

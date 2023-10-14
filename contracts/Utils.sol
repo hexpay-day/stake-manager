@@ -8,6 +8,7 @@ contract Utils {
    * either by using gas estimations or through a static call
    */
   error NotAllowed();
+  // SLOT
   /**
    * @notice the hex contract to target - because this is the same on ethereum
    * and pulsechain, we can leave it as a constant
@@ -17,44 +18,46 @@ contract Utils {
    * @notice a constant for the max number of days that can be used
    * when determining the number algorhythmically
    */
-  uint256 public constant MAX_DAYS = uint256(5555);
+  uint16 public constant MAX_DAYS = 5555;
+  /** @notice the number of binary slots in a 256 sized uint */
+  uint16 internal constant SLOTS = 256;
+  /** @notice a number to use as the denominator when determining basis points */
+  uint16 internal constant TEN_K = 10_000;
+  /** @notice the number of bits in an address */
+  uint8 internal constant ADDRESS_BIT_LENGTH = 160;
+  /** @notice the minimum value that can exist in a int16 (-2^15) */
+  int16 constant internal MIN_INT_16 = int16(type(int16).min);
+  /** @notice the max value that can fit in a uint8 slot (255) */
+  uint8 internal constant MAX_UINT_8 = type(uint8).max;
+  uint8 internal constant MAX_UINT_7 = MAX_UINT_8 / TWO;
+  /** @notice a uint8 as 0 in a constant */
+  uint8 internal constant ZERO = 0;
+  // SLOT
   /** @notice the max uint256 that can be used */
   uint256 internal constant MAX_UINT_256 = type(uint256).max;
-  /** @notice the number of binary slots in a 256 sized uint */
-  uint256 internal constant SLOTS = uint256(256);
-  /** @notice a number to use as the denominator when determining basis points */
-  uint256 internal constant TEN_K = uint256(10_000);
-  /** @notice the number of bits in an address */
-  uint256 internal constant ADDRESS_BIT_LENGTH = uint256(160);
-  /** @notice the minimum value that can exist in a int16 (-2^15) */
-  int256 constant internal MIN_INT_16 = int256(type(int16).min);
-  /** @notice the max value that can fit in a uint8 slot (255) */
-  uint256 internal constant MAX_UINT_8 = uint256(type(uint8).max);
-  uint256 internal constant MAX_UINT_7 = MAX_UINT_8 / TWO;
-  /** @notice a uint256 as 0 in a constant */
-  uint256 internal constant ZERO = uint256(0);
-  /** @notice a uint256 as 1 in a constant */
-  uint256 internal constant ONE = uint256(1);
-  /** @notice a uint256 as 2 in a constant */
-  uint256 internal constant TWO = uint256(2);
-  /** @notice a uint256 as 3 in a constant */
-  uint256 internal constant THREE = uint256(3);
-  /** @notice a uint256 as 4 in a constant */
-  uint256 internal constant FOUR = uint256(4);
-  /** @notice a uint256 as 8 in a constant */
-  uint256 internal constant EIGHT = uint256(8);
-  /** @notice a uint256 as 16 in a constant */
-  uint256 internal constant SIXTEEN = uint256(16);
-  /** @notice a uint256 as 24 in a constant */
-  uint256 internal constant TWENTY_FOUR = uint256(24);
-  /** @notice a uint256 as 32 in a constant */
-  uint256 internal constant THIRTY_TWO = uint256(32);
-  /** @notice a uint256 as 48 in a constant */
-  uint256 internal constant FOURTY_EIGHT = uint256(48);
-  /** @notice a uint256 as 56 in a constant */
-  uint256 internal constant FIFTY_SIX = uint256(56);
-  /** @notice a uint256 as 64 in a constant */
-  uint256 internal constant SIXTY_FOUR = uint256(64);
+  // SLOT
+  /** @notice a uint8 as 1 in a constant */
+  uint8 internal constant ONE = 1;
+  /** @notice a uint8 as 2 in a constant */
+  uint8 internal constant TWO = 2;
+  /** @notice a uint8 as 3 in a constant */
+  uint8 internal constant THREE = 3;
+  /** @notice a uint8 as 4 in a constant */
+  uint8 internal constant FOUR = 4;
+  /** @notice a uint8 as 8 in a constant */
+  uint8 internal constant EIGHT = 8;
+  /** @notice a uint8 as 16 in a constant */
+  uint8 internal constant SIXTEEN = 16;
+  /** @notice a uint8 as 24 in a constant */
+  uint8 internal constant TWENTY_FOUR = 24;
+  /** @notice a uint8 as 32 in a constant */
+  uint8 internal constant THIRTY_TWO = 32;
+  /** @notice a uint8 as 48 in a constant */
+  uint8 internal constant FOURTY_EIGHT = 48;
+  /** @notice a uint8 as 56 in a constant */
+  uint8 internal constant FIFTY_SIX = 56;
+  /** @notice a uint8 as 64 in a constant */
+  uint8 internal constant SIXTY_FOUR = 64;
   /** @notice the hedron contract to interact with and mint hedron tokens from */
   address public constant HEDRON = 0x3819f64f282bf135d62168C1e513280dAF905e06;
   /**

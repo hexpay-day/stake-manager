@@ -3,22 +3,23 @@ import { expect } from "chai"
 import * as hre from "hardhat"
 import * as utils from './utils'
 import _ from 'lodash'
+import { settings } from '../src/utils'
 import { anyUint } from "@nomicfoundation/hardhat-chai-matchers/withArgs"
-import { fromStruct } from '../src/utils'
+import { consentAbilities, fromStruct } from '../src/utils'
 
 describe('SingletonMintManager.sol', () => {
   describe('mintRewards', () => {
     it('mints rewards from stakes', async () => {
       const x = await loadFixture(utils.stakeSingletonBagAndWait)
-      const settings = await x.stakeManager.defaultSettings()
+      const decodedSettings = await x.stakeManager.defaultSettings().then(settings.decode)
       const nuSettings = {
-        ...fromStruct(settings),
-        consentAbilities: await x.stakeManager.decodeConsentAbilities(parseInt('1101', 2)).then(fromStruct),
+        ...decodedSettings,
+        consentAbilities: consentAbilities.decode(BigInt(parseInt('1101', 2))),
       }
       const data = await Promise.all(x.stakeIds.map(async (stakeId) => (
-        x.stakeManager.interface.encodeFunctionData('updateSettingsEncoded', [
+        x.stakeManager.interface.encodeFunctionData('updateSettings', [
           stakeId,
-          await x.stakeManager.encodeSettings(nuSettings),
+          settings.encode(nuSettings),
         ])
       )))
       const [signerA] = x.signers
@@ -32,15 +33,15 @@ describe('SingletonMintManager.sol', () => {
     })
     it('can withdraw rewards at a later time', async () => {
       const x = await loadFixture(utils.stakeSingletonBagAndWait)
-      const settings = await x.stakeManager.defaultSettings()
+      const decodedSettings = await x.stakeManager.defaultSettings().then(settings.decode)
       const nuSettings = {
-        ...fromStruct(settings),
-        consentAbilities: await x.stakeManager.decodeConsentAbilities(parseInt('1101', 2)).then(fromStruct),
+        ...decodedSettings,
+        consentAbilities: consentAbilities.decode(BigInt(parseInt('1101', 2))),
       }
       const data = await Promise.all(x.stakeIds.map(async (stakeId) => (
-        x.stakeManager.interface.encodeFunctionData('updateSettingsEncoded', [
+        x.stakeManager.interface.encodeFunctionData('updateSettings', [
           stakeId,
-          await x.stakeManager.encodeSettings(nuSettings),
+          settings.encode(nuSettings),
         ])
       )))
       const [signerA] = x.signers
@@ -69,26 +70,26 @@ describe('SingletonMintManager.sol', () => {
     })
     it('can mint for multiple addresses at the same time', async () => {
       const x = await loadFixture(utils.stakeSingletonBagAndWait)
-      const settings = await x.stakeManager.defaultSettings()
+      const decodedSettings = await x.stakeManager.defaultSettings().then(settings.decode)
       const nuSettings = {
-        ...fromStruct(settings),
-        consentAbilities: await x.stakeManager.decodeConsentAbilities(parseInt('1101', 2)).then(fromStruct),
+        ...decodedSettings,
+        consentAbilities: consentAbilities.decode(BigInt(parseInt('1101', 2))),
       }
       const [signerA, signerB] = x.signers
       const nextStakeId = await utils.nextStakeId(x.hex)
       await x.stakeManager.connect(signerB).stakeStart(x.stakedAmount, 30)
       const stakeIds = x.stakeIds.concat(nextStakeId)
       const signerAUpdateSettings = await Promise.all(x.stakeIds.map(async (stakeId) => (
-        x.stakeManager.interface.encodeFunctionData('updateSettingsEncoded', [
+        x.stakeManager.interface.encodeFunctionData('updateSettings', [
           stakeId,
-          await x.stakeManager.encodeSettings(nuSettings),
+          settings.encode(nuSettings),
         ])
       )))
       await x.stakeManager.connect(signerA).multicall(signerAUpdateSettings, false)
       const signerBUpdateSettings = await Promise.all([nextStakeId].map(async (stakeId) => (
-        x.stakeManager.interface.encodeFunctionData('updateSettingsEncoded', [
+        x.stakeManager.interface.encodeFunctionData('updateSettings', [
           stakeId,
-          await x.stakeManager.encodeSettings(nuSettings),
+          settings.encode(nuSettings),
         ])
       )))
       await x.stakeManager.connect(signerB).multicall(signerBUpdateSettings, false)

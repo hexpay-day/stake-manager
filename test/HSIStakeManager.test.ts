@@ -4,7 +4,7 @@ import * as hre from "hardhat"
 import * as utils from './utils'
 import _ from 'lodash'
 import { anyUint, anyValue } from "@nomicfoundation/hardhat-chai-matchers/withArgs"
-import { fromStruct } from '../src/utils'
+import { consentAbilities, fromStruct, linear, settings } from '../src/utils'
 import { EncodableSettings } from "../artifacts/types"
 
 describe('HSIStakeManager.sol', () => {
@@ -58,14 +58,14 @@ describe('HSIStakeManager.sol', () => {
         .to.emit(x.hsim, 'HSIDetokenize')
       const currencyIndex = await x.stakeManager.currencyListSize()
       const amount = hre.ethers.parseUnits('10', await x.usdc.decimals())
-      const encodedLinear = await x.existingStakeManager.encodeLinear({
-        method: 0,
-        xFactor: 1,
-        x: 1,
-        yFactor: 0,
-        y: 1,
-        bFactor: 0,
-        b: 0,
+      const encodedLinear = linear.encode({
+        method: 0n,
+        xFactor: 1n,
+        x: 1n,
+        yFactor: 0n,
+        y: 1n,
+        bFactor: 0n,
+        b: 0n,
       })
       const tipSettings = await x.existingStakeManager.encodeTipSettings(false, currencyIndex, amount, encodedLinear)
       const stakeId = await x.existingStakeManager.hsiAddressToId(x.hsiTargets[0].hsiAddress)
@@ -155,13 +155,13 @@ describe('HSIStakeManager.sol', () => {
       await utils.moveForwardDays(10n, x)
       const stakeId = x.hsiTargets[0].hsiAddress
       const currentSettings = await x.existingStakeManager.stakeIdToSettings(stakeId)
-      const decodedSettings = await x.existingStakeManager.decodeSettings(currentSettings)
+      const decodedSettings = settings.decode(currentSettings)
       // this tells system to send any remaining tokens to staker
       await Promise.all(x.hsiTargets.map(async ({ hsiAddress }) => (
-        x.existingStakeManager.updateSettingsEncoded(hsiAddress, await x.existingStakeManager.encodeSettings({
-          ...fromStruct(decodedSettings),
+        x.existingStakeManager.updateSettings(hsiAddress, settings.encode({
+          ...decodedSettings,
           consentAbilities: {
-            ...fromStruct(decodedSettings.consentAbilities),
+            ...decodedSettings.consentAbilities,
             shouldSendTokensToStaker: true,
           },
         }))
@@ -180,9 +180,9 @@ describe('HSIStakeManager.sol', () => {
     })
     it('anyone can mint rewards', async () => {
       const x = await loadFixture(utils.deployAndProcureHSIFixture)
-      const defaultEncodedSettings = await x.existingStakeManager.defaultEncodedSettings()
+      const defaultSettings = await x.existingStakeManager.defaultSettings()
       await x.existingStakeManager.multicall(_.flatMap(x.hsiTargets, (target) => ([
-        x.existingStakeManager.interface.encodeFunctionData('depositHsi', [target.tokenId, defaultEncodedSettings]),
+        x.existingStakeManager.interface.encodeFunctionData('depositHsi', [target.tokenId, defaultSettings]),
       ])), false)
       const [, signerB] = x.signers
       await utils.moveForwardDays(10n, x)
@@ -192,9 +192,9 @@ describe('HSIStakeManager.sol', () => {
     })
     it('end deposited stakes', async () => {
       const x = await loadFixture(utils.deployAndProcureHSIFixture)
-      const defaultEncodedSettings = await x.existingStakeManager.defaultEncodedSettings()
+      const defaultSettings = await x.existingStakeManager.defaultSettings()
       const deposits = _.flatMap(x.hsiTargets, (target) => ([
-        x.existingStakeManager.interface.encodeFunctionData('depositHsi', [target.tokenId, defaultEncodedSettings]),
+        x.existingStakeManager.interface.encodeFunctionData('depositHsi', [target.tokenId, defaultSettings]),
       ]))
       await expect(x.existingStakeManager.multicall(deposits, false))
         .to.emit(x.hsim, 'Transfer')
@@ -214,9 +214,9 @@ describe('HSIStakeManager.sol', () => {
     it('end deposited stakes and automatically attribute tips', async () => {
       const x = await loadFixture(utils.deployAndProcureHSIFixture)
       const [, signer2] = x.signers
-      const defaultEncodedSettings = await x.existingStakeManager.defaultEncodedSettings()
+      const defaultSettings = await x.existingStakeManager.defaultSettings()
       const deposits = _.flatMap(x.hsiTargets, (target) => ([
-        x.existingStakeManager.interface.encodeFunctionData('depositHsi', [target.tokenId, defaultEncodedSettings]),
+        x.existingStakeManager.interface.encodeFunctionData('depositHsi', [target.tokenId, defaultSettings]),
       ]))
       await expect(x.existingStakeManager.multicall(deposits, false))
         .to.emit(x.hsim, 'Transfer')
@@ -256,9 +256,9 @@ describe('HSIStakeManager.sol', () => {
     })
     it('end deposited stakes in any order', async () => {
       const x = await loadFixture(utils.deployAndProcureSequentialDayHSIFixture)
-      const defaultEncodedSettings = await x.existingStakeManager.defaultEncodedSettings()
+      const defaultSettings = await x.existingStakeManager.defaultSettings()
       const deposits = _.flatMap(x.hsiTargets, (target) => ([
-        x.existingStakeManager.interface.encodeFunctionData('depositHsi', [target.tokenId, defaultEncodedSettings]),
+        x.existingStakeManager.interface.encodeFunctionData('depositHsi', [target.tokenId, defaultSettings]),
       ]))
       await expect(x.existingStakeManager.multicall(deposits, false))
         .to.emit(x.hsim, 'Transfer')
@@ -283,43 +283,43 @@ describe('HSIStakeManager.sol', () => {
   })
   const tenPercent = {
     // 5, 0, 1, 0, 10, 0, 0
-    method: 2,
-    xFactor: 1,
-    x: 1,
-    yFactor: 0,
-    y: 10,
-    bFactor: 0,
-    b: 0,
+    method: 2n,
+    xFactor: 1n,
+    x: 1n,
+    yFactor: 0n,
+    y: 10n,
+    bFactor: 0n,
+    b: 0n,
   }
   const zeroLinear = {
-    method: 0,
-    xFactor: 0,
-    x: 0,
-    yFactor: 0,
-    y: 0,
-    bFactor: 0,
-    b: 0,
+    method: 0n,
+    xFactor: 0n,
+    x: 0n,
+    yFactor: 0n,
+    y: 0n,
+    bFactor: 0n,
+    b: 0n,
   }
   describe('setSettings', () => {
     it('sets settings', async function () {
       const x = await loadFixture(utils.deployAndProcureHSIFixture)
       const [signer1, signer2] = x.signers
       // give 10% of the yield to the end staker
-      const settings = {
+      const decodedSettings = {
         hedronTip: tenPercent,
         targetTip: tenPercent,
         newStake: zeroLinear,
-        consentAbilities: await x.stakeManager.decodeConsentAbilities(parseInt('001111', 2)).then(fromStruct),
+        consentAbilities: consentAbilities.decode(BigInt(parseInt('001111', 2))),
         // unused on hsi
-        newStakeDaysMethod: 0,
-        newStakeDaysMagnitude: 0,
-        copyIterations: 0,
+        newStakeDaysMethod: 0n,
+        newStakeDaysMagnitude: 0n,
+        copyIterations: 0n,
         hasExternalTips: false,
       }
-      const encodedSettings = await x.existingStakeManager.encodeSettings(settings)
+      const encodedSettings = settings.encode(decodedSettings)
       const firstStakeTarget = x.hsiTargets[0]
       const lastHsiTarget = x.hsiTargets[x.hsiTargets.length - 1]
-      const defaultEncoded = await x.existingStakeManager.defaultEncodedSettings()
+      const defaultEncoded = await x.existingStakeManager.defaultSettings()
       await expect(x.existingStakeManager.multicall(_.map(x.hsiTargets, (target) => (
         x.existingStakeManager.interface.encodeFunctionData('depositHsi', [
           target.tokenId,
@@ -335,19 +335,18 @@ describe('HSIStakeManager.sol', () => {
       await expect(x.existingStakeManager.stakeIdToSettings(lastHsiTarget.hsiAddress))
         .eventually.to.equal(defaultEncoded)
       const lastStakeIdSettings = await x.existingStakeManager.stakeIdToSettings(lastHsiTarget.hsiAddress)
-      const defaultSettings = await x.existingStakeManager.defaultSettings()
-      await expect(x.existingStakeManager.decodeSettings(lastStakeIdSettings))
-        .eventually.to.deep.equal(defaultSettings)
+      const defaultSettings = await x.existingStakeManager.defaultSettings().then(settings.decode)
+      expect(settings.decode(lastStakeIdSettings)).to.deep.equal(defaultSettings)
       await utils.moveForwardDays(30n, x)
-      const updatedSettings: EncodableSettings.SettingsStruct = {
-        ...settings,
+      const updatedSettings = {
+        ...decodedSettings,
         targetTip: zeroLinear,
       }
-      const encodedUpdatedSettings = await x.existingStakeManager.encodeSettings(updatedSettings)
-      await expect(x.existingStakeManager.connect(signer2).updateSettingsEncoded(firstStakeTarget.hsiAddress, encodedUpdatedSettings))
+      const encodedUpdatedSettings = settings.encode(updatedSettings)
+      await expect(x.existingStakeManager.connect(signer2).updateSettings(firstStakeTarget.hsiAddress, encodedUpdatedSettings))
         .to.revertedWithCustomError(x.existingStakeManager, 'StakeNotOwned')
         .withArgs(signer2.address, signer1.address)
-      await expect(x.existingStakeManager.updateSettingsEncoded(firstStakeTarget.hsiAddress, encodedUpdatedSettings))
+      await expect(x.existingStakeManager.updateSettings(firstStakeTarget.hsiAddress, encodedUpdatedSettings))
         .to.emit(x.existingStakeManager, 'UpdateSettings')
         .withArgs(firstStakeTarget.hsiAddress, encodedUpdatedSettings)
         // this line is required
@@ -372,21 +371,21 @@ describe('HSIStakeManager.sol', () => {
     it('will restart an hsi with the appropriate inputs', async () => {
       const x = await loadFixture(utils.deployAndProcureHSIFixture)
       const [signer1, signer2] = x.signers
-      const settings = {
+      const baselineSettings = {
         hedronTip: zeroLinear,
         targetTip: zeroLinear,
         newStake: {
           ...zeroLinear,
-          method: 2,
+          method: 2n,
         },
-        consentAbilities: await x.stakeManager.decodeConsentAbilities(parseInt('001101', 2)).then(fromStruct),
+        consentAbilities: consentAbilities.decode(BigInt(parseInt('001101', 2))),
         // unused on hsi
-        newStakeDaysMethod: 2,
-        newStakeDaysMagnitude: 0,
-        copyIterations: 0,
+        newStakeDaysMethod: 2n,
+        newStakeDaysMagnitude: 0n,
+        copyIterations: 0n,
         hasExternalTips: false,
       }
-      const encodedSettings = await x.stakeManager.encodeSettings(settings)
+      const encodedSettings = settings.encode(baselineSettings)
       const deposits = _.flatMap(x.hsiTargets, (target) => ([
         x.existingStakeManager.interface.encodeFunctionData('depositHsi', [target.tokenId, encodedSettings]),
       ]))
@@ -404,21 +403,21 @@ describe('HSIStakeManager.sol', () => {
     it('will ignore hsis that do not exist', async () => {
       const x = await loadFixture(utils.deployAndProcureHSIFixture)
       const [signer1, signer2] = x.signers
-      const settings = {
+      const baselineSettings = {
         hedronTip: zeroLinear,
         targetTip: zeroLinear,
         newStake: {
           ...zeroLinear,
-          method: 2,
+          method: 2n,
         },
-        consentAbilities: await x.stakeManager.decodeConsentAbilities(parseInt('001101', 2)).then(fromStruct),
+        consentAbilities: consentAbilities.decode(BigInt(parseInt('001101', 2))),
         // unused on hsi
-        newStakeDaysMethod: 2,
-        newStakeDaysMagnitude: 0,
-        copyIterations: 0,
+        newStakeDaysMethod: 2n,
+        newStakeDaysMagnitude: 0n,
+        copyIterations: 0n,
         hasExternalTips: false,
       }
-      const encodedSettings = await x.stakeManager.encodeSettings(settings)
+      const encodedSettings = settings.encode(baselineSettings)
       const deposits = _.flatMap(x.hsiTargets, (target) => ([
         x.existingStakeManager.interface.encodeFunctionData('depositHsi', [target.tokenId, encodedSettings]),
       ]))

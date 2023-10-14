@@ -3,7 +3,7 @@ import * as utils from './utils'
 import { expect } from "chai"
 import * as hre from 'hardhat'
 import { anyUint } from "@nomicfoundation/hardhat-chai-matchers/withArgs"
-import { EncodableSettings } from "../artifacts/types"
+import { settings, consentAbilities } from "../src/utils"
 import { fromStruct, isOneAtIndex } from '../src/utils'
 
 describe('TransferableStakeManager.sol', () => {
@@ -15,11 +15,11 @@ describe('TransferableStakeManager.sol', () => {
     it('removes the transferable flag', async () => {
       const days = 3
       const [signer1] = x.signers
-      const settings = await x.stakeManager.defaultSettings()
+      const decodedSettings = await x.stakeManager.defaultSettings().then(settings.decode)
       const updatedSettings = {
-        ...fromStruct(settings),
+        ...decodedSettings,
         consentAbilities: {
-          ...fromStruct(settings.consentAbilities),
+          ...decodedSettings.consentAbilities,
           canStakeEnd: true,
           canEarlyStakeEnd: true,
           canMintHedron: true,
@@ -29,7 +29,7 @@ describe('TransferableStakeManager.sol', () => {
           copyExternalTips: true,
         },
       }
-      const encodedSettings = await x.stakeManager.encodeSettings(updatedSettings)
+      const encodedSettings = settings.encode(updatedSettings)
       await expect(x.stakeManager.stakeStartFromBalanceFor(signer1.address, x.stakedAmount, days, encodedSettings))
         .to.emit(x.hex, 'StakeStart')
       const removedEncoded = await x.stakeManager.removeTransferrabilityFromEncodedSettings(encodedSettings)
@@ -45,16 +45,16 @@ describe('TransferableStakeManager.sol', () => {
     it('allows for a transfer', async () => {
       const days = 3n
       const [signer1, signer2, signer3] = x.signers
-      const settings = await x.stakeManager.defaultSettings()
-      const decodedSettings: EncodableSettings.SettingsStructOutput = {
-        ...fromStruct(settings),
+      const decodedSettings = await x.stakeManager.defaultSettings().then(settings.decode)
+      const updatedSettings = {
+        ...decodedSettings,
         newStakeDaysMethod: 0n,
         consentAbilities: {
-          ...fromStruct(settings.consentAbilities),
+          ...decodedSettings.consentAbilities,
           stakeIsTransferable: true,
         },
       }
-      const encodedSettings = await x.stakeManager.encodeSettings(decodedSettings)
+      const encodedSettings = settings.encode(updatedSettings)
       await expect(x.stakeManager.stakeStartFromBalanceFor(signer1.address, x.stakedAmount, days, encodedSettings))
         .to.emit(x.hex, 'StakeStart')
       await expect(x.stakeManager.stakeTransfer(x.nextStakeId, signer2.address))
@@ -81,16 +81,16 @@ describe('TransferableStakeManager.sol', () => {
     it('brings tips along', async () => {
       const days = 3
       const [signer1, signer2, signer3] = x.signers
-      const settings = await x.stakeManager.defaultSettings()
-      const decodedSettings: EncodableSettings.SettingsStructOutput = {
-        ...fromStruct(settings),
+      const decodedSettings = await x.stakeManager.defaultSettings().then(settings.decode)
+      const updatedSettings = {
+        ...decodedSettings,
         newStakeDaysMethod: 0n,
         consentAbilities: {
-          ...fromStruct(settings.consentAbilities),
+          ...decodedSettings.consentAbilities,
           stakeIsTransferable: true,
         },
       }
-      const encodedSettings = await x.stakeManager.encodeSettings(decodedSettings)
+      const encodedSettings = settings.encode(updatedSettings)
       await expect(x.stakeManager.stakeStartFromBalanceFor(signer1.address, x.stakedAmount, days, encodedSettings))
         .to.emit(x.hex, 'StakeStart')
       await expect(x.stakeManager.depositAndAddTipToStake(
@@ -116,15 +116,15 @@ describe('TransferableStakeManager.sol', () => {
     let transferableSettings!: bigint
     let stakeStartArgs!: [string, bigint, number, bigint]
     beforeEach(async () => {
-      const settings = await x.stakeManager.defaultSettings()
-      const updatedSettings: EncodableSettings.SettingsStruct = {
-        ...fromStruct(settings),
+      const decodedSettings = await x.stakeManager.defaultSettings().then(settings.decode)
+      const updatedSettings = {
+        ...decodedSettings,
         consentAbilities: {
-          ...fromStruct(settings.consentAbilities),
+          ...decodedSettings.consentAbilities,
           stakeIsTransferable: true,
         },
       }
-      const encodedsettings = await x.stakeManager.encodeSettings(updatedSettings)
+      const encodedsettings = settings.encode(updatedSettings)
       transferableSettings = encodedsettings
       const [signer1] = x.signers
       stakeStartArgs = [signer1.address, x.oneMillion / 10n, 1, transferableSettings]

@@ -23,7 +23,7 @@ contract SingletonMintManager is UnderlyingStakeManager {
   }
   function _createTo(uint256 settings, address owner) internal pure returns(uint256 to) {
     unchecked {
-      return ((_isOneAtIndex({
+      return (uint256(_isOneAtIndex({
         settings: settings,
         index: INDEX_RIGHT_SHOULD_SEND_TOKENS_TO_STAKER
       }) ? ONE : ZERO) << ADDRESS_BIT_LENGTH) | uint160(owner);
