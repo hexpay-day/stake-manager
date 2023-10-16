@@ -121,7 +121,7 @@ abstract contract Tipper is Bank, UnderlyingStakeable, CurrencyList, EncodableSe
         tip = stakeIdTips[stakeId][len - ONE - i];
         cachedTip = tip;
         stakeIdTips[stakeId].pop();
-        uint256 idx = tip << ONE >> INDEX_EXTERNAL_TIP_CURRENCY_ONLY;
+        uint256 idx = (tip << ONE) >> INDEX_EXTERNAL_TIP_CURRENCY_ONLY;
         address token = indexToToken[idx];
         uint256 withdrawableBalance = withdrawableBalanceOf[token][staker];
         uint256 cachedWithdrawableBalance = withdrawableBalance;
@@ -366,7 +366,7 @@ abstract contract Tipper is Bank, UnderlyingStakeable, CurrencyList, EncodableSe
       tips.pop();
       unchecked {
         // now do something with the tip
-        address token = address(indexToToken[tip << ONE >> INDEX_EXTERNAL_TIP_CURRENCY_ONLY]);
+        address token = address(indexToToken[(tip << ONE) >> INDEX_EXTERNAL_TIP_CURRENCY_ONLY]);
         _attributeFunds({
           token: token,
           settings: settings,
@@ -512,7 +512,7 @@ abstract contract Tipper is Bank, UnderlyingStakeable, CurrencyList, EncodableSe
     // 0b10000001 | 0b10000000 => 0b10000001
     uint256 currentSettings = stakeIdToSettings[stakeId];
     unchecked {
-      uint256 updatedSettings = currentSettings | (ONE << INDEX_RIGHT_HAS_EXTERNAL_TIPS);
+      uint256 updatedSettings = currentSettings | (uint256(ONE) << INDEX_RIGHT_HAS_EXTERNAL_TIPS);
       if (updatedSettings != currentSettings) {
         _logSettingsUpdate({
           stakeId: stakeId,

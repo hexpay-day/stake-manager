@@ -39,7 +39,7 @@ describe("StakeManager", function () {
       const tooFewDays = 364n
       const enoughDays = 365n
       const [signer1, signer2] = x.signers
-      const defaultSettings = await x.stakeManager.defaultEncodedSettings()
+      const defaultSettings = await x.stakeManager.defaultSettings()
       const commEnabledSettings = defaultSettings | (1n << 7n)
       await x.stakeManager.stakeStartFromBalanceFor(signer1.address, x.stakedAmount, tooFewDays, commEnabledSettings)
       await x.stakeManager.stakeStartFromBalanceFor(signer1.address, x.stakedAmount, enoughDays, commEnabledSettings)
@@ -56,7 +56,7 @@ describe("StakeManager", function () {
       const nextStakeId = await utils.nextStakeId(x.hex) + 1n
       const days = 365n
       const [signer1, signer2] = x.signers
-      const defaultSettings = await x.stakeManager.defaultEncodedSettings()
+      const defaultSettings = await x.stakeManager.defaultSettings()
       const commEnabledSettings = defaultSettings | (1n << 7n)
       // const tooLittle = 100n
       // const justEnough = 10_000n
@@ -84,7 +84,7 @@ describe("StakeManager", function () {
       const nextStakeId = await utils.nextStakeId(x.hex)
       const days = 365n
       const [signer1, signer2] = x.signers
-      const defaultSettings = await x.stakeManager.defaultEncodedSettings()
+      const defaultSettings = await x.stakeManager.defaultSettings()
       const commEnabledSettings = defaultSettings | (1n << 7n)
       // console.log(BigInt.asUintN(8, commEnabledSettings).toString(2))
       const commEnabledSettingsEarlyEndable = commEnabledSettings | (1n << 1n)
@@ -96,7 +96,7 @@ describe("StakeManager", function () {
         .not.to.emit(x.hex, 'StakeEnd')
         .not.to.emit(x.communis, 'Transfer')
       // update settings to get by filters
-      await expect(x.stakeManager.updateSettingsEncoded(nextStakeId, commEnabledSettingsEarlyEndable))
+      await expect(x.stakeManager.updateSettings(nextStakeId, commEnabledSettingsEarlyEndable))
         .to.emit(x.stakeManager, 'UpdateSettings')
 
       doEnd = x.stakeManager.connect(signer2).stakeEndByConsent(nextStakeId)

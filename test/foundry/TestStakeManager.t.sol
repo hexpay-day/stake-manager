@@ -16,10 +16,10 @@ contract TestStakeManager is Test {
   uint256 public decimalShift;
   uint256 public startingBalance;
   uint256 public nextStakeId;
-  uint256 public defaultEncodedSettings;
+  uint256 public defaultSettings;
   function setUp() public virtual {
     stkMngr = new StakeManager();
-    defaultEncodedSettings = stkMngr.defaultEncodedSettings();
+    defaultSettings = stkMngr.defaultSettings();
     uint256 decimals = 8; //ERC20Metadata(hx).decimals();
     decimalShift = 10**decimals;
     startingBalance = 1_000_000 * decimalShift;
@@ -77,7 +77,7 @@ contract TestStakeManager is Test {
   }
   function _managedStakeStart(address sender, uint256 amount, uint256 stakeDays) internal {
     vm.startPrank(sender);
-    stkMngr.stakeStartFromBalanceFor(sender, amount, stakeDays, defaultEncodedSettings);
+    stkMngr.stakeStartFromBalanceFor(sender, amount, stakeDays, defaultSettings);
     vm.stopPrank();
   }
   function _managedStakeEndById(address sender, uint256 stakeId) internal {
@@ -137,7 +137,7 @@ contract TestStakeManager is Test {
   }
   function _updateSettings(address stakeOwner, uint256 stakeId, uint256 settings) internal {
     vm.startPrank(stakeOwner);
-    stkMngr.updateSettingsEncoded(stakeId, settings);
+    stkMngr.updateSettings(stakeId, settings);
     vm.stopPrank();
   }
   function _stakeInfo(uint256 input) internal view returns(address staker, uint256 amount, uint256 stakeDays) {

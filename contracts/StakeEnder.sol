@@ -234,7 +234,7 @@ contract StakeEnder is Magnitude, SingletonMintManager {
         });
         if (nextStakeTipsLength > ZERO) {
           // add settings to flag tips as existing in new settings
-          settings = settings | (ONE << INDEX_RIGHT_HAS_EXTERNAL_TIPS);
+          settings = settings | (uint256(ONE) << INDEX_RIGHT_HAS_EXTERNAL_TIPS);
         }
       }
       if (nextStakeId > ZERO) {

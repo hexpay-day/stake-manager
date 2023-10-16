@@ -5,69 +5,69 @@ import { StakeInfo } from "./StakeInfo.sol";
 
 abstract contract EncodableSettings is StakeInfo {
   // the index of the first bit of targeted information
-  uint256 internal constant UNUSED_SPACE_RIGHT_UINT8 = SLOTS - EIGHT; // 256-8=248
-  uint256 internal constant UNUSED_SPACE_RIGHT_UINT16 = SLOTS - 16; // 256-16=240
-  uint256 internal constant UNUSED_SPACE_RIGHT_UINT64 = SLOTS - SIXTY_FOUR; // 256-64=192
-  uint256 internal constant INDEX_RIGHT_HEDRON_TIP = SLOTS - 72; // 256-72=184
-  uint256 internal constant INDEX_RIGHT_TARGET_TIP = INDEX_RIGHT_HEDRON_TIP - 72; // 184-72=112
-  uint256 internal constant INDEX_LEFT_TARGET_TIP = SLOTS - 144; // 256-144=112
-  uint256 internal constant INDEX_RIGHT_NEW_STAKE = INDEX_RIGHT_TARGET_TIP - 72;
-  uint256 internal constant INDEX_LEFT_NEW_STAKE = SLOTS - INDEX_RIGHT_NEW_STAKE;
-  uint256 internal constant INDEX_RIGHT_NEW_STAKE_DAYS_METHOD = THIRTY_TWO;
-  uint256 internal constant INDEX_RIGHT_NEW_STAKE_DAYS_MAGNITUDE = 16;
-  uint256 internal constant INDEX_RIGHT_COPY_ITERATIONS = 9;
-  uint256 internal constant INDEX_RIGHT_HAS_EXTERNAL_TIPS = EIGHT;
-  uint256 internal constant INDEX_RIGHT_MINT_COMMUNIS_AT_END = 7;
-  uint256 internal constant INDEX_RIGHT_COPY_EXTERNAL_TIPS = 6;
-  uint256 internal constant INDEX_RIGHT_STAKE_IS_TRANSFERABLE = 5;
-  uint256 internal constant INDEX_LEFT_STAKE_IS_TRANSFERABLE = SLOTS - INDEX_RIGHT_STAKE_IS_TRANSFERABLE;
-  uint256 internal constant INDEX_RIGHT_SHOULD_SEND_TOKENS_TO_STAKER = FOUR;
-  uint256 internal constant INDEX_RIGHT_CAN_MINT_HEDRON_AT_END = THREE;
-  uint256 internal constant INDEX_RIGHT_CAN_MINT_HEDRON = TWO;
-  uint256 internal constant INDEX_RIGHT_CAN_EARLY_STAKE_END = ONE;
-  uint256 internal constant INDEX_RIGHT_CAN_STAKE_END = ZERO;
+  uint8 internal constant UNUSED_SPACE_RIGHT_UINT8 = uint8(SLOTS - EIGHT); // 256-8=248
+  uint8 internal constant UNUSED_SPACE_RIGHT_UINT16 = uint8(SLOTS - SIXTEEN); // 256-16=240
+  uint8 internal constant UNUSED_SPACE_RIGHT_UINT64 = uint8(SLOTS - SIXTY_FOUR); // 256-64=192
+  uint8 internal constant INDEX_RIGHT_HEDRON_TIP = uint8(SLOTS - 72); // 256-72=184
+  uint8 internal constant INDEX_RIGHT_TARGET_TIP = INDEX_RIGHT_HEDRON_TIP - 72; // 184-72=112
+  uint8 internal constant INDEX_LEFT_TARGET_TIP = uint8(SLOTS - 144); // 256-144=112
+  uint8 internal constant INDEX_RIGHT_NEW_STAKE = INDEX_RIGHT_TARGET_TIP - 72;
+  uint8 internal constant INDEX_LEFT_NEW_STAKE = uint8(SLOTS - INDEX_RIGHT_NEW_STAKE);
+  uint8 internal constant INDEX_RIGHT_NEW_STAKE_DAYS_METHOD = THIRTY_TWO;
+  uint8 internal constant INDEX_RIGHT_NEW_STAKE_DAYS_MAGNITUDE = SIXTEEN;
+  uint8 internal constant INDEX_RIGHT_COPY_ITERATIONS = 9;
+  uint8 internal constant INDEX_RIGHT_HAS_EXTERNAL_TIPS = EIGHT;
+  uint8 internal constant INDEX_RIGHT_MINT_COMMUNIS_AT_END = 7;
+  uint8 internal constant INDEX_RIGHT_COPY_EXTERNAL_TIPS = 6;
+  uint8 internal constant INDEX_RIGHT_STAKE_IS_TRANSFERABLE = 5;
+  uint8 internal constant INDEX_LEFT_STAKE_IS_TRANSFERABLE = uint8(SLOTS - INDEX_RIGHT_STAKE_IS_TRANSFERABLE);
+  uint8 internal constant INDEX_RIGHT_SHOULD_SEND_TOKENS_TO_STAKER = FOUR;
+  uint8 internal constant INDEX_RIGHT_CAN_MINT_HEDRON_AT_END = THREE;
+  uint8 internal constant INDEX_RIGHT_CAN_MINT_HEDRON = TWO;
+  uint8 internal constant INDEX_RIGHT_CAN_EARLY_STAKE_END = ONE;
+  uint8 internal constant INDEX_RIGHT_CAN_STAKE_END = ZERO;
 
-  /**
-   * @notice this struct holds a series of flags to allow clients
-   * to easily access and understand 1/0 mappings
-   */
-  struct ConsentAbilities {
-    bool canStakeEnd;
-    bool canEarlyStakeEnd;
-    bool canMintHedron;
-    bool canMintHedronAtEnd;
-    bool shouldSendTokensToStaker;
-    bool stakeIsTransferable;
-    bool copyExternalTips;
-    bool mintCommunisAtEnd;
-  }
-  /**
-   * @notice this struct holds information that can be encoded into a uint256
-   */
-  struct Settings {
-    Linear hedronTip;
-    // starts with full amount of end stake
-    Linear targetTip;
-    // the rest goes into a new stake if the number of days are set
-    Linear newStake;
-    // useful to use methods 6+7 for stake days
-    uint256 newStakeDaysMethod;
-    uint256 newStakeDaysMagnitude;
-    uint256 copyIterations; // 0 for do not restart, 1-126 as countdown, 127 as restart indefinitely
-    // contract controlled
-    bool hasExternalTips;
-    /**
-     * 00000001(0): can stake end
-     * 00000010(1): can early stake end
-     * 00000100(2): can mint hedron (any time)
-     * 00001000(3): can mint hedron during end stake - future should be 0
-     * 00010000(4): should send tokens to staker
-     * 00100000(5): stake is transferable
-     * 01000000(6): copy external tips to next stake
-     * 10000000(7): mint comm tokens just before end
-     */
-    ConsentAbilities consentAbilities;
-  }
+  // /**
+  //  * @notice this struct holds a series of flags to allow clients
+  //  * to easily access and understand 1/0 mappings
+  //  */
+  // struct ConsentAbilities {
+  //   bool canStakeEnd;
+  //   bool canEarlyStakeEnd;
+  //   bool canMintHedron;
+  //   bool canMintHedronAtEnd;
+  //   bool shouldSendTokensToStaker;
+  //   bool stakeIsTransferable;
+  //   bool copyExternalTips;
+  //   bool mintCommunisAtEnd;
+  // }
+  // /**
+  //  * @notice this struct holds information that can be encoded into a uint256
+  //  */
+  // struct Settings {
+  //   Linear hedronTip;
+  //   // starts with full amount of end stake
+  //   Linear targetTip;
+  //   // the rest goes into a new stake if the number of days are set
+  //   Linear newStake;
+  //   // useful to use methods 6+7 for stake days
+  //   uint256 newStakeDaysMethod;
+  //   uint256 newStakeDaysMagnitude;
+  //   uint256 copyIterations; // 0 for do not restart, 1-126 as countdown, 127 as restart indefinitely
+  //   // contract controlled
+  //   bool hasExternalTips;
+  //   /**
+  //    * 00000001(0): can stake end
+  //    * 00000010(1): can early stake end
+  //    * 00000100(2): can mint hedron (any time)
+  //    * 00001000(3): can mint hedron during end stake - future should be 0
+  //    * 00010000(4): should send tokens to staker
+  //    * 00100000(5): stake is transferable
+  //    * 01000000(6): copy external tips to next stake
+  //    * 10000000(7): mint comm tokens just before end
+  //    */
+  //   ConsentAbilities consentAbilities;
+  // }
   mapping(uint256 stakeId => uint256 settings) public stakeIdToSettings;
   /**
    * an event to signal that settings to direct funds
@@ -148,69 +148,69 @@ abstract contract EncodableSettings is StakeInfo {
     })
   );
   */
-  uint256 private constant DEFAULT_ENCODED_SETTINGS
+  uint256 private constant DEFAULT_SETTINGS
     = uint256(0x000000000000000000000000000000000000000000000000000002020000fe01);
   /**
    * @return the default encoded settings used by end stakers to tip and end stakes
    */
-  function defaultEncodedSettings() external pure returns(uint256) {
-    return _defaultEncodedSettings();
+  function defaultSettings() external pure returns(uint256) {
+    return _defaultSettings();
   }
-  /**
-   * exposes the default settings to external for ease of access
-   * @return a settings struct with default values
-   */
-  function defaultSettings() external pure returns(Settings memory) {
-    return _decodeSettings(_defaultEncodedSettings());
+  // /**
+  //  * exposes the default settings to external for ease of access
+  //  * @return a settings struct with default values
+  //  */
+  // function defaultSettings() external pure returns(Settings memory) {
+  //   return _decodeSettings(_defaultSettings());
+  // }
+  function _defaultSettings() internal virtual pure returns(uint256) {
+    return DEFAULT_SETTINGS;
   }
-  function _defaultEncodedSettings() internal virtual pure returns(uint256) {
-    return DEFAULT_ENCODED_SETTINGS;
-  }
-  /**
-   * access settings of a stake id and decode it, returning the decoded settings struct
-   * @param stakeId the stake id to access and decode
-   * @return decoded settings struct that holds all configuration by owner
-   */
-  function stakeIdSettings(uint256 stakeId) external view returns (Settings memory) {
-    return _decodeSettings({
-      encoded: stakeIdToSettings[stakeId]
-    });
-  }
-  /**
-   * decode a uint's first byte as consent abilities struct
-   * @param abilities encoded consent abilities to decode
-   * @return a ConsentAbilities struct with flags appropriately set
-   */
-  function decodeConsentAbilities(uint256 abilities) external pure returns(ConsentAbilities memory) {
-    return _decodeConsentAbilities({
-      abilities: abilities
-    });
-  }
-  /**
-   * decode a uint's first byte as consent abilities struct
-   * @param abilities encoded consent abilities to decode
-   * @return a ConsentAbilities struct with flags appropriately set
-   */
-  function _decodeConsentAbilities(uint256 abilities) internal pure returns(ConsentAbilities memory) {
-    unchecked {
-      return ConsentAbilities({
-        mintCommunisAtEnd: (abilities >> INDEX_RIGHT_MINT_COMMUNIS_AT_END) % TWO == ONE,
-        copyExternalTips: (abilities >> INDEX_RIGHT_COPY_EXTERNAL_TIPS) % TWO == ONE,
-        stakeIsTransferable: (abilities >> INDEX_RIGHT_STAKE_IS_TRANSFERABLE) % TWO == ONE,
-        shouldSendTokensToStaker: (abilities >> INDEX_RIGHT_SHOULD_SEND_TOKENS_TO_STAKER) % TWO == ONE,
-        canMintHedronAtEnd: (abilities >> INDEX_RIGHT_CAN_MINT_HEDRON_AT_END) % TWO == ONE,
-        canMintHedron: (abilities >> INDEX_RIGHT_CAN_MINT_HEDRON) % TWO == ONE,
-        canEarlyStakeEnd: (abilities >> INDEX_RIGHT_CAN_EARLY_STAKE_END) % TWO == ONE,
-        canStakeEnd: abilities % TWO == ONE
-      });
-    }
-  }
+  // /**
+  //  * access settings of a stake id and decode it, returning the decoded settings struct
+  //  * @param stakeId the stake id to access and decode
+  //  * @return decoded settings struct that holds all configuration by owner
+  //  */
+  // function stakeIdSettings(uint256 stakeId) external view returns (Settings memory) {
+  //   return _decodeSettings({
+  //     encoded: stakeIdToSettings[stakeId]
+  //   });
+  // }
+  // /**
+  //  * decode a uint's first byte as consent abilities struct
+  //  * @param abilities encoded consent abilities to decode
+  //  * @return a ConsentAbilities struct with flags appropriately set
+  //  */
+  // function decodeConsentAbilities(uint256 abilities) external pure returns(ConsentAbilities memory) {
+  //   return _decodeConsentAbilities({
+  //     abilities: abilities
+  //   });
+  // }
+  // /**
+  //  * decode a uint's first byte as consent abilities struct
+  //  * @param abilities encoded consent abilities to decode
+  //  * @return a ConsentAbilities struct with flags appropriately set
+  //  */
+  // function _decodeConsentAbilities(uint256 abilities) internal pure returns(ConsentAbilities memory) {
+  //   unchecked {
+  //     return ConsentAbilities({
+  //       mintCommunisAtEnd: (abilities >> INDEX_RIGHT_MINT_COMMUNIS_AT_END) % TWO == ONE,
+  //       copyExternalTips: (abilities >> INDEX_RIGHT_COPY_EXTERNAL_TIPS) % TWO == ONE,
+  //       stakeIsTransferable: (abilities >> INDEX_RIGHT_STAKE_IS_TRANSFERABLE) % TWO == ONE,
+  //       shouldSendTokensToStaker: (abilities >> INDEX_RIGHT_SHOULD_SEND_TOKENS_TO_STAKER) % TWO == ONE,
+  //       canMintHedronAtEnd: (abilities >> INDEX_RIGHT_CAN_MINT_HEDRON_AT_END) % TWO == ONE,
+  //       canMintHedron: (abilities >> INDEX_RIGHT_CAN_MINT_HEDRON) % TWO == ONE,
+  //       canEarlyStakeEnd: (abilities >> INDEX_RIGHT_CAN_EARLY_STAKE_END) % TWO == ONE,
+  //       canStakeEnd: abilities % TWO == ONE
+  //     });
+  //   }
+  // }
   /**
    * update a stake's settings by providing a new, encoded value
    * @param stakeId the stake id to update settings for
    * @param settings the settings value to update settings for
    */
-  function updateSettingsEncoded(uint256 stakeId, uint256 settings) external virtual payable {
+  function updateSettings(uint256 stakeId, uint256 settings) external virtual payable {
     _verifyStakeOwnership({
       owner: msg.sender,
       stakeId: stakeId
@@ -258,92 +258,92 @@ abstract contract EncodableSettings is StakeInfo {
       settings: settings
     });
   }
-  /**
-   * encode a settings struct into it's number
-   * @param settings the settings struct to be encoded into a number
-   * @return encoded a uint256 expression of settings struct
-   */
-  function encodeSettings(Settings memory settings) external pure returns(uint256 encoded) {
-    return _encodeSettings({
-      settings: settings
-    });
-  }
-  /**
-   * encode a settings struct as a uint value to fit it within 1 word
-   * @param settings the settings struct to encode as a uint
-   * @return encoded a uint256 expression of settings struct
-   */
-  function _encodeSettings(Settings memory settings) internal pure returns(uint256 encoded) {
-    unchecked {
-      return _encodeLinear(settings.hedronTip) << INDEX_RIGHT_HEDRON_TIP
-        | _encodeLinear(settings.targetTip) << INDEX_RIGHT_TARGET_TIP
-        | _encodeLinear(settings.newStake) << INDEX_RIGHT_NEW_STAKE
-        | uint256(uint8(settings.newStakeDaysMethod)) << INDEX_RIGHT_NEW_STAKE_DAYS_METHOD
-        | uint256(uint16(settings.newStakeDaysMagnitude)) << INDEX_RIGHT_NEW_STAKE_DAYS_MAGNITUDE
-        | uint256(uint8(settings.copyIterations)) << INDEX_RIGHT_COPY_ITERATIONS
-        | (settings.hasExternalTips ? ONE << INDEX_RIGHT_HAS_EXTERNAL_TIPS : ZERO)
-        | _encodeConsentAbilities(settings.consentAbilities);
-    }
-  }
-  /**
-   * decode an encoded setting into it's settings struct
-   * @param encoded the encoded setting to decode
-   * @return settings the decoded settings struct
-   */
-  function decodeSettings(uint256 encoded) external pure returns(Settings memory settings) {
-    return _decodeSettings({
-      encoded: encoded
-    });
-  }
-  /**
-   * decode a settings struct (2 words minimum) from a single uint256
-   * @param encoded a number that represents all data needed for an encoded settings struct
-   */
-  function _decodeSettings(uint256 encoded) internal pure returns(Settings memory settings) {
-    unchecked {
-      return Settings(
-        _decodeLinear(uint72(encoded >> INDEX_RIGHT_HEDRON_TIP)),
-        _decodeLinear(uint72(encoded >> INDEX_RIGHT_TARGET_TIP)),
-        _decodeLinear(uint72(encoded >> INDEX_RIGHT_NEW_STAKE)),
-        uint8( encoded >> INDEX_RIGHT_NEW_STAKE_DAYS_METHOD),
-        uint16(encoded >> INDEX_RIGHT_NEW_STAKE_DAYS_MAGNITUDE),
-        uint8( encoded >> INDEX_RIGHT_COPY_ITERATIONS),
-        (encoded >> INDEX_RIGHT_HAS_EXTERNAL_TIPS) % TWO == ONE,
-        _decodeConsentAbilities({
-          abilities: uint8(encoded)
-        })
-      );
-    }
-  }
-  /**
-   * encode a ConsentAbilities struct to fit in 1 byte
-   * @param consentAbilities the consent abilities struct to encode as a uint
-   * @return the encoded list of consetn abilities as a uint
-   */
-  function encodeConsentAbilities(ConsentAbilities calldata consentAbilities) external pure returns(uint256) {
-    return _encodeConsentAbilities({
-      consentAbilities: consentAbilities
-    });
-  }
-  /**
-   * encode a struct of consent abilities to fit in 1 byte
-   * @param consentAbilities encodes a struct of 8 booleans as a uint to fit in 1 byte
-   * @return the encoded list of consent abilities as a uint
-   */
-  function _encodeConsentAbilities(ConsentAbilities memory consentAbilities) internal pure returns(uint256) {
-    unchecked {
-      return (
-        ((consentAbilities.mintCommunisAtEnd ? ONE : ZERO) << INDEX_RIGHT_MINT_COMMUNIS_AT_END)
-        | ((consentAbilities.copyExternalTips ? ONE : ZERO) << INDEX_RIGHT_COPY_EXTERNAL_TIPS)
-        | ((consentAbilities.stakeIsTransferable ? ONE : ZERO) << INDEX_RIGHT_STAKE_IS_TRANSFERABLE)
-        | ((consentAbilities.shouldSendTokensToStaker ? ONE : ZERO) << INDEX_RIGHT_SHOULD_SEND_TOKENS_TO_STAKER)
-        | ((consentAbilities.canMintHedronAtEnd ? ONE : ZERO) << INDEX_RIGHT_CAN_MINT_HEDRON_AT_END)
-        | ((consentAbilities.canMintHedron ? ONE : ZERO) << INDEX_RIGHT_CAN_MINT_HEDRON)
-        | ((consentAbilities.canEarlyStakeEnd ? ONE : ZERO) << INDEX_RIGHT_CAN_EARLY_STAKE_END)
-        | (consentAbilities.canStakeEnd ? ONE : ZERO)
-      );
-    }
-  }
+  // /**
+  //  * encode a settings struct into it's number
+  //  * @param settings the settings struct to be encoded into a number
+  //  * @return encoded a uint256 expression of settings struct
+  //  */
+  // function encodeSettings(Settings memory settings) external pure returns(uint256 encoded) {
+  //   return _encodeSettings({
+  //     settings: settings
+  //   });
+  // }
+  // /**
+  //  * encode a settings struct as a uint value to fit it within 1 word
+  //  * @param settings the settings struct to encode as a uint
+  //  * @return encoded a uint256 expression of settings struct
+  //  */
+  // function _encodeSettings(Settings memory settings) internal pure returns(uint256 encoded) {
+  //   unchecked {
+  //     return _encodeLinear(settings.hedronTip) << INDEX_RIGHT_HEDRON_TIP
+  //       | _encodeLinear(settings.targetTip) << INDEX_RIGHT_TARGET_TIP
+  //       | _encodeLinear(settings.newStake) << INDEX_RIGHT_NEW_STAKE
+  //       | uint256(uint8(settings.newStakeDaysMethod)) << INDEX_RIGHT_NEW_STAKE_DAYS_METHOD
+  //       | uint256(uint16(settings.newStakeDaysMagnitude)) << INDEX_RIGHT_NEW_STAKE_DAYS_MAGNITUDE
+  //       | uint256(uint8(settings.copyIterations)) << INDEX_RIGHT_COPY_ITERATIONS
+  //       | (settings.hasExternalTips ? uint256(ONE) << INDEX_RIGHT_HAS_EXTERNAL_TIPS : ZERO)
+  //       | _encodeConsentAbilities(settings.consentAbilities);
+  //   }
+  // }
+  // /**
+  //  * decode an encoded setting into it's settings struct
+  //  * @param encoded the encoded setting to decode
+  //  * @return settings the decoded settings struct
+  //  */
+  // function decodeSettings(uint256 encoded) external pure returns(Settings memory settings) {
+  //   return _decodeSettings({
+  //     encoded: encoded
+  //   });
+  // }
+  // /**
+  //  * decode a settings struct (2 words minimum) from a single uint256
+  //  * @param encoded a number that represents all data needed for an encoded settings struct
+  //  */
+  // function _decodeSettings(uint256 encoded) internal pure returns(Settings memory settings) {
+  //   unchecked {
+  //     return Settings(
+  //       _decodeLinear(uint72(encoded >> INDEX_RIGHT_HEDRON_TIP)),
+  //       _decodeLinear(uint72(encoded >> INDEX_RIGHT_TARGET_TIP)),
+  //       _decodeLinear(uint72(encoded >> INDEX_RIGHT_NEW_STAKE)),
+  //       uint8( encoded >> INDEX_RIGHT_NEW_STAKE_DAYS_METHOD),
+  //       uint16(encoded >> INDEX_RIGHT_NEW_STAKE_DAYS_MAGNITUDE),
+  //       uint8( encoded >> INDEX_RIGHT_COPY_ITERATIONS),
+  //       (encoded >> INDEX_RIGHT_HAS_EXTERNAL_TIPS) % TWO == ONE,
+  //       _decodeConsentAbilities({
+  //         abilities: uint8(encoded)
+  //       })
+  //     );
+  //   }
+  // }
+  // /**
+  //  * encode a ConsentAbilities struct to fit in 1 byte
+  //  * @param consentAbilities the consent abilities struct to encode as a uint
+  //  * @return the encoded list of consetn abilities as a uint
+  //  */
+  // function encodeConsentAbilities(ConsentAbilities calldata consentAbilities) external pure returns(uint256) {
+  //   return _encodeConsentAbilities({
+  //     consentAbilities: consentAbilities
+  //   });
+  // }
+  // /**
+  //  * encode a struct of consent abilities to fit in 1 byte
+  //  * @param consentAbilities encodes a struct of 8 booleans as a uint to fit in 1 byte
+  //  * @return the encoded list of consent abilities as a uint
+  //  */
+  // function _encodeConsentAbilities(ConsentAbilities memory consentAbilities) internal pure returns(uint256) {
+  //   unchecked {
+  //     return (
+  //       ((consentAbilities.mintCommunisAtEnd ? ONE : ZERO) << INDEX_RIGHT_MINT_COMMUNIS_AT_END)
+  //       | ((consentAbilities.copyExternalTips ? ONE : ZERO) << INDEX_RIGHT_COPY_EXTERNAL_TIPS)
+  //       | ((consentAbilities.stakeIsTransferable ? ONE : ZERO) << INDEX_RIGHT_STAKE_IS_TRANSFERABLE)
+  //       | ((consentAbilities.shouldSendTokensToStaker ? ONE : ZERO) << INDEX_RIGHT_SHOULD_SEND_TOKENS_TO_STAKER)
+  //       | ((consentAbilities.canMintHedronAtEnd ? ONE : ZERO) << INDEX_RIGHT_CAN_MINT_HEDRON_AT_END)
+  //       | ((consentAbilities.canMintHedron ? ONE : ZERO) << INDEX_RIGHT_CAN_MINT_HEDRON)
+  //       | ((consentAbilities.canEarlyStakeEnd ? ONE : ZERO) << INDEX_RIGHT_CAN_EARLY_STAKE_END)
+  //       | (consentAbilities.canStakeEnd ? ONE : ZERO)
+  //     );
+  //   }
+  // }
   /**
    * modify the second byteword from the right to appropriately decrement
    * the number of times that these settings should be copied

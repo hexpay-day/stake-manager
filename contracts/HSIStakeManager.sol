@@ -12,10 +12,10 @@ contract HSIStakeManager is StakeEnder {
   /**
    * a mapping of hsi addresses to the address that deposited the hsi into this contract
    */
-  uint256 private constant DEFAULT_ENCODED_SETTINGS
+  uint256 private constant DEFAULT_SETTINGS
     = 0x000000000000000000000000000000000000000000000000000000000000000d;
-  function _defaultEncodedSettings() internal virtual override pure returns(uint256) {
-    return DEFAULT_ENCODED_SETTINGS;
+  function _defaultSettings() internal virtual override pure returns(uint256) {
+    return DEFAULT_SETTINGS;
   }
   /**
    * transfer stakes by their token ids

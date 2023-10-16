@@ -116,58 +116,61 @@ contract Magnitude is Utils {
     uint256 bFactor;
     int256 b;
   }
-  function encodeLinear(Linear calldata linear) external pure returns(uint256 encoded) {
-    return _encodeLinear(linear);
-  }
-  /**
-   * convert an x/y+b linear struct into a number held in under 72 total bits
-   * @param linear the struct with all relevant linear data in it
-   * @return encoded the encoded numbers describing (x/y)+b
-   */
-  function _encodeLinear(Linear memory linear) internal pure returns(uint256 encoded) {
-    if (linear.method >= X_OPTIONS) revert NotAllowed();
-    if (linear.xFactor == ZERO) {
-      return uint72(
-        uint256(linear.yFactor << SIXTY_FOUR)
-        | uint256(uint56(linear.y << EIGHT))
-        | uint256(uint8(linear.method))
-      );
-    }
-    // xFactor must be > 0
-    unchecked {
-      return uint256(
-        (uint256(uint16(int16(linear.x)) - uint16(int16(MIN_INT_16))) << FIFTY_SIX)
-        | (uint256(uint8(linear.yFactor)) << FOURTY_EIGHT)
-        | (uint256(uint16(linear.y)) << THIRTY_TWO)
-        | (uint256(uint8(linear.bFactor)) << TWENTY_FOUR)
-        | (uint256(uint16(int16(linear.b)) - uint16(int16(MIN_INT_16))) << EIGHT)
-        | uint256(uint8((linear.xFactor * X_OPTIONS) + linear.method))
-      );
-    }
-  }
-  /**
-   * decode an b+(x/y) slope from a number and scale it to your preference
-   * @param encodedLinear holds all relevant data for filling out a Linear struct
-   * @return linear the full set of parameters to describe a (x/y)+b pattern
-   * @notice this limits the bFactor from scaling beyond 2^84, which should be enough for most use cases
-   */
-  function decodeLinear(uint256 encodedLinear) external pure returns (Linear memory linear) {
-    return _decodeLinear({
-      encodedLinear: encodedLinear
-    });
-  }
+  // function encodeLinear(Linear calldata linear) external pure returns(uint256 encoded) {
+  //   return _encodeLinear(linear);
+  // }
+  // /**
+  //  * convert an x/y+b linear struct into a number held in under 72 total bits
+  //  * @param linear the struct with all relevant linear data in it
+  //  * @return encoded the encoded numbers describing (x/y)+b
+  //  */
+  // function _encodeLinear(Linear memory linear) internal pure returns(uint256 encoded) {
+  //   if (linear.method >= X_OPTIONS) revert NotAllowed();
+  //   if (linear.xFactor == ZERO) {
+  //     return uint72(
+  //       uint256(linear.yFactor << SIXTY_FOUR)
+  //       | uint256(uint56(linear.y << EIGHT))
+  //       | uint256(uint8(linear.method))
+  //     );
+  //   }
+  //   // xFactor must be > 0
+  //   unchecked {
+  //     return uint256(
+  //       (uint256(uint16(int16(linear.x)) - uint16(int16(MIN_INT_16))) << FIFTY_SIX)
+  //       | (uint256(uint8(linear.yFactor)) << FOURTY_EIGHT)
+  //       | (uint256(uint16(linear.y)) << THIRTY_TWO)
+  //       | (uint256(uint8(linear.bFactor)) << TWENTY_FOUR)
+  //       | (uint256(uint16(int16(linear.b)) - uint16(int16(MIN_INT_16))) << EIGHT)
+  //       | uint256(uint8((linear.xFactor * X_OPTIONS) + linear.method))
+  //     );
+  //   }
+  // }
+  // /**
+  //  * decode an b+(x/y) slope from a number and scale it to your preference
+  //  * @param encodedLinear holds all relevant data for filling out a Linear struct
+  //  * @return linear the full set of parameters to describe a (x/y)+b pattern
+  //  * @notice this limits the bFactor from scaling beyond 2^84, which should be enough for most use cases
+  //  */
+  // function decodeLinear(uint256 encodedLinear) external pure returns (Linear memory linear) {
+  //   return _decodeLinear({
+  //     encodedLinear: encodedLinear
+  //   });
+  // }
   function _decodeLinear(uint256 encodedLinear) internal pure returns (Linear memory linear) {
     // only first 72 bits of magnitude are read / relevant for our purposes
     unchecked {
       uint256 method = uint8(encodedLinear);
       linear.xFactor = method / X_OPTIONS;
       linear.method = method % X_OPTIONS;
+      // these lines are no longer needed as they are only called when method >= 3
+      // which means that xFactor is always greater than 0
+
       // when xFactor is 0, nothing below makes a difference except y
-      if (linear.xFactor == ZERO) {
-        // y is being used because it is the only uint
-        linear.y = (uint256(uint56(encodedLinear >> EIGHT)) << uint8(encodedLinear >> SIXTY_FOUR));
-        return linear;
-      }
+      // if (linear.xFactor == ZERO) {
+      //   // y is being used because it is the only uint
+      //   linear.y = (uint256(uint56(encodedLinear >> EIGHT)) << uint8(encodedLinear >> SIXTY_FOUR));
+      //   return linear;
+      // }
       // numerator
       linear.x = int16(uint16(encodedLinear >> FIFTY_SIX)) + int16(-MIN_INT_16);
       // denominator - uint
@@ -186,7 +189,7 @@ contract Magnitude is Utils {
    * @param v1 the stake to use as an input for the second value
    */
   function computeMagnitude(
-    uint256 limit, Linear calldata linear,
+    uint256 limit, uint256 linear,
     uint256 v2, uint256 v1
   ) external pure returns(uint256 result) {
     // the reason that this condition is necessary is because "method" of a decoded linear struct
@@ -197,14 +200,15 @@ contract Magnitude is Utils {
     if (limit == ZERO) {
       return ZERO;
     }
-    if (linear.method == ZERO) {
-      if (linear.xFactor == ZERO) {
+    uint256 compoundMethod = uint8(linear);
+    if (compoundMethod % X_OPTIONS == ZERO) {
+      if (compoundMethod / X_OPTIONS == ZERO) {
         return ZERO;
       }
     }
     return _computeMagnitude({
       limit: limit,
-      linear: _encodeLinear(linear),
+      linear: linear,
       v2: v2,
       v1: v1
     });

@@ -50,7 +50,7 @@ describe("2023-10-02 utc", function () {
         await time.setNextBlockTimestamp(depositTime - 1)
         await x.hsim.connect(swa as unknown as ethers.Signer).setApprovalForAll(execStakeManager.getAddress(), true)
         await time.setNextBlockTimestamp(depositTime)
-        // const defaultSettings = await x.existingStakeManager.defaultEncodedSettings()
+        // const defaultSettings = await x.existingStakeManager.defaultSettings()
         // await expect(execStakeManager.multicall(_.map(hsis, (target) => (
         //   execStakeManager.interface.encodeFunctionData('depositHsi', [
         //     target.tokenId,
