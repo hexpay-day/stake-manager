@@ -108,8 +108,8 @@ describe("2023-10-02 utc", function () {
           .to.emit(x.hex, 'StakeEnd')
           .withArgs(anyUint, utils.anyUintNoPenalty, hsi.hsiAddress, hsi.stakeId)
       }
-      const IPoolContract = await hre.ethers.getContractAt('IPoolContract', x.base, swa as unknown as ethers.Signer)
-      await expect(IPoolContract.getEndStaker())
+      const GasReimberserInstance = await hre.ethers.getContractAt('GasReimberserInstance', x.base, swa as unknown as ethers.Signer)
+      await expect(GasReimberserInstance.getEndStaker())
         .eventually.to.equal(execStakeManager.getAddress())
     })
   })

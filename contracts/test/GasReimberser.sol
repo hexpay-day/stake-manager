@@ -3,7 +3,7 @@ pragma solidity ^0.8.18;
 
 import { Utils } from "../Utils.sol";
 import { IGasReimberser } from "../interfaces/IGasReimberser.sol";
-import { IPoolContract } from "../interfaces/IPoolContract.sol";
+import { GasReimberserInstance } from "../interfaces/GasReimberserInstance.sol";
 import { SafeTransferLib, ERC20 } from "solmate/src/utils/SafeTransferLib.sol";
 
 // this contract was modeled after the following tweet:
@@ -17,7 +17,7 @@ contract GasReimberser is IGasReimberser, Utils {
   }
   receive() external payable {}
   function flush() external {
-    IPoolContract pc = IPoolContract(POOL_ADDRESS);
+    GasReimberserInstance pc = GasReimberserInstance(POOL_ADDRESS);
     address ender = pc.getEndStaker();
     require(msg.sender == ender, "Only End Staker can run this function.");
     uint256 amount = address(this).balance;
@@ -26,7 +26,7 @@ contract GasReimberser is IGasReimberser, Utils {
     }
   }
   function flush_erc20(address token_contract_address) external {
-    IPoolContract pc = IPoolContract(POOL_ADDRESS);
+    GasReimberserInstance pc = GasReimberserInstance(POOL_ADDRESS);
     address ender = pc.getEndStaker();
     require(msg.sender == ender, "Only End Staker can run this function.");
     uint256 balance = ERC20(token_contract_address).balanceOf(address(this));
