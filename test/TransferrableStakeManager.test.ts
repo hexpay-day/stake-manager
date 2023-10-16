@@ -57,15 +57,15 @@ describe('TransferableStakeManager.sol', () => {
       const encodedSettings = settings.encode(updatedSettings)
       await expect(x.stakeManager.stakeStartFromBalanceFor(signer1.address, x.stakedAmount, days, encodedSettings))
         .to.emit(x.hex, 'StakeStart')
-      await expect(x.stakeManager.stakeTransfer(x.nextStakeId, signer2.address))
+      await expect(x.stakeManager.stakeTransfer(signer2.address, signer1.address, x.nextStakeId))
         .to.emit(x.stakeManager, 'TransferStake')
-        .withArgs(signer1.address, signer2.address, x.nextStakeId)
+        .withArgs(signer1.address, signer2.address, signer1.address, x.nextStakeId)
       await expect(x.stakeManager.canTransfer(x.nextStakeId))
         .eventually.to.equal(true)
       await expect(x.stakeManager.connect(signer2).removeTransferrability(x.nextStakeId))
         .to.emit(x.stakeManager, 'UpdateSettings')
         .withArgs(x.nextStakeId, await x.stakeManager.removeTransferrabilityFromEncodedSettings(encodedSettings))
-      await expect(x.stakeManager.connect(signer2).stakeTransfer(x.nextStakeId, signer1.address))
+      await expect(x.stakeManager.connect(signer2).stakeTransfer(signer1.address, signer2.address, x.nextStakeId))
         .to.revertedWithCustomError(x.stakeManager, 'NotAllowed')
       await utils.moveForwardDays(days + 1n, x)
       await expect(x.stakeManager.withdrawableBalanceOf(x.hex.getAddress(), signer2.address))
@@ -104,8 +104,9 @@ describe('TransferableStakeManager.sol', () => {
         },
       ))
         .to.emit(x.stakeManager, 'AddTip')
-      await expect(x.stakeManager.stakeTransfer(x.nextStakeId, signer2.address))
+      await expect(x.stakeManager.stakeTransfer(signer2.address, signer1.address, x.nextStakeId))
         .to.emit(x.stakeManager, 'TransferStake')
+        .withArgs(signer1.address, signer2.address, signer1.address, x.nextStakeId)
       await expect(x.stakeManager.connect(signer2).removeAllTips(x.nextStakeId))
         .to.emit(x.stakeManager, 'RemoveTip')
       await expect(x.stakeManager.withdrawableBalanceOf(hre.ethers.ZeroAddress, signer2.address))
@@ -133,48 +134,61 @@ describe('TransferableStakeManager.sol', () => {
       const [signer1, signer2] = x.signers
       await expect(x.stakeManager.stakeStartFromBalanceFor(...stakeStartArgs))
         .to.emit(x.hex, 'StakeStart')
-      await expect(x.stakeManager.stakeTransfer(x.nextStakeId, signer2.address))
+      await expect(x.stakeManager.stakeTransfer(signer2.address, signer1.address, x.nextStakeId))
         .to.emit(x.stakeManager, 'TransferStake')
-        .withArgs(signer1.address, signer2.address, x.nextStakeId)
+        .withArgs(signer1.address, signer2.address, signer1.address, x.nextStakeId)
     })
     it('can call onStakeReceived on a contract', async () => {
       const [signer1] = x.signers
       await expect(x.stakeManager.stakeStartFromBalanceFor(...stakeStartArgs))
         .to.emit(x.hex, 'StakeStart')
-      await expect(x.stakeManager.stakeTransfer(x.nextStakeId, x.transferReceiver.getAddress()))
+      await expect(x.stakeManager.stakeTransfer(x.transferReceiver.getAddress(), signer1.address, x.nextStakeId))
         .to.emit(x.stakeManager, 'TransferStake')
-        .withArgs(signer1.address, await x.transferReceiver.getAddress(), x.nextStakeId)
+        .withArgs(
+          signer1.address,
+          await x.transferReceiver.getAddress(),
+          signer1.address,
+          x.nextStakeId,
+        )
         .to.emit(x.transferReceiver, 'StakeReceived')
-        .withArgs(signer1.address, x.nextStakeId)
+        .withArgs(
+          signer1.address,
+          signer1.address,
+          x.nextStakeId,
+        )
     })
     describe('failures', () => {
       it('can bubble up empty errors', async () => {
+        const [signer1] = x.signers
         await x.transferReceiver.setReceiveAction(1)
         await expect(x.stakeManager.stakeStartFromBalanceFor(...stakeStartArgs))
           .to.emit(x.hex, 'StakeStart')
-        await expect(x.stakeManager.stakeTransfer(x.nextStakeId, x.transferReceiver.getAddress()))
+        await expect(x.stakeManager.stakeTransfer(x.transferReceiver.getAddress(), signer1.address, x.nextStakeId))
           .to.revertedWithoutReason()
       })
       it('can bubble up string errors', async () => {
+        const [signer1] = x.signers
         await x.transferReceiver.setReceiveAction(2)
         await expect(x.stakeManager.stakeStartFromBalanceFor(...stakeStartArgs))
           .to.emit(x.hex, 'StakeStart')
-        await expect(x.stakeManager.stakeTransfer(x.nextStakeId, x.transferReceiver.getAddress()))
+        await expect(x.stakeManager.stakeTransfer(x.transferReceiver.getAddress(), signer1.address, x.nextStakeId))
           .to.revertedWith('Failed to receive')
       })
       it('can bubble up custom errors', async () => {
+        const [signer1] = x.signers
         await x.transferReceiver.setReceiveAction(3)
         await expect(x.stakeManager.stakeStartFromBalanceFor(...stakeStartArgs))
           .to.emit(x.hex, 'StakeStart')
-        await expect(x.stakeManager.stakeTransfer(x.nextStakeId, x.transferReceiver.getAddress()))
+        await expect(x.stakeManager.stakeTransfer(x.transferReceiver.getAddress(), signer1.address, x.nextStakeId))
           .to.revertedWithCustomError(x.transferReceiver, 'FailedToReceive')
           .withArgs(x.nextStakeId)
       })
       it('can bubble up panic errors', async () => {
+        const [signer1] = x.signers
         await x.transferReceiver.setReceiveAction(4)
         await expect(x.stakeManager.stakeStartFromBalanceFor(...stakeStartArgs))
           .to.emit(x.hex, 'StakeStart')
-        await expect(x.stakeManager.stakeTransfer(x.nextStakeId, x.transferReceiver.getAddress()))
+        await expect(x.stakeManager.stakeTransfer(x.transferReceiver.getAddress(), signer1.address, x.nextStakeId))
           .to.revertedWithPanic(50) // array index out of bounds
       })
     })

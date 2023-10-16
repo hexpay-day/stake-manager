@@ -6,7 +6,20 @@ import { SingletonCommunis } from "./SingletonCommunis.sol";
 import { IStakeReceiver } from "./interfaces/IStakeReceiver.sol";
 
 contract TransferableStakeManager is StakeStarter {
-  event TransferStake(address from, address to, uint256 stakeId);
+  /**
+   * a stake's ownership has been transferred from one address to another
+   * if 2 contracts are involved, they can use the owner param to internal accounting ownership
+   * @param from the address who owns the stake according to stake manager contracts
+   * @param to the address where the stake is being transferred
+   * @param owner the owner of the stake if there is separate accounting occuring in the "from" address
+   * @param stakeId the stake id being transferred
+   */
+  event TransferStake(
+    address from,
+    address indexed to,
+    address indexed owner,
+    uint256 indexed stakeId
+  );
   /**
    * removes transfer abilities from a stake
    * @param stakeId the stake that the sender owns and wishes to remove transfer abilities from
@@ -72,12 +85,14 @@ contract TransferableStakeManager is StakeStarter {
   }
   /**
    * transfer a stake from one owner to another
-   * @param stakeId the stake id to transfer
    * @param to the account to receive the stake
+   * @param owner the owner address if there is internal
+   * accounting of stakes via contract
+   * @param stakeId the stake id to transfer
    * @dev this method is only payable to reduce gas costs.
    * Any value sent to this method will be unattributed
    */
-  function stakeTransfer(uint256 stakeId, address to) external payable {
+  function stakeTransfer(address to, address owner, uint256 stakeId) external payable {
     _verifyStakeOwnership({
       owner: msg.sender,
       stakeId: stakeId
@@ -96,7 +111,7 @@ contract TransferableStakeManager is StakeStarter {
       tipStakeIdToStaker[stakeId] = to;
     }
     (bool success, bytes memory data) = to.call(
-      abi.encodeCall(IStakeReceiver.onStakeReceived, (msg.sender, stakeId))
+      abi.encodeCall(IStakeReceiver.onStakeReceived, (msg.sender, owner, stakeId))
     );
     if (!success) {
       _bubbleRevert(data);
@@ -104,6 +119,7 @@ contract TransferableStakeManager is StakeStarter {
     emit TransferStake({
       from: msg.sender,
       to: to,
+      owner: owner,
       stakeId: stakeId
     });
   }

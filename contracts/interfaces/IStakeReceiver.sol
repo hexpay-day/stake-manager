@@ -2,5 +2,5 @@
 pragma solidity ^0.8.18;
 
 interface IStakeReceiver {
-  function onStakeReceived(address from, uint256 stakeId) external;
+  function onStakeReceived(address from, address owner, uint256 stakeId) external;
 }
