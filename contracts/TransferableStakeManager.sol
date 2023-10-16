@@ -3,7 +3,7 @@ pragma solidity ^0.8.18;
 
 import { StakeStarter } from "./StakeStarter.sol";
 import { SingletonCommunis } from "./SingletonCommunis.sol";
-import { IStakeReceiver } from "./interfaces/IStakeReceiver.sol";
+import { StakeReceiver } from "./interfaces/StakeReceiver.sol";
 
 contract TransferableStakeManager is StakeStarter {
   /**
@@ -111,7 +111,7 @@ contract TransferableStakeManager is StakeStarter {
       tipStakeIdToStaker[stakeId] = to;
     }
     (bool success, bytes memory data) = to.call(
-      abi.encodeCall(IStakeReceiver.onStakeReceived, (msg.sender, owner, stakeId))
+      abi.encodeCall(StakeReceiver.onStakeReceived, (msg.sender, owner, stakeId))
     );
     if (!success) {
       _bubbleRevert(data);

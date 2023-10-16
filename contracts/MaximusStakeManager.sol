@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.18;
 
-import { IPublicEndStakeable } from "./interfaces/IPublicEndStakeable.sol";
+import { PublicEndStakeable } from "./interfaces/PublicEndStakeable.sol";
 import { ExternalPerpetualFilter } from "./interfaces/ExternalPerpetualFilter.sol";
 import { HSIStakeManager } from "./HSIStakeManager.sol";
 import { IGasReimberser } from './interfaces/IGasReimberser.sol';
@@ -99,7 +99,7 @@ contract MaximusStakeManager is HSIStakeManager {
    */
   function stakeEndAs(address rewarded, address perpetual, uint256 stakeId) external payable {
     if (!_checkPerpetual(perpetual)) revert NotAllowed();
-    IPublicEndStakeable endable = IPublicEndStakeable(perpetual);
+    PublicEndStakeable endable = PublicEndStakeable(perpetual);
     // STAKE_END_DAY is locked + staked days - 1 so > is correct in this case
     if (_checkEndable(endable)) {
       endable.mintHedron(ZERO, uint40(stakeId));
@@ -117,7 +117,7 @@ contract MaximusStakeManager is HSIStakeManager {
    * @param endable the endable perpetual contract
    * @return isEndable denotes whether or not the stake is endable
    */
-  function _checkEndable(IPublicEndStakeable endable) internal view returns(bool isEndable) {
+  function _checkEndable(PublicEndStakeable endable) internal view returns(bool isEndable) {
     if (_currentDay() > endable.STAKE_END_DAY()) {
       return endable.STAKE_IS_ACTIVE();
     }
@@ -128,7 +128,7 @@ contract MaximusStakeManager is HSIStakeManager {
    * @return isEndable verifies that the provided address is endable
    */
   function checkEndable(address endable) external view returns(bool isEndable) {
-    return _checkEndable(IPublicEndStakeable(endable));
+    return _checkEndable(PublicEndStakeable(endable));
   }
   /**
    * flush erc20 tokens into this contract
@@ -148,7 +148,7 @@ contract MaximusStakeManager is HSIStakeManager {
     address[] calldata tokens
   ) external payable {
     if (!perpetualWhitelist[perpetual]) revert NotAllowed();
-    if (IPublicEndStakeable(perpetual).getCurrentPeriod() != period) {
+    if (PublicEndStakeable(perpetual).getCurrentPeriod() != period) {
       return;
     }
     uint256 len = tokens.length;
