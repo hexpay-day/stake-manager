@@ -37,7 +37,6 @@ contract SingletonCommunis is StakeEnder {
     uint256 stakeId, address referrer,
     uint256 stakeAmount
   ) external payable returns(uint256 amount) {
-    _mintStakeBonus();
     if (portion < CommunisMintPortion.END) {
       uint256 settings = stakeIdToSettings[stakeId];
       if (portion == CommunisMintPortion.START) {
@@ -98,6 +97,7 @@ contract SingletonCommunis is StakeEnder {
       }
     } else {
       // end
+      _mintStakeBonus();
       // if this branch is being called, then it generally means that this is
       // occurring outside of the rush of end stakes - so we do fewer checks here
       if (Communis(COMM).stakeIdEndBonusPayout(stakeId) == ZERO) {
@@ -148,8 +148,10 @@ contract SingletonCommunis is StakeEnder {
     }
   }
   function _setEndStakedSignal() internal {
-    if ((distributableCommunis >> TWO_FOURTY) == ZERO) {
-      distributableCommunis |= (uint256(ONE) << TWO_FOURTY);
+    unchecked {
+      if ((distributableCommunis >> TWO_FOURTY) == ZERO) {
+        distributableCommunis |= (uint256(ONE) << TWO_FOURTY);
+      }
     }
   }
 
