@@ -4,6 +4,8 @@ import { ethers } from 'ethers'
 import * as yargs from 'yargs'
 import { ERC20 } from '../artifacts/types'
 
+import { HARDHAT_NETWORK_MNEMONIC } from 'hardhat/internal/core/config/default-config'
+
 Error.stackTraceLimit = Infinity
 
 export const args = yargs.options({
@@ -52,7 +54,17 @@ export const args = yargs.options({
     ],
     describe: 'opcodes used for traacing',
   },
-  blockNumber: {
+  blockNumber1: {
+    type: 'number',
+    require: false,
+    default: 18335216,
+  },
+  blockNumber369: {
+    type: 'number',
+    require: false,
+    default: 18335216,
+  },
+  blockNumber943: {
     type: 'number',
     require: false,
     default: 18335216,
@@ -60,7 +72,7 @@ export const args = yargs.options({
   mnemonic: {
     type: 'string',
     require: false,
-    default: 'test test test test test test test test test test test junk',
+    default: HARDHAT_NETWORK_MNEMONIC,
   },
   apiKey: {
     type: 'string',

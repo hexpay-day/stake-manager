@@ -118,7 +118,7 @@ const defaultHardhatNetwork: HardhatNetworkUserConfig = {
 const pulsechainV4: HardhatNetworkUserConfig = {
   forking: {
     url: conf.args.rpc943,
-    blockNumber: conf.args.blockNumber,
+    blockNumber: conf.args.blockNumber943,
   },
   chains: {
     943: {
@@ -133,7 +133,7 @@ const pulsechainV4: HardhatNetworkUserConfig = {
 const pulsechain: HardhatNetworkUserConfig = {
   forking: {
     url: conf.args.rpc369,
-    blockNumber: conf.args.blockNumber,
+    blockNumber: conf.args.blockNumber369,
   },
   chains: {
     369: {
@@ -148,7 +148,7 @@ const pulsechain: HardhatNetworkUserConfig = {
 const ethereum: HardhatNetworkUserConfig = {
   forking: {
     url: conf.args.rpc1,
-    blockNumber: conf.args.blockNumber,
+    blockNumber: conf.args.blockNumber1,
   },
   // chains is known by hh
 }
