@@ -115,7 +115,7 @@ describe('EncodableSettings.sol', () => {
       await expect(x.stakeManager.decrementCopyIterations(127n << 9n))
         .eventually.to.equal(127n << 9n)
     })
-    it('any number less than 255 in the second byte is decremented', async () => {
+    it('any number less than 127 in the second byte, left shifted 1 is decremented', async () => {
       await expect(x.stakeManager.decrementCopyIterations(126n << 9n))
         .eventually.to.equal(125n << 9n)
     })
