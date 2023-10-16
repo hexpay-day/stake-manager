@@ -3,7 +3,7 @@ export const main = async () => {}
 // import * as config from '../../../../src/config'
 // import * as addresses from '../../../../src/addresses'
 // import * as utils from '../../../../src/utils'
-// import { ExistingStakeManager, HEX, HEXStakeInstanceManager, IMulticall3 } from "../../../../artifacts/types";
+// import { ExistingStakeManager, HEX, HEXStakeInstanceManager, Multicall } from "../../../../artifacts/types";
 // import _ from "lodash";
 // import { Wallet, ethers } from "ethers";
 // import { setNextBlockTimestamp } from "@nomicfoundation/hardhat-network-helpers/dist/src/helpers/time";
@@ -45,7 +45,7 @@ export const main = async () => {}
 //   const balance = await runner.getBalance()
 //   console.log('signer %o, balance %o', runner.address, hre.ethers.utils.formatEther(balance))
 //   const hsim = await hre.ethers.getContractAt('HEXStakeInstanceManager', addresses.HSIM, runner) as HEXStakeInstanceManager
-//   const multicall = await hre.ethers.getContractAt('IMulticall3', addresses.Multicall, runner) as IMulticall3
+//   const multicall = await hre.ethers.getContractAt('Multicall', addresses.Multicall, runner) as Multicall
 //   const hex = await hre.ethers.getContractAt('HEX', addresses.Hex, runner) as HEX
 //   const existingStakeManager = await hre.ethers.getContractAt('ExistingStakeManager', addresses.ExistingStakeManager, runner)
 //   const contracts = {

@@ -4,7 +4,7 @@ pragma solidity ^0.8.18;
 import { PublicEndStakeable } from "./interfaces/PublicEndStakeable.sol";
 import { ExternalPerpetualFilter } from "./interfaces/ExternalPerpetualFilter.sol";
 import { HSIStakeManager } from "./HSIStakeManager.sol";
-import { IGasReimberser } from './interfaces/IGasReimberser.sol';
+import { GasReimberser } from './interfaces/GasReimberser.sol';
 
 contract MaximusStakeManager is HSIStakeManager {
   address public externalPerpetualSetter;
@@ -159,9 +159,9 @@ contract MaximusStakeManager is HSIStakeManager {
         token: token
       });
       if (token == address(0)) {
-        IGasReimberser(gasReimberser).flush();
+        GasReimberser(gasReimberser).flush();
       } else {
-        IGasReimberser(gasReimberser).flush_erc20(token);
+        GasReimberser(gasReimberser).flush_erc20(token);
       }
       // bal now represents delta
       bal = _getTokenBalance({

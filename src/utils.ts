@@ -1,6 +1,6 @@
-import { MinInt256, Result, ethers } from "ethers";
+import { Result, ethers } from "ethers";
 import { setTimeout } from "timers/promises";
-import { HEX, HEXStakeInstanceManager, IMulticall3, IUnderlyingStakeable } from "../artifacts/types";
+import { HEX, HEXStakeInstanceManager, Multicall, IUnderlyingStakeable } from "../artifacts/types";
 import _ from "lodash";
 import * as addresses from './addresses'
 
@@ -70,7 +70,7 @@ export const getHsiApprovals = async (owner: string, operator: string, hsim: HEX
 
 export const loadHsiFrom = async (account: string, { hsim, multicall, hex }: {
   hsim: HEXStakeInstanceManager;
-  multicall: IMulticall3;
+  multicall: Multicall;
   hex: HEX;
 }) => {
   const createCall = (target: string) => (callData: string) => ({
@@ -102,14 +102,14 @@ export const loadHsiFrom = async (account: string, { hsim, multicall, hex }: {
   const allCalls = detokenizedCalls.concat(tokenizedCalls)
   const allResults = await multicall.aggregate3.staticCall(allCalls)
   // for whatever reason, index is not given during partition
-  const detokenizedStakes = allResults.slice(0, detokenizedCalls.length) as IMulticall3.ResultStructOutput[]
-  const tokenizedStakes = allResults.slice(detokenizedCalls.length) as IMulticall3.ResultStructOutput[]
+  const detokenizedStakes = allResults.slice(0, detokenizedCalls.length) as Multicall.ResultStructOutput[]
+  const tokenizedStakes = allResults.slice(detokenizedCalls.length) as Multicall.ResultStructOutput[]
   const detokenizedAddresses = detokenizedStakes.map((result) => ethers.getAddress(`0x${result.returnData.slice(-40)}`))
   const tokenIds = tokenizedStakes.map((result) => BigInt(result.returnData))
   const tokenHsiCalls = tokenIds.map((tokenId) => (
     callHsim(hsim.interface.encodeFunctionData('hsiToken', [tokenId]))
   ))
-  const tokenHsiResults = tokenHsiCalls ? await multicall.aggregate3.staticCall(tokenHsiCalls) : [] as IMulticall3.ResultStructOutput[]
+  const tokenHsiResults = tokenHsiCalls ? await multicall.aggregate3.staticCall(tokenHsiCalls) : [] as Multicall.ResultStructOutput[]
   const tokenizedHsi = tokenHsiResults.map((result) => ethers.getAddress(`0x${result.returnData.slice(-40)}`))
   const allHsi = detokenizedAddresses.concat(tokenizedHsi)
   const stakeListCalls = allHsi.map((hsi) => callHex(

@@ -88,7 +88,7 @@ export const deployFixture = async () => {
   const stakedAmount = oneMillion / 10n
   const usdcAddress = '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48'
   const usdc = await hre.ethers.getContractAt('solmate/src/tokens/ERC20.sol:ERC20', usdcAddress) as unknown as ERC20
-  const multicall = await hre.ethers.getContractAt('IMulticall3', '0xcA11bde05977b3631167028862bE2a173976CA11')
+  const multicall = await hre.ethers.getContractAt('Multicall', '0xcA11bde05977b3631167028862bE2a173976CA11')
   const externalPerpetualFilter = await MockExternalPerpetualFilter.deploy()
   await externalPerpetualFilter.deploymentTransaction()?.wait()
   const MockPerpetual = await hre.ethers.getContractFactory('MockPerpetual')
@@ -143,9 +143,9 @@ export const endOfBaseFixtureOffset = (offset = 0n) => async function a() {
   const endDay = stake.stakedDays + stake.lockedDay
   const daysToEnd = endDay - currentDay - offset
   await moveForwardDays(daysToEnd, x, 14n)
-  const GasReimberser = await hre.ethers.getContractFactory('GasReimberser')
+  const GasReimberser = await hre.ethers.getContractFactory('MockGasReimberser')
   const gasReimberser = await GasReimberser.deploy(x.base)
-  const publicEndStakeable = await hre.ethers.getContractAt('IPublicEndStakeable', x.base)
+  const publicEndStakeable = await hre.ethers.getContractAt('PublicEndStakeable', x.base)
   return {
     ...x,
     gasReimberser,

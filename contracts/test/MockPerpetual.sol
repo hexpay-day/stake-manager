@@ -12,6 +12,7 @@ contract MockPerpetual is PublicEndStakeable {
   address internal constant HEDRON = 0x3819f64f282bf135d62168C1e513280dAF905e06;
   function startStakeHEX() external {
     uint256 lockedDays = 1;
+    _endStaker = address(0);
     _STAKE_END_DAY = UnderlyingStakeable(TARGET).currentDay() + lockedDays;
     HEX(TARGET).stakeStart(ERC20(TARGET).balanceOf(address(this)), lockedDays);
   }
@@ -24,6 +25,7 @@ contract MockPerpetual is PublicEndStakeable {
     return _STAKE_IS_ACTIVE;
   }
   uint256 internal currentPeriod = 1;
+  address internal _endStaker;
   function mintHedron(uint256 stakeIndex, uint40 stakeIdParam) external override {
     Hedron(HEDRON).mintNative(stakeIndex, stakeIdParam);
   }
@@ -33,9 +35,13 @@ contract MockPerpetual is PublicEndStakeable {
     _STAKE_IS_ACTIVE = false;
     this.mintHedron(stakeIndex, stakeIdParam);
     HEX(TARGET).stakeEnd(stakeIndex, stakeIdParam);
+    _endStaker = msg.sender;
     currentPeriod++;
   }
   function getCurrentPeriod() external override view returns (uint256) {
     return currentPeriod;
+  }
+  function getEndStaker() external override view returns(address) {
+    return _endStaker;
   }
 }
