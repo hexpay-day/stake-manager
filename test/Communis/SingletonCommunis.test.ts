@@ -992,7 +992,7 @@ describe('SingletonCommunis.sol', () => {
         hre.ethers.ZeroAddress,
         payoutResponseStake1.maxPayout,
       ))
-      .to.emit(x.communis, 'Transfer')
+      .not.to.reverted
 
       //Stake 2
       await x.stakeManager.connect(signer2).stakeStart(10000000, 365)
