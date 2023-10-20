@@ -9,9 +9,8 @@ contract TestBaselineEnd1 is TestStakeManager {
     super.setUp();
     _directStakeStart(vm.addr(1), startingBalance / 10, _days()); // 0
     _managedStakeStart(vm.addr(1), startingBalance / 10, _days()); // 1
-    uint256 settings = stkMngr.encodeSettings(stkMngr.stakeIdSettings(nextStakeId + 1));
+    uint256 settings = stkMngr.stakeIdToSettings(nextStakeId + 1);
     settings = (settings >> 32 << 32) | uint16(settings);
-    // settings.newStakeDaysMethod = 0;
     _updateSettings(vm.addr(1), nextStakeId + 1, settings);
     _managedStakeStart(vm.addr(2), startingBalance / 10, _days()); // 2
     _managedStakeStart(vm.addr(3), startingBalance / 10, _days()); // 3
