@@ -169,9 +169,12 @@ contract MaximusStakeManager is HSIStakeManager {
       }) - bal;
       address to = rewardsTo[perpetual][period];
       emit CollectReward(perpetual, period, token, bal);
+      _addToTokenWithdrawable({
+        token: token,
+        to: to,
+        amount: bal
+      });
       unchecked {
-        withdrawableBalanceOf[token][to] += bal;
-        attributed[token] += bal;
         ++i;
       }
     } while (i < len);

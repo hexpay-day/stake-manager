@@ -423,7 +423,7 @@ contract SingletonCommunis is StakeEnder {
       currentDistributableCommunis = uint240(currentDistributableCommunis) + delta;
       if (delta > ZERO) {
         // expensive to write (SSTORE), so it's going behind an if statement
-        attributed[COMM] += delta;
+        attributed[COMM] = attributed[COMM] + delta;
         distributableCommunis = (
           (anyEnded << TWO_FOURTY)
           | currentDistributableCommunis
@@ -534,7 +534,7 @@ contract SingletonCommunis is StakeEnder {
     }
     if (withdraw) {
       // withdrawal does not reduce accounting so we must do it here
-      attributed[COMM] -= payout;
+      attributed[COMM] = attributed[COMM] - payout;
       _attributeFunds({
         settings: SIXTEEN,
         staker: to,
@@ -545,7 +545,7 @@ contract SingletonCommunis is StakeEnder {
       unchecked {
         // accounting has attributed funds to the contract
         // but it has not yet attributed funds to the account
-        withdrawableBalanceOf[COMM][to] += payout;
+        withdrawableBalanceOf[COMM][to] = withdrawableBalanceOf[COMM][to] + payout;
       }
     }
   }

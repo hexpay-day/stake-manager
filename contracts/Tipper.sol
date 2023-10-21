@@ -136,10 +136,10 @@ abstract contract Tipper is Bank, UnderlyingStakeable, CurrencyList, EncodableSe
             amount: tip
           });
           if (tipTo == address(0)) {
-            attributed[token] -= tip;
+            attributed[token] = attributed[token] - tip;
           } else {
             if (tipTo == staker) {
-              withdrawableBalance += tip;
+              withdrawableBalance = withdrawableBalance + tip;
             } else {
               withdrawableBalanceOf[token][tipTo] = withdrawableBalanceOf[token][tipTo] + tip;
               // because attributed already has the tip, we should not double count it
