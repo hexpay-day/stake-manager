@@ -363,3 +363,7 @@ export const settings = {
   decode: settingsDecode,
   encode: settingsEncode,
 }
+
+export const clamp = (amount: bigint, max: bigint) => (
+  amount === ZERO || amount > max ? max : amount
+)
