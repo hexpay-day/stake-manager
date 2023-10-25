@@ -1,4 +1,4 @@
-@openzeppelin/contracts/=node_modules/@openzeppelin/contracts/
+solmate/=node_modules/solmate/
 eth-gas-reporter/=node_modules/eth-gas-reporter/
 hardhat/=node_modules/hardhat/
 ds-test/=lib/forge-std/lib/ds-test/src/

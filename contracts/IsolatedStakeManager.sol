@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.18;
 
-import { Ownable2Step } from "@openzeppelin/contracts/access/Ownable2Step.sol";
 import { IUnderlyingStakeable } from "./interfaces/IUnderlyingStakeable.sol";
 import { AuthorizationManager } from "./AuthorizationManager.sol";
 import { GoodAccounting } from "./GoodAccounting.sol";
 import { SafeTransferLib, ERC20 } from "solmate/src/utils/SafeTransferLib.sol";
+import { Ownable2Step } from "./Ownable2Step.sol";
 
 contract IsolatedStakeManager is Ownable2Step, AuthorizationManager, GoodAccounting {
   using SafeTransferLib for ERC20;
@@ -29,7 +29,8 @@ contract IsolatedStakeManager is Ownable2Step, AuthorizationManager, GoodAccount
    * @param account the address to change settings for
    * @param settings the encoded setting (binary) to apply to the target address
    */
-  function setAuthorization(address account, uint256 settings) external onlyOwner {
+  function setAuthorization(address account, uint256 settings) external {
+    _onlyOwner();
     _setAddressAuthorization({
       account: account,
       settings: settings
@@ -41,7 +42,8 @@ contract IsolatedStakeManager is Ownable2Step, AuthorizationManager, GoodAccount
    * @param stakeDays the number of days that can be passed for the address (to constrain griefing)
    * @param settings the settings to provide (only index 0 is relevant)
    */
-  function setStartAuthorization(address runner, uint16 stakeDays, uint256 settings) external onlyOwner {
+  function setStartAuthorization(address runner, uint16 stakeDays, uint256 settings) external {
+    _onlyOwner();
     _setAuthorization({
       key: _startAuthorizationKey({
         runner: runner,
@@ -190,7 +192,7 @@ contract IsolatedStakeManager is Ownable2Step, AuthorizationManager, GoodAccount
     })) {
       revert NotAllowed();
     }
-    ERC20(TARGET).safeTransfer(owner(), _balanceOf({
+    ERC20(TARGET).safeTransfer(owner, _balanceOf({
       owner: address(this)
     }));
   }
@@ -248,6 +250,6 @@ contract IsolatedStakeManager is Ownable2Step, AuthorizationManager, GoodAccount
     })) {
       revert NotAllowed();
     }
-    ERC20(TARGET).safeTransferFrom(owner(), address(this), amount);
+    ERC20(TARGET).safeTransferFrom(owner, address(this), amount);
   }
 }

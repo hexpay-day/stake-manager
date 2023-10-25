@@ -270,7 +270,6 @@ const config: HardhatUserConfig = {
   },
   dependencyCompiler: {
     paths: [
-      // '@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol',
     ],
   },
   preprocess: {

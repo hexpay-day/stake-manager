@@ -72,7 +72,7 @@ describe('IsolatedStakeManager.sol', () => {
       const x = await loadFixture(utils.deployFixture)
       const [, signerB] = x.signers
       await expect(x.isolatedStakeManager.connect(signerB as unknown as ethers.Signer).setAuthorization(signerB.address, 5))
-        .eventually.to.rejectedWith('Ownable: caller is not the owner')
+        .to.be.revertedWithCustomError(x.isolatedStakeManager, 'OnlyOwner')
     })
     it('cannot provide a value greater than the max', async () => {
       const x = await loadFixture(utils.deployFixture)
@@ -250,7 +250,7 @@ describe('IsolatedStakeManager.sol', () => {
       await expect(x.isolatedStakeManager.connect(signerB as unknown as ethers.Signer).stakeStartWithAuthorization(100))
         .to.revertedWithCustomError(x.isolatedStakeManager, 'NotAllowed')
       await expect(x.isolatedStakeManager.connect(signerB as unknown as ethers.Signer).setStartAuthorization(signerB.address, 100, 1))
-        .to.revertedWith('Ownable: caller is not the owner')
+        .to.revertedWithCustomError(x.isolatedStakeManager, 'OnlyOwner')
 
       await expect(x.isolatedStakeManager.setStartAuthorization(signerB.address, 100, 1))
         .to.emit(x.isolatedStakeManager, 'UpdateAuthorization')
