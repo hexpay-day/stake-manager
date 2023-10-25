@@ -24,11 +24,10 @@ contract CurrencyList is Utils {
     if (currencyToIndex[token] > ZERO || token == address(0)) {
       return currencyToIndex[token];
     }
-    // token must already exist - helps reduce grief attacks
+    // token must already exist
     if (token.code.length == ZERO) {
       revert NotAllowed();
     }
-    // reduces griefing
     if (ERC20(token).balanceOf(msg.sender) == ZERO) {
       revert MustBeHolder();
     }
