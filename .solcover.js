@@ -4,6 +4,7 @@ module.exports = {
     'reference',
     'interfaces',
     'test',
+    'Ownable2Step.sol',
   ],
   // solcOptimizerDetails: {
   //   peephole: false,
