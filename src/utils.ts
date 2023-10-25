@@ -316,6 +316,16 @@ const decodeConsentAbilities = (abilities: bigint) => ({
   canStakeEnd: BigInt.asUintN(1, abilities) == ONE,
 })
 
+/**
+ * 00000001(0): can stake end
+ * 00000010(1): can early stake end
+ * 00000100(2): can mint hedron (any time)
+ * 00001000(3): can mint hedron during end stake - future should be 0
+ * 00010000(4): should send tokens to staker
+ * 00100000(5): stake is transferable
+ * 01000000(6): copy external tips to next stake
+ * 10000000(7): mint comm tokens just before end
+ */
 const encodeConsentAbilities = (abilities: ReturnType<typeof decodeConsentAbilities>) => (
   ((abilities.mintCommunisAtEnd ? ONE : ZERO) << INDEX_RIGHT_MINT_COMMUNIS_AT_END)
   | ((abilities.copyExternalTips ? ONE : ZERO) << INDEX_RIGHT_COPY_EXTERNAL_TIPS)
@@ -329,15 +339,90 @@ const encodeConsentAbilities = (abilities: ReturnType<typeof decodeConsentAbilit
 
 const settingsDecode = (encoded: bigint) => ({
   hedronTip: decodeLinear(BigInt.asUintN(72, encoded >> INDEX_RIGHT_HEDRON_TIP)),
+  // starts with full amount of end stake
   targetTip: decodeLinear(BigInt.asUintN(72, encoded >> INDEX_RIGHT_TARGET_TIP)),
+  // the rest goes into a new stake if the number of days are set
   newStake: decodeLinear(BigInt.asUintN(72, encoded >> INDEX_RIGHT_NEW_STAKE)),
   newStakeDaysMethod: BigInt.asUintN(8, encoded >> INDEX_RIGHT_NEW_STAKE_DAYS_METHOD),
   newStakeDaysMagnitude: BigInt.asUintN(16, encoded >> INDEX_RIGHT_NEW_STAKE_DAYS_MAGNITUDE),
+  // 0 for do not restart, 1-126 as countdown, 127 as restart indefinitely
   copyIterations: BigInt.asUintN(8, encoded >> INDEX_RIGHT_COPY_ITERATIONS),
   hasExternalTips: ((encoded >> INDEX_RIGHT_HAS_EXTERNAL_TIPS) % TWO) == ONE,
   consentAbilities: decodeConsentAbilities(BigInt.asUintN(8, encoded)),
 })
 
+/**
+Settings(
+  * by default, there is no hedron tip
+  * assume that stakers will manage their own stakes at bare minimum
+  Linear({
+    method: ZERO,
+    xFactor: ZERO,
+    x: 0,
+    yFactor: ZERO,
+    y: ZERO,
+    bFactor: ZERO,
+    b: 0
+  }),
+  * by default, there is no target (hex) tip
+  * assume that stakers will manage their own stakes at bare minimum
+  Linear({
+    method: ZERO,
+    xFactor: ZERO,
+    x: 0,
+    yFactor: ZERO,
+    y: ZERO,
+    bFactor: ZERO,
+    b: 0
+  }),
+  * by default, assume that all tokens minted from an end stake
+  * should go directly into a new stake
+  Linear({
+    method: TWO,
+    xFactor: ZERO,
+    x: 0,
+    yFactor: ZERO,
+    y: ZERO,
+    bFactor: ZERO,
+    b: 0
+  }),
+  * by default, assume that by using this contract, users want efficiency gains
+  * so by default, restarting their stakes are the most efficient means of managing tokens
+  uint8(TWO), uint16(ZERO),
+  uint8(MAX_UINT_7), restart forever
+    * stakes do not start with external tips
+    * tips can be added in the same tx via a multicall
+  false,
+  * by index: 00000001
+  * 7: signal to ender that tips exist to be collected (allows contract to avoid an SLOAD) (0)
+  * 6: should recreate external tips
+  * 5: give dominion over hedron after tip to staker (0)
+  * 4: give dominion over target after tip to staker (0)
+  * 3: do not allow end hedron mint (0)
+  * 2: do not allow continuous hedron mint (0)
+  * 1: do not allow early end (0)
+  * 0: allow end stake once days have been served (1)
+  *
+  * restarting is signalled by using settings above
+  * no funds are ever pulled from external address
+  * is ever allowed except by sender
+  *
+  * the reason why the hedron flags are 0 by default on the contract level is because
+  * it may be worthwhile for hedron developers to build on top of this contract
+  * and it is poor form to force people in the future to have to cancel out the past
+  * front ends may choose to send a different default (non 0) during stake start
+  ConsentAbilities({
+    canStakeEnd: true,
+    canEarlyStakeEnd: false,
+    canMintHedron: false,
+    canMintHedronAtEnd: false,
+    shouldSendTokensToStaker: false,
+    stakeIsTransferable: false,
+    copyExternalTips: false,
+    mintCommunisAtEnd: false
+  })
+);
+*/
 const settingsEncode = (decoded: ReturnType<typeof settingsDecode>) => (
   (encodeLinear(decoded.hedronTip) << INDEX_RIGHT_HEDRON_TIP)
   | (encodeLinear(decoded.targetTip) << INDEX_RIGHT_TARGET_TIP)
