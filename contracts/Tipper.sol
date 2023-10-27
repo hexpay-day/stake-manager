@@ -123,11 +123,11 @@ abstract contract Tipper is Bank, UnderlyingStakeable, CurrencyList, EncodableSe
         stakeIdTips[stakeId].pop();
         uint256 idx = (tip << ONE) >> INDEX_EXTERNAL_TIP_CURRENCY_ONLY;
         address token = indexToToken[idx];
-        uint256 withdrawableBalance = withdrawableBalanceOf[token][staker];
-        uint256 cachedWithdrawableBalance = withdrawableBalance;
+        uint256 withdrawableBalanceToStaker = withdrawableBalanceOf[token][staker];
+        uint256 cachedWithdrawableBalance = withdrawableBalanceToStaker;
         (limit, tip) = _computeTip(tip);
         // this is a refund
-        withdrawableBalance += (limit - tip);
+        withdrawableBalanceToStaker += (limit - tip);
         if (tip > ZERO) {
           emit Tip({
             stakeId: stakeId,
@@ -139,13 +139,14 @@ abstract contract Tipper is Bank, UnderlyingStakeable, CurrencyList, EncodableSe
             attributed[token] = attributed[token] - tip;
           } else {
             if (tipTo == staker) {
-              withdrawableBalance = withdrawableBalance + tip;
+              withdrawableBalanceToStaker = withdrawableBalanceToStaker + tip;
             } else {
               withdrawableBalanceOf[token][tipTo] = withdrawableBalanceOf[token][tipTo] + tip;
               // because attributed already has the tip, we should not double count it
             }
           }
         }
+        // check if the tip should be reused
         if (_isOneAtIndex({
           settings: cachedTip,
           index: MAX_UINT_8
@@ -153,11 +154,11 @@ abstract contract Tipper is Bank, UnderlyingStakeable, CurrencyList, EncodableSe
           if (nextStakeId > ZERO) {
             limit = _clamp({
               amount: limit,
-              max: withdrawableBalance
+              max: withdrawableBalanceToStaker
             });
             if (limit > ZERO) {
               cachedTip = _encodeTipSettings(true, idx, limit, cachedTip);
-              withdrawableBalance -= limit;
+              withdrawableBalanceToStaker -= limit;
               // we no longer need currency idx
               // so this line takes it over / reuses it
               stakeIdTips[nextStakeId].push(cachedTip);
@@ -174,8 +175,8 @@ abstract contract Tipper is Bank, UnderlyingStakeable, CurrencyList, EncodableSe
             }
           }
         }
-        if (withdrawableBalance != cachedWithdrawableBalance) {
-          withdrawableBalanceOf[token][staker] = withdrawableBalance;
+        if (withdrawableBalanceToStaker != cachedWithdrawableBalance) {
+          withdrawableBalanceOf[token][staker] = withdrawableBalanceToStaker;
         }
         ++i;
       } while (i < len);
