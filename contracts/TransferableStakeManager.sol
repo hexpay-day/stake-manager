@@ -39,7 +39,9 @@ contract TransferableStakeManager is StakeStarter {
       stakeId: stakeId
     });
     settings = stakeIdToSettings[stakeId];
-    settings = _removeTransferrabilityFromEncodedSettings(settings);
+    settings = _removeTransferrabilityFromSettings({
+      settings: settings
+    });
     _logSettingsUpdate({
       stakeId: stakeId,
       settings: settings
@@ -49,14 +51,16 @@ contract TransferableStakeManager is StakeStarter {
    * rewrite encoded settings to remove the transferable flag and leave all other settings in tact
    * @param settings encoded settings to rewrite without a transferable flag
    */
-  function removeTransferrabilityFromEncodedSettings(uint256 settings) external pure returns(uint256) {
-    return _removeTransferrabilityFromEncodedSettings(settings);
+  function removeTransferrabilityFromSettings(uint256 settings) external pure returns(uint256) {
+    return _removeTransferrabilityFromSettings({
+      settings: settings
+    });
   }
   /**
    * rewrite encoded settings to remove the transferable flag and leave all other settings in tact
    * @param settings encoded settings to rewrite without a transferable flag
    */
-  function _removeTransferrabilityFromEncodedSettings(uint256 settings) internal pure returns(uint256) {
+  function _removeTransferrabilityFromSettings(uint256 settings) internal pure returns(uint256) {
     unchecked {
       return (
         (settings >> INDEX_RIGHT_COPY_EXTERNAL_TIPS << INDEX_RIGHT_COPY_EXTERNAL_TIPS)

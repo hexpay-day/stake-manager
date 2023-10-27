@@ -22,7 +22,10 @@ contract StakeInfo is Magnitude {
    * @notice error occurs if owner does not match
    */
   function verifyStakeOwnership(address owner, uint256 stakeId) external view {
-    _verifyStakeOwnership(owner, stakeId);
+    _verifyStakeOwnership({
+      owner: owner,
+      stakeId: stakeId
+    });
   }
   /**
    * verify the ownership of a stake given its id
@@ -31,8 +34,13 @@ contract StakeInfo is Magnitude {
    * @notice StakeNotOwned error occurs if owner does not match
    */
   function _verifyStakeOwnership(address owner, uint256 stakeId) internal view {
-    if (_stakeIdToOwner(stakeId) != owner) {
-      revert StakeNotOwned(owner, _stakeIdToOwner(stakeId));
+    if (_stakeIdToOwner({
+      stakeId: stakeId
+    }) != owner) {
+      revert StakeNotOwned({
+        provided: owner,
+        expected: _stakeIdToOwner(stakeId)
+      });
     }
   }
   /**
@@ -51,8 +59,12 @@ contract StakeInfo is Magnitude {
    * @notice StakeNotCustodied error occurs if owner is not known
    */
   function _verifyCustodian(uint256 stakeId) internal view {
-    if (_stakeIdToOwner(stakeId) == address(0)) {
-      revert StakeNotCustodied(stakeId);
+    if (_stakeIdToOwner({
+      stakeId: stakeId
+    }) == address(0)) {
+      revert StakeNotCustodied({
+        stakeId: stakeId
+      });
     }
   }
   /**
@@ -63,7 +75,9 @@ contract StakeInfo is Magnitude {
    * @notice value will be address(0) for unknown
    */
   function stakeIdToOwner(uint256 stakeId) external view returns(address owner) {
-    return _stakeIdToOwner(stakeId);
+    return _stakeIdToOwner({
+      stakeId: stakeId
+    });
   }
   /**
    * access the owner of a given stake id
@@ -84,7 +98,9 @@ contract StakeInfo is Magnitude {
    * @return owner of the stake
    */
   function stakeIdToInfo(uint256 stakeId) external view returns(uint256 index, address owner) {
-    return _stakeIdToInfo(stakeId);
+    return _stakeIdToInfo({
+      stakeId: stakeId
+    });
   }
   /**
    * retrieve the index and owner of a stake id
@@ -106,7 +122,9 @@ contract StakeInfo is Magnitude {
    * @return index of the stake in the targeted list
    */
   function stakeIdToIndex(uint256 stakeId) external view returns(uint256 index) {
-    return _stakeIdToIndex(stakeId);
+    return _stakeIdToIndex({
+      stakeId: stakeId
+    });
   }
   /**
    * the index of the stake id - useful when indexes are moving around

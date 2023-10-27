@@ -138,7 +138,10 @@ contract UnderlyingStakeManager is GoodAccounting {
     (uint256 stakeIndex, ) = _stakeIdToInfo({
       stakeId: stakeId
     });
-    return _stakeEndByIndexAndId(stakeIndex, stakeId);
+    return _stakeEndByIndexAndId({
+      stakeIndex: stakeIndex,
+      stakeId: stakeId
+    });
   }
   function _getStakeInfo(uint256 stakeId) internal view virtual returns(
     bool valid,
@@ -146,7 +149,9 @@ contract UnderlyingStakeManager is GoodAccounting {
     uint256 stakeIndex,
     UnderlyingStakeable.StakeStore memory stake
   ) {
-    (stakeIndex, staker) = _stakeIdToInfo(stakeId);
+    (stakeIndex, staker) = _stakeIdToInfo({
+      stakeId: stakeId
+    });
     if (staker == address(0)) {
       return (valid, staker, stakeIndex, stake);
     }
@@ -175,7 +180,10 @@ contract UnderlyingStakeManager is GoodAccounting {
     }
     // move to after valid check since this should happen less often
     if (staker != msg.sender) {
-      revert StakeNotOwned(msg.sender, staker);
+      revert StakeNotOwned({
+        provided: msg.sender,
+        expected: staker
+      });
     }
     uint256 stakeCountAfter = _getStakeCount({
       staker: address(this)
