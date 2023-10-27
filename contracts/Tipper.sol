@@ -7,9 +7,8 @@ import { CurrencyList } from "./CurrencyList.sol";
 import { EncodableSettings } from "./EncodableSettings.sol";
 
 abstract contract Tipper is Bank, UnderlyingStakeable, CurrencyList, EncodableSettings {
-  // 2^56 is a lot harder to grief than 2^32
-  uint256 internal constant INDEX_EXTERNAL_TIP_CURRENCY = 200;
-  uint256 internal constant INDEX_EXTERNAL_TIP_CURRENCY_ONLY = INDEX_EXTERNAL_TIP_CURRENCY + ONE;
+  // 2^55 is a lot harder to grief than 2^32
+  uint256 internal constant INDEX_EXTERNAL_TIP_CURRENCY_ONLY = 200 + ONE;
   uint256 internal constant INDEX_EXTERNAL_TIP_LIMIT = 72; // 128 bits long
   constructor()
     Bank()
@@ -222,7 +221,7 @@ abstract contract Tipper is Bank, UnderlyingStakeable, CurrencyList, EncodableSe
     }
     unchecked {
       return uint256(reusable ? ONE : ZERO) << MAX_UINT_8
-        | (uint256(currencyIndex) << INDEX_EXTERNAL_TIP_CURRENCY)
+        | ((uint256(currencyIndex) << INDEX_EXTERNAL_TIP_CURRENCY_ONLY) >> ONE)
         | (uint256(uint128(amount)) << INDEX_EXTERNAL_TIP_LIMIT)
         | uint256(uint72(encodedLinear));
     }
@@ -466,7 +465,6 @@ abstract contract Tipper is Bank, UnderlyingStakeable, CurrencyList, EncodableSe
       revert NotAllowed();
     }
     // cannot add a tip to a stake that has already ended
-    // if (_stakeById(stakeId).stakeId != stakeId) {
     if (_getStake({
       custodian: address(this),
       index: _stakeIdToIndex({
