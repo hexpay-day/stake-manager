@@ -286,7 +286,9 @@ const decodeLinear = (linear: bigint) => {
   }
 }
 
-const encodeLinear = (decoded: ReturnType<typeof decodeLinear>) => {
+type Linear = ReturnType<typeof decodeLinear>
+
+const encodeLinear = (decoded: Linear) => {
   if (decoded.method >= X_OPTIONS) throw new Error('NotAllowed')
   if (decoded.xFactor == ZERO) {
     return BigInt.asUintN(72, (
@@ -452,3 +454,21 @@ export const settings = {
 export const clamp = (amount: bigint, max: bigint) => (
   amount === ZERO || amount > max ? max : amount
 )
+
+export const tipEncode = (reusable: boolean, currencyIndex: bigint, amount: bigint, linear: Linear) => {
+  return (
+    ((reusable ? 1n : 0n) << SLOTS)
+    | BigInt.asUintN(55, currencyIndex) << 200n
+    | BigInt.asUintN(128, amount) << 72n
+    | encodeLinear(linear)
+  )
+}
+
+export const tipDecode = (tip: bigint) => {
+  return {
+    reusable: BigInt.asUintN(1, tip >> SLOTS) === 1n,
+    currencyIndex: BigInt.asUintN(55, tip >> 200n),
+    amount: BigInt.asUintN(128, tip >> 72n),
+    linear: decodeLinear(BigInt.asUintN(72, tip)),
+  }
+}
