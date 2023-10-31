@@ -206,7 +206,7 @@ const networks: Record<string, NetworkUserConfig> = {
 const settings: SolcUserConfig["settings"] = {
   optimizer: {
     enabled: true,
-    runs: 2000,
+    runs: 2_000,
     // details: {
     //   yul: true,
     //   yulDetails: {
@@ -267,10 +267,6 @@ const config: HardhatUserConfig = {
       address: ethers.getAddress('0x2b591e99afe9f32eaa6214f7b7629768c40eeb39'),
       bytecode: hexArtifact.bytecode,
     }],
-  },
-  dependencyCompiler: {
-    paths: [
-    ],
   },
   preprocess: {
     eachLine: () => ({

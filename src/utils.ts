@@ -169,7 +169,11 @@ export const isOneAtIndex = (setting: bigint | number, index: bigint | number) =
 export const calculateExpectedCommunisStakePayout = (
   stakedAmount: bigint,
   numberOfPayouts: bigint | number
-) => (stakedAmount * BigInt(numberOfPayouts)) / 80n
+) => {
+  let expected = (stakedAmount * BigInt(numberOfPayouts)) / 80n
+  if (expected > 1n) expected -= 1n
+  return expected
+}
 
 const MAX_UINT_8 = 256n
 const MIN_INT_16 = -(2n**15n)

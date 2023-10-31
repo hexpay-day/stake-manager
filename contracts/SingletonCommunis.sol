@@ -520,6 +520,7 @@ contract SingletonCommunis is StakeEnder {
       uint256 numberOfPayouts = ((day - nextPayoutDay) / NINETY_ONE) + ONE;
 
       payout = (stakedAmount * numberOfPayouts) / 80;
+      payout = payout > ONE ? payout - ONE : ZERO;
 
       distributableCommunis = (
         (anyEnded << TWO_FOURTY)
