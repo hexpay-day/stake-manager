@@ -19,7 +19,7 @@ yarn run test --trace-error # with error traces
 
 ### Verification
 
-verification should occur with git hash `f1180beb5322796abeaa5fd2371afb3f6a880d62` to have the correct bytecode
+Verification should occur with git hash `f1180beb5322796abeaa5fd2371afb3f6a880d62` to have the correct bytecode for contract `0x209b1C66cB0Ea99DC2d4Ad13C35859DD1c258988` on Ethereum mainnet.
 
 ### Run Traces
 
