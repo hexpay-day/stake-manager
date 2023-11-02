@@ -16,7 +16,7 @@
     "cloc:default": "cloc --by-file --out=./cloc.md ./contracts/*.sol",
     "lint": "run-script-os",
     "lint:default": "solhint 'contracts/**/*.sol'",
-    "clean": "rm -rf cache_hardhat artifacts docs site forge-cache out coverage",
+    "clean": "rm -rf cache_hardhat artifacts docs site forge-cache out coverage metrics.md cloc.md coverage.json",
     "test-only": "hardhat test",
     "test": "yarn run test-only && hardhat size-contracts",
     "coverage": "hardhat coverage",
