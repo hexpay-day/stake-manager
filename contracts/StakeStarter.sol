@@ -26,7 +26,9 @@ contract StakeStarter is SingletonCommunis {
       owner: to,
       amount: amount,
       newStakedDays: newStakedDays,
-      index: _stakeCount(address(this))
+      index: _stakeCount({
+        staker: address(this)
+      })
     });
     _logPreservedSettingsUpdate({
       stakeId: stakeId,
