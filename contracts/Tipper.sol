@@ -20,6 +20,7 @@ abstract contract Tipper is Bank, UnderlyingStakeable, CurrencyList, EncodableSe
     // this line allows hex to be tipped by factor of basefee
     _addCurrencyToList(TARGET);
     _addCurrencyToList(HEDRON);
+    _addCurrencyToList(COMM);
   }
   /**
    * @dev this mapping is needed for the case where a tip is added to a stake
