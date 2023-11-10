@@ -43,13 +43,6 @@ abstract contract EncodableSettings is StakeInfo {
   function defaultSettings() external pure returns(uint256) {
     return _defaultSettings();
   }
-  // /**
-  //  * exposes the default settings to external for ease of access
-  //  * @return a settings struct with default values
-  //  */
-  // function defaultSettings() external pure returns(Settings memory) {
-  //   return _decodeSettings(_defaultSettings());
-  // }
   function _defaultSettings() internal virtual pure returns(uint256) {
     return DEFAULT_SETTINGS;
   }
