@@ -7,20 +7,39 @@ import { anyUint, anyValue } from "@nomicfoundation/hardhat-chai-matchers/withAr
 import { toBeHex } from "ethers"
 
 describe('Multicall.sol', () => {
-  describe('multicallWithDeadline', () => {
-    it('runs multiple external functions in 1 tx but not after deadline', async () => {
+  describe('failures', () => {
+    it('can handle failures optionally', async () => {
+      const x = await loadFixture(utils.deployFixture)
+      await expect(x.stakeManager.multicall([
+        x.stakeManager.interface.encodeFunctionData('stakeStart', [x.stakedAmount, 30]),
+        x.stakeManager.interface.encodeFunctionData('stakeStart', [0, 30]),
+      ], false))
+      .to.revertedWith('HEX: newStakedHearts must be at least minimum shareRate')
+    })
+  })
+  describe('multicallBetweenTimestamp', () => {
+    it('runs multiple external functions in 1 tx but not outside of timestamp bounds', async () => {
       const x = await loadFixture(utils.deployFixture)
       const nextStakeId = await utils.nextStakeId(x.hex)
-      const latestTime = await time.latest()
+      let latestTime!: number
+      latestTime = await time.latest()
       const stakeStartData = [
         x.stakeManager.interface.encodeFunctionData('stakeStart', [x.stakedAmount, 30]),
         x.stakeManager.interface.encodeFunctionData('stakeStart', [x.stakedAmount, 60]),
         x.stakeManager.interface.encodeFunctionData('stakeStart', [x.stakedAmount, 90]),
       ]
-      await expect(x.stakeManager.multicallWithDeadline(latestTime, stakeStartData, false))
-        .to.revertedWithCustomError(x.stakeManager, 'Deadline')
-        .withArgs(latestTime, anyUint)
-      const tx = x.stakeManager.multicallWithDeadline(await time.latest() + 12, stakeStartData, false)
+      // executed too late
+      await time.setNextBlockTimestamp(latestTime + 1)
+      await expect(x.stakeManager.multicallBetweenTimestamp(latestTime, latestTime, stakeStartData, false))
+        .to.revertedWithCustomError(x.stakeManager, 'OutsideTimestamps')
+        .withArgs(latestTime, latestTime, anyUint)
+      // executed too soon
+      latestTime = await time.latest()
+      await time.setNextBlockTimestamp(latestTime + 1)
+      await expect(x.stakeManager.multicallBetweenTimestamp(latestTime + 2, latestTime + 2, stakeStartData, false))
+        .to.revertedWithCustomError(x.stakeManager, 'OutsideTimestamps')
+        .withArgs(latestTime + 2, latestTime + 2, anyUint)
+      const tx = x.stakeManager.multicallBetweenTimestamp(await time.latest(), await time.latest() + 12, stakeStartData, false)
       await expect(tx)
         .to.emit(x.hex, 'StakeStart')
         .withArgs(anyUint, await x.stakeManager.getAddress(), nextStakeId)

@@ -158,14 +158,21 @@ describe('TransferableStakeManager.sol', () => {
         )
     })
     describe('failures', () => {
+      it('can handle bad implementations', async () => {
+        const [signer1] = x.signers
+        await expect(x.stakeManager.stakeStartFromBalanceFor(...stakeStartArgs))
+          .to.emit(x.hex, 'StakeStart')
+        await expect(x.stakeManager.stakeTransfer(x.badTransferReceiver.getAddress(), signer1.address, x.nextStakeId))
+          .to.revertedWithCustomError(x.stakeManager, 'InvalidStakeReceiver')
+          .withArgs(await x.badTransferReceiver.getAddress())
+      })
       it('can bubble up empty errors', async () => {
         const [signer1] = x.signers
         await x.transferReceiver.setReceiveAction(1)
         await expect(x.stakeManager.stakeStartFromBalanceFor(...stakeStartArgs))
           .to.emit(x.hex, 'StakeStart')
         await expect(x.stakeManager.stakeTransfer(x.transferReceiver.getAddress(), signer1.address, x.nextStakeId))
-          .to.revertedWithCustomError(x.stakeManager, 'InvalidStakeReceiver')
-          .withArgs(await x.transferReceiver.getAddress())
+          .to.revertedWithoutReason()
       })
       it('can bubble up string errors', async () => {
         const [signer1] = x.signers

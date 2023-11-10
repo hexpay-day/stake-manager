@@ -128,11 +128,7 @@ contract TransferableStakeManager is StakeStarter {
           revert InvalidStakeReceiver(to);
         }
       } catch (bytes memory reason) {
-        if (reason.length == ZERO) {
-          revert InvalidStakeReceiver(to);
-        } else {
-          _bubbleRevert(reason);
-        }
+        _bubbleRevert(reason);
       }
     }
   }

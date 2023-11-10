@@ -1629,7 +1629,7 @@ describe("StakeEnder", function () {
         .withArgs(await x.stakeManager.getAddress(), signer1.address, x.stakedAmount)
 
       await time.setNextBlockTimestamp(deadline)
-      await expect(x.stakeManager.multicallWithDeadline(deadline, [
+      await expect(x.stakeManager.multicallBetweenTimestamp(deadline, deadline, [
         x.stakeManager.interface.encodeFunctionData('stakeEndById', [
           nextStakeId + 1n,
         ]),
@@ -1647,13 +1647,13 @@ describe("StakeEnder", function () {
         .to.emit(x.hex, 'Transfer')
         .withArgs(await x.stakeManager.getAddress(), signer1.address, anyUint)
       await time.setNextBlockTimestamp(deadline + 1)
-      await expect(x.stakeManager.multicallWithDeadline(deadline, [
+      await expect(x.stakeManager.multicallBetweenTimestamp(deadline, deadline, [
         x.stakeManager.interface.encodeFunctionData('stakeEndById', [
           nextStakeId + 3n,
         ]),
       ], false))
-        .to.revertedWithCustomError(x.stakeManager, 'Deadline')
-        .withArgs(deadline, currentTime)
+        .to.revertedWithCustomError(x.stakeManager, 'OutsideTimestamps')
+        .withArgs(deadline, deadline, currentTime)
     })
     it('null ends result in no failure', async () => {
       const x = await loadFixture(utils.deployFixture)

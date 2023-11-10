@@ -9,7 +9,7 @@ import { Utils } from "./Utils.sol";
  */
 contract MulticallExtension is Utils {
   error BlockHash(bytes32 expected, bytes32 actual);
-  error Deadline(uint256 deadline, uint256 currentTime);
+  error OutsideTimestamps(uint256 minTime, uint256 maxTime, uint256 currentTime);
   event TxFailed(uint256 indexed index, bytes result);
   /**
    * call a series of functions on a contract that inherits this method
@@ -27,20 +27,25 @@ contract MulticallExtension is Utils {
   }
   /**
    * call multiple methods and pass a deadline, after which the transaction should fail
-   * @param deadline the timestamp, in seconds
+   * @param minTime the min valid timestamp, in seconds
+   * @param maxTime the max valid timestamp, in seconds
    * @param calls the calldata to run on the external method
    * @param allowFailures allows failures when true
    */
-  function multicallWithDeadline(
-    uint256 deadline,
+  function multicallBetweenTimestamp(
+    uint256 minTime,
+    uint256 maxTime,
     bytes[] calldata calls,
     bool allowFailures
   ) external {
-    if (block.timestamp > deadline) {
-      revert Deadline({
-        deadline: deadline,
-        currentTime: block.timestamp
-      });
+    unchecked {
+      if (block.timestamp < minTime || maxTime < block.timestamp) {
+        revert OutsideTimestamps({
+          minTime: minTime,
+          maxTime: maxTime,
+          currentTime: block.timestamp
+        });
+      }
     }
     _multicall({
       calls: calls,

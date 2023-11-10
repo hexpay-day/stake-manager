@@ -6,7 +6,19 @@ import * as ethers from 'ethers'
 import _ from "lodash"
 import * as Chai from "chai"
 import * as config from '../src/config'
-import { Hedron, HEXStakeInstanceManager, IsolatedStakeManagerFactory__factory, ExistingStakeManager__factory, TransferReceiver__factory, StakeManager__factory, Utils__factory, MockExternalPerpetualFilter__factory, HEX, Communis } from "../artifacts/types"
+import type {
+  Hedron,
+  HEXStakeInstanceManager,
+  IsolatedStakeManagerFactory__factory,
+  ExistingStakeManager__factory,
+  TransferReceiver__factory,
+  StakeManager__factory,
+  Utils__factory,
+  MockExternalPerpetualFilter__factory,
+  HEX,
+  Communis,
+  BadTransferReceiver__factory,
+ } from "../artifacts/types"
 import { HSIStartEvent } from "../artifacts/types/contracts/interfaces/HEXStakeInstanceManager"
 import { anyUint } from "@nomicfoundation/hardhat-chai-matchers/withArgs"
 import { ERC20 } from "../artifacts/types/solmate/src/tokens"
@@ -49,6 +61,7 @@ export const deployFixture = async () => {
   const hedron = await hre.ethers.getContractAt('Hedron', config.hedronAddress) as unknown as Hedron
   const hsim = await hre.ethers.getContractAt('HEXStakeInstanceManager', await hedron.hsim()) as unknown as HEXStakeInstanceManager
   const TransferReceiver = await hre.ethers.getContractFactory('TransferReceiver') as unknown as TransferReceiver__factory
+  const BadTransferReceiver = await hre.ethers.getContractFactory('BadTransferReceiver') as unknown as BadTransferReceiver__factory
   const communis = await hre.ethers.getContractAt('Communis', config.communisAddress) as unknown as Communis
   const ExistingStakeManager = await hre.ethers.getContractFactory('ExistingStakeManager') as unknown as ExistingStakeManager__factory
   const IsolatedStakeManagerFactory = await hre.ethers.getContractFactory('IsolatedStakeManagerFactory') as unknown as IsolatedStakeManagerFactory__factory
@@ -60,6 +73,7 @@ export const deployFixture = async () => {
   const signers = _signers.slice(0, 20)
   const [signer] = signers
   const transferReceiver = await TransferReceiver.deploy()
+  const badTransferReceiver = await BadTransferReceiver.deploy()
   const existingStakeManager = await ExistingStakeManager.deploy()
   const maximusStakeManager = existingStakeManager
   const decimals = await hex.decimals()
@@ -97,6 +111,7 @@ export const deployFixture = async () => {
   const [, , , , , , stakeIdBN] = await hex.globalInfo()
   return {
     transferReceiver,
+    badTransferReceiver,
     mockPerpetual,
     externalPerpetualFilter,
     multicall,
