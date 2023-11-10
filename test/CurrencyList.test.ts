@@ -8,24 +8,24 @@ describe('CurrencyList.sol', () => {
   it('starts with 3 tokens', async () => {
     const x = await loadFixture(utils.deployFixture)
     await expect(x.stakeManager.currencyListSize())
-      .eventually.to.equal(3)
+      .eventually.to.equal(4)
   })
   describe('addCurrencyToList', () => {
     it('cannot add zero address again', async () => {
       const x = await loadFixture(utils.deployFixture)
       await expect(x.stakeManager.currencyListSize())
-        .eventually.to.equal(3)
+        .eventually.to.equal(4)
       await x.stakeManager.addCurrencyToList(ethers.ZeroAddress)
       await expect(x.stakeManager.currencyListSize())
-        .eventually.to.equal(3)
+        .eventually.to.equal(4)
     })
     it('cannot add a token more than once', async () => {
       const x = await loadFixture(utils.deployFixture)
       await expect(x.stakeManager.currencyListSize())
-        .eventually.to.equal(3)
+        .eventually.to.equal(4)
       await x.stakeManager.addCurrencyToList(await x.stakeManager.TARGET())
       await expect(x.stakeManager.currencyListSize())
-        .eventually.to.equal(3)
+        .eventually.to.equal(4)
     })
     it('disallows non deployed contracts', async () => {
       const x = await loadFixture(utils.deployFixture)
