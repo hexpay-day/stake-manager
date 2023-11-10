@@ -10,10 +10,9 @@ contract TransferReceiver is StakeReceiver {
   function setReceiveAction(uint256 shouldErr) external {
     _shouldErr = shouldErr;
   }
-  function onStakeReceived(address from, address owner, uint256 stakeId) external override {
+  function onStakeReceived(address from, address owner, uint256 stakeId) external override returns(bytes4) {
     if (_shouldErr == 0) {
       emit StakeReceived(from, owner, stakeId);
-      return;
     }
     if (_shouldErr == 1) revert();
     if (_shouldErr == 2) revert("Failed to receive");
@@ -24,5 +23,6 @@ contract TransferReceiver is StakeReceiver {
       uint256[] memory list = new uint256[](3);
       emit StakeReceived(from, owner, list[list.length]);
     }
+    return this.onStakeReceived.selector;
   }
 }

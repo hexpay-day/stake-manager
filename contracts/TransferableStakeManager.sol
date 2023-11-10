@@ -20,20 +20,13 @@ contract TransferableStakeManager is StakeStarter {
     address indexed owner,
     uint256 indexed stakeId
   );
+
+  error InvalidStakeReceiver(address to);
   /**
    * removes transfer abilities from a stake
    * @param stakeId the stake that the sender owns and wishes to remove transfer abilities from
    */
   function removeTransferrability(uint256 stakeId) external payable returns(uint256 settings) {
-    return _removeTransferrability({
-      stakeId: stakeId
-    });
-  }
-  /**
-   * removes transfer abilities from a stake
-   * @param stakeId the stake that the sender owns and wishes to remove transfer abilities from
-   */
-  function _removeTransferrability(uint256 stakeId) internal returns(uint256 settings) {
     _verifyStakeOwnership({
       owner: msg.sender,
       stakeId: stakeId
@@ -114,17 +107,33 @@ contract TransferableStakeManager is StakeStarter {
     if (tipStakeIdToStaker[stakeId] != address(0)) {
       tipStakeIdToStaker[stakeId] = to;
     }
-    (bool success, bytes memory data) = to.call(
-      abi.encodeCall(StakeReceiver.onStakeReceived, (msg.sender, owner, stakeId))
-    );
-    if (!success) {
-      _bubbleRevert(data);
-    }
     emit TransferStake({
       from: msg.sender,
       to: to,
       owner: owner,
       stakeId: stakeId
     });
+    // to is now the owner according to this contract,
+    // however to may wish to attribute ownership differently internally
+    // therefore, the "owner" param is provided
+    // eoa's skipped
+    if (to.code.length > ZERO) {
+      // contracts must implement onStakeReceived to hold stakes
+      try StakeReceiver(to).onStakeReceived({
+        from: msg.sender,
+        owner: owner,
+        stakeId: stakeId
+      }) returns (bytes4 result) {
+        if (result != StakeReceiver.onStakeReceived.selector) {
+          revert InvalidStakeReceiver(to);
+        }
+      } catch (bytes memory reason) {
+        if (reason.length == ZERO) {
+          revert InvalidStakeReceiver(to);
+        } else {
+          _bubbleRevert(reason);
+        }
+      }
+    }
   }
 }
