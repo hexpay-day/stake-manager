@@ -31,6 +31,8 @@ contract CurrencyList is Utils {
    * to numbers so that they can fit in a single byteword,
    * reducing costs when tips in the same currency occur
    * @param token the token to add to the list of tippable tokens
+   * @return index of the token in the list - if new, it will equal the pre-push length,
+   * if already exists, it will equal the previously created index
    */
   function addCurrencyToList(address token) external payable returns(uint256) {
     if (currencyToIndex[token] > ZERO || token == address(0)) {
@@ -59,7 +61,10 @@ contract CurrencyList is Utils {
     emit AddCurrency(token, index);
     return index;
   }
-  /** reads the length of the indexToToken list to get iteration constraints */
+  /**
+   * reads the length of the indexToToken list to get iteration constraints
+   * @return length size of the indexToToken list
+   */
   function currencyListSize() external view returns(uint256) {
     return indexToToken.length;
   }

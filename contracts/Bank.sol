@@ -187,30 +187,35 @@ contract Bank is Utils {
       token: token
     });
     amount = (unattributed * basisPoints) / TEN_K;
-    _collectUnattributed({
-      token: token,
-      transferOut: transferOut,
-      to: recipient,
-      amount: amount,
-      max: unattributed
-    });
+    if (amount > ZERO) {
+      _collectUnattributed({
+        token: token,
+        transferOut: transferOut,
+        to: recipient,
+        amount: amount,
+        max: unattributed
+      });
+    }
   }
   /**
    * transfer an amount of tokens currently attributed to the withdrawable balance of the sender
    * @param token the token to transfer - uses address(0) for native
    * @param to the to of the funds
    * @param amount the amount that should be deducted from the sender's balance
+   * @return the amount of tokens withdrawn
    */
   function withdrawTokenTo(address token, address to, uint256 amount) external payable returns(uint256) {
-    return _withdrawTokenTo({
+    amount = _deductWithdrawable({
+      token: token,
+      account: msg.sender,
+      amount: amount
+    });
+    _withdrawTokenTo({
       token: token,
       to: to,
-      amount: _deductWithdrawable({
-        token: token,
-        account: msg.sender,
-        amount: amount
-      })
+      amount: amount
     });
+    return amount;
   }
   /**
    * get the balance of a given token
@@ -271,6 +276,7 @@ contract Bank is Utils {
   }
   /**
    * deposit a number of tokens to the contract
+   * @param token the address of the token to deposit
    * @param amount the number of tokens to deposit
    */
   function depositTokenUnattributed(address token, uint256 amount) external {
@@ -285,7 +291,7 @@ contract Bank is Utils {
    * @param to where to send the tokens
    * @param amount the number of tokens to send
    */
-  function _withdrawTokenTo(address token, address to, uint256 amount) internal returns(uint256) {
+  function _withdrawTokenTo(address token, address to, uint256 amount) internal {
     if (amount > ZERO) {
       if (token == address(0)) {
         to.safeTransferETH(amount);
@@ -293,7 +299,6 @@ contract Bank is Utils {
         ERC20(token).safeTransfer(to, amount);
       }
     }
-    return amount;
   }
   /**
    *

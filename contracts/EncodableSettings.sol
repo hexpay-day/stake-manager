@@ -111,6 +111,7 @@ abstract contract EncodableSettings is StakeInfo {
    * modify the second byteword from the right to appropriately decrement
    * the number of times that these settings should be copied
    * @param settings the settings to start with - only the 2nd byte from the right is modified
+   * @return settings updated after decrementing copy iterations
    */
   function decrementCopyIterations(uint256 settings) external pure returns(uint256) {
     return _decrementCopyIterations({

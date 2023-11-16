@@ -720,7 +720,19 @@ describe("StakeEnder", function () {
           await x.hex.getAddress(),
           false,
           signer2.address,
-          500,
+          500, // 5%
+        ]),
+        x.stakeManager.interface.encodeFunctionData('collectUnattributedPercent', [
+          await x.hex.getAddress(),
+          false,
+          signer2.address,
+          0,
+        ]),
+        x.stakeManager.interface.encodeFunctionData('collectUnattributedPercent', [
+          await x.hex.getAddress(),
+          false,
+          signer2.address,
+          10_001,
         ]),
         x.stakeManager.interface.encodeFunctionData('collectUnattributed', [
           await x.hex.getAddress(),

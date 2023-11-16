@@ -54,6 +54,7 @@ abstract contract GoodAccounting is Tipper {
    * check if a stake custodied by this contract
    * is good accountable and return its status
    * @param stakeId the stake id to check if is good accountable
+   * @return status communicating the state of the stake relative to the days
    */
   function isStakeIdGoodAccountable(uint256 stakeId) external view returns(GoodAccountingStatus) {
     return _isGoodAccountable({

@@ -39,8 +39,9 @@ contract EarningsOracle is Utils {
   }
   /**
    * the size of the payoutTotal array - correlates to days stored
+   * @return the length of the totals list
    */
-  function totalsCount() external view returns(uint256 count) {
+  function totalsCount() external view returns(uint256) {
     return totals.length;
   }
   /**
@@ -48,6 +49,8 @@ contract EarningsOracle is Utils {
    * than startDay argument otherwise call may fail
    * @param startDay the day to start counting from
    * @param untilDay the day to end with (inclusive)
+   * @return payout the delta between start and until day payout
+   * @return shares the delta between start and until day shares
    */
   function payoutDelta(uint256 startDay, uint256 untilDay) external view returns(uint256 payout, uint256 shares) {
     if (startDay >= untilDay) {
@@ -68,6 +71,7 @@ contract EarningsOracle is Utils {
    * @param lockedDay the day that the stake was locked
    * @param stakedDays the number of days that the stake was locked
    * @param shares a number to multiply by the difference of the payout
+   * @return payout the amount estimated from shares and payout
    */
   function payoutDeltaTruncated(
     uint256 lockedDay,
@@ -146,6 +150,8 @@ contract EarningsOracle is Utils {
   }
   /**
    * checks the current day and increments the stored days if not yet covered
+   * @return total the summed payout and shares values from last stored day
+   * @return day the last stored day
    */
   function incrementDay() external payable returns(Total memory total, uint256 day) {
     uint256 size = totals.length;
@@ -162,6 +168,8 @@ contract EarningsOracle is Utils {
    * store a range of day payout information. untilDay is exclusive unless startDay and untilDay match
    * @param startDay the day to start storing day information
    * @param untilDay the day to stop storing day information
+   * @return total the summed payout and shares values from last stored day
+   * @return day the last stored day
    */
   function _storeDays(uint256 startDay, uint256 untilDay) internal returns(Total memory total, uint256 day) {
     uint256[] memory range = HEX(TARGET).dailyDataRange(startDay, untilDay);
@@ -187,6 +195,8 @@ contract EarningsOracle is Utils {
    * then it is subject to failure
    * @param startDay the day to start storing day information
    * @param untilDay the day to stop storing day information. Until day is inclusive
+   * @return total the summed payout and shares values from last stored day
+   * @return day the last stored day
    */
   function storeDays(uint256 startDay, uint256 untilDay) external payable returns(Total memory total, uint256 day) {
     uint256 size = totals.length;
@@ -204,6 +214,8 @@ contract EarningsOracle is Utils {
   /**
    * catch up the contract by reading up to 1_000 days of payout information at a time
    * @param iterations the maximum number of days to iterate over - capped at 1_000 due to sload constraints
+   * @return total the summed payout and shares values from last stored day
+   * @return day the last stored day
    */
   function catchUpDays(uint256 iterations) external payable returns(Total memory total, uint256 day) {
     // constrain by gas costs
