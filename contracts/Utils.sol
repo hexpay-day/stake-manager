@@ -29,6 +29,7 @@ contract Utils {
   int16 constant internal MIN_INT_16 = int16(type(int16).min);
   /** @notice the max value that can fit in a uint8 slot (255) */
   uint8 internal constant MAX_UINT_8 = type(uint8).max;
+  /** @notice the max value that can fit in a uint8 slot (127) */
   uint8 internal constant MAX_UINT_7 = MAX_UINT_8 / TWO;
   /** @notice a uint8 as 0 in a constant */
   uint8 internal constant ZERO = 0;
@@ -60,6 +61,7 @@ contract Utils {
   uint8 internal constant SIXTY_FOUR = 64;
   /** @notice the hedron contract to interact with and mint hedron tokens from */
   address public constant HEDRON = 0x3819f64f282bf135d62168C1e513280dAF905e06;
+  // SLOT
   /**
    * @notice the hedron stake instance manager contract
    * to interact with and transfer hsi tokens from and end stakes through
