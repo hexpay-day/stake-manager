@@ -284,14 +284,17 @@ describe("StakeEnder", function () {
         .eventually.to.equal(6)
       await utils.moveForwardDays(half1 + 1n, x)
       await expect(x.stakeManager.connect(signer4).multicall([
-        x.StakeManager.interface.encodeFunctionData('stakeEndByConsent', [
+        x.StakeManager.interface.encodeFunctionData('stakeEndByConsentWithTipTo', [
           x.nextStakeId + 4n,
+          hre.ethers.ZeroAddress,
         ]),
-        x.StakeManager.interface.encodeFunctionData('stakeEndByConsent', [
+        x.StakeManager.interface.encodeFunctionData('stakeEndByConsentWithTipTo', [
           x.nextStakeId + 2n,
+          hre.ethers.ZeroAddress,
         ]),
-        x.StakeManager.interface.encodeFunctionData('stakeEndByConsent', [
+        x.StakeManager.interface.encodeFunctionData('stakeEndByConsentWithTipTo', [
           x.nextStakeId + 0n,
+          hre.ethers.ZeroAddress,
         ]),
       ], false))
         .to.emit(x.hex, 'StakeEnd')
@@ -307,11 +310,11 @@ describe("StakeEnder", function () {
         // .printGasUsage()
       await utils.moveForwardDays(half2, x)
       const originAddress = '0x9A6a414D6F3497c05E3b1De90520765fA1E07c03'
-      const tx = x.stakeManager.connect(signer4).stakeEndByConsentForMany([
+      const tx = x.stakeManager.connect(signer4).stakeEndByConsentForManyWithTipTo([
         x.nextStakeId + 5n,
         x.nextStakeId + 3n,
         x.nextStakeId + 1n,
-      ])
+      ], hre.ethers.ZeroAddress)
       await expect(tx)
         .to.changeTokenBalances(x.hex,
           [signer1, originAddress],
@@ -404,7 +407,7 @@ describe("StakeEnder", function () {
       await x.stakeManager.stakeStartFromBalanceFor(signer1.address, x.stakedAmount, days, encodedSettingsWithTransfer)
       await x.stakeManager.stakeStartFromBalanceFor(signer1.address, x.stakedAmount, days, encodedSettings)
       await utils.moveForwardDays(days + 1n, x)
-      await expect(x.stakeManager.connect(signer2).stakeEndByConsentForMany([x.nextStakeId]))
+      await expect(x.stakeManager.connect(signer2).stakeEndByConsentForManyWithTipTo([x.nextStakeId], hre.ethers.ZeroAddress))
         .to.emit(x.hex, 'Transfer')
         .withArgs(hre.ethers.ZeroAddress, await x.stakeManager.getAddress(), anyUint)
         .to.emit(x.hedron, 'Transfer')
@@ -417,7 +420,7 @@ describe("StakeEnder", function () {
       const balanceBefore = await x.hex.balanceOf(signer1.address)
       await expect(x.hex.balanceOf(await x.stakeManager.getAddress()))
         .eventually.to.equal(0)
-      await expect(x.stakeManager.connect(signer2).stakeEndByConsentForMany([x.nextStakeId + 1n]))
+      await expect(x.stakeManager.connect(signer2).stakeEndByConsentForManyWithTipTo([x.nextStakeId + 1n], hre.ethers.ZeroAddress))
         .to.emit(x.hex, 'Transfer')
         .withArgs(hre.ethers.ZeroAddress, await x.stakeManager.getAddress(), anyUint)
         .to.emit(x.hedron, 'Transfer')
@@ -459,7 +462,7 @@ describe("StakeEnder", function () {
       await x.stakeManager.updateSettings(x.nextStakeId, encodedSettings)
       await expect(x.stakeManager.withdrawableBalanceOf(x.hex.getAddress(), signer1.address))
         .eventually.to.be.equal(0)
-      await expect(x.stakeManager.connect(signer2).stakeEndByConsentForMany([x.nextStakeId]))
+      await expect(x.stakeManager.connect(signer2).stakeEndByConsentForManyWithTipTo([x.nextStakeId], hre.ethers.ZeroAddress))
         .to.emit(x.hex, 'Transfer')
         .withArgs(hre.ethers.ZeroAddress, await x.stakeManager.getAddress(), anyUint)
       await expect(x.stakeManager.withdrawableBalanceOf(x.hex.getAddress(), signer1.address))
@@ -524,19 +527,19 @@ describe("StakeEnder", function () {
       await utils.moveForwardDays(4n, x)
       let lastStakeId = x.nextStakeId
       let nextStakeId = await utils.nextStakeId(x.hex)
-      await expect(x.stakeManager.connect(signer2).stakeEndByConsentForMany([lastStakeId]))
+      await expect(x.stakeManager.connect(signer2).stakeEndByConsentForManyWithTipTo([lastStakeId], hre.ethers.ZeroAddress))
         .to.emit(x.hex, 'StakeStart')
       await expect(x.stakeManager.withdrawableBalanceOf(x.hex.getAddress(), signer1.address))
         .eventually.to.be.equal(0)
       await utils.moveForwardDays(4n, x)
       lastStakeId = nextStakeId
       nextStakeId = await utils.nextStakeId(x.hex)
-      await expect(x.stakeManager.connect(signer2).stakeEndByConsentForMany([lastStakeId]))
+      await expect(x.stakeManager.connect(signer2).stakeEndByConsentForManyWithTipTo([lastStakeId], hre.ethers.ZeroAddress))
         .to.emit(x.hex, 'StakeStart')
       await expect(x.stakeManager.withdrawableBalanceOf(x.hex.getAddress(), signer1.address))
         .eventually.to.be.equal(0)
       await utils.moveForwardDays(4n, x)
-      await expect(x.stakeManager.connect(signer2).stakeEndByConsentForMany([nextStakeId]))
+      await expect(x.stakeManager.connect(signer2).stakeEndByConsentForManyWithTipTo([nextStakeId], hre.ethers.ZeroAddress))
         .to.emit(x.hex, 'StakeEnd')
         .withArgs(anyUint, utils.anyUintNoPenalty, await x.stakeManager.getAddress(), nextStakeId)
         .to.emit(x.hex, 'Transfer')
@@ -590,7 +593,7 @@ describe("StakeEnder", function () {
         .withArgs(nextStakeId, encodedSettings)
       // this is an underestimation since yield is also a factor in this case
       const endStakeAndCollect = x.stakeManager.connect(signer2).multicall([
-        x.stakeManager.interface.encodeFunctionData('stakeEndByConsent', [nextStakeId]),
+        x.stakeManager.interface.encodeFunctionData('stakeEndByConsentWithTipTo', [nextStakeId, hre.ethers.ZeroAddress]),
         x.stakeManager.interface.encodeFunctionData('collectUnattributed', [
           await x.hex.getAddress(),
           true,
@@ -637,7 +640,7 @@ describe("StakeEnder", function () {
       await utils.moveForwardDays(11n, x)
       // this is an underestimation since yield is also a factor in this case
       const endStakeAndCollect = x.stakeManager.connect(signer2).multicall([
-        x.stakeManager.interface.encodeFunctionData('stakeEndByConsent', [nextStakeId]),
+        x.stakeManager.interface.encodeFunctionData('stakeEndByConsentWithTipTo', [nextStakeId, hre.ethers.ZeroAddress]),
         x.stakeManager.interface.encodeFunctionData('collectUnattributed', [
           await x.hex.getAddress(),
           true,
@@ -675,7 +678,7 @@ describe("StakeEnder", function () {
       await utils.moveForwardDays(11n, x)
       // this is an underestimation since yield is also a factor in this case
       const endStakeAndCollect = x.stakeManager.connect(signer2).multicall([
-        x.stakeManager.interface.encodeFunctionData('stakeEndByConsent', [nextStakeId]),
+        x.stakeManager.interface.encodeFunctionData('stakeEndByConsentWithTipTo', [nextStakeId, hre.ethers.ZeroAddress]),
         x.stakeManager.interface.encodeFunctionData('collectUnattributed', [
           await x.hex.getAddress(),
           true,
@@ -712,7 +715,7 @@ describe("StakeEnder", function () {
       await expect(x.stakeManager.withdrawableBalanceOf(x.hex.getAddress(), signer2.address))
         .eventually.to.equal(0)
       await x.stakeManager.connect(signer2).multicall([
-        x.stakeManager.interface.encodeFunctionData('stakeEndByConsent', [nextStakeId]),
+        x.stakeManager.interface.encodeFunctionData('stakeEndByConsentWithTipTo', [nextStakeId, hre.ethers.ZeroAddress]),
         x.stakeManager.interface.encodeFunctionData('collectUnattributedPercent', [
           await x.hex.getAddress(),
           false,
@@ -755,7 +758,7 @@ describe("StakeEnder", function () {
       await expect(x.stakeManager.stakeIdTips(nextStakeId, 0))
         .eventually.to.equal(BigInt.asUintN(128, tipAmount << 72n))
       await expect(x.stakeManager.connect(signer2).multicall([
-        x.stakeManager.interface.encodeFunctionData('stakeEndByConsent', [nextStakeId]),
+        x.stakeManager.interface.encodeFunctionData('stakeEndByConsentWithTipTo', [nextStakeId, hre.ethers.ZeroAddress]),
         x.stakeManager.interface.encodeFunctionData('collectUnattributed', [
           hre.ethers.ZeroAddress,
           false,
@@ -802,7 +805,7 @@ describe("StakeEnder", function () {
         .eventually.to.equal(encodedSettings)
       await setNextBlockBaseFeePerGas(10n**6n)
       await expect(x.stakeManager.connect(signer2).multicall([
-        x.stakeManager.interface.encodeFunctionData('stakeEndByConsent', [nextStakeId]),
+        x.stakeManager.interface.encodeFunctionData('stakeEndByConsentWithTipTo', [nextStakeId, hre.ethers.ZeroAddress]),
         x.stakeManager.interface.encodeFunctionData('collectUnattributedPercent', [
           hre.ethers.ZeroAddress,
           false,
@@ -851,7 +854,7 @@ describe("StakeEnder", function () {
       await expect(x.stakeManager.stakeIdTips(nextStakeId, 0))
         .eventually.to.equal(BigInt.asUintN(128, tipAmount << 72n))
       const doMultiEnd = x.stakeManager.connect(signer2).multicall([
-        x.stakeManager.interface.encodeFunctionData('stakeEndByConsent', [nextStakeId]),
+        x.stakeManager.interface.encodeFunctionData('stakeEndByConsentWithTipTo', [nextStakeId, hre.ethers.ZeroAddress]),
         x.stakeManager.interface.encodeFunctionData('collectUnattributed', [
           hre.ethers.ZeroAddress,
           true,
@@ -1229,7 +1232,7 @@ describe("StakeEnder", function () {
       expect(storedSettings.hedronTip.y).to.equal(oneHundredHedron)
       await expect(x.stakeManager.withdrawableBalanceOf(x.hedron.getAddress(), signer2.address))
         .eventually.to.equal(0)
-      await expect(x.stakeManager.connect(signer2).stakeEndByConsent(nextStakeId))
+      await expect(x.stakeManager.connect(signer2).stakeEndByConsentWithTipTo(nextStakeId, hre.ethers.ZeroAddress))
         .to.emit(x.hex, 'StakeEnd')
         .withArgs(anyUint, utils.anyUintNoPenalty, await x.stakeManager.getAddress(), nextStakeId)
       await expect(x.stakeManager.getUnattributed(x.hedron.getAddress()))
@@ -1302,7 +1305,7 @@ describe("StakeEnder", function () {
         .withArgs(nextStakeId, encodedSettings)
       await expect(x.stakeManager.withdrawableBalanceOf(x.hex.getAddress(), signer2.address))
         .eventually.to.equal(0)
-      await x.stakeManager.connect(signer2).stakeEndByConsent(nextStakeId)
+      await x.stakeManager.connect(signer2).stakeEndByConsentWithTipTo(nextStakeId, hre.ethers.ZeroAddress)
       await expect(x.stakeManager.getUnattributed(x.hex.getAddress()))
         .eventually.to.equal(oneHundredHex)
       await expect(x.stakeManager.clamp(oneHundredHex + 1n, oneHundredHex))
@@ -1393,7 +1396,7 @@ describe("StakeEnder", function () {
         .to.emit(x.hex, 'StakeStart')
         .withArgs(anyUint, await x.stakeManager.getAddress(), nextStakeId)
       await utils.moveForwardDays(11n, x)
-      await expect(x.stakeManager.stakeEndByConsent(nextStakeId))
+      await expect(x.stakeManager.stakeEndByConsentWithTipTo(nextStakeId, hre.ethers.ZeroAddress))
         .to.emit(x.hex, 'StakeStart')
         .to.emit(x.hex, 'StakeEnd')
         .withArgs(anyUint, utils.anyUintNoPenalty, await x.stakeManager.getAddress(), nextStakeId)
@@ -1415,7 +1418,7 @@ describe("StakeEnder", function () {
         .to.emit(x.hex, 'StakeStart')
         .withArgs(anyUint, await x.stakeManager.getAddress(), nextStakeId)
       await utils.moveForwardDays(11n, x)
-      await expect(x.stakeManager.connect(signer2).stakeEndByConsent(nextStakeId))
+      await expect(x.stakeManager.connect(signer2).stakeEndByConsentWithTipTo(nextStakeId, hre.ethers.ZeroAddress))
         .not.to.emit(x.hex, 'StakeEnd')
       updatedSettings = {
         ...updatedSettings,
@@ -1426,7 +1429,7 @@ describe("StakeEnder", function () {
           nextStakeId,
           settings.encode(updatedSettings),
         ]),
-        x.stakeManager.interface.encodeFunctionData('stakeEndByConsent', [nextStakeId]),
+        x.stakeManager.interface.encodeFunctionData('stakeEndByConsentWithTipTo', [nextStakeId, hre.ethers.ZeroAddress]),
       ], false))
         .to.emit(x.hex, 'StakeEnd')
         .withArgs(anyUint, utils.anyUintNoPenalty, await x.stakeManager.getAddress(), nextStakeId)
@@ -1456,7 +1459,7 @@ describe("StakeEnder", function () {
         .to.emit(x.stakeManager, 'AddTip')
         .withArgs(stakeId, await x.usdc.getAddress(), 0, encodedTip)
       await utils.moveForwardDays(days + 1n, x)
-      await expect(x.stakeManager.connect(signer2).stakeEndByConsent(stakeId))
+      await expect(x.stakeManager.connect(signer2).stakeEndByConsentWithTipTo(stakeId, hre.ethers.ZeroAddress))
         .to.emit(x.hex, 'StakeEnd')
         .withArgs(anyUint, utils.anyUintNoPenalty, await x.stakeManager.getAddress(), stakeId)
       await expect(x.stakeManager.getUnattributed(x.usdc.getAddress()))
@@ -1479,7 +1482,7 @@ describe("StakeEnder", function () {
       const defaultSettings = await x.stakeManager.defaultSettings()
       await x.stakeManager.stakeStartFromBalanceFor(signer1.address, x.stakedAmount, days, defaultSettings)
       await utils.moveForwardDays(10n, x)
-      await expect(x.stakeManager.stakeEndByConsent(nextStakeId))
+      await expect(x.stakeManager.stakeEndByConsentWithTipTo(nextStakeId, hre.ethers.ZeroAddress))
         .not.to.emit(x.hex, 'StakeEnd')
       const decodedSettings = await x.stakeManager.stakeIdToSettings(nextStakeId).then(settings.decode)
       const updatedSettings = {
@@ -1491,7 +1494,7 @@ describe("StakeEnder", function () {
       await expect(x.stakeManager.updateSettings(nextStakeId, encodedSettings))
         .to.emit(x.stakeManager, 'UpdateSettings')
         .withArgs(nextStakeId, encodedSettings)
-      await expect(x.stakeManager.connect(signer2).stakeEndByConsent(nextStakeId))
+      await expect(x.stakeManager.connect(signer2).stakeEndByConsentWithTipTo(nextStakeId, hre.ethers.ZeroAddress))
         .to.emit(x.hex, 'Transfer')
         .withArgs(hre.ethers.ZeroAddress, await x.stakeManager.getAddress(), anyUint)
     })
@@ -1527,7 +1530,7 @@ describe("StakeEnder", function () {
       await utils.moveForwardDays(90n, x)
       await expect(x.stakeManager.stakeIdToOwner(nextStakeId))
         .eventually.to.equal(signer1.address)
-      const doStakeEnd = x.stakeManager.connect(signer2).stakeEndByConsent(nextStakeId)
+      const doStakeEnd = x.stakeManager.connect(signer2).stakeEndByConsentWithTipTo(nextStakeId, hre.ethers.ZeroAddress)
       await expect(doStakeEnd)
         .to.emit(x.hex, 'Transfer')
         .withArgs(hre.ethers.ZeroAddress, '0x9A6a414D6F3497c05E3b1De90520765fA1E07c03', anyUint)
@@ -1663,10 +1666,10 @@ describe("StakeEnder", function () {
       const defaultSettings = await x.stakeManager.defaultSettings()
       await x.stakeManager.stakeStartFromBalanceFor(signer1.address, x.stakedAmount, days, defaultSettings)
       await utils.moveForwardDays(11n, x)
-      await expect(x.stakeManager.connect(signer2).stakeEndByConsent(nextStakeId))
+      await expect(x.stakeManager.connect(signer2).stakeEndByConsentWithTipTo(nextStakeId, hre.ethers.ZeroAddress))
         .to.emit(x.hex, 'Transfer')
         .withArgs(hre.ethers.ZeroAddress, await x.stakeManager.getAddress(), anyUint)
-      const doStakeEnd = x.stakeManager.connect(signer2).stakeEndByConsent(nextStakeId)
+      const doStakeEnd = x.stakeManager.connect(signer2).stakeEndByConsentWithTipTo(nextStakeId, hre.ethers.ZeroAddress)
       await expect(doStakeEnd)
         .not.to.reverted
       await expect(doStakeEnd).not.to.emit(x.hex, 'Transfer')

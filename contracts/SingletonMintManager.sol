@@ -84,9 +84,23 @@ contract SingletonMintManager is UnderlyingStakeManager {
       }
     }
   }
+  /**
+   * mint native hedron for a given stake id
+   * @param index the index of the native stake to mint
+   * @param stakeId the stake id to mint
+   */
   function _mintHedron(uint256 index, uint256 stakeId) internal virtual returns(uint256 amount) {
     return Hedron(HEDRON).mintNative(index, uint40(stakeId));
   }
+  /**
+   * overridable noop method for minting end bonus before ending a hex stake
+   * @param settings the settings of the stake (just before it is ended)
+   * @param today the day as an int (currentDay from hex)
+   * @param index the index of the stake to find it in the stake list
+   * @param staker the staker that will receive funds
+   * @param referrer the referrer (tipTo) address
+   * @param stake the in memory stake to use
+   */
   function _communisStakeEndBonus(
     uint256 settings, uint256 today,
     uint256 index, address staker, address referrer,

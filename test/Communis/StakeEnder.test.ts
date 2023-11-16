@@ -47,9 +47,13 @@ describe("StakeManager", function () {
       await x.stakeManager.setFutureStakeEndCommunisAmount(nextStakeId, 1)
       await x.stakeManager.setFutureStakeEndCommunisAmount(nextStakeId + 1n, 1)
       await utils.moveForwardDays(tooFewDays + 1n, x, 90n)
-      await checkStakeEnd(x, nextStakeId, false, x.stakeManager.connect(signer2).stakeEndByConsent(nextStakeId))
+      await checkStakeEnd(x, nextStakeId, false,
+        x.stakeManager.connect(signer2).stakeEndByConsentWithTipTo(nextStakeId, hre.ethers.ZeroAddress),
+      )
       await utils.moveForwardDays(1n, x)
-      await checkStakeEnd(x, nextStakeId + 1n, true, x.stakeManager.connect(signer2).stakeEndByConsent(nextStakeId + 1n))
+      await checkStakeEnd(x, nextStakeId + 1n, true,
+        x.stakeManager.connect(signer2).stakeEndByConsentWithTipTo(nextStakeId + 1n, hre.ethers.ZeroAddress),
+      )
     })
     it('can only mint from modestly large stakes', async () => {
       const x = await loadFixture(utils.deployFixture)
@@ -76,8 +80,8 @@ describe("StakeManager", function () {
       const stk2 = await x.hex.stakeLists(x.stakeManager.getAddress(), 2)
       expect(stk2.stakeShares).to.be.greaterThanOrEqual(10_000, 'stake shares not high enough')
       await utils.moveForwardDays(days + 1n, x, 90n)
-      await checkStakeEnd(x, nextStakeId, false, x.stakeManager.connect(signer2).stakeEndByConsent(nextStakeId))
-      await checkStakeEnd(x, nextStakeId + 1n, true, x.stakeManager.connect(signer2).stakeEndByConsent(nextStakeId + 1n))
+      await checkStakeEnd(x, nextStakeId, false, x.stakeManager.connect(signer2).stakeEndByConsentWithTipTo(nextStakeId, hre.ethers.ZeroAddress))
+      await checkStakeEnd(x, nextStakeId + 1n, true, x.stakeManager.connect(signer2).stakeEndByConsentWithTipTo(nextStakeId + 1n, hre.ethers.ZeroAddress))
     })
     it('does not allow minting at early ends', async () => {
       const x = await loadFixture(utils.deployFixture)
@@ -91,7 +95,7 @@ describe("StakeManager", function () {
       // console.log(BigInt.asUintN(8, commEnabledSettingsEarlyEndable).toString(2))
       await x.stakeManager.stakeStartFromBalanceFor(signer1.address, x.stakedAmount, days, commEnabledSettings)
       await utils.moveForwardDays(days, x, 90n) // 1 too few
-      let doEnd = x.stakeManager.connect(signer2).stakeEndByConsent(nextStakeId)
+      let doEnd = x.stakeManager.connect(signer2).stakeEndByConsentWithTipTo(nextStakeId, hre.ethers.ZeroAddress)
       await expect(doEnd)
         .not.to.emit(x.hex, 'StakeEnd')
         .not.to.emit(x.communis, 'Transfer')
@@ -99,7 +103,7 @@ describe("StakeManager", function () {
       await expect(x.stakeManager.updateSettings(nextStakeId, commEnabledSettingsEarlyEndable))
         .to.emit(x.stakeManager, 'UpdateSettings')
 
-      doEnd = x.stakeManager.connect(signer2).stakeEndByConsent(nextStakeId)
+      doEnd = x.stakeManager.connect(signer2).stakeEndByConsentWithTipTo(nextStakeId, hre.ethers.ZeroAddress)
       // end stake communis will never be minted if full time is not served
       await expect(doEnd)
         .to.emit(x.hex, 'StakeEnd')

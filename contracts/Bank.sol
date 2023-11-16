@@ -86,6 +86,12 @@ contract Bank is Utils {
       amount: amount
     });
   }
+  /**
+   * deposit a token to a given address - usually the transaction sender's
+   * @param token the token address being deposited
+   * @param to the account to attribute tokens
+   * @param amount the number of tokens to attribute
+   */
   function _depositTokenTo(address token, address to, uint256 amount) internal returns(uint256) {
     amount = _depositTokenFrom({
       token: token,
@@ -124,6 +130,17 @@ contract Bank is Utils {
       })
     });
   }
+  /**
+   * collect any tokens that have a delta between balanceOf for this address
+   * and attributed (total) such that the difference can be withdrawn by anyone
+   * @param token the token to collect unattributed of
+   * @param transferOut should transfer out to the "to" address
+   * @param to the address to attribute or transfer to
+   * @param amount the number of tokens to attribute or transfer
+   * @param max the maximum number of tokens that can be withdrawn
+   * @notice max param must be the unattributed delta
+   * or less to preserve correct accounting
+   */
   function _collectUnattributed(
     address token, bool transferOut, address to,
     uint256 amount, uint256 max
@@ -195,6 +212,11 @@ contract Bank is Utils {
       })
     });
   }
+  /**
+   * get the balance of a given token
+   * @param token the balance of a given token - 0x00 is ether
+   * @return the balance of the given token
+   */
   function _getTokenBalance(address token) internal view returns(uint256) {
     return token == address(0)
       ? address(this).balance
@@ -273,6 +295,14 @@ contract Bank is Utils {
     }
     return amount;
   }
+  /**
+   *
+   * @param settings the settings to determine if a token should be withdrawn to the staker
+   * @param token the token address currently being targeted
+   * @param staker the staker address - this account will have access to tokens
+   * either to withdraw or by dint of having access to the key
+   * @param amount the number of tokens to attribute or transfer
+   */
   function _attributeFunds(uint256 settings, address token, address staker, uint256 amount) internal {
     if (_isOneAtIndex({
       settings: settings,

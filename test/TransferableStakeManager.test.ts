@@ -70,7 +70,7 @@ describe('TransferableStakeManager.sol', () => {
       await utils.moveForwardDays(days + 1n, x)
       await expect(x.stakeManager.withdrawableBalanceOf(x.hex.getAddress(), signer2.address))
         .eventually.to.equal(0)
-      await expect(x.stakeManager.stakeEndByConsent(x.nextStakeId))
+      await expect(x.stakeManager.stakeEndByConsentWithTipTo(x.nextStakeId, hre.ethers.ZeroAddress))
         .to.emit(x.hex, 'StakeEnd')
         .withArgs(anyUint, utils.anyUintNoPenalty, await x.stakeManager.getAddress(), x.nextStakeId)
         .to.emit(x.hex, 'Transfer')

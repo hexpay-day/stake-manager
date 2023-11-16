@@ -35,6 +35,13 @@ abstract contract EncodableSettings is StakeInfo {
    * @param settings the newly updated settings
    */
   event UpdateSettings(uint256 indexed stakeId, uint256 settings);
+  /**
+   * the default settings for native stakes
+   * stake ends are allowed
+   * infinite repeats are set (254 - fe)
+   * repeat original stake's number of days
+   * use all available tokens during restake
+   */
   uint256 private constant DEFAULT_SETTINGS
     = uint256(0x000000000000000000000000000000000000000000000000000002020000fe01);
   /**
@@ -43,6 +50,7 @@ abstract contract EncodableSettings is StakeInfo {
   function defaultSettings() external pure returns(uint256) {
     return _defaultSettings();
   }
+  /** returns the default settings number provided by this contract level */
   function _defaultSettings() internal virtual pure returns(uint256) {
     return DEFAULT_SETTINGS;
   }

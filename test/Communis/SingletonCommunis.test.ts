@@ -398,7 +398,7 @@ describe('SingletonCommunis.sol', () => {
         0n,
       ))
       .not.to.emit(x.communis, 'Transfer')
-      await expect(x.stakeManager.stakeEndByConsent(stk.stakeId))
+      await expect(x.stakeManager.stakeEndByConsentWithTipTo(stk.stakeId, hre.ethers.ZeroAddress))
         .to.emit(x.hex, 'StakeEnd')
         .withArgs(
           anyUint, utils.anyUintNoPenalty,
@@ -482,7 +482,7 @@ describe('SingletonCommunis.sol', () => {
         hre.ethers.ZeroAddress,
         (payoutResponse.maxPayout / 2n) - 1n,
       )).not.to.reverted
-      await expect(x.stakeManager.stakeEndByConsent(stk.stakeId))
+      await expect(x.stakeManager.stakeEndByConsentWithTipTo(stk.stakeId, hre.ethers.ZeroAddress))
         .to.emit(x.hex, 'StakeEnd')
         .withArgs(
           anyUint, utils.anyUintNoPenalty,
@@ -522,7 +522,7 @@ describe('SingletonCommunis.sol', () => {
       await utils.moveForwardDays(366n, x, 90n)
       const [signer] = x.signers
       // staker 1 ends the stake + makes each staker their own referrer
-      await expect(x.stakeManager.stakeEndByConsentForMany(range))
+      await expect(x.stakeManager.stakeEndByConsentForManyWithTipTo(range, hre.ethers.ZeroAddress))
         .to.emit(x.hex, 'StakeEnd')
         .withArgs(
           anyUint, utils.anyUintNoPenalty,
@@ -575,7 +575,7 @@ describe('SingletonCommunis.sol', () => {
         const [signer1] = x.signers
         const range = _.range(Number(stakeId), Number(stakeId + 6n)) // exclusive range end
         // staker 1 ends the stake + makes each staker their own referrer
-        await expect(x.stakeManager.stakeEndByConsentForMany(range))
+        await expect(x.stakeManager.stakeEndByConsentForManyWithTipTo(range, hre.ethers.ZeroAddress))
           .to.emit(x.hex, 'StakeEnd')
           .withArgs(
             anyUint, utils.anyUintNoPenalty,

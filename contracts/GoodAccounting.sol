@@ -50,6 +50,11 @@ abstract contract GoodAccounting is Tipper {
       stakeId: stakeId
     });
   }
+  /**
+   * check if a stake custodied by this contract
+   * is good accountable and return its status
+   * @param stakeId the stake id to check if is good accountable
+   */
   function isStakeIdGoodAccountable(uint256 stakeId) external view returns(GoodAccountingStatus) {
     return _isGoodAccountable({
       staker: address(this),
@@ -66,6 +71,13 @@ abstract contract GoodAccounting is Tipper {
     MISMATCH,
     MISCOUNT
   }
+  /**
+   * check that a given staker's stake id, at index, is good accountable
+   * @param staker the custodian of the stake
+   * @param index the index of the stake in the owner's list
+   * @param stakeId the stake id, to ensure that the list
+   * does not shift and the index no longer matches
+   */
   function _isGoodAccountable(
     address staker,
     uint256 index,
@@ -97,6 +109,12 @@ abstract contract GoodAccounting is Tipper {
     }
     return GoodAccountingStatus.READY;
   }
+  /**
+   * checks that a stake is good accountable and runs goodAccounting if it is
+   * @param staker the custodiann of the stake
+   * @param index the index of the stake id
+   * @param stakeId the stake id to be ended
+   */
   function _checkAndDoStakeGoodAccounting(address staker, uint256 index, uint256 stakeId) internal {
     if (_isGoodAccountable({
       staker: staker,

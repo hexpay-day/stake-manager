@@ -7,22 +7,15 @@ import { Magnitude } from "./Magnitude.sol";
 
 contract StakeEnder is Magnitude, SingletonMintManager {
   uint256 public constant INDEX_RIGHT_TODAY = 128;
-
   /**
-   * end a stake for someone other than the sender of the transaction
-   * @param stakeId the stake id on the underlying contract to end
+   * end a stake, given its settings, and tip to a given address
+   * @param stakeId the stake id being targeted for ending
+   * @param tipTo where to send tokens from tips
+   * @return count the current day and number of stakes remaining concatted with |
    */
-  function stakeEndByConsent(uint256 stakeId) external payable returns(
-    uint256 delta, uint256 count
-  ) {
-    return _stakeEndByConsentWithTipTo({
-      stakeId: stakeId,
-      tipTo: address(0)
-    });
-  }
   function stakeEndByConsentWithTipTo(
     uint256 stakeId, address tipTo
-  ) external payable returns(uint256 delta, uint256 count) {
+  ) external payable returns(uint256) {
     return _stakeEndByConsentWithTipTo({
       stakeId: stakeId,
       tipTo: tipTo
@@ -30,7 +23,7 @@ contract StakeEnder is Magnitude, SingletonMintManager {
   }
   function _stakeEndByConsentWithTipTo(
     uint256 stakeId, address tipTo
-  ) internal returns(uint256 delta, uint256 count) {
+  ) internal returns(uint256) {
     unchecked {
       return _stakeEndByConsent({
         stakeId: stakeId,
@@ -51,8 +44,9 @@ contract StakeEnder is Magnitude, SingletonMintManager {
    */
   function _stakeEndByConsent(
     uint256 stakeId, address tipTo, uint256 count
-  ) internal returns(uint256 delta, uint256) {
+  ) internal returns(uint256) {
     unchecked {
+      uint256 delta;
       address staker;
       uint256 idx;
       UnderlyingStakeable.StakeStore memory stake;
@@ -60,7 +54,7 @@ contract StakeEnder is Magnitude, SingletonMintManager {
         bool valid;
         (valid, staker, idx, stake) = _getStakeInfo(stakeId);
         if (!valid) {
-          return (ZERO, count);
+          return count;
         }
       }
       uint256 settings = stakeIdToSettings[stakeId];
@@ -68,7 +62,7 @@ contract StakeEnder is Magnitude, SingletonMintManager {
         settings: settings,
         index: INDEX_RIGHT_CAN_STAKE_END
       })) {
-        return (ZERO, count);
+        return count;
       }
       if (_isEarlyEnding({
         lockedDay: stake.lockedDay,
@@ -78,7 +72,7 @@ contract StakeEnder is Magnitude, SingletonMintManager {
         if (!_isOneAtIndex({
           settings: settings,
           index: INDEX_RIGHT_CAN_EARLY_STAKE_END
-        })) return (ZERO, count);
+        })) return count;
       }
       if (_isOneAtIndex({
         settings: settings,
@@ -251,17 +245,11 @@ contract StakeEnder is Magnitude, SingletonMintManager {
           settings: settings
         });
       }
-      return (delta, count);
+      return count | (uint256(ONE) << SLOTS);
     }
   }
-  function stakeEndByConsentForMany(uint256[] calldata stakeIds) external payable {
-    _stakeEndByConsentForManyWithTipTo({
-      stakeIds: stakeIds,
-      tipTo: address(0)
-    });
-  }
-  function stakeEndByConsentForManyWithTipTo(uint256[] calldata stakeIds, address tipTo) external payable {
-    _stakeEndByConsentForManyWithTipTo({
+  function stakeEndByConsentForManyWithTipTo(uint256[] calldata stakeIds, address tipTo) external payable returns(uint256) {
+    return _stakeEndByConsentForManyWithTipTo({
       stakeIds: stakeIds,
       tipTo: tipTo
     });
@@ -274,20 +262,21 @@ contract StakeEnder is Magnitude, SingletonMintManager {
    * @notice this method should, generally, only be called when multiple enders
    * are attempting to end stake the same stakes
    */
-  function _stakeEndByConsentForManyWithTipTo(uint256[] calldata stakeIds, address tipTo) internal {
+  function _stakeEndByConsentForManyWithTipTo(uint256[] calldata stakeIds, address tipTo) internal returns(uint256 ended) {
     uint256 i;
     uint256 len = stakeIds.length;
-    uint256 count;
     unchecked {
-      count = (_currentDay() << INDEX_RIGHT_TODAY) | _stakeCount({
+      uint256 count = (_currentDay() << INDEX_RIGHT_TODAY) | _stakeCount({
         staker: address(this)
       });
       do {
-        (, count) = _stakeEndByConsent({
+        count = _stakeEndByConsent({
           stakeId: stakeIds[i],
           tipTo: tipTo,
           count: count
         });
+        if (count >> SLOTS == ONE) ++ended;
+        count = uint248(count);
         ++i;
       } while(i < len);
     }

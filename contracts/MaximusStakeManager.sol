@@ -7,8 +7,19 @@ import { HSIStakeManager } from "./HSIStakeManager.sol";
 import { GasReimberser } from './interfaces/GasReimberser.sol';
 
 contract MaximusStakeManager is HSIStakeManager {
+  /**
+   * @notice the address that can set the external
+   * perpetual filter contract address
+   */
   address public externalPerpetualSetter;
+  /**
+   * @notice a contract to consult regarding whether or not
+   * a given address is a perpetual pool
+   */
   address public externalPerpetualFilter;
+  /**
+   * @notice a whitelist for caching perpetual reads
+   */
   mapping(address perpetual => bool isPerpetual) public perpetualWhitelist;
   /**
    * bytes32 is a key made up of the perpetual whitelist address + the iteration of the stake found at
@@ -149,6 +160,7 @@ contract MaximusStakeManager is HSIStakeManager {
   ) external payable {
     if (!perpetualWhitelist[perpetual]) revert NotAllowed();
     if (PublicEndStakeable(perpetual).getCurrentPeriod() != period) {
+      // most likely, the transaction was too late
       return;
     }
     uint256 len = tokens.length;

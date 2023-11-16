@@ -14,6 +14,9 @@ contract HSIStakeManager is StakeEnder {
    */
   uint256 private constant DEFAULT_SETTINGS
     = 0x000000000000000000000000000000000000000000000000000000000000000d;
+  /**
+   * returns the default settings for a contract layer
+   */
   function _defaultSettings() internal virtual override pure returns(uint256) {
     return DEFAULT_SETTINGS;
   }
@@ -110,9 +113,17 @@ contract HSIStakeManager is StakeEnder {
       settings: settings
     });
   }
+  /**
+   * get the hsi count of a given stake owner
+   * @param staker the account to check an hsi count
+   */
   function _hsiCount(address staker) internal view returns(uint256 count) {
     return HEXStakeInstanceManager(HSIM).hsiCount(staker);
   }
+  /**
+   * get the count of stakes owned by a contract
+   * @param staker the account to check how many stakes are owned
+   */
   function _getStakeCount(address staker) internal view override returns(uint256 count) {
     return _hsiCount({
       staker: staker
@@ -128,14 +139,29 @@ contract HSIStakeManager is StakeEnder {
     tokenId = HEXStakeInstanceManager(HSIM).hexStakeTokenize(index, hsiAddress);
     ERC721(HSIM).transferFrom(address(this), owner, tokenId);
   }
-  function hsiStakeEndMany(address[] calldata hsiAddresses) external payable {
-    _hsiStakeEndMany({
+  /**
+   * end and unwind a set of hsi addresses
+   * @param hsiAddresses the list of hsi addresses that should be ended and unwound
+   * @notice while this method is payable, it will not do anything with the funds
+   * so any value sent to this method will be lost. keyword is for gas savings
+   */
+  function hsiStakeEndMany(address[] calldata hsiAddresses) external payable returns(uint256) {
+    return _hsiStakeEndMany({
       hsiAddresses: hsiAddresses,
       tipTo: address(0)
     });
   }
-  function hsiStakeEndManyWithTipTo(address[] calldata hsiAddresses, address tipTo) external payable {
-    _hsiStakeEndMany({
+  /**
+   *
+   * end and unwind a set of hsi addresses
+   * @param hsiAddresses the list of hsi addresses that should be ended and unwound
+   * @param tipTo the address to tip to - if stakes set up tips previous to this transaction
+   * then those tips will be counted toward the deposits of the tipTo address
+   * @notice while this method is payable, it will not do anything with the funds
+   * so any value sent to this method will be lost. keyword is for gas savings
+   */
+  function hsiStakeEndManyWithTipTo(address[] calldata hsiAddresses, address tipTo) external payable returns(uint256) {
+    return _hsiStakeEndMany({
       hsiAddresses: hsiAddresses,
       tipTo: tipTo
     });
@@ -144,19 +170,21 @@ contract HSIStakeManager is StakeEnder {
    * provide a list of hsi addresses to end the stake of
    * @param hsiAddresses a list of hsi addresses (known in this contract as stake ids)
    */
-  function _hsiStakeEndMany(address[] calldata hsiAddresses, address tipTo) internal {
-    uint256 len = hsiAddresses.length;
+  function _hsiStakeEndMany(address[] calldata hsiAddresses, address tipTo) internal returns(uint256 ended) {
     uint256 i;
+    uint256 len = hsiAddresses.length;
     unchecked {
       uint256 count = (_currentDay() << INDEX_RIGHT_TODAY) | _hsiCount({
         staker: address(this)
       });
       do {
-        (, count) = _stakeEndByConsent({
+        count = _stakeEndByConsent({
           stakeId: uint160(hsiAddresses[i]),
           tipTo: tipTo,
           count: count
         });
+        if (count >> SLOTS == ONE) ++ended;
+        count = uint248(count);
         ++i;
       } while (i < len);
     }
@@ -205,6 +233,11 @@ contract HSIStakeManager is StakeEnder {
       });
     }
   }
+  /**
+   * because indexes change quickly they should be tracked and managed so that subsequent
+   * ends do not effect one another
+   * @param index the index to be targeted after removing an hsi from the underlying list
+   */
   function _rewriteIndex(uint256 index) internal {
     address movedHsiAddress = HEXStakeInstanceManager(HSIM)
       .hsiLists(address(this), index);

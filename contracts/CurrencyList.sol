@@ -5,14 +5,26 @@ import { SafeTransferLib, ERC20 } from "solmate/src/utils/SafeTransferLib.sol";
 import { Utils } from "./Utils.sol";
 
 contract CurrencyList is Utils {
+  /**
+   * a new token was added to the list of acceptable tip tokens
+   * @param token a token address was added to the list
+   * @param index the index of the token address in the `indexToToken` list
+   */
   event AddCurrency(
     address indexed token,
     uint256 indexed index
   );
 
+  /** @notice must be token holder to add tokens to list */
   error MustBeHolder();
 
+  /**
+   * this list allows us to access from idx->address,
+   * to potentially remove an sload from tip settings
+   * depending on overlap from other stake ends
+   */
   address[] public indexToToken;
+  /** maps tokens back to indexes for easy lookups off or on chain */
   mapping(address token => uint256 index) public currencyToIndex;
   /**
    * creates a registry of tokens to map addresses that stakes will tip in
@@ -47,6 +59,7 @@ contract CurrencyList is Utils {
     emit AddCurrency(token, index);
     return index;
   }
+  /** reads the length of the indexToToken list to get iteration constraints */
   function currencyListSize() external view returns(uint256) {
     return indexToToken.length;
   }

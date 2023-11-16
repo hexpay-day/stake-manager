@@ -91,7 +91,7 @@ contract TestStakeManager is Test {
     uint256 i;
     bytes[] memory calls = new bytes[](len);
     do {
-      calls[i] = abi.encodeWithSelector(stkMngr.stakeEndByConsentForMany.selector, stakeIds[i]);
+      calls[i] = abi.encodeWithSelector(stkMngr.stakeEndByConsentForManyWithTipTo.selector, stakeIds[i]);
       unchecked {
         ++i;
       }
@@ -104,7 +104,7 @@ contract TestStakeManager is Test {
     uint256[] memory list
   ) internal {
     vm.startPrank(ender);
-    stkMngr.stakeEndByConsentForMany(list);
+    stkMngr.stakeEndByConsentForManyWithTipTo(list, address(0));
     vm.stopPrank();
   }
   function _stakeRestartManyById(address staker, uint256[] memory stakeIds) internal {
@@ -122,7 +122,7 @@ contract TestStakeManager is Test {
     uint256 stakeId
   ) internal {
     vm.startPrank(ender);
-    stkMngr.stakeEndByConsent(stakeId);
+    stkMngr.stakeEndByConsentWithTipTo(stakeId, address(0));
     vm.stopPrank();
   }
   function _directStakeStart(address sender, uint256 amount, uint256 daysStaked) internal {

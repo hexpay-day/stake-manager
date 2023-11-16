@@ -14,11 +14,20 @@ contract SingletonCommunis is StakeEnder {
     END
   }
 
+  /** the total communis that is distributable to stakers */
   uint256 public distributableCommunis;
+  /** the former stake owner - must be tracked to constrain communis restakes after hex stake ends */
   mapping(uint256 stakeId => address formerOwner) public formerStakeOwner;
+  /** stake id to encoded payout info */
   mapping(uint256 stakeId => uint256 payoutInfo) public stakeIdCommunisPayoutInfo;
+  /** the number of days after today when one can claim tokens after staking */
   uint256 constant internal NINETY_ONE = 91;
+  /** the bit placement index (from the left) of `endBonusPayoutDebt` */
   uint256 constant internal ONE_TWENTY = 120;
+  /**
+   * the bit placement index of the `anyEnded` flag to signify
+   * that a stake has ever ended from this address
+   */
   uint256 constant internal TWO_FOURTY = 240;
 
   /**
@@ -147,6 +156,9 @@ contract SingletonCommunis is StakeEnder {
       }
     }
   }
+  /**
+   * sets the end staked signal if it has not yet been set
+   */
   function _setEndStakedSignal() internal {
     unchecked {
       if ((distributableCommunis >> TWO_FOURTY) == ZERO) {
@@ -320,6 +332,10 @@ contract SingletonCommunis is StakeEnder {
     }
   }
 
+  /**
+   * check that the stake id is owned by the sender - fail if it is not
+   * @param stakeId the stake id to check that the sender is or was the owner
+   */
   function _verifyOnlyStaker(uint256 stakeId) internal view returns(address staker) {
     staker = formerStakeOwner[stakeId];
     if (staker != msg.sender) {
@@ -433,7 +449,7 @@ contract SingletonCommunis is StakeEnder {
   }
 
   /**
-   *
+   * distribute communis stake bonus, given a stake id
    * @param stakeId the stake id to use to apply limits to the distribution
    * @param withdraw whether or not the funds should be transferred to the stake owner
    */
