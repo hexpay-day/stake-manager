@@ -175,6 +175,10 @@ export const calculateExpectedCommunisStakePayout = (
   return expected
 }
 
+type DeepPartial<T> = T extends object ? {
+  [P in keyof T]?: DeepPartial<T[P]>;
+} : T;
+
 const MAX_UINT_8 = 256n
 const MIN_INT_16 = -(2n**15n)
 const ZERO = 0n
@@ -292,22 +296,32 @@ const decodeLinear = (linear: bigint) => {
 
 type Linear = ReturnType<typeof decodeLinear>
 
-const encodeLinear = (decoded: Linear) => {
-  if (decoded.method >= X_OPTIONS) throw new Error('NotAllowed')
+const linearZero: Linear = {
+  method: 0n,
+  xFactor: 0n,
+  yFactor: 0n,
+  bFactor: 0n,
+  x: 0n,
+  y: 0n,
+  b: 0n,
+}
+
+const encodeLinear = (decoded: Partial<Linear> = linearZero) => {
+  if ((decoded.method || 0n) >= X_OPTIONS) throw new Error('NotAllowed')
   if (decoded.xFactor == ZERO) {
     return BigInt.asUintN(72, (
-      decoded.yFactor << SIXTY_FOUR
-      | decoded.y << EIGHT
-      | decoded.method
+      (decoded.yFactor || 0n) << SIXTY_FOUR
+      | (decoded.y || 0n) << EIGHT
+      | (decoded.method || 0n)
     ))
   }
   return (
-    (BigInt.asUintN(16, decoded.x - MIN_INT_16) << FIFTY_SIX)
-    | (BigInt.asUintN(8, decoded.yFactor) << FOURTY_EIGHT)
-    | (BigInt.asUintN(16, decoded.y) << THIRTY_TWO)
-    | (BigInt.asUintN(8, decoded.bFactor) << TWENTY_FOUR)
-    | (BigInt.asUintN(16, decoded.b - MIN_INT_16) << EIGHT)
-    | (BigInt.asUintN(8, decoded.xFactor * X_OPTIONS) + decoded.method)
+    (BigInt.asUintN(16, (decoded.x || 0n) - MIN_INT_16) << FIFTY_SIX)
+    | (BigInt.asUintN(8, (decoded.yFactor || 0n)) << FOURTY_EIGHT)
+    | (BigInt.asUintN(16, (decoded.y || 0n)) << THIRTY_TWO)
+    | (BigInt.asUintN(8, (decoded.bFactor || 0n)) << TWENTY_FOUR)
+    | (BigInt.asUintN(16, (decoded.b || 0n) - MIN_INT_16) << EIGHT)
+    | (BigInt.asUintN(8, (decoded.xFactor || 0n) * X_OPTIONS) + (decoded.method || 0n))
   )
 }
 
@@ -332,7 +346,7 @@ const decodeConsentAbilities = (abilities: bigint) => ({
  * 01000000(6): copy external tips to next stake
  * 10000000(7): mint comm tokens just before end
  */
-const encodeConsentAbilities = (abilities: ReturnType<typeof decodeConsentAbilities>) => (
+const encodeConsentAbilities = (abilities: Partial<ReturnType<typeof decodeConsentAbilities>>) => (
   ((abilities.mintCommunisAtEnd ? ONE : ZERO) << INDEX_RIGHT_MINT_COMMUNIS_AT_END)
   | ((abilities.copyExternalTips ? ONE : ZERO) << INDEX_RIGHT_COPY_EXTERNAL_TIPS)
   | ((abilities.stakeIsTransferable ? ONE : ZERO) << INDEX_RIGHT_STAKE_IS_TRANSFERABLE)
@@ -429,15 +443,15 @@ Settings(
   })
 );
 */
-const settingsEncode = (decoded: ReturnType<typeof settingsDecode>) => (
+const settingsEncode = (decoded: DeepPartial<ReturnType<typeof settingsDecode>>) => (
   (encodeLinear(decoded.hedronTip) << INDEX_RIGHT_HEDRON_TIP)
   | (encodeLinear(decoded.targetTip) << INDEX_RIGHT_TARGET_TIP)
   | (encodeLinear(decoded.newStake) << INDEX_RIGHT_NEW_STAKE)
-  | (BigInt.asUintN(8, decoded.newStakeDaysMethod) << INDEX_RIGHT_NEW_STAKE_DAYS_METHOD)
-  | (BigInt.asUintN(16, decoded.newStakeDaysMagnitude) << INDEX_RIGHT_NEW_STAKE_DAYS_MAGNITUDE)
-  | (BigInt.asUintN(8, decoded.copyIterations) << INDEX_RIGHT_COPY_ITERATIONS)
+  | (BigInt.asUintN(8, decoded.newStakeDaysMethod || ZERO) << INDEX_RIGHT_NEW_STAKE_DAYS_METHOD)
+  | (BigInt.asUintN(16, decoded.newStakeDaysMagnitude || ZERO) << INDEX_RIGHT_NEW_STAKE_DAYS_MAGNITUDE)
+  | (BigInt.asUintN(8, decoded.copyIterations || ZERO) << INDEX_RIGHT_COPY_ITERATIONS)
   | (decoded.hasExternalTips ? (ONE << INDEX_RIGHT_HAS_EXTERNAL_TIPS) : ZERO)
-  | encodeConsentAbilities(decoded.consentAbilities)
+  | encodeConsentAbilities(decoded.consentAbilities || {})
 )
 
 export const consentAbilities = {
