@@ -38,7 +38,7 @@ abstract contract EncodableSettings is StakeInfo {
   /**
    * the default settings for native stakes
    * stake ends are allowed
-   * infinite repeats are set (254 - fe)
+   * infinite repeats are set (127 - fe << 1)
    * repeat original stake's number of days
    * use all available tokens during restake
    */

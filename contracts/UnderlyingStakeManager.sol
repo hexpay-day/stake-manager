@@ -64,6 +64,9 @@ contract UnderlyingStakeManager is GoodAccounting {
       }) - balanceBefore;
     }
     stakeIdInfo[stakeId] = ZERO;
+    if (stakeIdToSettings[stakeId] > ZERO) {
+      stakeIdToSettings[stakeId] = ZERO;
+    }
   }
   /**
    * starts a stake from the provided amount

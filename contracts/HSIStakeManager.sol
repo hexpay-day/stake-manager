@@ -182,6 +182,9 @@ contract HSIStakeManager is StakeEnder {
         index: index
       });
     }
+    if (stakeIdToSettings[stakeId] > ZERO) {
+      stakeIdToSettings[stakeId] = ZERO;
+    }
   }
   /**
    * because indexes change quickly they should be tracked and managed so that subsequent

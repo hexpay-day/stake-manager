@@ -127,9 +127,6 @@ contract StakeEnder is Magnitude, SingletonMintManager {
         stakeId: stakeId,
         stakeCountAfter: uint128(count)
       });
-      if (settings > ZERO) {
-        stakeIdToSettings[stakeId] = ZERO;
-      }
       uint256 nextStakeId;
       if (delta > ZERO) {
         // direct funds after end stake

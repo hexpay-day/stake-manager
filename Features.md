@@ -56,7 +56,7 @@ This contract is a singleton that holds all stakes in a single contract for gas 
 - Auto send funds to owner or attribute in internal accounting
 - Leave tip to be collected by transaction runner in stake's hex, stake's hedron, or any other token
 - Tip amount for deposited tokens based on deposit with multiplier from block.basefee
-- Restart stake using multiple functions up to 254 times or infinitely
+- Restart stake using multiple functions up to 127 times or infinitely
 - Divide funds or pull percentage of interest off the top
 - Consent signalling by signature (eip712)
 - Automatic stake restarting - tokens never leave contract
@@ -89,7 +89,7 @@ The properties of the settings object are as follows:
 | `consentAbilities`      | `uint8`  | set of binary permissions to signal which actions can be taken on the stake |
 
 \* value below minimum signals no new stake should be created<br>
-\** 0 = do not restart, 1-254 = countdown mechanism, 255 = always restart
+\** 0 = do not restart, 1-126 = countdown mechanism, 127 = always restart
 
 
 ### [#computeMagnitude](https://github.com/hexpay-day/stake-manager/master/contracts/Magnitude.sol)
