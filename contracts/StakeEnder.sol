@@ -20,7 +20,7 @@ contract StakeEnder is Magnitude, SingletonMintManager {
       return (_stakeEndByConsent({
         stakeId: stakeId,
         tipTo: tipTo,
-        count: (_currentDay() << INDEX_RIGHT_TODAY) | _stakeCount({
+        count: (_currentDay() << INDEX_RIGHT_TODAY) | _getStakeCount({
           staker: address(this)
         })
       }) >> SLOTS) == ONE;

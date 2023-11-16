@@ -79,9 +79,14 @@ contract StakeStarter is SingletonCommunis {
   ) external payable returns(uint256 stakeId) {
     stakeId = _stakeStartFor({
       owner: to,
-      amount: _clamp(amount, _getUnattributed(TARGET)),
+      amount: _clamp({
+        amount: amount,
+        max: _getUnattributed(TARGET)
+      }),
       newStakedDays: newStakedDays,
-      index: _stakeCount(address(this))
+      index: _stakeCount({
+        staker: address(this)
+      })
     });
     _logPreservedSettingsUpdate({
       stakeId: stakeId,

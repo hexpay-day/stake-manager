@@ -460,7 +460,7 @@ abstract contract Tipper is Bank, UnderlyingStakeable, CurrencyList, EncodableSe
    * @param stakeId the stake id to check that this address is the custodian
    */
   function _checkStakeCustodian(uint256 stakeId) internal virtual view {
-    if (_stakeCount({
+    if (_getStakeCount({
       staker: address(this)
     }) == ZERO) {
       revert NotAllowed();
