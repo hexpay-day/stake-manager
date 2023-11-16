@@ -98,7 +98,10 @@ contract UnderlyingStakeManager is GoodAccounting {
    * or requires that the staker send start and end methods (0)
    */
   function stakeEnd(uint256 stakeIndex, uint40 stakeId) external override virtual {
-    _stakeEndByIndexAndId(stakeIndex, stakeId);
+    _stakeEndByIndexAndId({
+      stakeIndex: stakeIndex,
+      stakeId: stakeId
+    });
   }
   /**
    * end a stake given its index and id
@@ -218,16 +221,28 @@ contract UnderlyingStakeManager is GoodAccounting {
    * given ownership over a list of ids of stakes, restart a list of stakes
    * @param stakeIds the list of stake ids to iterate over and restart
    */
-  function stakeRestartManyById(uint256[] calldata stakeIds) external {
+  function stakeRestartManyById(
+    uint256[] calldata stakeIds
+  ) external returns(uint256, uint256[] memory) {
     unchecked {
       uint256 i;
       uint256 len = stakeIds.length;
+      uint256 amount;
+      uint256 newStakeId;
+      uint256 ended;
+      uint256[] memory mask = new uint256[](len);
       do {
-        _stakeRestartById({
+        (amount, newStakeId) = _stakeRestartById({
           stakeId: stakeIds[i]
         });
+        if (amount > ZERO) {
+          // stake did end
+          mask[i] = stakeIds[i];
+          ++ended;
+        }
         ++i;
       } while (i < len);
+      return (ended, mask);
     }
   }
 }

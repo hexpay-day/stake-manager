@@ -4,8 +4,7 @@ import * as hre from "hardhat"
 import * as utils from './utils'
 import _ from 'lodash'
 import { anyUint, anyValue } from "@nomicfoundation/hardhat-chai-matchers/withArgs"
-import { consentAbilities, fromStruct, linear, settings } from '../src/utils'
-import { EncodableSettings } from "../artifacts/types"
+import { consentAbilities, linear, settings } from '../src/utils'
 
 describe('HSIStakeManager.sol', () => {
   describe('depositHsi', () => {
@@ -202,7 +201,7 @@ describe('HSIStakeManager.sol', () => {
       await utils.moveForwardDays(30n, x)
       // 30 day stake is in last
       const targetStakeIdAsHsi = x.hsiTargets[0]
-      await expect(x.existingStakeManager.hsiStakeEndMany([targetStakeIdAsHsi.hsiAddress]))
+      await expect(x.existingStakeManager.stakeEndByConsentForManyWithTipTo([targetStakeIdAsHsi.hsiAddress], hre.ethers.ZeroAddress))
         .to.emit(x.hex, 'StakeEnd')
         .withArgs(anyUint, utils.anyUintNoPenalty, targetStakeIdAsHsi.hsiAddress, targetStakeIdAsHsi.stakeId)
         .to.emit(x.hsim, 'HSIEnd')
@@ -236,7 +235,7 @@ describe('HSIStakeManager.sol', () => {
         },
       )
       const tip = await x.existingStakeManager.stakeIdTips(targetStakeIdAsHsi.hsiAddress, 0)
-      await expect(x.existingStakeManager.hsiStakeEndManyWithTipTo([targetStakeIdAsHsi.hsiAddress], signer2.address))
+      await expect(x.existingStakeManager.stakeEndByConsentForManyWithTipTo([targetStakeIdAsHsi.hsiAddress], signer2.address))
         .to.emit(x.hex, 'StakeEnd')
         .withArgs(anyUint, utils.anyUintNoPenalty, targetStakeIdAsHsi.hsiAddress, targetStakeIdAsHsi.stakeId)
         .to.emit(x.hsim, 'HSIEnd')
@@ -265,7 +264,7 @@ describe('HSIStakeManager.sol', () => {
         .to.emit(x.hsim, 'HSIDetokenize')
       await utils.moveForwardDays(90n, x)
       // 30 day stake is in last
-      await expect(x.existingStakeManager.hsiStakeEndMany(_.map(x.hsiTargets, 'hsiAddress')))
+      await expect(x.existingStakeManager.stakeEndByConsentForManyWithTipTo(_.map(x.hsiTargets, 'hsiAddress'), hre.ethers.ZeroAddress))
         .to.emit(x.hex, 'StakeEnd')
         .withArgs(anyUint, utils.anyUintNoPenalty, x.hsiTargets[0].hsiAddress, x.hsiTargets[0].stakeId)
         .to.emit(x.hex, 'StakeEnd')
@@ -353,7 +352,7 @@ describe('HSIStakeManager.sol', () => {
         // for some reason, the test fails without it
         // .printGasUsage()
 
-      await expect(x.existingStakeManager.connect(signer2).hsiStakeEndMany([firstStakeTarget.hsiAddress]))
+      await expect(x.existingStakeManager.connect(signer2).stakeEndByConsentForManyWithTipTo([firstStakeTarget.hsiAddress], hre.ethers.ZeroAddress))
         .to.emit(x.hex, 'StakeEnd')
         .withArgs(anyUint, utils.anyUintNoPenalty, firstStakeTarget.hsiAddress, firstStakeTarget.stakeId)
       await utils.moveForwardDays(30n, x)
@@ -362,7 +361,7 @@ describe('HSIStakeManager.sol', () => {
       await expect(x.existingStakeManager.mintHedronRewards([x.hsiTargets[1].hsiAddress]))
         .to.emit(x.hedron, 'Transfer')
         .withArgs(hre.ethers.ZeroAddress, await x.existingStakeManager.getAddress(), anyUint)
-      await expect(x.existingStakeManager.connect(signer2).hsiStakeEndMany([x.hsiTargets[1].hsiAddress]))
+      await expect(x.existingStakeManager.connect(signer2).stakeEndByConsentForManyWithTipTo([x.hsiTargets[1].hsiAddress], hre.ethers.ZeroAddress))
         .to.emit(x.hex, 'StakeEnd')
         .withArgs(anyUint, utils.anyUintNoPenalty, x.hsiTargets[1].hsiAddress, x.hsiTargets[1].stakeId)
     })
@@ -394,7 +393,7 @@ describe('HSIStakeManager.sol', () => {
         .to.emit(x.hsim, 'HSIDetokenize')
       await utils.moveForwardDays(30n, x)
       const nextStakeId = await utils.nextStakeId(x.hex)
-      await expect(x.existingStakeManager.connect(signer2).hsiStakeEndMany([x.hsiTargets[0].hsiAddress]))
+      await expect(x.existingStakeManager.connect(signer2).stakeEndByConsentForManyWithTipTo([x.hsiTargets[0].hsiAddress], hre.ethers.ZeroAddress))
         .to.emit(x.hex, 'StakeEnd')
         .withArgs(anyUint, utils.anyUintNoPenalty, x.hsiTargets[0].hsiAddress, x.hsiTargets[0].stakeId)
         .to.emit(x.hex, 'StakeStart')
@@ -426,10 +425,10 @@ describe('HSIStakeManager.sol', () => {
         .to.emit(x.hsim, 'HSIDetokenize')
       await utils.moveForwardDays(30n, x)
       const nextStakeId = await utils.nextStakeId(x.hex)
-      const hsiEndMany = x.existingStakeManager.connect(signer2).hsiStakeEndMany([
+      const hsiEndMany = x.existingStakeManager.connect(signer2).stakeEndByConsentForManyWithTipTo([
         x.hsiTargets[0].hsiAddress,
         signer1.address, // invalid hsi addresses are ignored
-      ])
+      ], hre.ethers.ZeroAddress)
       await expect(hsiEndMany)
         .to.emit(x.hex, 'StakeEnd')
         .withArgs(anyUint, utils.anyUintNoPenalty, x.hsiTargets[0].hsiAddress, x.hsiTargets[0].stakeId)
@@ -484,7 +483,7 @@ describe('HSIStakeManager.sol', () => {
         .to.emit(x.hsim, 'HSIDetokenize')
       await utils.moveForwardDays(30n, x)
       const targetStakeIdAsHsi = x.hsiTargets[0]
-      await expect(x.existingStakeManager.hsiStakeEndMany([targetStakeIdAsHsi.hsiAddress]))
+      await expect(x.existingStakeManager.stakeEndByConsentForManyWithTipTo([targetStakeIdAsHsi.hsiAddress], hre.ethers.ZeroAddress))
         .not.to.reverted
     })
   })

@@ -15,23 +15,15 @@ contract StakeEnder is Magnitude, SingletonMintManager {
    */
   function stakeEndByConsentWithTipTo(
     uint256 stakeId, address tipTo
-  ) external payable returns(uint256) {
-    return _stakeEndByConsentWithTipTo({
-      stakeId: stakeId,
-      tipTo: tipTo
-    });
-  }
-  function _stakeEndByConsentWithTipTo(
-    uint256 stakeId, address tipTo
-  ) internal returns(uint256) {
+  ) external payable returns(bool) {
     unchecked {
-      return _stakeEndByConsent({
+      return (_stakeEndByConsent({
         stakeId: stakeId,
         tipTo: tipTo,
         count: (_currentDay() << INDEX_RIGHT_TODAY) | _stakeCount({
           staker: address(this)
         })
-      });
+      }) >> SLOTS) == ONE;
     }
   }
   /**
@@ -135,6 +127,9 @@ contract StakeEnder is Magnitude, SingletonMintManager {
         stakeId: stakeId,
         stakeCountAfter: uint128(count)
       });
+      if (settings > ZERO) {
+        stakeIdToSettings[stakeId] = ZERO;
+      }
       uint256 nextStakeId;
       if (delta > ZERO) {
         // direct funds after end stake
@@ -248,12 +243,6 @@ contract StakeEnder is Magnitude, SingletonMintManager {
       return count | (uint256(ONE) << SLOTS);
     }
   }
-  function stakeEndByConsentForManyWithTipTo(uint256[] calldata stakeIds, address tipTo) external payable returns(uint256) {
-    return _stakeEndByConsentForManyWithTipTo({
-      stakeIds: stakeIds,
-      tipTo: tipTo
-    });
-  }
   /**
    * end many stakes at the same time
    * provides an optimized path for all stake ends
@@ -261,12 +250,18 @@ contract StakeEnder is Magnitude, SingletonMintManager {
    * @param stakeIds stake ids to end
    * @notice this method should, generally, only be called when multiple enders
    * are attempting to end stake the same stakes
+   * @return ended a counter
    */
-  function _stakeEndByConsentForManyWithTipTo(uint256[] calldata stakeIds, address tipTo) internal returns(uint256 ended) {
-    uint256 i;
-    uint256 len = stakeIds.length;
+  function stakeEndByConsentForManyWithTipTo(
+    uint256[] calldata stakeIds,
+    address tipTo
+  ) external payable returns(uint256, uint256[] memory) {
     unchecked {
-      uint256 count = (_currentDay() << INDEX_RIGHT_TODAY) | _stakeCount({
+      uint256 i;
+      uint256 ended;
+      uint256 len = stakeIds.length;
+      uint256[] memory mask = new uint256[](len);
+      uint256 count = (_currentDay() << INDEX_RIGHT_TODAY) | _getStakeCount({
         staker: address(this)
       });
       do {
@@ -275,18 +270,15 @@ contract StakeEnder is Magnitude, SingletonMintManager {
           tipTo: tipTo,
           count: count
         });
-        if (count >> SLOTS == ONE) ++ended;
-        count = uint248(count);
+        if (count >> SLOTS == ONE) {
+          // stake did end
+          mask[i] = stakeIds[i];
+          ++ended;
+        }
+        count = uint248(count); // reset memo
         ++i;
       } while(i < len);
+      return (ended, mask);
     }
-  }
-  function _stakeEnd(
-    uint256 stakeIndex, uint256 stakeId, uint256 stakeCountAfter
-  ) internal virtual override returns(uint256) {
-    if (stakeIdToSettings[stakeId] > ZERO) {
-      stakeIdToSettings[stakeId] = ZERO;
-    }
-    return super._stakeEnd(stakeIndex, stakeId, stakeCountAfter);
   }
 }

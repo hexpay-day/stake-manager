@@ -66,7 +66,7 @@ describe("2023-10-02 utc", function () {
         return execStakeManager.multicall(
           [
             execStakeManager.interface.encodeFunctionData('stakeEndAs', [swa.address, x.base, stake.stakeId]),
-            execStakeManager.interface.encodeFunctionData('hsiStakeEndMany', [_.map(hsis, 'hsiAddress')]),
+            execStakeManager.interface.encodeFunctionData('stakeEndByConsentForManyWithTipTo', [_.map(hsis, 'hsiAddress'), hre.ethers.ZeroAddress]),
           ],
           false,
         )

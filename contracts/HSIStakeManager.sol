@@ -140,56 +140,6 @@ contract HSIStakeManager is StakeEnder {
     ERC721(HSIM).transferFrom(address(this), owner, tokenId);
   }
   /**
-   * end and unwind a set of hsi addresses
-   * @param hsiAddresses the list of hsi addresses that should be ended and unwound
-   * @notice while this method is payable, it will not do anything with the funds
-   * so any value sent to this method will be lost. keyword is for gas savings
-   */
-  function hsiStakeEndMany(address[] calldata hsiAddresses) external payable returns(uint256) {
-    return _hsiStakeEndMany({
-      hsiAddresses: hsiAddresses,
-      tipTo: address(0)
-    });
-  }
-  /**
-   *
-   * end and unwind a set of hsi addresses
-   * @param hsiAddresses the list of hsi addresses that should be ended and unwound
-   * @param tipTo the address to tip to - if stakes set up tips previous to this transaction
-   * then those tips will be counted toward the deposits of the tipTo address
-   * @notice while this method is payable, it will not do anything with the funds
-   * so any value sent to this method will be lost. keyword is for gas savings
-   */
-  function hsiStakeEndManyWithTipTo(address[] calldata hsiAddresses, address tipTo) external payable returns(uint256) {
-    return _hsiStakeEndMany({
-      hsiAddresses: hsiAddresses,
-      tipTo: tipTo
-    });
-  }
-  /**
-   * provide a list of hsi addresses to end the stake of
-   * @param hsiAddresses a list of hsi addresses (known in this contract as stake ids)
-   */
-  function _hsiStakeEndMany(address[] calldata hsiAddresses, address tipTo) internal returns(uint256 ended) {
-    uint256 i;
-    uint256 len = hsiAddresses.length;
-    unchecked {
-      uint256 count = (_currentDay() << INDEX_RIGHT_TODAY) | _hsiCount({
-        staker: address(this)
-      });
-      do {
-        count = _stakeEndByConsent({
-          stakeId: uint160(hsiAddresses[i]),
-          tipTo: tipTo,
-          count: count
-        });
-        if (count >> SLOTS == ONE) ++ended;
-        count = uint248(count);
-        ++i;
-      } while (i < len);
-    }
-  }
-  /**
    * retrieve a stake id's (hsi address's) singular stake
    * @param stakeId the stake id or hsi address to retrieve a stake from its list
    */
