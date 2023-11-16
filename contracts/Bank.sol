@@ -114,6 +114,7 @@ contract Bank is Utils {
    * @param amount the requested amount - clamped to the amount unattributed
    * @notice when 0 is passed, withdraw maximum available
    * or in other words, all unattributed tokens
+   * @return withdrawable the amount attributed to the to account
    */
   function collectUnattributed(
     address token, bool transferOut,
@@ -178,9 +179,10 @@ contract Bank is Utils {
    * in order to reduce rounding errors
    * @dev please be sure to run blanket collect unattributed
    * calls to collect any remaining tokens
+   * @return amount number of tokens attribued to the recipient
    */
   function collectUnattributedPercent(
-    address token, bool transferOut, address payable recipient,
+    address token, bool transferOut, address recipient,
     uint256 basisPoints
   ) external payable returns(uint256 amount) {
     uint256 unattributed = _getUnattributed({

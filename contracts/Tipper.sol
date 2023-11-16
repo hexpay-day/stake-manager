@@ -64,6 +64,7 @@ abstract contract Tipper is Bank, UnderlyingStakeable, CurrencyList, EncodableSe
   /**
    * check the count of a list of tips provided by the staker
    * @param stakeId the stake id to check the list of tips
+   * @return size of tip list backing a given stake id
    */
   function stakeIdTipSize(uint256 stakeId) external view returns(uint256) {
     return _stakeIdTipSize({
@@ -77,6 +78,13 @@ abstract contract Tipper is Bank, UnderlyingStakeable, CurrencyList, EncodableSe
   function _stakeIdTipSize(uint256 stakeId) internal view returns(uint256) {
     return stakeIdTips[stakeId].length;
   }
+  /**
+   * compute the limit (input from staker) and the final tip (attributable to ender)
+   * using the base fee and limit as v1 and v2 respectively
+   * @param tip the encoded tip, holding the limit and a linear definition
+   * @return limit the limit parsed from the tip value
+   * @return consumed the number of tokens consumed by the tip
+   */
   function computeTip(uint256 tip) external view returns(uint256 limit, uint256 consumed) {
     return _computeTip(tip);
   }
@@ -84,7 +92,7 @@ abstract contract Tipper is Bank, UnderlyingStakeable, CurrencyList, EncodableSe
     unchecked {
       limit = uint128(tip >> INDEX_EXTERNAL_TIP_LIMIT);
       if (uint72(tip) == ZERO) {
-        // checking for existance of a tip number
+        // checking for existance of a linear tip number
         // allows us to use ZERO as simplest pathway
         consumed = limit;
       } else {
