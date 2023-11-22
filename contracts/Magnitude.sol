@@ -31,7 +31,7 @@ contract Magnitude is Utils {
         // to your stake could lead to it not being restarted
         // with this constraint, a stake will never be restarted for longer than 2x
         // the original stake - otherwise the stakes could indefinitely elongate
-        if (newMethod == FOUR) {
+        if (newMethod > THREE) {
           return (newMethod, ZERO);
         }
         // 3 - start an equally spaced ladder, even if end stake happens late
