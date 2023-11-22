@@ -168,30 +168,30 @@ contract StakeEnder is Magnitude, SingletonMintManager {
             // crazy high costs - for the next 15 years, it should be done off chain
             // stakes small enough to be anywhere near this
             // threshold should simply be ignored
-            uint256 newStakeDaysMethod = uint8(settings >> INDEX_RIGHT_NEW_STAKE_DAYS_METHOD);
-            if (newStakeDaysMethod > ZERO) {
-              uint256 newStakeDays;
-              (newStakeDaysMethod, newStakeDays) = _computeDayMagnitude({
+            if (uint8(settings >> INDEX_RIGHT_NEW_STAKE_DAYS_METHOD) > ZERO) {
+              (uint256 newStakeDaysMethod, uint256 newStakeDays) = _computeDayMagnitude({
                 limit: MAX_DAYS,
-                method: newStakeDaysMethod,
+                method: uint8(settings >> INDEX_RIGHT_NEW_STAKE_DAYS_METHOD),
                 x: uint16(settings >> INDEX_RIGHT_NEW_STAKE_DAYS_MAGNITUDE),
                 today: count >> INDEX_RIGHT_TODAY,
                 lockedDay: stake.lockedDay,
                 stakedDays: stake.stakedDays
               });
-              settings = (
-                (settings >> INDEX_RIGHT_NEW_STAKE) << INDEX_RIGHT_NEW_STAKE
-                | (newStakeDaysMethod << THIRTY_TWO) // only 0-4
-                | uint32(settings)
-              );
-              delta -= newStakeAmount; // already checked for underflow
-              nextStakeId = _stakeStartFor({
-                owner: staker,
-                amount: newStakeAmount,
-                newStakedDays: newStakeDays,
-                index: uint128(count)
-              });
-              ++count;
+              if (newStakeDaysMethod > ZERO) {
+                settings = (
+                  (settings >> INDEX_RIGHT_NEW_STAKE) << INDEX_RIGHT_NEW_STAKE
+                  | (newStakeDaysMethod << THIRTY_TWO) // only 0-4
+                  | uint32(settings)
+                );
+                delta -= newStakeAmount; // already checked for underflow
+                nextStakeId = _stakeStartFor({
+                  owner: staker,
+                  amount: newStakeAmount,
+                  newStakedDays: newStakeDays,
+                  index: uint128(count)
+                });
+                ++count;
+              }
             }
           }
         }
