@@ -380,33 +380,50 @@ describe('HSIStakeManager.sol', () => {
         consentAbilities: consentAbilities.decode(BigInt(parseInt('001101', 2))),
         // unused on hsi
         newStakeDaysMethod: 0n,
-        newStakeDaysMagnitude: 2n,
+        newStakeDaysMagnitude: 0n,
         copyIterations: 0n,
         hasExternalTips: false,
       }
       const encodedSettings = settings.encode(baselineSettings)
-      const restartableSettings = settings.encode({
+      const withMethodSettings = settings.encode({
+        ...baselineSettings,
+        newStakeDaysMethod: 1n,
+      })
+      const withCurrentSettings = settings.encode({
         ...baselineSettings,
         newStakeDaysMethod: 2n,
       })
+      const settingsList = [encodedSettings, withMethodSettings, withCurrentSettings]
       const deposits = _.flatMap(x.hsiTargets, (target, index) => ([
-        x.existingStakeManager.interface.encodeFunctionData('depositHsi', [target.tokenId, index === 0 ? encodedSettings : restartableSettings]),
+        x.existingStakeManager.interface.encodeFunctionData('depositHsi', [
+          target.tokenId,
+          settingsList[index],
+        ]),
       ]))
       await expect(x.existingStakeManager.multicall(deposits, false))
         .to.emit(x.hsim, 'Transfer')
         .to.emit(x.hsim, 'HSIDetokenize')
-      await utils.moveForwardDays(30n, x)
 
-      const [hsi1, hsi2] = x.hsiTargets
+      const [hsi1, hsi2, hsi3] = x.hsiTargets
+      let nextStakeId!: bigint
+
+      await utils.moveForwardDays(30n, x)
       await expect(x.existingStakeManager.connect(signer2).stakeEndByConsentForManyWithTipTo([hsi1.hsiAddress], hre.ethers.ZeroAddress))
         .to.emit(x.hex, 'StakeEnd')
         .withArgs(anyUint, utils.anyUintNoPenalty, hsi1.hsiAddress, hsi1.stakeId)
         .not.to.emit(x.hex, 'StakeStart')
+
       await utils.moveForwardDays(30n, x)
-      const nextStakeId = await utils.nextStakeId(x.hex)
       await expect(x.existingStakeManager.connect(signer2).stakeEndByConsentForManyWithTipTo([hsi2.hsiAddress], hre.ethers.ZeroAddress))
         .to.emit(x.hex, 'StakeEnd')
         .withArgs(anyUint, utils.anyUintNoPenalty, hsi2.hsiAddress, hsi2.stakeId)
+        .not.to.emit(x.hex, 'StakeStart')
+
+      await utils.moveForwardDays(30n, x)
+      nextStakeId = await utils.nextStakeId(x.hex)
+      await expect(x.existingStakeManager.connect(signer2).stakeEndByConsentForManyWithTipTo([hsi3.hsiAddress], hre.ethers.ZeroAddress))
+        .to.emit(x.hex, 'StakeEnd')
+        .withArgs(anyUint, utils.anyUintNoPenalty, hsi3.hsiAddress, hsi3.stakeId)
         .to.emit(x.hex, 'StakeStart')
         .withArgs(anyUint, anyValue, nextStakeId)
     })

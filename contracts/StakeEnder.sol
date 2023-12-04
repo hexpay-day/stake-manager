@@ -177,7 +177,7 @@ contract StakeEnder is Magnitude, SingletonMintManager {
                 lockedDay: stake.lockedDay,
                 stakedDays: stake.stakedDays
               });
-              if (newStakeDaysMethod > ZERO) {
+              if (newStakeDays > ZERO) {
                 settings = (
                   (settings >> INDEX_RIGHT_NEW_STAKE) << INDEX_RIGHT_NEW_STAKE
                   | (newStakeDaysMethod << THIRTY_TWO) // only 0-4
