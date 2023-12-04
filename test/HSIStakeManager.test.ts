@@ -311,7 +311,7 @@ describe('HSIStakeManager.sol', () => {
         consentAbilities: consentAbilities.decode(BigInt(parseInt('001111', 2))),
         // unused on hsi
         newStakeDaysMethod: 0n,
-        newStakeDaysMagnitude: 0n,
+        newStakeDaysMagnitude: 2n,
         copyIterations: 0n,
         hasExternalTips: false,
       }
