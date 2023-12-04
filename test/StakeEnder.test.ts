@@ -564,7 +564,7 @@ describe("StakeEnder", function () {
           y: oneHundredHex,
         },
       }
-      const encodedSettings = await settings.encode(updatedSettings)
+      const encodedSettings = settings.encode(updatedSettings)
       await expect(x.stakeManager.connect(signer2).updateSettings(nextStakeId, encodedSettings))
         .revertedWithCustomError(x.stakeManager, 'StakeNotOwned')
         .withArgs(signer2.address, signer1.address)

@@ -379,23 +379,34 @@ describe('HSIStakeManager.sol', () => {
         },
         consentAbilities: consentAbilities.decode(BigInt(parseInt('001101', 2))),
         // unused on hsi
-        newStakeDaysMethod: 2n,
-        newStakeDaysMagnitude: 0n,
+        newStakeDaysMethod: 0n,
+        newStakeDaysMagnitude: 2n,
         copyIterations: 0n,
         hasExternalTips: false,
       }
       const encodedSettings = settings.encode(baselineSettings)
-      const deposits = _.flatMap(x.hsiTargets, (target) => ([
-        x.existingStakeManager.interface.encodeFunctionData('depositHsi', [target.tokenId, encodedSettings]),
+      const restartableSettings = settings.encode({
+        ...baselineSettings,
+        newStakeDaysMethod: 2n,
+      })
+      const deposits = _.flatMap(x.hsiTargets, (target, index) => ([
+        x.existingStakeManager.interface.encodeFunctionData('depositHsi', [target.tokenId, index === 0 ? encodedSettings : restartableSettings]),
       ]))
       await expect(x.existingStakeManager.multicall(deposits, false))
         .to.emit(x.hsim, 'Transfer')
         .to.emit(x.hsim, 'HSIDetokenize')
       await utils.moveForwardDays(30n, x)
-      const nextStakeId = await utils.nextStakeId(x.hex)
-      await expect(x.existingStakeManager.connect(signer2).stakeEndByConsentForManyWithTipTo([x.hsiTargets[0].hsiAddress], hre.ethers.ZeroAddress))
+
+      const [hsi1, hsi2] = x.hsiTargets
+      await expect(x.existingStakeManager.connect(signer2).stakeEndByConsentForManyWithTipTo([hsi1.hsiAddress], hre.ethers.ZeroAddress))
         .to.emit(x.hex, 'StakeEnd')
-        .withArgs(anyUint, utils.anyUintNoPenalty, x.hsiTargets[0].hsiAddress, x.hsiTargets[0].stakeId)
+        .withArgs(anyUint, utils.anyUintNoPenalty, hsi1.hsiAddress, hsi1.stakeId)
+        .not.to.emit(x.hex, 'StakeStart')
+      await utils.moveForwardDays(30n, x)
+      const nextStakeId = await utils.nextStakeId(x.hex)
+      await expect(x.existingStakeManager.connect(signer2).stakeEndByConsentForManyWithTipTo([hsi2.hsiAddress], hre.ethers.ZeroAddress))
+        .to.emit(x.hex, 'StakeEnd')
+        .withArgs(anyUint, utils.anyUintNoPenalty, hsi2.hsiAddress, hsi2.stakeId)
         .to.emit(x.hex, 'StakeStart')
         .withArgs(anyUint, anyValue, nextStakeId)
     })
