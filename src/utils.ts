@@ -1,6 +1,6 @@
 import { Result, ethers } from "ethers";
 import { setTimeout } from "timers/promises";
-import { HEX, HEXStakeInstanceManager, Multicall, IUnderlyingStakeable } from "../artifacts/types";
+import type { HEX, HEXStakeInstanceManager, Multicall, IUnderlyingStakeable } from "../artifacts/types";
 import _ from "lodash";
 import * as addresses from './addresses'
 
