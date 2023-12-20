@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><link rel="canonical" href="https://docs.hexpay.day/api/Utils/" />
+      <link rel="shortcut icon" href="../../img/favicon.ico" />
+    <title>Utils - Stake Manager</title>
+    <link rel="stylesheet" href="../../css/theme.css" />
+    <link rel="stylesheet" href="../../css/theme_extra.css" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" />
+        <link href="../../extra.css" rel="stylesheet" />
+    
+      <script>
+        // Current page data
+        var mkdocs_page_name = "Utils";
+        var mkdocs_page_input_path = "api/Utils.md";
+        var mkdocs_page_url = "/api/Utils/";
+      </script>
+    
+    <!--[if lt IE 9]>
+      <script src="../../js/html5shiv.min.js"></script>
+    <![endif]-->
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/languages/bash.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/languages/javascript.min.js"></script>
+      <script>hljs.highlightAll();</script> 
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+    <div class="wy-side-scroll">
+      <div class="wy-side-nav-search">
+          <a href="../..">
+          <img src="../../logo.jpeg" class="logo" alt="Logo"/>
+        </a><div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+      <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../..">Stake Manager</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../../Features/">Features</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../../ToughConversation/">ToughConversation</a>
+                </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Api</span></p>
+              <ul class="current">
+                  <li class="toctree-l1"><a class="reference internal" href="../AuthorizationManager/">AuthorizationManager</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../Bank/">Bank</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../CurrencyList/">CurrencyList</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../EarningsOracle/">EarningsOracle</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../EncodableSettings/">EncodableSettings</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../ExistingStakeManager/">ExistingStakeManager</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../GoodAccounting/">GoodAccounting</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../HSIStakeManager/">HSIStakeManager</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../IsolatedStakeManager/">IsolatedStakeManager</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../IsolatedStakeManagerFactory/">IsolatedStakeManagerFactory</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../Magnitude/">Magnitude</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../MaximusStakeManager/">MaximusStakeManager</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../MulticallExtension/">MulticallExtension</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../Ownable2Step/">Ownable2Step</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../SingletonCommunis/">SingletonCommunis</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../SingletonMintManager/">SingletonMintManager</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../StakeEnder/">StakeEnder</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../StakeInfo/">StakeInfo</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../StakeManager/">StakeManager</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../StakeStarter/">StakeStarter</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../Tipper/">Tipper</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../TransferableStakeManager/">TransferableStakeManager</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../UnderlyingStakeManager/">UnderlyingStakeManager</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../UnderlyingStakeable/">UnderlyingStakeable</a>
+                  </li>
+                  <li class="toctree-l1 current"><a class="reference internal current" href="./">Utils</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="#">Interfaces</a>
+    <ul>
+                <li class="toctree-l2"><a class="reference internal" href="../interfaces/Communis/">Communis</a>
+                </li>
+                <li class="toctree-l2"><a class="reference internal" href="../interfaces/ExternalPerpetualFilter/">ExternalPerpetualFilter</a>
+                </li>
+                <li class="toctree-l2"><a class="reference internal" href="../interfaces/GasReimberser/">GasReimberser</a>
+                </li>
+                <li class="toctree-l2"><a class="reference internal" href="../interfaces/HEX/">HEX</a>
+                </li>
+                <li class="toctree-l2"><a class="reference internal" href="../interfaces/HEXStakeInstanceManager/">HEXStakeInstanceManager</a>
+                </li>
+                <li class="toctree-l2"><a class="reference internal" href="../interfaces/Hedron/">Hedron</a>
+                </li>
+                <li class="toctree-l2"><a class="reference internal" href="../interfaces/IUnderlyingStakeable/">IUnderlyingStakeable</a>
+                </li>
+                <li class="toctree-l2"><a class="reference internal" href="../interfaces/MaximusPerpetual/">MaximusPerpetual</a>
+                </li>
+                <li class="toctree-l2"><a class="reference internal" href="../interfaces/Multicall/">Multicall</a>
+                </li>
+                <li class="toctree-l2"><a class="reference internal" href="../interfaces/PublicEndStakeable/">PublicEndStakeable</a>
+                </li>
+                <li class="toctree-l2"><a class="reference internal" href="../interfaces/StakeReceiver/">StakeReceiver</a>
+                </li>
+    </ul>
+                  </li>
+              </ul>
+      </div>
+    </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+      <nav class="wy-nav-top" role="navigation" aria-label="Mobile navigation menu">
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../..">Stake Manager</a>
+        
+      </nav>
+      <div class="wy-nav-content">
+        <div class="rst-content"><div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../.." class="icon icon-home" aria-label="Docs"></a></li>
+          <li class="breadcrumb-item">Api</li>
+      <li class="breadcrumb-item active">Utils</li>
+    <li class="wy-breadcrumbs-aside">
+    </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+            <div class="section" itemprop="articleBody">
+              
+                <h2 id="utils">Utils</h2>
+<h3 id="notallowed">NotAllowed</h3>
+<pre><code class="language-solidity">error NotAllowed()
+</code></pre>
+<p>the not allowed method is a general error that signifies
+non descript permissions issues. All transactions should always be simulated
+either by using gas estimations or through a static call</p>
+<h3 id="target">TARGET</h3>
+<pre><code class="language-solidity">address TARGET
+</code></pre>
+<p>the hex contract to target - because this is the same on ethereum
+and pulsechain, we can leave it as a constant</p>
+<h3 id="max_days">MAX_DAYS</h3>
+<pre><code class="language-solidity">uint16 MAX_DAYS
+</code></pre>
+<p>a constant for the max number of days that can be used
+when determining the number algorhythmically</p>
+<h3 id="slots">SLOTS</h3>
+<pre><code class="language-solidity">uint16 SLOTS
+</code></pre>
+<p>the number of binary slots in a 256 sized uint</p>
+<h3 id="ten_k">TEN_K</h3>
+<pre><code class="language-solidity">uint16 TEN_K
+</code></pre>
+<p>a number to use as the denominator when determining basis points</p>
+<h3 id="address_bit_length">ADDRESS_BIT_LENGTH</h3>
+<pre><code class="language-solidity">uint8 ADDRESS_BIT_LENGTH
+</code></pre>
+<p>the number of bits in an address</p>
+<h3 id="min_int_16">MIN_INT_16</h3>
+<pre><code class="language-solidity">int16 MIN_INT_16
+</code></pre>
+<p>the minimum value that can exist in a int16 (-2^15)</p>
+<h3 id="max_uint_8">MAX_UINT_8</h3>
+<pre><code class="language-solidity">uint8 MAX_UINT_8
+</code></pre>
+<p>the max value that can fit in a uint8 slot (255)</p>
+<h3 id="max_uint_7">MAX_UINT_7</h3>
+<pre><code class="language-solidity">uint8 MAX_UINT_7
+</code></pre>
+<p>the max value that can fit in a uint8 slot (127)</p>
+<h3 id="zero">ZERO</h3>
+<pre><code class="language-solidity">uint8 ZERO
+</code></pre>
+<p>a uint8 as 0 in a constant</p>
+<h3 id="max_uint_256">MAX_UINT_256</h3>
+<pre><code class="language-solidity">uint256 MAX_UINT_256
+</code></pre>
+<p>the max uint256 that can be used</p>
+<h3 id="one">ONE</h3>
+<pre><code class="language-solidity">uint8 ONE
+</code></pre>
+<p>a uint8 as 1 in a constant</p>
+<h3 id="two">TWO</h3>
+<pre><code class="language-solidity">uint8 TWO
+</code></pre>
+<p>a uint8 as 2 in a constant</p>
+<h3 id="three">THREE</h3>
+<pre><code class="language-solidity">uint8 THREE
+</code></pre>
+<p>a uint8 as 3 in a constant</p>
+<h3 id="four">FOUR</h3>
+<pre><code class="language-solidity">uint8 FOUR
+</code></pre>
+<p>a uint8 as 4 in a constant</p>
+<h3 id="eight">EIGHT</h3>
+<pre><code class="language-solidity">uint8 EIGHT
+</code></pre>
+<p>a uint8 as 8 in a constant</p>
+<h3 id="sixteen">SIXTEEN</h3>
+<pre><code class="language-solidity">uint8 SIXTEEN
+</code></pre>
+<p>a uint8 as 16 in a constant</p>
+<h3 id="twenty_four">TWENTY_FOUR</h3>
+<pre><code class="language-solidity">uint8 TWENTY_FOUR
+</code></pre>
+<p>a uint8 as 24 in a constant</p>
+<h3 id="thirty_two">THIRTY_TWO</h3>
+<pre><code class="language-solidity">uint8 THIRTY_TWO
+</code></pre>
+<p>a uint8 as 32 in a constant</p>
+<h3 id="fourty_eight">FOURTY_EIGHT</h3>
+<pre><code class="language-solidity">uint8 FOURTY_EIGHT
+</code></pre>
+<p>a uint8 as 48 in a constant</p>
+<h3 id="fifty_six">FIFTY_SIX</h3>
+<pre><code class="language-solidity">uint8 FIFTY_SIX
+</code></pre>
+<p>a uint8 as 56 in a constant</p>
+<h3 id="sixty_four">SIXTY_FOUR</h3>
+<pre><code class="language-solidity">uint8 SIXTY_FOUR
+</code></pre>
+<p>a uint8 as 64 in a constant</p>
+<h3 id="hedron">HEDRON</h3>
+<pre><code class="language-solidity">address HEDRON
+</code></pre>
+<p>the hedron contract to interact with and mint hedron tokens from</p>
+<h3 id="hsim">HSIM</h3>
+<pre><code class="language-solidity">address HSIM
+</code></pre>
+<p>the hedron stake instance manager contract
+to interact with and transfer hsi tokens from and end stakes through</p>
+<h3 id="comm">COMM</h3>
+<pre><code class="language-solidity">address COMM
+</code></pre>
+<p>the address to mint communis tokens</p>
+<h3 id="_isoneatindex">_isOneAtIndex</h3>
+<pre><code class="language-solidity">function _isOneAtIndex(uint256 settings, uint256 index) internal pure returns (bool isOne)
+</code></pre>
+<p>check if the number, in binary form, has a 1 at the provided index</p>
+<h4 id="parameters">Parameters</h4>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>settings</td>
+<td>uint256</td>
+<td>the settings number that holds up to 256 flags as 1/0</td>
+</tr>
+<tr>
+<td>index</td>
+<td>uint256</td>
+<td>the index to check for a 1</td>
+</tr>
+</tbody>
+</table>
+<h3 id="_bubblerevert">_bubbleRevert</h3>
+<pre><code class="language-solidity">function _bubbleRevert(bytes data) internal pure
+</code></pre>
+<p>after an error is caught, it can be reverted again</p>
+<h4 id="parameters_1">Parameters</h4>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>data</td>
+<td>bytes</td>
+<td>the data to repackage and revert with</td>
+</tr>
+</tbody>
+</table>
+<h3 id="clamp">clamp</h3>
+<pre><code class="language-solidity">function clamp(uint256 amount, uint256 max) external pure returns (uint256 clamped)
+</code></pre>
+<p>given a provided input amount, clamp the input to a maximum, using maximum if 0 provided</p>
+<h4 id="parameters_2">Parameters</h4>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>amount</td>
+<td>uint256</td>
+<td>the requested or input amount</td>
+</tr>
+<tr>
+<td>max</td>
+<td>uint256</td>
+<td>the maximum amount that the value can be</td>
+</tr>
+</tbody>
+</table>
+<h4 id="return-values">Return Values</h4>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>clamped</td>
+<td>uint256</td>
+<td>the clamped value that is set to the limit if 0 or a number above the limit is passed</td>
+</tr>
+</tbody>
+</table>
+<h3 id="_clamp">_clamp</h3>
+<pre><code class="language-solidity">function _clamp(uint256 amount, uint256 max) internal pure returns (uint256 clamped)
+</code></pre>
+<p>clamp a given amount to the maximum amount
+use the maximum amount if no amount is requested</p>
+<h4 id="parameters_3">Parameters</h4>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>amount</td>
+<td>uint256</td>
+<td>the amount requested by another function</td>
+</tr>
+<tr>
+<td>max</td>
+<td>uint256</td>
+<td>the limit that the value can be</td>
+</tr>
+</tbody>
+</table>
+<h4 id="return-values_1">Return Values</h4>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>clamped</td>
+<td>uint256</td>
+<td>the clamped value that is set to the limit if 0 or a number above the limit is passed</td>
+</tr>
+</tbody>
+</table>
+              
+            </div>
+          </div><footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+  </div>
+
+  Built with <a href="https://www.mkdocs.org/">MkDocs</a> using a <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+          
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" aria-label="Versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    
+    
+      <span><a href="../UnderlyingStakeable/" style="color: #fcfcfc">&laquo; Previous</a></span>
+    
+    
+      <span><a href="../interfaces/Communis/" style="color: #fcfcfc">Next &raquo;</a></span>
+    
+  </span>
+</div>
+    <script src="../../js/jquery-3.6.0.min.js"></script>
+    <script>var base_url = "../..";</script>
+    <script src="../../js/theme_extra.js"></script>
+    <script src="../../js/theme.js"></script>
+      <script src="https://cdn.jsdelivr.net/npm/highlightjs-solidity@2.0.6/dist/solidity.min.js"></script>
+      <script src="../../search/main.js"></script>
+    <script>
+        jQuery(function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        });
+    </script>
+
+</body>
+</html>

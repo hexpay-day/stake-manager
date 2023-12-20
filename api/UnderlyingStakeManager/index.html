@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><link rel="canonical" href="https://docs.hexpay.day/api/UnderlyingStakeManager/" />
+      <link rel="shortcut icon" href="../../img/favicon.ico" />
+    <title>UnderlyingStakeManager - Stake Manager</title>
+    <link rel="stylesheet" href="../../css/theme.css" />
+    <link rel="stylesheet" href="../../css/theme_extra.css" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" />
+        <link href="../../extra.css" rel="stylesheet" />
+    
+      <script>
+        // Current page data
+        var mkdocs_page_name = "UnderlyingStakeManager";
+        var mkdocs_page_input_path = "api/UnderlyingStakeManager.md";
+        var mkdocs_page_url = "/api/UnderlyingStakeManager/";
+      </script>
+    
+    <!--[if lt IE 9]>
+      <script src="../../js/html5shiv.min.js"></script>
+    <![endif]-->
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/languages/bash.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/languages/javascript.min.js"></script>
+      <script>hljs.highlightAll();</script> 
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+    <div class="wy-side-scroll">
+      <div class="wy-side-nav-search">
+          <a href="../..">
+          <img src="../../logo.jpeg" class="logo" alt="Logo"/>
+        </a><div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+      <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../..">Stake Manager</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../../Features/">Features</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../../ToughConversation/">ToughConversation</a>
+                </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Api</span></p>
+              <ul class="current">
+                  <li class="toctree-l1"><a class="reference internal" href="../AuthorizationManager/">AuthorizationManager</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../Bank/">Bank</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../CurrencyList/">CurrencyList</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../EarningsOracle/">EarningsOracle</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../EncodableSettings/">EncodableSettings</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../ExistingStakeManager/">ExistingStakeManager</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../GoodAccounting/">GoodAccounting</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../HSIStakeManager/">HSIStakeManager</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../IsolatedStakeManager/">IsolatedStakeManager</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../IsolatedStakeManagerFactory/">IsolatedStakeManagerFactory</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../Magnitude/">Magnitude</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../MaximusStakeManager/">MaximusStakeManager</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../MulticallExtension/">MulticallExtension</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../Ownable2Step/">Ownable2Step</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../SingletonCommunis/">SingletonCommunis</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../SingletonMintManager/">SingletonMintManager</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../StakeEnder/">StakeEnder</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../StakeInfo/">StakeInfo</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../StakeManager/">StakeManager</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../StakeStarter/">StakeStarter</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../Tipper/">Tipper</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../TransferableStakeManager/">TransferableStakeManager</a>
+                  </li>
+                  <li class="toctree-l1 current"><a class="reference internal current" href="./">UnderlyingStakeManager</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../UnderlyingStakeable/">UnderlyingStakeable</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../Utils/">Utils</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="#">Interfaces</a>
+    <ul>
+                <li class="toctree-l2"><a class="reference internal" href="../interfaces/Communis/">Communis</a>
+                </li>
+                <li class="toctree-l2"><a class="reference internal" href="../interfaces/ExternalPerpetualFilter/">ExternalPerpetualFilter</a>
+                </li>
+                <li class="toctree-l2"><a class="reference internal" href="../interfaces/GasReimberser/">GasReimberser</a>
+                </li>
+                <li class="toctree-l2"><a class="reference internal" href="../interfaces/HEX/">HEX</a>
+                </li>
+                <li class="toctree-l2"><a class="reference internal" href="../interfaces/HEXStakeInstanceManager/">HEXStakeInstanceManager</a>
+                </li>
+                <li class="toctree-l2"><a class="reference internal" href="../interfaces/Hedron/">Hedron</a>
+                </li>
+                <li class="toctree-l2"><a class="reference internal" href="../interfaces/IUnderlyingStakeable/">IUnderlyingStakeable</a>
+                </li>
+                <li class="toctree-l2"><a class="reference internal" href="../interfaces/MaximusPerpetual/">MaximusPerpetual</a>
+                </li>
+                <li class="toctree-l2"><a class="reference internal" href="../interfaces/Multicall/">Multicall</a>
+                </li>
+                <li class="toctree-l2"><a class="reference internal" href="../interfaces/PublicEndStakeable/">PublicEndStakeable</a>
+                </li>
+                <li class="toctree-l2"><a class="reference internal" href="../interfaces/StakeReceiver/">StakeReceiver</a>
+                </li>
+    </ul>
+                  </li>
+              </ul>
+      </div>
+    </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+      <nav class="wy-nav-top" role="navigation" aria-label="Mobile navigation menu">
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../..">Stake Manager</a>
+        
+      </nav>
+      <div class="wy-nav-content">
+        <div class="rst-content"><div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../.." class="icon icon-home" aria-label="Docs"></a></li>
+          <li class="breadcrumb-item">Api</li>
+      <li class="breadcrumb-item active">UnderlyingStakeManager</li>
+    <li class="wy-breadcrumbs-aside">
+    </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+            <div class="section" itemprop="articleBody">
+              
+                <h2 id="underlyingstakemanager">UnderlyingStakeManager</h2>
+<h3 id="_stakestartfor">_stakeStartFor</h3>
+<pre><code class="language-solidity">function _stakeStartFor(address owner, uint256 amount, uint256 newStakedDays, uint256 index) internal virtual returns (uint256 stakeId)
+</code></pre>
+<p>start a stake for the staker given the amount and number of days</p>
+<h4 id="parameters">Parameters</h4>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>owner</td>
+<td>address</td>
+<td>the underlying owner of the stake</td>
+</tr>
+<tr>
+<td>amount</td>
+<td>uint256</td>
+<td>the amount to add to the stake</td>
+</tr>
+<tr>
+<td>newStakedDays</td>
+<td>uint256</td>
+<td>the number of days that the stake should run</td>
+</tr>
+<tr>
+<td>index</td>
+<td>uint256</td>
+<td>where in the list the stake will be placed. this is a param because it can be cached for internal loops</td>
+</tr>
+</tbody>
+</table>
+<h3 id="_stakeend">_stakeEnd</h3>
+<pre><code class="language-solidity">function _stakeEnd(uint256 stakeIndex, uint256 stakeId, uint256 stakeCountAfter) internal virtual returns (uint256 delta)
+</code></pre>
+<p>ends a stake for someone else</p>
+<h4 id="parameters_1">Parameters</h4>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>stakeIndex</td>
+<td>uint256</td>
+<td>the stake index on the underlying contract to end</td>
+</tr>
+<tr>
+<td>stakeId</td>
+<td>uint256</td>
+<td>the stake id on the underlying contract to end</td>
+</tr>
+<tr>
+<td>stakeCountAfter</td>
+<td>uint256</td>
+<td>the stake count after the stake is ended (current length - 1)</td>
+</tr>
+</tbody>
+</table>
+<h4 id="return-values">Return Values</h4>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>delta</td>
+<td>uint256</td>
+<td>the number of tokens that have been received from ending the stake</td>
+</tr>
+</tbody>
+</table>
+<h3 id="stakestart">stakeStart</h3>
+<pre><code class="language-solidity">function stakeStart(uint256 amount, uint256 newStakedDays) external virtual
+</code></pre>
+<p>starts a stake from the provided amount</p>
+<p><em>this method interface matches the original underlying token contract</em></p>
+<h4 id="parameters_2">Parameters</h4>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>amount</td>
+<td>uint256</td>
+<td>amount of tokens to stake</td>
+</tr>
+<tr>
+<td>newStakedDays</td>
+<td>uint256</td>
+<td>the number of days for this new stake</td>
+</tr>
+</tbody>
+</table>
+<h3 id="stakeend">stakeEnd</h3>
+<pre><code class="language-solidity">function stakeEnd(uint256 stakeIndex, uint40 stakeId) external virtual
+</code></pre>
+<p>end your own stake which is custodied by the stake manager. skips tip computing
+this is not payable to match the underlying contract
+this moves funds back to the sender to make behavior match underlying token
+this method only checks that the sender owns the stake it does not care
+if it is managed in a created contract and externally endable by this contract (1)
+or requires that the staker send start and end methods (0)</p>
+<h4 id="parameters_3">Parameters</h4>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>stakeIndex</td>
+<td>uint256</td>
+<td>the index on the underlying contract to end stake</td>
+</tr>
+<tr>
+<td>stakeId</td>
+<td>uint40</td>
+<td>the stake id from the underlying contract to end stake</td>
+</tr>
+</tbody>
+</table>
+<h3 id="_stakeendbyindexandid">_stakeEndByIndexAndId</h3>
+<pre><code class="language-solidity">function _stakeEndByIndexAndId(uint256 stakeIndex, uint256 stakeId) internal virtual returns (uint256 amount)
+</code></pre>
+<p>end a stake given its index and id</p>
+<h4 id="parameters_4">Parameters</h4>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>stakeIndex</td>
+<td>uint256</td>
+<td>the index of the stake to end</td>
+</tr>
+<tr>
+<td>stakeId</td>
+<td>uint256</td>
+<td>the stake id to end</td>
+</tr>
+</tbody>
+</table>
+<h3 id="stakeendbyid">stakeEndById</h3>
+<pre><code class="language-solidity">function stakeEndById(uint256 stakeId) external virtual returns (uint256 amount)
+</code></pre>
+<p>end your own stake which is custodied by the stake manager. skips tip computing
+this is not payable to match the underlying contract
+this moves funds back to the sender to make behavior match underlying token
+this method only checks that the sender owns the stake it does not care
+if it is managed in a created contract and externally endable by this contract (1)
+or requires that the staker send start and end methods (0)</p>
+<h4 id="parameters_5">Parameters</h4>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>stakeId</td>
+<td>uint256</td>
+<td>the stake id from the underlying contract to end stake</td>
+</tr>
+</tbody>
+</table>
+<h3 id="_getstakeinfo">_getStakeInfo</h3>
+<pre><code class="language-solidity">function _getStakeInfo(uint256 stakeId) internal view virtual returns (bool valid, address staker, uint256 stakeIndex, struct IUnderlyingStakeable.StakeStore stake)
+</code></pre>
+<h3 id="_stakerestartbyid">_stakeRestartById</h3>
+<pre><code class="language-solidity">function _stakeRestartById(uint256 stakeId) internal returns (uint256 amount, uint256 newStakeId)
+</code></pre>
+<p>given ownership over a stake, end the stake
+and restart all of the proceeds</p>
+<h4 id="parameters_6">Parameters</h4>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>stakeId</td>
+<td>uint256</td>
+<td>the stake id to restart</td>
+</tr>
+</tbody>
+</table>
+<h4 id="return-values_1">Return Values</h4>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>amount</td>
+<td>uint256</td>
+<td>the amount ended and re-staked</td>
+</tr>
+<tr>
+<td>newStakeId</td>
+<td>uint256</td>
+<td>the newly recreated stake id</td>
+</tr>
+</tbody>
+</table>
+<h3 id="stakerestartbyid">stakeRestartById</h3>
+<pre><code class="language-solidity">function stakeRestartById(uint256 stakeId) external payable returns (uint256 amount, uint256 newStakeId)
+</code></pre>
+<p>given ownership over a stake, stop and restart a stake with all proceeds</p>
+<h4 id="parameters_7">Parameters</h4>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>stakeId</td>
+<td>uint256</td>
+<td>the stake id to restart</td>
+</tr>
+</tbody>
+</table>
+<h4 id="return-values_2">Return Values</h4>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>amount</td>
+<td>uint256</td>
+<td>the number of tokens that were ended and added to new stake</td>
+</tr>
+<tr>
+<td>newStakeId</td>
+<td>uint256</td>
+<td>the newly created stake id</td>
+</tr>
+</tbody>
+</table>
+<h3 id="stakerestartmanybyid">stakeRestartManyById</h3>
+<pre><code class="language-solidity">function stakeRestartManyById(uint256[] stakeIds) external returns (uint256, uint256[])
+</code></pre>
+<p>given ownership over a list of ids of stakes, restart a list of stakes</p>
+<h4 id="parameters_8">Parameters</h4>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>stakeIds</td>
+<td>uint256[]</td>
+<td>the list of stake ids to iterate over and restart</td>
+</tr>
+</tbody>
+</table>
+              
+            </div>
+          </div><footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+  </div>
+
+  Built with <a href="https://www.mkdocs.org/">MkDocs</a> using a <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+          
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" aria-label="Versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    
+    
+      <span><a href="../TransferableStakeManager/" style="color: #fcfcfc">&laquo; Previous</a></span>
+    
+    
+      <span><a href="../UnderlyingStakeable/" style="color: #fcfcfc">Next &raquo;</a></span>
+    
+  </span>
+</div>
+    <script src="../../js/jquery-3.6.0.min.js"></script>
+    <script>var base_url = "../..";</script>
+    <script src="../../js/theme_extra.js"></script>
+    <script src="../../js/theme.js"></script>
+      <script src="https://cdn.jsdelivr.net/npm/highlightjs-solidity@2.0.6/dist/solidity.min.js"></script>
+      <script src="../../search/main.js"></script>
+    <script>
+        jQuery(function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        });
+    </script>
+
+</body>
+</html>

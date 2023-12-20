@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><link rel="canonical" href="https://docs.hexpay.day/api/interfaces/HEX/" />
+      <link rel="shortcut icon" href="../../../img/favicon.ico" />
+    <title>HEX - Stake Manager</title>
+    <link rel="stylesheet" href="../../../css/theme.css" />
+    <link rel="stylesheet" href="../../../css/theme_extra.css" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" />
+        <link href="../../../extra.css" rel="stylesheet" />
+    
+      <script>
+        // Current page data
+        var mkdocs_page_name = "HEX";
+        var mkdocs_page_input_path = "api/interfaces/HEX.md";
+        var mkdocs_page_url = "/api/interfaces/HEX/";
+      </script>
+    
+    <!--[if lt IE 9]>
+      <script src="../../../js/html5shiv.min.js"></script>
+    <![endif]-->
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/languages/bash.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/languages/javascript.min.js"></script>
+      <script>hljs.highlightAll();</script> 
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+    <div class="wy-side-scroll">
+      <div class="wy-side-nav-search">
+          <a href="../../..">
+          <img src="../../../logo.jpeg" class="logo" alt="Logo"/>
+        </a><div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+      <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../../..">Stake Manager</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../../../Features/">Features</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../../../ToughConversation/">ToughConversation</a>
+                </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Api</span></p>
+              <ul class="current">
+                  <li class="toctree-l1"><a class="reference internal" href="../../AuthorizationManager/">AuthorizationManager</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../Bank/">Bank</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../CurrencyList/">CurrencyList</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../EarningsOracle/">EarningsOracle</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../EncodableSettings/">EncodableSettings</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../ExistingStakeManager/">ExistingStakeManager</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../GoodAccounting/">GoodAccounting</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../HSIStakeManager/">HSIStakeManager</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../IsolatedStakeManager/">IsolatedStakeManager</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../IsolatedStakeManagerFactory/">IsolatedStakeManagerFactory</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../Magnitude/">Magnitude</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../MaximusStakeManager/">MaximusStakeManager</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../MulticallExtension/">MulticallExtension</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../Ownable2Step/">Ownable2Step</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../SingletonCommunis/">SingletonCommunis</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../SingletonMintManager/">SingletonMintManager</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../StakeEnder/">StakeEnder</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../StakeInfo/">StakeInfo</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../StakeManager/">StakeManager</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../StakeStarter/">StakeStarter</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../Tipper/">Tipper</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../TransferableStakeManager/">TransferableStakeManager</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../UnderlyingStakeManager/">UnderlyingStakeManager</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../UnderlyingStakeable/">UnderlyingStakeable</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../Utils/">Utils</a>
+                  </li>
+                  <li class="toctree-l1 current"><a class="reference internal current" href="#">Interfaces</a>
+    <ul class="current">
+                <li class="toctree-l2"><a class="reference internal" href="../Communis/">Communis</a>
+                </li>
+                <li class="toctree-l2"><a class="reference internal" href="../ExternalPerpetualFilter/">ExternalPerpetualFilter</a>
+                </li>
+                <li class="toctree-l2"><a class="reference internal" href="../GasReimberser/">GasReimberser</a>
+                </li>
+                <li class="toctree-l2 current"><a class="reference internal current" href="./">HEX</a>
+                </li>
+                <li class="toctree-l2"><a class="reference internal" href="../HEXStakeInstanceManager/">HEXStakeInstanceManager</a>
+                </li>
+                <li class="toctree-l2"><a class="reference internal" href="../Hedron/">Hedron</a>
+                </li>
+                <li class="toctree-l2"><a class="reference internal" href="../IUnderlyingStakeable/">IUnderlyingStakeable</a>
+                </li>
+                <li class="toctree-l2"><a class="reference internal" href="../MaximusPerpetual/">MaximusPerpetual</a>
+                </li>
+                <li class="toctree-l2"><a class="reference internal" href="../Multicall/">Multicall</a>
+                </li>
+                <li class="toctree-l2"><a class="reference internal" href="../PublicEndStakeable/">PublicEndStakeable</a>
+                </li>
+                <li class="toctree-l2"><a class="reference internal" href="../StakeReceiver/">StakeReceiver</a>
+                </li>
+    </ul>
+                  </li>
+              </ul>
+      </div>
+    </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+      <nav class="wy-nav-top" role="navigation" aria-label="Mobile navigation menu">
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../..">Stake Manager</a>
+        
+      </nav>
+      <div class="wy-nav-content">
+        <div class="rst-content"><div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../../.." class="icon icon-home" aria-label="Docs"></a></li>
+          <li class="breadcrumb-item">Api</li>
+          <li class="breadcrumb-item">Interfaces</li>
+      <li class="breadcrumb-item active">HEX</li>
+    <li class="wy-breadcrumbs-aside">
+    </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+            <div class="section" itemprop="articleBody">
+              
+                <h2 id="hex">HEX</h2>
+<h3 id="xflobbyenter">XfLobbyEnter</h3>
+<pre><code class="language-solidity">event XfLobbyEnter(uint256 data0, address memberAddr, uint256 entryId, address referrerAddr)
+</code></pre>
+<h3 id="xflobbyexit">XfLobbyExit</h3>
+<pre><code class="language-solidity">event XfLobbyExit(uint256 data0, address memberAddr, uint256 entryId, address referrerAddr)
+</code></pre>
+<h3 id="dailydataupdate">DailyDataUpdate</h3>
+<pre><code class="language-solidity">event DailyDataUpdate(uint256 data0, address updaterAddr)
+</code></pre>
+<h3 id="claim">Claim</h3>
+<pre><code class="language-solidity">event Claim(uint256 data0, uint256 data1, bytes20 btcAddr, address claimToAddr, address referrerAddr)
+</code></pre>
+<h3 id="claimassist">ClaimAssist</h3>
+<pre><code class="language-solidity">event ClaimAssist(uint256 data0, uint256 data1, uint256 data2, address senderAddr)
+</code></pre>
+<h3 id="stakestart">StakeStart</h3>
+<pre><code class="language-solidity">event StakeStart(uint256 data0, address stakerAddr, uint40 stakeId)
+</code></pre>
+<h3 id="stakegoodaccounting">StakeGoodAccounting</h3>
+<pre><code class="language-solidity">event StakeGoodAccounting(uint256 data0, uint256 data1, address stakerAddr, uint40 stakeId, address senderAddr)
+</code></pre>
+<h3 id="stakeend">StakeEnd</h3>
+<pre><code class="language-solidity">event StakeEnd(uint256 data0, uint256 data1, address stakerAddr, uint40 stakeId)
+</code></pre>
+<h3 id="shareratechange">ShareRateChange</h3>
+<pre><code class="language-solidity">event ShareRateChange(uint256 data0, uint40 stakeId)
+</code></pre>
+<h3 id="stakelists">stakeLists</h3>
+<pre><code class="language-solidity">function stakeLists(address staker, uint256 index) external view virtual returns (struct IUnderlyingStakeable.StakeStore)
+</code></pre>
+<p>retrieve a stake at a staker's index given a staker address and an index</p>
+<h4 id="parameters">Parameters</h4>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>staker</td>
+<td>address</td>
+<td>the staker in question</td>
+</tr>
+<tr>
+<td>index</td>
+<td>uint256</td>
+<td>the index to focus on</td>
+</tr>
+</tbody>
+</table>
+<h4 id="return-values">Return Values</h4>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>[0]</td>
+<td>struct IUnderlyingStakeable.StakeStore</td>
+<td>stake the stake custodied by a given staker at a given index</td>
+</tr>
+</tbody>
+</table>
+<h3 id="currentday">currentDay</h3>
+<pre><code class="language-solidity">function currentDay() external view virtual returns (uint256)
+</code></pre>
+<p>retrieve the current day from the target contract</p>
+<h4 id="return-values_1">Return Values</h4>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>[0]</td>
+<td>uint256</td>
+<td>day the current day according to the hex contract</td>
+</tr>
+</tbody>
+</table>
+<h3 id="globalinfo">globalInfo</h3>
+<pre><code class="language-solidity">function globalInfo() external view virtual returns (uint256[13])
+</code></pre>
+<h3 id="dailydata">dailyData</h3>
+<pre><code class="language-solidity">function dailyData(uint256 day) external view virtual returns (uint72 dayPayoutTotal, uint72 dayStakeSharesTotal, uint56 dayUnclaimedSatoshisTotal)
+</code></pre>
+<h3 id="dailydatarange">dailyDataRange</h3>
+<pre><code class="language-solidity">function dailyDataRange(uint256 beginDay, uint256 endDay) external view virtual returns (uint256[] list)
+</code></pre>
+              
+            </div>
+          </div><footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+  </div>
+
+  Built with <a href="https://www.mkdocs.org/">MkDocs</a> using a <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+          
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" aria-label="Versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    
+    
+      <span><a href="../GasReimberser/" style="color: #fcfcfc">&laquo; Previous</a></span>
+    
+    
+      <span><a href="../HEXStakeInstanceManager/" style="color: #fcfcfc">Next &raquo;</a></span>
+    
+  </span>
+</div>
+    <script src="../../../js/jquery-3.6.0.min.js"></script>
+    <script>var base_url = "../../..";</script>
+    <script src="../../../js/theme_extra.js"></script>
+    <script src="../../../js/theme.js"></script>
+      <script src="https://cdn.jsdelivr.net/npm/highlightjs-solidity@2.0.6/dist/solidity.min.js"></script>
+      <script src="../../../search/main.js"></script>
+    <script>
+        jQuery(function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        });
+    </script>
+
+</body>
+</html>

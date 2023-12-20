@@ -1,0 +1,650 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><link rel="canonical" href="https://docs.hexpay.day/api/StakeInfo/" />
+      <link rel="shortcut icon" href="../../img/favicon.ico" />
+    <title>StakeInfo - Stake Manager</title>
+    <link rel="stylesheet" href="../../css/theme.css" />
+    <link rel="stylesheet" href="../../css/theme_extra.css" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" />
+        <link href="../../extra.css" rel="stylesheet" />
+    
+      <script>
+        // Current page data
+        var mkdocs_page_name = "StakeInfo";
+        var mkdocs_page_input_path = "api/StakeInfo.md";
+        var mkdocs_page_url = "/api/StakeInfo/";
+      </script>
+    
+    <!--[if lt IE 9]>
+      <script src="../../js/html5shiv.min.js"></script>
+    <![endif]-->
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/languages/bash.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/languages/javascript.min.js"></script>
+      <script>hljs.highlightAll();</script> 
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+    <div class="wy-side-scroll">
+      <div class="wy-side-nav-search">
+          <a href="../..">
+          <img src="../../logo.jpeg" class="logo" alt="Logo"/>
+        </a><div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+      <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../..">Stake Manager</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../../Features/">Features</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../../ToughConversation/">ToughConversation</a>
+                </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Api</span></p>
+              <ul class="current">
+                  <li class="toctree-l1"><a class="reference internal" href="../AuthorizationManager/">AuthorizationManager</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../Bank/">Bank</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../CurrencyList/">CurrencyList</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../EarningsOracle/">EarningsOracle</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../EncodableSettings/">EncodableSettings</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../ExistingStakeManager/">ExistingStakeManager</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../GoodAccounting/">GoodAccounting</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../HSIStakeManager/">HSIStakeManager</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../IsolatedStakeManager/">IsolatedStakeManager</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../IsolatedStakeManagerFactory/">IsolatedStakeManagerFactory</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../Magnitude/">Magnitude</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../MaximusStakeManager/">MaximusStakeManager</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../MulticallExtension/">MulticallExtension</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../Ownable2Step/">Ownable2Step</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../SingletonCommunis/">SingletonCommunis</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../SingletonMintManager/">SingletonMintManager</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../StakeEnder/">StakeEnder</a>
+                  </li>
+                  <li class="toctree-l1 current"><a class="reference internal current" href="./">StakeInfo</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../StakeManager/">StakeManager</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../StakeStarter/">StakeStarter</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../Tipper/">Tipper</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../TransferableStakeManager/">TransferableStakeManager</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../UnderlyingStakeManager/">UnderlyingStakeManager</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../UnderlyingStakeable/">UnderlyingStakeable</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../Utils/">Utils</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="#">Interfaces</a>
+    <ul>
+                <li class="toctree-l2"><a class="reference internal" href="../interfaces/Communis/">Communis</a>
+                </li>
+                <li class="toctree-l2"><a class="reference internal" href="../interfaces/ExternalPerpetualFilter/">ExternalPerpetualFilter</a>
+                </li>
+                <li class="toctree-l2"><a class="reference internal" href="../interfaces/GasReimberser/">GasReimberser</a>
+                </li>
+                <li class="toctree-l2"><a class="reference internal" href="../interfaces/HEX/">HEX</a>
+                </li>
+                <li class="toctree-l2"><a class="reference internal" href="../interfaces/HEXStakeInstanceManager/">HEXStakeInstanceManager</a>
+                </li>
+                <li class="toctree-l2"><a class="reference internal" href="../interfaces/Hedron/">Hedron</a>
+                </li>
+                <li class="toctree-l2"><a class="reference internal" href="../interfaces/IUnderlyingStakeable/">IUnderlyingStakeable</a>
+                </li>
+                <li class="toctree-l2"><a class="reference internal" href="../interfaces/MaximusPerpetual/">MaximusPerpetual</a>
+                </li>
+                <li class="toctree-l2"><a class="reference internal" href="../interfaces/Multicall/">Multicall</a>
+                </li>
+                <li class="toctree-l2"><a class="reference internal" href="../interfaces/PublicEndStakeable/">PublicEndStakeable</a>
+                </li>
+                <li class="toctree-l2"><a class="reference internal" href="../interfaces/StakeReceiver/">StakeReceiver</a>
+                </li>
+    </ul>
+                  </li>
+              </ul>
+      </div>
+    </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+      <nav class="wy-nav-top" role="navigation" aria-label="Mobile navigation menu">
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../..">Stake Manager</a>
+        
+      </nav>
+      <div class="wy-nav-content">
+        <div class="rst-content"><div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../.." class="icon icon-home" aria-label="Docs"></a></li>
+          <li class="breadcrumb-item">Api</li>
+      <li class="breadcrumb-item active">StakeInfo</li>
+    <li class="wy-breadcrumbs-aside">
+    </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+            <div class="section" itemprop="articleBody">
+              
+                <h2 id="stakeinfo">StakeInfo</h2>
+<h3 id="stakeidinfo">stakeIdInfo</h3>
+<pre><code class="language-solidity">mapping(uint256 =&gt; uint256) stakeIdInfo
+</code></pre>
+<p>the owner of a stake indexed by the stake id
+index + 160(owner)</p>
+<h3 id="stakenotowned">StakeNotOwned</h3>
+<pre><code class="language-solidity">error StakeNotOwned(address provided, address expected)
+</code></pre>
+<p>this error is thrown when the stake in question
+is not owned by the expected address</p>
+<h3 id="stakenotcustodied">StakeNotCustodied</h3>
+<pre><code class="language-solidity">error StakeNotCustodied(uint256 stakeId)
+</code></pre>
+<h3 id="verifystakeownership">verifyStakeOwnership</h3>
+<pre><code class="language-solidity">function verifyStakeOwnership(address owner, uint256 stakeId) external view
+</code></pre>
+<p>verify the ownership of a stake given its id
+error occurs if owner does not match</p>
+<h4 id="parameters">Parameters</h4>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>owner</td>
+<td>address</td>
+<td>the supposed owner of the stake</td>
+</tr>
+<tr>
+<td>stakeId</td>
+<td>uint256</td>
+<td>the id of the stake in question</td>
+</tr>
+</tbody>
+</table>
+<h3 id="_verifystakeownership">_verifyStakeOwnership</h3>
+<pre><code class="language-solidity">function _verifyStakeOwnership(address owner, uint256 stakeId) internal view
+</code></pre>
+<p>verify the ownership of a stake given its id
+StakeNotOwned error occurs if owner does not match</p>
+<h4 id="parameters_1">Parameters</h4>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>owner</td>
+<td>address</td>
+<td>the supposed owner of the stake</td>
+</tr>
+<tr>
+<td>stakeId</td>
+<td>uint256</td>
+<td>the id of the stake in question</td>
+</tr>
+</tbody>
+</table>
+<h3 id="verifycustodian">verifyCustodian</h3>
+<pre><code class="language-solidity">function verifyCustodian(uint256 stakeId) external view
+</code></pre>
+<p>verify that this contract knows the owner of a given stake id
+and is acting as custodian for said owner
+StakeNotCustodied error occurs if owner is not known</p>
+<h4 id="parameters_2">Parameters</h4>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>stakeId</td>
+<td>uint256</td>
+<td>the stake id to verify custodialship over</td>
+</tr>
+</tbody>
+</table>
+<h3 id="_verifycustodian">_verifyCustodian</h3>
+<pre><code class="language-solidity">function _verifyCustodian(uint256 stakeId) internal view
+</code></pre>
+<p>verify that this contract knows the owner of a given stake id
+and is acting as custodian for said owner
+StakeNotCustodied error occurs if owner is not known</p>
+<h4 id="parameters_3">Parameters</h4>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>stakeId</td>
+<td>uint256</td>
+<td>the stake id to verify custodialship over</td>
+</tr>
+</tbody>
+</table>
+<h3 id="stakeidtoowner">stakeIdToOwner</h3>
+<pre><code class="language-solidity">function stakeIdToOwner(uint256 stakeId) external view returns (address owner)
+</code></pre>
+<p>get the owner of the stake id - the account that has rights over
+the stake's settings and ability to end it outright
+value will be address(0) for unknown</p>
+<h4 id="parameters_4">Parameters</h4>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>stakeId</td>
+<td>uint256</td>
+<td>the stake id in question</td>
+</tr>
+</tbody>
+</table>
+<h4 id="return-values">Return Values</h4>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>owner</td>
+<td>address</td>
+<td>of the stake at the provided id</td>
+</tr>
+</tbody>
+</table>
+<h3 id="_stakeidtoowner">_stakeIdToOwner</h3>
+<pre><code class="language-solidity">function _stakeIdToOwner(uint256 stakeId) internal view returns (address owner)
+</code></pre>
+<p>access the owner of a given stake id
+value will be address(0) for unknown</p>
+<h4 id="parameters_5">Parameters</h4>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>stakeId</td>
+<td>uint256</td>
+<td>the stake id in question</td>
+</tr>
+</tbody>
+</table>
+<h4 id="return-values_1">Return Values</h4>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>owner</td>
+<td>address</td>
+<td>of a given stake id</td>
+</tr>
+</tbody>
+</table>
+<h3 id="stakeidtoinfo">stakeIdToInfo</h3>
+<pre><code class="language-solidity">function stakeIdToInfo(uint256 stakeId) external view returns (uint256 index, address owner)
+</code></pre>
+<p>get the info of a stake given it's id. The index must match
+the index of the stake in the hex/hedron contract</p>
+<h4 id="parameters_6">Parameters</h4>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>stakeId</td>
+<td>uint256</td>
+<td>the stake id to get info for</td>
+</tr>
+</tbody>
+</table>
+<h4 id="return-values_2">Return Values</h4>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>index</td>
+<td>uint256</td>
+<td>of the stake id in the hex list</td>
+</tr>
+<tr>
+<td>owner</td>
+<td>address</td>
+<td>of the stake</td>
+</tr>
+</tbody>
+</table>
+<h3 id="_stakeidtoinfo">_stakeIdToInfo</h3>
+<pre><code class="language-solidity">function _stakeIdToInfo(uint256 stakeId) internal view returns (uint256 index, address owner)
+</code></pre>
+<p>retrieve the index and owner of a stake id
+for a non custodied stake, the index is 0 and the owner is address(0)</p>
+<h4 id="parameters_7">Parameters</h4>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>stakeId</td>
+<td>uint256</td>
+<td>the id of the stake in question</td>
+</tr>
+</tbody>
+</table>
+<h4 id="return-values_3">Return Values</h4>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>index</td>
+<td>uint256</td>
+<td>the index of the stake in the hex list or the hsim list</td>
+</tr>
+<tr>
+<td>owner</td>
+<td>address</td>
+<td>the owner of the stake</td>
+</tr>
+</tbody>
+</table>
+<h3 id="stakeidtoindex">stakeIdToIndex</h3>
+<pre><code class="language-solidity">function stakeIdToIndex(uint256 stakeId) external view returns (uint256 index)
+</code></pre>
+<p>the index of the stake id - useful when indexes are moving around
+and could be moved by other people</p>
+<h4 id="parameters_8">Parameters</h4>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>stakeId</td>
+<td>uint256</td>
+<td>the stake id to target</td>
+</tr>
+</tbody>
+</table>
+<h4 id="return-values_4">Return Values</h4>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>index</td>
+<td>uint256</td>
+<td>of the stake in the targeted list</td>
+</tr>
+</tbody>
+</table>
+<h3 id="_stakeidtoindex">_stakeIdToIndex</h3>
+<pre><code class="language-solidity">function _stakeIdToIndex(uint256 stakeId) internal view returns (uint256 index)
+</code></pre>
+<p>the index of the stake id - useful when indexes are moving around
+and could be moved by other people</p>
+<h4 id="parameters_9">Parameters</h4>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>stakeId</td>
+<td>uint256</td>
+<td>the stake id to target</td>
+</tr>
+</tbody>
+</table>
+<h4 id="return-values_5">Return Values</h4>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>index</td>
+<td>uint256</td>
+<td>of the stake in the targeted list</td>
+</tr>
+</tbody>
+</table>
+<h3 id="encodeinfo">encodeInfo</h3>
+<pre><code class="language-solidity">function encodeInfo(uint256 index, address owner) external pure returns (uint256 info)
+</code></pre>
+<p>encode an index and owner pair to track under a single sload</p>
+<h4 id="parameters_10">Parameters</h4>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>index</td>
+<td>uint256</td>
+<td>index of a stake</td>
+</tr>
+<tr>
+<td>owner</td>
+<td>address</td>
+<td>the owner of a stake</td>
+</tr>
+</tbody>
+</table>
+<h4 id="return-values_6">Return Values</h4>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>info</td>
+<td>uint256</td>
+<td>the encoded uint256 that can be decoded to the index and owner</td>
+</tr>
+</tbody>
+</table>
+<h3 id="_encodeinfo">_encodeInfo</h3>
+<pre><code class="language-solidity">function _encodeInfo(uint256 index, address owner) internal pure returns (uint256 info)
+</code></pre>
+<p>encode an index and owner pair to track under a single sload</p>
+<h4 id="parameters_11">Parameters</h4>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>index</td>
+<td>uint256</td>
+<td>index of a stake</td>
+</tr>
+<tr>
+<td>owner</td>
+<td>address</td>
+<td>the owner of a stake</td>
+</tr>
+</tbody>
+</table>
+<h4 id="return-values_7">Return Values</h4>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>info</td>
+<td>uint256</td>
+<td>the encoded uint256 that can be decoded to the index and owner</td>
+</tr>
+</tbody>
+</table>
+              
+            </div>
+          </div><footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+  </div>
+
+  Built with <a href="https://www.mkdocs.org/">MkDocs</a> using a <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+          
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" aria-label="Versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    
+    
+      <span><a href="../StakeEnder/" style="color: #fcfcfc">&laquo; Previous</a></span>
+    
+    
+      <span><a href="../StakeManager/" style="color: #fcfcfc">Next &raquo;</a></span>
+    
+  </span>
+</div>
+    <script src="../../js/jquery-3.6.0.min.js"></script>
+    <script>var base_url = "../..";</script>
+    <script src="../../js/theme_extra.js"></script>
+    <script src="../../js/theme.js"></script>
+      <script src="https://cdn.jsdelivr.net/npm/highlightjs-solidity@2.0.6/dist/solidity.min.js"></script>
+      <script src="../../search/main.js"></script>
+    <script>
+        jQuery(function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        });
+    </script>
+
+</body>
+</html>

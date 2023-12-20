@@ -1,0 +1,27 @@
+.wy-nav-side.stickynav {
+  padding: 0;
+}
+.rst-versions {
+  display: none;
+}
+.wy-side-nav-search > a {
+  max-height: 56px;
+  display: flex;
+  position: relative;
+  align-items: center;
+  justify-content: center;
+  flex-direction: row;
+}
+.wy-side-nav-search .wy-dropdown>a img.logo,
+.wy-side-nav-search>a img.logo {
+  height: 100%;
+  display: flex;
+  width: auto;
+  height: 56px;
+  border-radius: 9999px;
+  margin: 0;
+  margin-right: 8px;
+}
+.wy-side-nav-search > a::after {
+  content: "HexPay.Day";
+}

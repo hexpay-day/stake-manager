@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><link rel="canonical" href="https://docs.hexpay.day/Features/" />
+      <link rel="shortcut icon" href="../img/favicon.ico" />
+    <title>Features - Stake Manager</title>
+    <link rel="stylesheet" href="../css/theme.css" />
+    <link rel="stylesheet" href="../css/theme_extra.css" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" />
+        <link href="../extra.css" rel="stylesheet" />
+    
+      <script>
+        // Current page data
+        var mkdocs_page_name = "Features";
+        var mkdocs_page_input_path = "Features.md";
+        var mkdocs_page_url = "/Features/";
+      </script>
+    
+    <!--[if lt IE 9]>
+      <script src="../js/html5shiv.min.js"></script>
+    <![endif]-->
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/languages/bash.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/languages/javascript.min.js"></script>
+      <script>hljs.highlightAll();</script> 
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+    <div class="wy-side-scroll">
+      <div class="wy-side-nav-search">
+          <a href="..">
+          <img src="../logo.jpeg" class="logo" alt="Logo"/>
+        </a><div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../search.html" method="get">
+      <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="..">Stake Manager</a>
+                </li>
+              </ul>
+              <ul class="current">
+                <li class="toctree-l1 current"><a class="reference internal current" href="./">Features</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../ToughConversation/">ToughConversation</a>
+                </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Api</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../api/AuthorizationManager/">AuthorizationManager</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../api/Bank/">Bank</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../api/CurrencyList/">CurrencyList</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../api/EarningsOracle/">EarningsOracle</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../api/EncodableSettings/">EncodableSettings</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../api/ExistingStakeManager/">ExistingStakeManager</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../api/GoodAccounting/">GoodAccounting</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../api/HSIStakeManager/">HSIStakeManager</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../api/IsolatedStakeManager/">IsolatedStakeManager</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../api/IsolatedStakeManagerFactory/">IsolatedStakeManagerFactory</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../api/Magnitude/">Magnitude</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../api/MaximusStakeManager/">MaximusStakeManager</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../api/MulticallExtension/">MulticallExtension</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../api/Ownable2Step/">Ownable2Step</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../api/SingletonCommunis/">SingletonCommunis</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../api/SingletonMintManager/">SingletonMintManager</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../api/StakeEnder/">StakeEnder</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../api/StakeInfo/">StakeInfo</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../api/StakeManager/">StakeManager</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../api/StakeStarter/">StakeStarter</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../api/Tipper/">Tipper</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../api/TransferableStakeManager/">TransferableStakeManager</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../api/UnderlyingStakeManager/">UnderlyingStakeManager</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../api/UnderlyingStakeable/">UnderlyingStakeable</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../api/Utils/">Utils</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="#">Interfaces</a>
+    <ul>
+                <li class="toctree-l2"><a class="reference internal" href="../api/interfaces/Communis/">Communis</a>
+                </li>
+                <li class="toctree-l2"><a class="reference internal" href="../api/interfaces/ExternalPerpetualFilter/">ExternalPerpetualFilter</a>
+                </li>
+                <li class="toctree-l2"><a class="reference internal" href="../api/interfaces/GasReimberser/">GasReimberser</a>
+                </li>
+                <li class="toctree-l2"><a class="reference internal" href="../api/interfaces/HEX/">HEX</a>
+                </li>
+                <li class="toctree-l2"><a class="reference internal" href="../api/interfaces/HEXStakeInstanceManager/">HEXStakeInstanceManager</a>
+                </li>
+                <li class="toctree-l2"><a class="reference internal" href="../api/interfaces/Hedron/">Hedron</a>
+                </li>
+                <li class="toctree-l2"><a class="reference internal" href="../api/interfaces/IUnderlyingStakeable/">IUnderlyingStakeable</a>
+                </li>
+                <li class="toctree-l2"><a class="reference internal" href="../api/interfaces/MaximusPerpetual/">MaximusPerpetual</a>
+                </li>
+                <li class="toctree-l2"><a class="reference internal" href="../api/interfaces/Multicall/">Multicall</a>
+                </li>
+                <li class="toctree-l2"><a class="reference internal" href="../api/interfaces/PublicEndStakeable/">PublicEndStakeable</a>
+                </li>
+                <li class="toctree-l2"><a class="reference internal" href="../api/interfaces/StakeReceiver/">StakeReceiver</a>
+                </li>
+    </ul>
+                  </li>
+              </ul>
+      </div>
+    </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+      <nav class="wy-nav-top" role="navigation" aria-label="Mobile navigation menu">
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="..">Stake Manager</a>
+        
+      </nav>
+      <div class="wy-nav-content">
+        <div class="rst-content"><div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href=".." class="icon icon-home" aria-label="Docs"></a></li>
+      <li class="breadcrumb-item active">Features</li>
+    <li class="wy-breadcrumbs-aside">
+    </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+            <div class="section" itemprop="articleBody">
+              
+                <h1 id="features">Features</h1>
+<p>This document outlines the features available in these contracts and how they might be utilized by other contracts or stakers.</p>
+<h3 id="contract-entry-points">Contract Entry Points</h3>
+<ul>
+<li>Isolated Stake Manager</li>
+<li>Singleton Stake Manager</li>
+<li>Existing Stake Manager</li>
+</ul>
+<h3 id="isolatedstakemanagersol"><a href="https://github.com/hexpay-day/stake-manager/master/contracts/IsolatedStakeManager.sol">IsolatedStakeManager.sol</a></h3>
+<p>This contract, or, more specifically it's factory, generates a contract based on the owner of the stake. Some features to understand about this contract:</p>
+<ul>
+<li>Anyone can create an Isolated Stake Manager (ISM) for any other address.</li>
+<li>Only the owner of the contract can start stakes.</li>
+<li>Addresses can be added as authorized end stakers.</li>
+<li>Tokens are transferred from the owner of the ISM contract to the ISM, where the stake starts.</li>
+<li>Ownership of the ISM can be transferred, even if stakes are active.</li>
+<li>Ownership is a 2 step process - <a href="https://docs.openzeppelin.com/contracts/4.x/api/access#Ownable2Step">OZ's Ownable2Step</a>.</li>
+<li>Start, end, and early end capabilities can be granted to any address and persist between each round of starting and ending stakes. For this reason it is best to only grant permission in 1 direction for each address.</li>
+<li>Early end stake capabilities can be removed, even for the owner by adjusting permissions.</li>
+<li>Can be ended by external, <a href="https://github.com/mds1/multicall">multicall</a> contract</li>
+<li>Has permissioned multicall to do multiple actions at same time</li>
+</ul>
+<h3 id="existingstakemanagersol"><a href="https://github.com/hexpay-day/stake-manager/master/contracts/ExistingStakeManager.sol">ExistingStakeManager.sol</a></h3>
+<p>This contract holds methods for ending hsi and maximus stakes.</p>
+<ul>
+<li>Anyone can deposit hsi's, that do not have hedron lent against them (must be paid off).</li>
+<li>HSI is detokenized and can be withdrawn at any time.</li>
+<li>Ability to call multiple end stakes available.</li>
+<li>End stakes and mint hedron tokens in one transaction using a public multicall.</li>
+<li>Rewards can be minted for all owned hsi's at the same time. So, no more single tx for each mint.</li>
+<li>Send reward (hedron) or target (hex) tokens to any address.</li>
+<li>Send end stake calls from external multicall.</li>
+<li>Mint hedron tokens as final step before ending stake.</li>
+<li>Multiple end stakes owned by multiple addresses are possible to end at the same time.</li>
+<li>Transfers are reduced when end stake owners are grouped.</li>
+<li>Uses a whitelist to check maximus addresses: <a href="https://etherscan.io/address/0xe9f84d418B008888A992Ff8c6D22389C2C3504e0">base</a>, <a href="https://etherscan.io/address/0xF55cD1e399e1cc3D95303048897a680be3313308">trio</a>, <a href="https://etherscan.io/address/0x6B0956258fF7bd7645aa35369B55B61b8e6d6140">lucky</a>, <a href="https://etherscan.io/address/0x6b32022693210cD2Cfc466b9Ac0085DE8fC34eA6">deci</a>, and <a href="https://etherscan.io/address/0x0d86EB9f43C57f6FF3BC9E23D8F9d82503f0e84b">maxi</a>.</li>
+<li>Allows for the deployer to connect a contract in the future, to support other perpetual pools such as <a href="https://hexpool.party/">hexpool.party</a></li>
+<li>Generates an intermediary contract for collecting fees from perpetuals with ease using previously provided (though not released and therefore codified) interface.</li>
+<li>Only allows for current perpetuals to be ended - otherwise security vulnerability is opened up.</li>
+<li>Create intermediary contract for any address.</li>
+<li>Separate authorization levels for ending stakes, flushing tokens, withdrawing.</li>
+<li>Permissioned multicall available for multiple flush and withdrawal steps.</li>
+<li>End stakes available from external multicall for reach maximization.</li>
+<li>Leave tip to be collected by transaction runner in stake's hex, stake's hedron, or any other token.</li>
+<li>Tip amount for deposited tokens based on deposit with multiplier from block.basefee.</li>
+</ul>
+<h3 id="singletonstakemanager"><a href="https://github.com/hexpay-day/stake-manager/master/contracts/SingletonStakeManager.sol">SingletonStakeManager</a></h3>
+<p>This contract is a singleton that holds all stakes in a single contract for gas efficiency and chaining purposes.</p>
+<ul>
+<li>Settings for defining what to do with stakes when they are ended</li>
+<li>Auto send funds to owner or attribute in internal accounting</li>
+<li>Leave tip to be collected by transaction runner in stake's hex, stake's hedron, or any other token</li>
+<li>Tip amount for deposited tokens based on deposit with multiplier from block.basefee</li>
+<li>Restart stake using multiple functions up to 127 times or infinitely</li>
+<li>Divide funds or pull percentage of interest off the top</li>
+<li>Consent signalling by signature (eip712)</li>
+<li>Automatic stake restarting - tokens never leave contract</li>
+<li>External <a href="https://github.com/mds1/multicall">multicall</a> compatible</li>
+<li>Permissioned multicall available</li>
+<li>Preference for silent failures to reduce failure cases (gas loss)</li>
+<li>Removal of stake index requirement (internally tracked)</li>
+<li>Settings to require final hedron mint during stake end</li>
+<li>Anyone can mint hedron rewards to be custodied by SingletonStakeManager</li>
+<li>Holds hedron rewards until owner collects them</li>
+<li>Low cost hedron mint authorization to allow for future skipping / upgrades to exclude from process</li>
+<li>Stake ownership can be transferred to different owners</li>
+<li>Stake tips can be replicated to new stakes when they are paid out</li>
+<li>Call GoodAccounting method for multiple stakes. Even mix the calls in with other end stakes to save gas money.</li>
+</ul>
+<h3 id="settings"><a href="https://github.com/hexpay-day/stake-manager/master/contracts/EncodableSettings.sol">Settings</a></h3>
+<p>The settings struct holds all relevant settings for determining what tokens should go where when a stake is done as well as what the end stake call should do at the end of a stake.</p>
+<p>The properties of the settings object are as follows:</p>
+<table>
+<thead>
+<tr>
+<th>name</th>
+<th>type</th>
+<th>description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>targetTip</code></td>
+<td><code>uint72</code></td>
+<td>holds an encoded linear value to determine the amount to tip in $HEX from the stake</td>
+</tr>
+<tr>
+<td><code>hedronTip</code></td>
+<td><code>uint72</code></td>
+<td>holds an encoded linear value to determine the amount to tip in $HEDRON from the stake</td>
+</tr>
+<tr>
+<td><code>newStake</code></td>
+<td><code>uint72</code></td>
+<td>holds an encoded linear value to determine the amount to start a new stake with</td>
+</tr>
+<tr>
+<td><code>newStakeDaysMethod</code></td>
+<td><code>uint8</code></td>
+<td>method to compute the number of days the new stake should last</td>
+</tr>
+<tr>
+<td><code>newStakeDaysMagnitude</code></td>
+<td><code>uint16</code></td>
+<td>input to compute number of days new stake should last</td>
+</tr>
+<tr>
+<td><code>copyIterations</code></td>
+<td><code>uint8</code></td>
+<td>a limiter on how many times the stake should be restarted**</td>
+</tr>
+<tr>
+<td><code>consentAbilities</code></td>
+<td><code>uint8</code></td>
+<td>set of binary permissions to signal which actions can be taken on the stake</td>
+</tr>
+</tbody>
+</table>
+<p>* value below minimum signals no new stake should be created<br>
+** 0 = do not restart, 1-126 = countdown mechanism, 127 = always restart</p>
+<h3 id="computemagnitude"><a href="https://github.com/hexpay-day/stake-manager/master/contracts/Magnitude.sol">#computeMagnitude</a></h3>
+<p>Compute magnitude is probably the most confusing method in the repo. Once broken down, it is fairly simple, but has a fair number of options which can make it confusing. Below is a breakdown of the options and features.</p>
+<p>There are 4 inputs: <code>method</code>, <code>x</code>, <code>y</code>, and <code>stake</code></p>
+<p>The <code>method</code> arg determines which path (if statement) should be used. Each of these methods has its own implications for mutating the x and y values to result in another value.</p>
+<p>The situations where this method is used includes the following:
+- Compute ender tip
+- Compute withdrawable magnitude (how much to send to staker)
+- Compute new stake magnitude
+- Compute new stake days</p>
+<p>These situations can broadly be put into 2 categories: 1 manipulating inputs around an amount of hex to do something. Manipulating inputs around a number of days to do something.</p>
+<h5 id="amount-manipulation">Amount manipulation</h5>
+<p>The main directions that determines what is done with the hex after the stake ends is as follows:
+1. tip the ender
+1. start a new stake
+1. send to owner / custody funds (remainder)</p>
+<p>The value of each of the following methods is able to be derived by using a magnitude method</p>
+<ol>
+<li>tip the ender ($hedron)</li>
+<li>tip the ender ($hex)</li>
+<li>start a new stake</li>
+<li>determine number of days to stake*</li>
+</ol>
+<p>* mostly useful for new stake days magnitude only<br></p>
+<p>Determining the number of days to start a stake uses a separate, pure function which is globally capped at <code>5_555</code>.</p>
+<p>Each of the tip manipulations use a method of 0-2 to determine the value to use.</p>
+<ul>
+<li><code>0</code> - returns zero always</li>
+<li><code>1</code> - returns the full input amount</li>
+<li><code>2</code> - returns a value held in the encoded setting</li>
+</ul>
+<p>after 2, the values are determined by an (x/y)+b encoded in a 72 bit number.</p>
+<ul>
+<li><code>3</code> - uses the total input value (principle + yield)</li>
+<li><code>4</code> - uses the principle</li>
+<li><code>5</code> - uses the yield</li>
+</ul>
+<p>after 5, the numbers are repeated through 255, with each iteration, scaling the x value in the linear encoding by a factor of <code>2</code>.</p>
+<h3 id="auxilliary-features">Auxilliary Features</h3>
+<p>The ability to create stakes that anyone has control over is an interesting feature that is not available in the current HEX staking model. The ability to create a stake for an address that does not yet exist or simply starting a stake for someone remotely is an exciting new feature that is now available to all hex stakers with these contracts. A simple model for how this could play out could be as follows:
+1. Have the recipient create a wallet and send an address.
+1. Start a stake for that address using the <code>stakeStartFromBalanceFor</code> method which will pull HEX from the sending wallet and mark the stake as owned by the designated recipient with settings that will roll the stake over, given some period.
+1. Fund a small amount of eth to incent an end stake or provide appropriate settings to tip using hex.</p>
+<p>Under this pattern, they have the stake length as the amount of time to figure out how to end their stake (use DeFi). And if they are unable to figure it out, their stake is still safe and can either be custodied by the contract or rolled into a ladder.</p>
+<p>More complex patterns can be achived by launching contracts that utilize the <code>[StakeStarter](/api/StakeStarter/)</code> contract, such as creating NFT's (cheap) to delineate stake ownership without requiring a new contract be cloned (expensive), dead man switches, or social recovery mechanisms just to name a few.</p>
+<p>Another reason why this library makes building on top of HEX much more attractive is that stake indexes no longer have to be tracked. The contract assumes, that there is no need to track an index in an array on top of an id since, generally one only cares about the stake id being ended. If a contract wishes to keep a list, they are still free to do so, but that list will be auxillary to the globally stored stake list under <code>[stakeIdInfo](/api/stakeIdInfo/)</code>.</p>
+              
+            </div>
+          </div><footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+  </div>
+
+  Built with <a href="https://www.mkdocs.org/">MkDocs</a> using a <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+          
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" aria-label="Versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    
+    
+      <span><a href=".." style="color: #fcfcfc">&laquo; Previous</a></span>
+    
+    
+      <span><a href="../ToughConversation/" style="color: #fcfcfc">Next &raquo;</a></span>
+    
+  </span>
+</div>
+    <script src="../js/jquery-3.6.0.min.js"></script>
+    <script>var base_url = "..";</script>
+    <script src="../js/theme_extra.js"></script>
+    <script src="../js/theme.js"></script>
+      <script src="https://cdn.jsdelivr.net/npm/highlightjs-solidity@2.0.6/dist/solidity.min.js"></script>
+      <script src="../search/main.js"></script>
+    <script>
+        jQuery(function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        });
+    </script>
+
+</body>
+</html>

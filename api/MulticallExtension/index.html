@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><link rel="canonical" href="https://docs.hexpay.day/api/MulticallExtension/" />
+      <link rel="shortcut icon" href="../../img/favicon.ico" />
+    <title>MulticallExtension - Stake Manager</title>
+    <link rel="stylesheet" href="../../css/theme.css" />
+    <link rel="stylesheet" href="../../css/theme_extra.css" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" />
+        <link href="../../extra.css" rel="stylesheet" />
+    
+      <script>
+        // Current page data
+        var mkdocs_page_name = "MulticallExtension";
+        var mkdocs_page_input_path = "api/MulticallExtension.md";
+        var mkdocs_page_url = "/api/MulticallExtension/";
+      </script>
+    
+    <!--[if lt IE 9]>
+      <script src="../../js/html5shiv.min.js"></script>
+    <![endif]-->
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/languages/bash.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/languages/javascript.min.js"></script>
+      <script>hljs.highlightAll();</script> 
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+    <div class="wy-side-scroll">
+      <div class="wy-side-nav-search">
+          <a href="../..">
+          <img src="../../logo.jpeg" class="logo" alt="Logo"/>
+        </a><div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+      <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../..">Stake Manager</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../../Features/">Features</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../../ToughConversation/">ToughConversation</a>
+                </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Api</span></p>
+              <ul class="current">
+                  <li class="toctree-l1"><a class="reference internal" href="../AuthorizationManager/">AuthorizationManager</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../Bank/">Bank</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../CurrencyList/">CurrencyList</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../EarningsOracle/">EarningsOracle</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../EncodableSettings/">EncodableSettings</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../ExistingStakeManager/">ExistingStakeManager</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../GoodAccounting/">GoodAccounting</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../HSIStakeManager/">HSIStakeManager</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../IsolatedStakeManager/">IsolatedStakeManager</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../IsolatedStakeManagerFactory/">IsolatedStakeManagerFactory</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../Magnitude/">Magnitude</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../MaximusStakeManager/">MaximusStakeManager</a>
+                  </li>
+                  <li class="toctree-l1 current"><a class="reference internal current" href="./">MulticallExtension</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../Ownable2Step/">Ownable2Step</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../SingletonCommunis/">SingletonCommunis</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../SingletonMintManager/">SingletonMintManager</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../StakeEnder/">StakeEnder</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../StakeInfo/">StakeInfo</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../StakeManager/">StakeManager</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../StakeStarter/">StakeStarter</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../Tipper/">Tipper</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../TransferableStakeManager/">TransferableStakeManager</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../UnderlyingStakeManager/">UnderlyingStakeManager</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../UnderlyingStakeable/">UnderlyingStakeable</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../Utils/">Utils</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="#">Interfaces</a>
+    <ul>
+                <li class="toctree-l2"><a class="reference internal" href="../interfaces/Communis/">Communis</a>
+                </li>
+                <li class="toctree-l2"><a class="reference internal" href="../interfaces/ExternalPerpetualFilter/">ExternalPerpetualFilter</a>
+                </li>
+                <li class="toctree-l2"><a class="reference internal" href="../interfaces/GasReimberser/">GasReimberser</a>
+                </li>
+                <li class="toctree-l2"><a class="reference internal" href="../interfaces/HEX/">HEX</a>
+                </li>
+                <li class="toctree-l2"><a class="reference internal" href="../interfaces/HEXStakeInstanceManager/">HEXStakeInstanceManager</a>
+                </li>
+                <li class="toctree-l2"><a class="reference internal" href="../interfaces/Hedron/">Hedron</a>
+                </li>
+                <li class="toctree-l2"><a class="reference internal" href="../interfaces/IUnderlyingStakeable/">IUnderlyingStakeable</a>
+                </li>
+                <li class="toctree-l2"><a class="reference internal" href="../interfaces/MaximusPerpetual/">MaximusPerpetual</a>
+                </li>
+                <li class="toctree-l2"><a class="reference internal" href="../interfaces/Multicall/">Multicall</a>
+                </li>
+                <li class="toctree-l2"><a class="reference internal" href="../interfaces/PublicEndStakeable/">PublicEndStakeable</a>
+                </li>
+                <li class="toctree-l2"><a class="reference internal" href="../interfaces/StakeReceiver/">StakeReceiver</a>
+                </li>
+    </ul>
+                  </li>
+              </ul>
+      </div>
+    </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+      <nav class="wy-nav-top" role="navigation" aria-label="Mobile navigation menu">
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../..">Stake Manager</a>
+        
+      </nav>
+      <div class="wy-nav-content">
+        <div class="rst-content"><div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../.." class="icon icon-home" aria-label="Docs"></a></li>
+          <li class="breadcrumb-item">Api</li>
+      <li class="breadcrumb-item active">MulticallExtension</li>
+    <li class="wy-breadcrumbs-aside">
+    </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+            <div class="section" itemprop="articleBody">
+              
+                <h2 id="multicallextension">MulticallExtension</h2>
+<p>this multicall extension is useful for chaining permissioned calls
+in other words, calls that operate on the senders funds or settings</p>
+<h3 id="blockhash">BlockHash</h3>
+<pre><code class="language-solidity">error BlockHash(bytes32 expected, bytes32 actual)
+</code></pre>
+<h3 id="outsidetimestamps">OutsideTimestamps</h3>
+<pre><code class="language-solidity">error OutsideTimestamps(uint256 minTime, uint256 maxTime, uint256 currentTime)
+</code></pre>
+<h3 id="txfailed">TxFailed</h3>
+<pre><code class="language-solidity">event TxFailed(uint256 index, bytes result)
+</code></pre>
+<h3 id="multicall">multicall</h3>
+<pre><code class="language-solidity">function multicall(bytes[] calls, bool allowFailures) external
+</code></pre>
+<p>call a series of functions on a contract that inherits this method</p>
+<h4 id="parameters">Parameters</h4>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>calls</td>
+<td>bytes[]</td>
+<td>the calls to perform on this contract</td>
+</tr>
+<tr>
+<td>allowFailures</td>
+<td>bool</td>
+<td>whether to allow failures or to error out</td>
+</tr>
+</tbody>
+</table>
+<h3 id="multicallbetweentimestamp">multicallBetweenTimestamp</h3>
+<pre><code class="language-solidity">function multicallBetweenTimestamp(uint256 minTime, uint256 maxTime, bytes[] calls, bool allowFailures) external
+</code></pre>
+<p>call multiple methods and pass a deadline, after which the transaction should fail</p>
+<h4 id="parameters_1">Parameters</h4>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>minTime</td>
+<td>uint256</td>
+<td>the min valid timestamp, in seconds</td>
+</tr>
+<tr>
+<td>maxTime</td>
+<td>uint256</td>
+<td>the max valid timestamp, in seconds</td>
+</tr>
+<tr>
+<td>calls</td>
+<td>bytes[]</td>
+<td>the calldata to run on the external method</td>
+</tr>
+<tr>
+<td>allowFailures</td>
+<td>bool</td>
+<td>allows failures when true</td>
+</tr>
+</tbody>
+</table>
+<h3 id="multicallwithpreviousblockhash">multicallWithPreviousBlockHash</h3>
+<pre><code class="language-solidity">function multicallWithPreviousBlockHash(bytes32 previousBlockhash, bytes[] calls, bool allowFailures) external
+</code></pre>
+<p>pass the previous block hash to enable mev uncle bandit protection</p>
+<h4 id="parameters_2">Parameters</h4>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>previousBlockhash</td>
+<td>bytes32</td>
+<td>the previously mined block - useful for mev protected uncle bandit risks</td>
+</tr>
+<tr>
+<td>calls</td>
+<td>bytes[]</td>
+<td>the calldata to run on the external method</td>
+</tr>
+<tr>
+<td>allowFailures</td>
+<td>bool</td>
+<td>allows failures when true</td>
+</tr>
+</tbody>
+</table>
+<h3 id="_multicall">_multicall</h3>
+<pre><code class="language-solidity">function _multicall(bytes[] calls, bool allowFailures) internal
+</code></pre>
+<p>call multiple / arbitrary steps allowing each to fail independently or requiring all to succeed</p>
+<h4 id="parameters_3">Parameters</h4>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>calls</td>
+<td>bytes[]</td>
+<td>the sequence of calls that is requested</td>
+</tr>
+<tr>
+<td>allowFailures</td>
+<td>bool</td>
+<td>allows the calls to fail separately or requires all to succeed or fail</td>
+</tr>
+</tbody>
+</table>
+              
+            </div>
+          </div><footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+  </div>
+
+  Built with <a href="https://www.mkdocs.org/">MkDocs</a> using a <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+          
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" aria-label="Versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    
+    
+      <span><a href="../MaximusStakeManager/" style="color: #fcfcfc">&laquo; Previous</a></span>
+    
+    
+      <span><a href="../Ownable2Step/" style="color: #fcfcfc">Next &raquo;</a></span>
+    
+  </span>
+</div>
+    <script src="../../js/jquery-3.6.0.min.js"></script>
+    <script>var base_url = "../..";</script>
+    <script src="../../js/theme_extra.js"></script>
+    <script src="../../js/theme.js"></script>
+      <script src="https://cdn.jsdelivr.net/npm/highlightjs-solidity@2.0.6/dist/solidity.min.js"></script>
+      <script src="../../search/main.js"></script>
+    <script>
+        jQuery(function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        });
+    </script>
+
+</body>
+</html>
