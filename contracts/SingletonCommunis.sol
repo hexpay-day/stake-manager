@@ -223,7 +223,7 @@ contract SingletonCommunis is StakeEnder {
    * @param stake the stake being ended
    * @return maxPayout the maximum payout that can be achieved by this stake
    */
-  function _maxPayout(UnderlyingStakeable.StakeStore memory stake) internal pure returns(uint256 maxPayout) {
+  function _maxPayout(UnderlyingStakeable.StakeStore memory stake) internal pure returns(uint256) {
     return Communis(COMM).getPayout(Communis.Stake(
       stake.stakeId,
       stake.stakedHearts,

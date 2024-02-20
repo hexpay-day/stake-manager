@@ -108,12 +108,15 @@ contract MaximusStakeManager is HSIStakeManager {
    * @param perpetual the perpetual to end a stake on
    * @param stakeId the stake id to end
    */
-  function stakeEndAs(address rewarded, address perpetual, uint256 stakeId) external payable {
+  function stakeEndAs(address rewarded, bool v2, address perpetual, uint256 stakeId) external payable {
     if (!_checkPerpetual(perpetual)) revert NotAllowed();
     PublicEndStakeable endable = PublicEndStakeable(perpetual);
     // STAKE_END_DAY is locked + staked days - 1 so > is correct in this case
     if (_checkEndable(endable)) {
       endable.mintHedron(ZERO, uint40(stakeId));
+      if (v2) {
+        endable.mintEndBonusCom(ZERO, uint40(stakeId));
+      }
       endable.endStakeHEX(ZERO, uint40(stakeId));
       // by now we have incremented by 1 since the start of this function
       uint256 currentPeriod = endable.getCurrentPeriod();

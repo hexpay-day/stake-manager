@@ -12,7 +12,7 @@ describe('MaximusStakeManager.sol', () => {
       const x = await loadFixture(utils.endOfBaseFixture)
       const [signerA] = x.signers
       const stake = await x.hex.stakeLists(x.base, 0)
-      await expect(x.maximusStakeManager.stakeEndAs(signerA.address, x.base, stake.stakeId))
+      await expect(x.maximusStakeManager.stakeEndAs(signerA.address, false, x.base, stake.stakeId))
         .to.emit(x.hex, 'StakeEnd')
         .withArgs(anyUint, utils.anyUintNoPenalty, x.base, stake.stakeId)
     })
@@ -20,21 +20,21 @@ describe('MaximusStakeManager.sol', () => {
       const x = await loadFixture(utils.endOfBaseFixtureOffset(1n))
       const [, signerB] = x.signers
       const stake = await x.hex.stakeLists(x.base, 0)
-      await expect(x.maximusStakeManager.stakeEndAs(signerB.address, x.base, stake.stakeId))
+      await expect(x.maximusStakeManager.stakeEndAs(signerB.address, false, x.base, stake.stakeId))
         .not.to.emit(x.hex, 'StakeEnd')
     })
     it('can only end perpetuals', async () => {
       const x = await loadFixture(utils.endOfBaseFixture)
       const [, signerB, signerC] = x.signers
       const stake = await x.hex.stakeLists(x.base, 0)
-      await expect(x.maximusStakeManager.stakeEndAs(signerB.address, signerC.address, stake.stakeId))
+      await expect(x.maximusStakeManager.stakeEndAs(signerB.address, false, signerC.address, stake.stakeId))
         .to.revertedWithCustomError(x.maximusStakeManager, 'NotAllowed')
     })
     it('can end the perpetual\'s stake and name any address as the rewards recipient', async () => {
       const x = await loadFixture(utils.endOfBaseFixture)
       const [, signerB] = x.signers
       const stake = await x.hex.stakeLists(x.base, 0)
-      await expect(x.maximusStakeManager.stakeEndAs(signerB.address, x.base, stake.stakeId))
+      await expect(x.maximusStakeManager.stakeEndAs(signerB.address, false, x.base, stake.stakeId))
         .to.emit(x.hex, 'StakeEnd')
         .withArgs(anyUint, utils.anyUintNoPenalty, x.base, stake.stakeId)
     })
@@ -42,14 +42,14 @@ describe('MaximusStakeManager.sol', () => {
       const x = await loadFixture(utils.endOfBaseFixture)
       const [signerA, , signerC] = x.signers
       const stake = await x.hex.stakeLists(x.base, 0)
-      await expect(x.maximusStakeManager.stakeEndAs(signerA.address, signerC.address, stake.stakeId))
+      await expect(x.maximusStakeManager.stakeEndAs(signerA.address, false, signerC.address, stake.stakeId))
         .to.revertedWithCustomError(x.maximusStakeManager, 'NotAllowed')
     })
     it('can collect rewards', async () => {
       const x = await loadFixture(utils.endOfBaseFixture)
       const [signerA, signerB, signerC] = x.signers
       const stake = await x.hex.stakeLists(x.base, 0)
-      await x.maximusStakeManager.stakeEndAs(signerA.address, x.base, stake.stakeId)
+      await x.maximusStakeManager.stakeEndAs(signerA.address, false, x.base, stake.stakeId)
       const currentPeriod = await x.publicEndStakeable.getCurrentPeriod()
       const oneEther = hre.ethers.parseEther('1')
       await signerC.sendTransaction({
@@ -119,7 +119,7 @@ describe('MaximusStakeManager.sol', () => {
         await x.hex.transfer(x.mockPerpetual.getAddress(), x.oneMillion / 10n)
         await x.mockPerpetual.startStakeHEX();
         await utils.moveForwardDays(2n, x) // we can now end the stake
-        const args = [signer1.address, x.mockPerpetual.getAddress(), x.nextStakeId] as const
+        const args = [signer1.address, false, x.mockPerpetual.getAddress(), x.nextStakeId] as const
         await expect(x.existingStakeManager.checkPerpetual.staticCall(x.mockPerpetual.getAddress()))
           .eventually.to.equal(false)
         await expect(x.existingStakeManager.stakeEndAs(...args))
