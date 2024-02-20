@@ -1,0 +1,674 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><link rel="canonical" href="https://docs.hexpay.day/api/UnderlyingStakeable/" />
+      <link rel="shortcut icon" href="../../img/favicon.ico" />
+    <title>UnderlyingStakeable - Stake Manager</title>
+    <link rel="stylesheet" href="../../css/theme.css" />
+    <link rel="stylesheet" href="../../css/theme_extra.css" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" />
+        <link href="../../extra.css" rel="stylesheet" />
+    
+      <script>
+        // Current page data
+        var mkdocs_page_name = "UnderlyingStakeable";
+        var mkdocs_page_input_path = "api/UnderlyingStakeable.md";
+        var mkdocs_page_url = "/api/UnderlyingStakeable/";
+      </script>
+    
+    <!--[if lt IE 9]>
+      <script src="../../js/html5shiv.min.js"></script>
+    <![endif]-->
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/languages/bash.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/languages/javascript.min.js"></script>
+      <script>hljs.highlightAll();</script> 
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+    <div class="wy-side-scroll">
+      <div class="wy-side-nav-search">
+          <a href="../..">
+          <img src="../../logo.jpeg" class="logo" alt="Logo"/>
+        </a><div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+      <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../..">Stake Manager</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../../Features/">Features</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../../ToughConversation/">ToughConversation</a>
+                </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Api</span></p>
+              <ul class="current">
+                  <li class="toctree-l1"><a class="reference internal" href="../AuthorizationManager/">AuthorizationManager</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../Bank/">Bank</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../CurrencyList/">CurrencyList</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../EarningsOracle/">EarningsOracle</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../EncodableSettings/">EncodableSettings</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../ExistingStakeManager/">ExistingStakeManager</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../GoodAccounting/">GoodAccounting</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../HSIStakeManager/">HSIStakeManager</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../IsolatedStakeManager/">IsolatedStakeManager</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../IsolatedStakeManagerFactory/">IsolatedStakeManagerFactory</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../Magnitude/">Magnitude</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../MaximusStakeManager/">MaximusStakeManager</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../MulticallExtension/">MulticallExtension</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../Ownable2Step/">Ownable2Step</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../SingletonCommunis/">SingletonCommunis</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../SingletonMintManager/">SingletonMintManager</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../StakeEnder/">StakeEnder</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../StakeInfo/">StakeInfo</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../StakeManager/">StakeManager</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../StakeStarter/">StakeStarter</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../Tipper/">Tipper</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../TransferableStakeManager/">TransferableStakeManager</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../UnderlyingStakeManager/">UnderlyingStakeManager</a>
+                  </li>
+                  <li class="toctree-l1 current"><a class="reference internal current" href="./">UnderlyingStakeable</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../Utils/">Utils</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="#">Interfaces</a>
+    <ul>
+                <li class="toctree-l2"><a class="reference internal" href="../interfaces/Communis/">Communis</a>
+                </li>
+                <li class="toctree-l2"><a class="reference internal" href="../interfaces/ExternalPerpetualFilter/">ExternalPerpetualFilter</a>
+                </li>
+                <li class="toctree-l2"><a class="reference internal" href="../interfaces/GasReimberser/">GasReimberser</a>
+                </li>
+                <li class="toctree-l2"><a class="reference internal" href="../interfaces/HEX/">HEX</a>
+                </li>
+                <li class="toctree-l2"><a class="reference internal" href="../interfaces/HEXStakeInstanceManager/">HEXStakeInstanceManager</a>
+                </li>
+                <li class="toctree-l2"><a class="reference internal" href="../interfaces/Hedron/">Hedron</a>
+                </li>
+                <li class="toctree-l2"><a class="reference internal" href="../interfaces/IUnderlyingStakeable/">IUnderlyingStakeable</a>
+                </li>
+                <li class="toctree-l2"><a class="reference internal" href="../interfaces/MaximusPerpetual/">MaximusPerpetual</a>
+                </li>
+                <li class="toctree-l2"><a class="reference internal" href="../interfaces/Multicall/">Multicall</a>
+                </li>
+                <li class="toctree-l2"><a class="reference internal" href="../interfaces/PublicEndStakeable/">PublicEndStakeable</a>
+                </li>
+                <li class="toctree-l2"><a class="reference internal" href="../interfaces/StakeReceiver/">StakeReceiver</a>
+                </li>
+    </ul>
+                  </li>
+              </ul>
+      </div>
+    </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+      <nav class="wy-nav-top" role="navigation" aria-label="Mobile navigation menu">
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../..">Stake Manager</a>
+        
+      </nav>
+      <div class="wy-nav-content">
+        <div class="rst-content"><div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../.." class="icon icon-home" aria-label="Docs"></a></li>
+          <li class="breadcrumb-item">Api</li>
+      <li class="breadcrumb-item active">UnderlyingStakeable</li>
+    <li class="wy-breadcrumbs-aside">
+    </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+            <div class="section" itemprop="articleBody">
+              
+                <h2 id="underlyingstakeable">UnderlyingStakeable</h2>
+<h3 id="_getstake">_getStake</h3>
+<pre><code class="language-solidity">function _getStake(address custodian, uint256 index) internal view virtual returns (struct IUnderlyingStakeable.StakeStore)
+</code></pre>
+<p>gets the stake store at the provided index</p>
+<h4 id="parameters">Parameters</h4>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>custodian</td>
+<td>address</td>
+<td>the custodian (usually this) whose list to check</td>
+</tr>
+<tr>
+<td>index</td>
+<td>uint256</td>
+<td>the index of the stake to get</td>
+</tr>
+</tbody>
+</table>
+<h4 id="return-values">Return Values</h4>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>[0]</td>
+<td>struct IUnderlyingStakeable.StakeStore</td>
+<td>the stake on the list at the provided index</td>
+</tr>
+</tbody>
+</table>
+<h3 id="stakecount">stakeCount</h3>
+<pre><code class="language-solidity">function stakeCount(address staker) external view returns (uint256 count)
+</code></pre>
+<p>the count of stakes for a given custodian / staker</p>
+<h4 id="parameters_1">Parameters</h4>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>staker</td>
+<td>address</td>
+<td>the custodian in question</td>
+</tr>
+</tbody>
+</table>
+<h4 id="return-values_1">Return Values</h4>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>count</td>
+<td>uint256</td>
+<td>of the stakes under a given custodian / staker</td>
+</tr>
+</tbody>
+</table>
+<h3 id="_stakecount">_stakeCount</h3>
+<pre><code class="language-solidity">function _stakeCount(address staker) internal view returns (uint256 count)
+</code></pre>
+<p>the count of stakes for a given custodian / staker</p>
+<h4 id="parameters_2">Parameters</h4>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>staker</td>
+<td>address</td>
+<td>the custodian in question</td>
+</tr>
+</tbody>
+</table>
+<h4 id="return-values_2">Return Values</h4>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>count</td>
+<td>uint256</td>
+<td>of the stakes under a given custodian / staker</td>
+</tr>
+</tbody>
+</table>
+<h3 id="_getstakecount">_getStakeCount</h3>
+<pre><code class="language-solidity">function _getStakeCount(address staker) internal view virtual returns (uint256 count)
+</code></pre>
+<h3 id="balanceof">balanceOf</h3>
+<pre><code class="language-solidity">function balanceOf(address owner) external view returns (uint256 amount)
+</code></pre>
+<p>retrieve the balance of a given owner</p>
+<h4 id="parameters_3">Parameters</h4>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>owner</td>
+<td>address</td>
+<td>the owner of the tokens</td>
+</tr>
+</tbody>
+</table>
+<h4 id="return-values_3">Return Values</h4>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>amount</td>
+<td>uint256</td>
+<td>a balance amount</td>
+</tr>
+</tbody>
+</table>
+<h3 id="_balanceof">_balanceOf</h3>
+<pre><code class="language-solidity">function _balanceOf(address owner) internal view returns (uint256 amount)
+</code></pre>
+<p>retrieve the balance of a given owner</p>
+<h4 id="parameters_4">Parameters</h4>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>owner</td>
+<td>address</td>
+<td>the owner of the tokens</td>
+</tr>
+</tbody>
+</table>
+<h4 id="return-values_4">Return Values</h4>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>amount</td>
+<td>uint256</td>
+<td>a balance amount</td>
+</tr>
+</tbody>
+</table>
+<h3 id="stakelists">stakeLists</h3>
+<pre><code class="language-solidity">function stakeLists(address staker, uint256 index) external view returns (struct IUnderlyingStakeable.StakeStore stake)
+</code></pre>
+<p>retrieve a stake at a staker's index given a staker address and an index</p>
+<h4 id="parameters_5">Parameters</h4>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>staker</td>
+<td>address</td>
+<td>the staker in question</td>
+</tr>
+<tr>
+<td>index</td>
+<td>uint256</td>
+<td>the index to focus on</td>
+</tr>
+</tbody>
+</table>
+<h4 id="return-values_5">Return Values</h4>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>stake</td>
+<td>struct IUnderlyingStakeable.StakeStore</td>
+<td>the stake custodied by a given staker at a given index</td>
+</tr>
+</tbody>
+</table>
+<h3 id="currentday">currentDay</h3>
+<pre><code class="language-solidity">function currentDay() external view returns (uint256 day)
+</code></pre>
+<p>retrieve the current day from the target contract</p>
+<h4 id="return-values_6">Return Values</h4>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>day</td>
+<td>uint256</td>
+<td>the current day according to the hex contract</td>
+</tr>
+</tbody>
+</table>
+<h3 id="_currentday">_currentDay</h3>
+<pre><code class="language-solidity">function _currentDay() internal view returns (uint256)
+</code></pre>
+<p>retrieve the current day from the target contract</p>
+<h4 id="return-values_7">Return Values</h4>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>[0]</td>
+<td>uint256</td>
+<td>day the current day according to the hex contract</td>
+</tr>
+</tbody>
+</table>
+<h3 id="isearlyending">isEarlyEnding</h3>
+<pre><code class="language-solidity">function isEarlyEnding(uint256 lockedDay, uint256 stakedDays, uint256 targetDay) external pure returns (bool isEarly)
+</code></pre>
+<p>check whether or not the stake is being ended early</p>
+<h4 id="parameters_6">Parameters</h4>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>lockedDay</td>
+<td>uint256</td>
+<td>the day after the stake was locked</td>
+</tr>
+<tr>
+<td>stakedDays</td>
+<td>uint256</td>
+<td>the number of days that the stake is locked</td>
+</tr>
+<tr>
+<td>targetDay</td>
+<td>uint256</td>
+<td>the day to check whether it will be categorized as ending early</td>
+</tr>
+</tbody>
+</table>
+<h4 id="return-values_8">Return Values</h4>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>isEarly</td>
+<td>bool</td>
+<td>the locked and staked days are greater than the target day (usually today)</td>
+</tr>
+</tbody>
+</table>
+<h3 id="_isearlyending">_isEarlyEnding</h3>
+<pre><code class="language-solidity">function _isEarlyEnding(uint256 lockedDay, uint256 stakedDays, uint256 targetDay) internal pure returns (bool isEarly)
+</code></pre>
+<p>check whether or not the stake is being ended early</p>
+<h4 id="parameters_7">Parameters</h4>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>lockedDay</td>
+<td>uint256</td>
+<td>the day after the stake was locked</td>
+</tr>
+<tr>
+<td>stakedDays</td>
+<td>uint256</td>
+<td>the number of days that the stake is locked</td>
+</tr>
+<tr>
+<td>targetDay</td>
+<td>uint256</td>
+<td>the day to check whether it will be categorized as ending early</td>
+</tr>
+</tbody>
+</table>
+<h4 id="return-values_9">Return Values</h4>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>isEarly</td>
+<td>bool</td>
+<td>the locked and staked days are greater than the target day (usually today)</td>
+</tr>
+</tbody>
+</table>
+<h3 id="stakestart">stakeStart</h3>
+<pre><code class="language-solidity">function stakeStart(uint256 newStakedHearts, uint256 newStakedDays) external virtual
+</code></pre>
+<p>starts a stake from the provided amount</p>
+<p><em>this method interface matches the original underlying token contract</em></p>
+<h4 id="parameters_8">Parameters</h4>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>newStakedHearts</td>
+<td>uint256</td>
+<td>amount of tokens to stake</td>
+</tr>
+<tr>
+<td>newStakedDays</td>
+<td>uint256</td>
+<td>the number of days for this new stake</td>
+</tr>
+</tbody>
+</table>
+<h3 id="stakeend">stakeEnd</h3>
+<pre><code class="language-solidity">function stakeEnd(uint256 stakeIndex, uint40 stakeId) external virtual
+</code></pre>
+<p>end your own stake which is custodied by the stake manager. skips tip computing
+this is not payable to match the underlying contract
+this moves funds back to the sender to make behavior match underlying token
+this method only checks that the sender owns the stake it does not care
+if it is managed in a created contract and externally endable by this contract (1)
+or requires that the staker send start and end methods (0)</p>
+<h4 id="parameters_9">Parameters</h4>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>stakeIndex</td>
+<td>uint256</td>
+<td>the index on the underlying contract to end stake</td>
+</tr>
+<tr>
+<td>stakeId</td>
+<td>uint40</td>
+<td>the stake id from the underlying contract to end stake</td>
+</tr>
+</tbody>
+</table>
+<h3 id="stakegoodaccounting">stakeGoodAccounting</h3>
+<pre><code class="language-solidity">function stakeGoodAccounting(address stakerAddr, uint256 stakeIndex, uint40 stakeIdParam) external virtual
+</code></pre>
+<p>freeze the progression of a stake to avoid penalties and preserve payout</p>
+<h4 id="parameters_10">Parameters</h4>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>stakerAddr</td>
+<td>address</td>
+<td>the custoidan of the stake</td>
+</tr>
+<tr>
+<td>stakeIndex</td>
+<td>uint256</td>
+<td>the index of the stake in question</td>
+</tr>
+<tr>
+<td>stakeIdParam</td>
+<td>uint40</td>
+<td>the id of the stake</td>
+</tr>
+</tbody>
+</table>
+              
+            </div>
+          </div><footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+  </div>
+
+  Built with <a href="https://www.mkdocs.org/">MkDocs</a> using a <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+          
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" aria-label="Versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    
+    
+      <span><a href="../UnderlyingStakeManager/" style="color: #fcfcfc">&laquo; Previous</a></span>
+    
+    
+      <span><a href="../Utils/" style="color: #fcfcfc">Next &raquo;</a></span>
+    
+  </span>
+</div>
+    <script src="../../js/jquery-3.6.0.min.js"></script>
+    <script>var base_url = "../..";</script>
+    <script src="../../js/theme_extra.js"></script>
+    <script src="../../js/theme.js"></script>
+      <script src="https://cdn.jsdelivr.net/npm/highlightjs-solidity@2.0.6/dist/solidity.min.js"></script>
+      <script src="../../search/main.js"></script>
+    <script>
+        jQuery(function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        });
+    </script>
+
+</body>
+</html>

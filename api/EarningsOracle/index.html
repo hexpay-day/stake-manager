@@ -1,0 +1,606 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><link rel="canonical" href="https://docs.hexpay.day/api/EarningsOracle/" />
+      <link rel="shortcut icon" href="../../img/favicon.ico" />
+    <title>EarningsOracle - Stake Manager</title>
+    <link rel="stylesheet" href="../../css/theme.css" />
+    <link rel="stylesheet" href="../../css/theme_extra.css" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" />
+        <link href="../../extra.css" rel="stylesheet" />
+    
+      <script>
+        // Current page data
+        var mkdocs_page_name = "EarningsOracle";
+        var mkdocs_page_input_path = "api/EarningsOracle.md";
+        var mkdocs_page_url = "/api/EarningsOracle/";
+      </script>
+    
+    <!--[if lt IE 9]>
+      <script src="../../js/html5shiv.min.js"></script>
+    <![endif]-->
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/languages/bash.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/languages/javascript.min.js"></script>
+      <script>hljs.highlightAll();</script> 
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+    <div class="wy-side-scroll">
+      <div class="wy-side-nav-search">
+          <a href="../..">
+          <img src="../../logo.jpeg" class="logo" alt="Logo"/>
+        </a><div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+      <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../..">Stake Manager</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../../Features/">Features</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../../ToughConversation/">ToughConversation</a>
+                </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Api</span></p>
+              <ul class="current">
+                  <li class="toctree-l1"><a class="reference internal" href="../AuthorizationManager/">AuthorizationManager</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../Bank/">Bank</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../CurrencyList/">CurrencyList</a>
+                  </li>
+                  <li class="toctree-l1 current"><a class="reference internal current" href="./">EarningsOracle</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../EncodableSettings/">EncodableSettings</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../ExistingStakeManager/">ExistingStakeManager</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../GoodAccounting/">GoodAccounting</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../HSIStakeManager/">HSIStakeManager</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../IsolatedStakeManager/">IsolatedStakeManager</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../IsolatedStakeManagerFactory/">IsolatedStakeManagerFactory</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../Magnitude/">Magnitude</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../MaximusStakeManager/">MaximusStakeManager</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../MulticallExtension/">MulticallExtension</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../Ownable2Step/">Ownable2Step</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../SingletonCommunis/">SingletonCommunis</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../SingletonMintManager/">SingletonMintManager</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../StakeEnder/">StakeEnder</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../StakeInfo/">StakeInfo</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../StakeManager/">StakeManager</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../StakeStarter/">StakeStarter</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../Tipper/">Tipper</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../TransferableStakeManager/">TransferableStakeManager</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../UnderlyingStakeManager/">UnderlyingStakeManager</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../UnderlyingStakeable/">UnderlyingStakeable</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../Utils/">Utils</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="#">Interfaces</a>
+    <ul>
+                <li class="toctree-l2"><a class="reference internal" href="../interfaces/Communis/">Communis</a>
+                </li>
+                <li class="toctree-l2"><a class="reference internal" href="../interfaces/ExternalPerpetualFilter/">ExternalPerpetualFilter</a>
+                </li>
+                <li class="toctree-l2"><a class="reference internal" href="../interfaces/GasReimberser/">GasReimberser</a>
+                </li>
+                <li class="toctree-l2"><a class="reference internal" href="../interfaces/HEX/">HEX</a>
+                </li>
+                <li class="toctree-l2"><a class="reference internal" href="../interfaces/HEXStakeInstanceManager/">HEXStakeInstanceManager</a>
+                </li>
+                <li class="toctree-l2"><a class="reference internal" href="../interfaces/Hedron/">Hedron</a>
+                </li>
+                <li class="toctree-l2"><a class="reference internal" href="../interfaces/IUnderlyingStakeable/">IUnderlyingStakeable</a>
+                </li>
+                <li class="toctree-l2"><a class="reference internal" href="../interfaces/MaximusPerpetual/">MaximusPerpetual</a>
+                </li>
+                <li class="toctree-l2"><a class="reference internal" href="../interfaces/Multicall/">Multicall</a>
+                </li>
+                <li class="toctree-l2"><a class="reference internal" href="../interfaces/PublicEndStakeable/">PublicEndStakeable</a>
+                </li>
+                <li class="toctree-l2"><a class="reference internal" href="../interfaces/StakeReceiver/">StakeReceiver</a>
+                </li>
+    </ul>
+                  </li>
+              </ul>
+      </div>
+    </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+      <nav class="wy-nav-top" role="navigation" aria-label="Mobile navigation menu">
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../..">Stake Manager</a>
+        
+      </nav>
+      <div class="wy-nav-content">
+        <div class="rst-content"><div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../.." class="icon icon-home" aria-label="Docs"></a></li>
+          <li class="breadcrumb-item">Api</li>
+      <li class="breadcrumb-item active">EarningsOracle</li>
+    <li class="wy-breadcrumbs-aside">
+    </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+            <div class="section" itemprop="articleBody">
+              
+                <h2 id="earningsoracle">EarningsOracle</h2>
+<h3 id="lastzeroday">lastZeroDay</h3>
+<pre><code class="language-solidity">uint256 lastZeroDay
+</code></pre>
+<h3 id="max_catch_up_days">MAX_CATCH_UP_DAYS</h3>
+<pre><code class="language-solidity">uint256 MAX_CATCH_UP_DAYS
+</code></pre>
+<p><em>this max constraint is very generous given that
+the sstore opcode costs ~20k gas at the time of writing</em></p>
+<h3 id="max_uint_128">MAX_UINT_128</h3>
+<pre><code class="language-solidity">uint256 MAX_UINT_128
+</code></pre>
+<h3 id="share_scale">SHARE_SCALE</h3>
+<pre><code class="language-solidity">uint256 SHARE_SCALE
+</code></pre>
+<h3 id="totals">totals</h3>
+<pre><code class="language-solidity">struct EarningsOracle.TotalStore[] totals
+</code></pre>
+<h3 id="totalstore">TotalStore</h3>
+<pre><code class="language-solidity">struct TotalStore {
+  uint128 payout;
+  uint128 shares;
+}
+</code></pre>
+<h3 id="total">Total</h3>
+<pre><code class="language-solidity">struct Total {
+  uint256 payout;
+  uint256 shares;
+}
+</code></pre>
+<h3 id="constructor">constructor</h3>
+<pre><code class="language-solidity">constructor(uint256 _lastZeroDay, uint256 untilDay) public
+</code></pre>
+<p>deploy contract and start collecting data immediately.
+pass 0 for untilDay arg to skip collection and start with nothing in payoutTotal array</p>
+<h4 id="parameters">Parameters</h4>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>_lastZeroDay</td>
+<td>uint256</td>
+<td>the final day to allow zero value (used to filter out empty values)</td>
+</tr>
+<tr>
+<td>untilDay</td>
+<td>uint256</td>
+<td>the day to end collection</td>
+</tr>
+</tbody>
+</table>
+<h3 id="totalscount">totalsCount</h3>
+<pre><code class="language-solidity">function totalsCount() external view returns (uint256)
+</code></pre>
+<p>the size of the payoutTotal array - correlates to days stored</p>
+<h4 id="return-values">Return Values</h4>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>[0]</td>
+<td>uint256</td>
+<td>the length of the totals list</td>
+</tr>
+</tbody>
+</table>
+<h3 id="payoutdelta">payoutDelta</h3>
+<pre><code class="language-solidity">function payoutDelta(uint256 startDay, uint256 untilDay) external view returns (uint256 payout, uint256 shares)
+</code></pre>
+<p>the delta between two days. untilDay argument must be greater
+than startDay argument otherwise call may fail</p>
+<h4 id="parameters_1">Parameters</h4>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>startDay</td>
+<td>uint256</td>
+<td>the day to start counting from</td>
+</tr>
+<tr>
+<td>untilDay</td>
+<td>uint256</td>
+<td>the day to end with (inclusive)</td>
+</tr>
+</tbody>
+</table>
+<h4 id="return-values_1">Return Values</h4>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>payout</td>
+<td>uint256</td>
+<td>the delta between start and until day payout</td>
+</tr>
+<tr>
+<td>shares</td>
+<td>uint256</td>
+<td>the delta between start and until day shares</td>
+</tr>
+</tbody>
+</table>
+<h3 id="payoutdeltatruncated">payoutDeltaTruncated</h3>
+<pre><code class="language-solidity">function payoutDeltaTruncated(uint256 lockedDay, uint256 stakedDays, uint256 shares) external view returns (uint256 payout)
+</code></pre>
+<p>multiply the difference of the payout by a constant and divide that result by the denominator
+subtract half of the difference between the two days to find the possible lower bound</p>
+<h4 id="parameters_2">Parameters</h4>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>lockedDay</td>
+<td>uint256</td>
+<td>the day that the stake was locked</td>
+</tr>
+<tr>
+<td>stakedDays</td>
+<td>uint256</td>
+<td>the number of days that the stake was locked</td>
+</tr>
+<tr>
+<td>shares</td>
+<td>uint256</td>
+<td>a number to multiply by the difference of the payout</td>
+</tr>
+</tbody>
+</table>
+<h4 id="return-values_2">Return Values</h4>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>payout</td>
+<td>uint256</td>
+<td>the amount estimated from shares and payout</td>
+</tr>
+</tbody>
+</table>
+<h3 id="_storeday">_storeDay</h3>
+<pre><code class="language-solidity">function _storeDay(uint256 day, struct EarningsOracle.Total _total) internal returns (struct EarningsOracle.Total total)
+</code></pre>
+<p>store the payout total for a given day. day must be the next day in the sequence (start with 0)
+day must have data available to read from the hex contract</p>
+<p><em>the _total arg must be handled internally - cannot be passed from external</em></p>
+<h4 id="parameters_3">Parameters</h4>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>day</td>
+<td>uint256</td>
+<td>the day being targeted</td>
+</tr>
+<tr>
+<td>_total</td>
+<td>struct EarningsOracle.Total</td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<h3 id="_readtotals">_readTotals</h3>
+<pre><code class="language-solidity">function _readTotals(uint256 day, struct EarningsOracle.Total _total) internal view returns (uint256 payout, uint256 shares)
+</code></pre>
+<h3 id="_saveday">_saveDay</h3>
+<pre><code class="language-solidity">function _saveDay(uint256 payout, uint256 shares) internal returns (struct EarningsOracle.Total total)
+</code></pre>
+<h3 id="storeday">storeDay</h3>
+<pre><code class="language-solidity">function storeDay(uint256 day) external payable returns (struct EarningsOracle.Total total)
+</code></pre>
+<p>store a singular day, only the next day in the sequence is allowed</p>
+<h4 id="parameters_4">Parameters</h4>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>day</td>
+<td>uint256</td>
+<td>the day to store</td>
+</tr>
+</tbody>
+</table>
+<h3 id="incrementday">incrementDay</h3>
+<pre><code class="language-solidity">function incrementDay() external payable returns (struct EarningsOracle.Total total, uint256 day)
+</code></pre>
+<p>checks the current day and increments the stored days if not yet covered</p>
+<h4 id="return-values_3">Return Values</h4>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>total</td>
+<td>struct EarningsOracle.Total</td>
+<td>the summed payout and shares values from last stored day</td>
+</tr>
+<tr>
+<td>day</td>
+<td>uint256</td>
+<td>the last stored day</td>
+</tr>
+</tbody>
+</table>
+<h3 id="_storedays">_storeDays</h3>
+<pre><code class="language-solidity">function _storeDays(uint256 startDay, uint256 untilDay) internal returns (struct EarningsOracle.Total total, uint256 day)
+</code></pre>
+<p>store a range of day payout information. untilDay is exclusive unless startDay and untilDay match</p>
+<h4 id="parameters_5">Parameters</h4>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>startDay</td>
+<td>uint256</td>
+<td>the day to start storing day information</td>
+</tr>
+<tr>
+<td>untilDay</td>
+<td>uint256</td>
+<td>the day to stop storing day information</td>
+</tr>
+</tbody>
+</table>
+<h4 id="return-values_4">Return Values</h4>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>total</td>
+<td>struct EarningsOracle.Total</td>
+<td>the summed payout and shares values from last stored day</td>
+</tr>
+<tr>
+<td>day</td>
+<td>uint256</td>
+<td>the last stored day</td>
+</tr>
+</tbody>
+</table>
+<h3 id="storedays">storeDays</h3>
+<pre><code class="language-solidity">function storeDays(uint256 startDay, uint256 untilDay) external payable returns (struct EarningsOracle.Total total, uint256 day)
+</code></pre>
+<p>store a range of day payout information. range is not constrained by max catch up days constant
+nor is it constrained to the current day so if it goes beyond the current day or has not yet been stored
+then it is subject to failure</p>
+<h4 id="parameters_6">Parameters</h4>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>startDay</td>
+<td>uint256</td>
+<td>the day to start storing day information</td>
+</tr>
+<tr>
+<td>untilDay</td>
+<td>uint256</td>
+<td>the day to stop storing day information. Until day is inclusive</td>
+</tr>
+</tbody>
+</table>
+<h4 id="return-values_5">Return Values</h4>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>total</td>
+<td>struct EarningsOracle.Total</td>
+<td>the summed payout and shares values from last stored day</td>
+</tr>
+<tr>
+<td>day</td>
+<td>uint256</td>
+<td>the last stored day</td>
+</tr>
+</tbody>
+</table>
+<h3 id="catchupdays">catchUpDays</h3>
+<pre><code class="language-solidity">function catchUpDays(uint256 iterations) external payable returns (struct EarningsOracle.Total total, uint256 day)
+</code></pre>
+<p>catch up the contract by reading up to 1_000 days of payout information at a time</p>
+<h4 id="parameters_7">Parameters</h4>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>iterations</td>
+<td>uint256</td>
+<td>the maximum number of days to iterate over - capped at 1_000 due to sload constraints</td>
+</tr>
+</tbody>
+</table>
+<h4 id="return-values_6">Return Values</h4>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>total</td>
+<td>struct EarningsOracle.Total</td>
+<td>the summed payout and shares values from last stored day</td>
+</tr>
+<tr>
+<td>day</td>
+<td>uint256</td>
+<td>the last stored day</td>
+</tr>
+</tbody>
+</table>
+<h3 id="_validatetotals">_validateTotals</h3>
+<pre><code class="language-solidity">function _validateTotals(uint256 payout, uint256 shares) internal pure virtual
+</code></pre>
+              
+            </div>
+          </div><footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+  </div>
+
+  Built with <a href="https://www.mkdocs.org/">MkDocs</a> using a <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+          
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" aria-label="Versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    
+    
+      <span><a href="../CurrencyList/" style="color: #fcfcfc">&laquo; Previous</a></span>
+    
+    
+      <span><a href="../EncodableSettings/" style="color: #fcfcfc">Next &raquo;</a></span>
+    
+  </span>
+</div>
+    <script src="../../js/jquery-3.6.0.min.js"></script>
+    <script>var base_url = "../..";</script>
+    <script src="../../js/theme_extra.js"></script>
+    <script src="../../js/theme.js"></script>
+      <script src="https://cdn.jsdelivr.net/npm/highlightjs-solidity@2.0.6/dist/solidity.min.js"></script>
+      <script src="../../search/main.js"></script>
+    <script>
+        jQuery(function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        });
+    </script>
+
+</body>
+</html>

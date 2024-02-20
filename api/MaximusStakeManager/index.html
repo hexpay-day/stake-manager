@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><link rel="canonical" href="https://docs.hexpay.day/api/MaximusStakeManager/" />
+      <link rel="shortcut icon" href="../../img/favicon.ico" />
+    <title>MaximusStakeManager - Stake Manager</title>
+    <link rel="stylesheet" href="../../css/theme.css" />
+    <link rel="stylesheet" href="../../css/theme_extra.css" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" />
+        <link href="../../extra.css" rel="stylesheet" />
+    
+      <script>
+        // Current page data
+        var mkdocs_page_name = "MaximusStakeManager";
+        var mkdocs_page_input_path = "api/MaximusStakeManager.md";
+        var mkdocs_page_url = "/api/MaximusStakeManager/";
+      </script>
+    
+    <!--[if lt IE 9]>
+      <script src="../../js/html5shiv.min.js"></script>
+    <![endif]-->
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/languages/bash.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/languages/javascript.min.js"></script>
+      <script>hljs.highlightAll();</script> 
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+    <div class="wy-side-scroll">
+      <div class="wy-side-nav-search">
+          <a href="../..">
+          <img src="../../logo.jpeg" class="logo" alt="Logo"/>
+        </a><div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+      <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../..">Stake Manager</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../../Features/">Features</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../../ToughConversation/">ToughConversation</a>
+                </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Api</span></p>
+              <ul class="current">
+                  <li class="toctree-l1"><a class="reference internal" href="../AuthorizationManager/">AuthorizationManager</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../Bank/">Bank</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../CurrencyList/">CurrencyList</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../EarningsOracle/">EarningsOracle</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../EncodableSettings/">EncodableSettings</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../ExistingStakeManager/">ExistingStakeManager</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../GoodAccounting/">GoodAccounting</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../HSIStakeManager/">HSIStakeManager</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../IsolatedStakeManager/">IsolatedStakeManager</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../IsolatedStakeManagerFactory/">IsolatedStakeManagerFactory</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../Magnitude/">Magnitude</a>
+                  </li>
+                  <li class="toctree-l1 current"><a class="reference internal current" href="./">MaximusStakeManager</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../MulticallExtension/">MulticallExtension</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../Ownable2Step/">Ownable2Step</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../SingletonCommunis/">SingletonCommunis</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../SingletonMintManager/">SingletonMintManager</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../StakeEnder/">StakeEnder</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../StakeInfo/">StakeInfo</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../StakeManager/">StakeManager</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../StakeStarter/">StakeStarter</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../Tipper/">Tipper</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../TransferableStakeManager/">TransferableStakeManager</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../UnderlyingStakeManager/">UnderlyingStakeManager</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../UnderlyingStakeable/">UnderlyingStakeable</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../Utils/">Utils</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="#">Interfaces</a>
+    <ul>
+                <li class="toctree-l2"><a class="reference internal" href="../interfaces/Communis/">Communis</a>
+                </li>
+                <li class="toctree-l2"><a class="reference internal" href="../interfaces/ExternalPerpetualFilter/">ExternalPerpetualFilter</a>
+                </li>
+                <li class="toctree-l2"><a class="reference internal" href="../interfaces/GasReimberser/">GasReimberser</a>
+                </li>
+                <li class="toctree-l2"><a class="reference internal" href="../interfaces/HEX/">HEX</a>
+                </li>
+                <li class="toctree-l2"><a class="reference internal" href="../interfaces/HEXStakeInstanceManager/">HEXStakeInstanceManager</a>
+                </li>
+                <li class="toctree-l2"><a class="reference internal" href="../interfaces/Hedron/">Hedron</a>
+                </li>
+                <li class="toctree-l2"><a class="reference internal" href="../interfaces/IUnderlyingStakeable/">IUnderlyingStakeable</a>
+                </li>
+                <li class="toctree-l2"><a class="reference internal" href="../interfaces/MaximusPerpetual/">MaximusPerpetual</a>
+                </li>
+                <li class="toctree-l2"><a class="reference internal" href="../interfaces/Multicall/">Multicall</a>
+                </li>
+                <li class="toctree-l2"><a class="reference internal" href="../interfaces/PublicEndStakeable/">PublicEndStakeable</a>
+                </li>
+                <li class="toctree-l2"><a class="reference internal" href="../interfaces/StakeReceiver/">StakeReceiver</a>
+                </li>
+    </ul>
+                  </li>
+              </ul>
+      </div>
+    </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+      <nav class="wy-nav-top" role="navigation" aria-label="Mobile navigation menu">
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../..">Stake Manager</a>
+        
+      </nav>
+      <div class="wy-nav-content">
+        <div class="rst-content"><div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../.." class="icon icon-home" aria-label="Docs"></a></li>
+          <li class="breadcrumb-item">Api</li>
+      <li class="breadcrumb-item active">MaximusStakeManager</li>
+    <li class="wy-breadcrumbs-aside">
+    </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+            <div class="section" itemprop="articleBody">
+              
+                <h2 id="maximusstakemanager">MaximusStakeManager</h2>
+<h3 id="externalperpetualsetter">externalPerpetualSetter</h3>
+<pre><code class="language-solidity">address externalPerpetualSetter
+</code></pre>
+<p>the address that can set the external
+perpetual filter contract address</p>
+<h3 id="externalperpetualfilter">externalPerpetualFilter</h3>
+<pre><code class="language-solidity">address externalPerpetualFilter
+</code></pre>
+<p>a contract to consult regarding whether or not
+a given address is a perpetual pool</p>
+<h3 id="perpetualwhitelist">perpetualWhitelist</h3>
+<pre><code class="language-solidity">mapping(address =&gt; bool) perpetualWhitelist
+</code></pre>
+<p>a whitelist for caching perpetual reads</p>
+<h3 id="rewardsto">rewardsTo</h3>
+<pre><code class="language-solidity">mapping(address =&gt; mapping(uint256 =&gt; address)) rewardsTo
+</code></pre>
+<p>bytes32 is a key made up of the perpetual whitelist address + the iteration of the stake found at</p>
+<h3 id="addperpetual">AddPerpetual</h3>
+<pre><code class="language-solidity">event AddPerpetual(address perpetual)
+</code></pre>
+<p>emitted when a contract is added to the whitelist</p>
+<h4 id="parameters">Parameters</h4>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>perpetual</td>
+<td>address</td>
+<td>the perpetual contract added to the whitelist</td>
+</tr>
+</tbody>
+</table>
+<h3 id="collectreward">CollectReward</h3>
+<pre><code class="language-solidity">event CollectReward(address perpetual, uint256 period, address token, uint256 amount)
+</code></pre>
+<p>collect a reward from a given perpetual within a period</p>
+<h4 id="parameters_1">Parameters</h4>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>perpetual</td>
+<td>address</td>
+<td>the perpetual contract being targeted</td>
+</tr>
+<tr>
+<td>period</td>
+<td>uint256</td>
+<td>the period, managed internally by the perpetual</td>
+</tr>
+<tr>
+<td>token</td>
+<td>address</td>
+<td>the token being rewarded</td>
+</tr>
+<tr>
+<td>amount</td>
+<td>uint256</td>
+<td>the amount of a token being rewarded</td>
+</tr>
+</tbody>
+</table>
+<h3 id="constructor">constructor</h3>
+<pre><code class="language-solidity">constructor() public
+</code></pre>
+<p>a list of known perpetual contracts is set during constructor</p>
+<h3 id="setexternalperpetualfilter">setExternalPerpetualFilter</h3>
+<pre><code class="language-solidity">function setExternalPerpetualFilter(address _externalPerpetualFilter) external payable
+</code></pre>
+<p>sets the extended perpetual filter to allow for other perpetual contracts
+to pass through the filter and added at a later date</p>
+<h4 id="parameters_2">Parameters</h4>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>_externalPerpetualFilter</td>
+<td>address</td>
+<td>the extended perpetual filter set by the creator of this contract</td>
+</tr>
+</tbody>
+</table>
+<h3 id="checkperpetual">checkPerpetual</h3>
+<pre><code class="language-solidity">function checkPerpetual(address perpetual) external payable returns (bool)
+</code></pre>
+<p>check if a given contract can pass through the perpetual filter</p>
+<h4 id="parameters_3">Parameters</h4>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>perpetual</td>
+<td>address</td>
+<td>the perpetual contract to check</td>
+</tr>
+</tbody>
+</table>
+<h4 id="return-values">Return Values</h4>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>[0]</td>
+<td>bool</td>
+<td>isPerpetual when address has passed through the filter or extended filter</td>
+</tr>
+</tbody>
+</table>
+<h3 id="_checkperpetual">_checkPerpetual</h3>
+<pre><code class="language-solidity">function _checkPerpetual(address perpetual) internal returns (bool)
+</code></pre>
+<p>check if a given contract can pass through the perpetual filter</p>
+<h4 id="parameters_4">Parameters</h4>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>perpetual</td>
+<td>address</td>
+<td>the perpetual contract to check</td>
+</tr>
+</tbody>
+</table>
+<h4 id="return-values_1">Return Values</h4>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>[0]</td>
+<td>bool</td>
+<td>isPerpetual when address has passed through the filter or extended filter after passing through extended filter, the result is cached</td>
+</tr>
+</tbody>
+</table>
+<h3 id="_addperpetual">_addPerpetual</h3>
+<pre><code class="language-solidity">function _addPerpetual(address perpetual) internal
+</code></pre>
+<p>adds new perpetual contract to the whitelist
+Once a perpetual is whitelisted it cannot be removed</p>
+<h4 id="parameters_5">Parameters</h4>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>perpetual</td>
+<td>address</td>
+<td>the perpetual address to add to the persistent mapping</td>
+</tr>
+</tbody>
+</table>
+<h3 id="stakeendas">stakeEndAs</h3>
+<pre><code class="language-solidity">function stakeEndAs(address rewarded, bool v2, address perpetual, uint256 stakeId) external payable
+</code></pre>
+<p>end a stake on a known perpetual</p>
+<h4 id="parameters_6">Parameters</h4>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>rewarded</td>
+<td>address</td>
+<td>the address to reward with tokens</td>
+</tr>
+<tr>
+<td>v2</td>
+<td>bool</td>
+<td></td>
+</tr>
+<tr>
+<td>perpetual</td>
+<td>address</td>
+<td>the perpetual to end a stake on</td>
+</tr>
+<tr>
+<td>stakeId</td>
+<td>uint256</td>
+<td>the stake id to end</td>
+</tr>
+</tbody>
+</table>
+<h3 id="_checkendable">_checkEndable</h3>
+<pre><code class="language-solidity">function _checkEndable(contract PublicEndStakeable endable) internal view returns (bool isEndable)
+</code></pre>
+<p>checks if a given perpetual is endable</p>
+<h4 id="parameters_7">Parameters</h4>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>endable</td>
+<td>contract PublicEndStakeable</td>
+<td>the endable perpetual contract</td>
+</tr>
+</tbody>
+</table>
+<h4 id="return-values_2">Return Values</h4>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>isEndable</td>
+<td>bool</td>
+<td>denotes whether or not the stake is endable</td>
+</tr>
+</tbody>
+</table>
+<h3 id="checkendable">checkEndable</h3>
+<pre><code class="language-solidity">function checkEndable(address endable) external view returns (bool)
+</code></pre>
+<p>checks if a given perpetual is endable</p>
+<h4 id="parameters_8">Parameters</h4>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>endable</td>
+<td>address</td>
+<td>the endable perpetual contract</td>
+</tr>
+</tbody>
+</table>
+<h4 id="return-values_3">Return Values</h4>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>[0]</td>
+<td>bool</td>
+<td>isEndable verifies that the provided address is endable</td>
+</tr>
+</tbody>
+</table>
+<h3 id="flush">flush</h3>
+<pre><code class="language-solidity">function flush(address gasReimberser, address perpetual, uint256 period, address[] tokens) external payable
+</code></pre>
+<p>flush erc20 tokens into this contract
+this assumes that only one token is flushed at a time
+accounting will be lost if this patterns is broken by distribution tokens
+or perpetual sending more than one token at a time</p>
+<p><em>this method should not be chained to a stake end - it should be done in a separate transaction</em></p>
+<h4 id="parameters_9">Parameters</h4>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>gasReimberser</td>
+<td>address</td>
+<td>the address to collect gas reimbursement from</td>
+</tr>
+<tr>
+<td>perpetual</td>
+<td>address</td>
+<td>the perpetual pool to call flush on</td>
+</tr>
+<tr>
+<td>period</td>
+<td>uint256</td>
+<td>the period that the token collects against</td>
+</tr>
+<tr>
+<td>tokens</td>
+<td>address[]</td>
+<td>the token addresses to flush into this contract</td>
+</tr>
+</tbody>
+</table>
+              
+            </div>
+          </div><footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+  </div>
+
+  Built with <a href="https://www.mkdocs.org/">MkDocs</a> using a <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+          
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" aria-label="Versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    
+    
+      <span><a href="../Magnitude/" style="color: #fcfcfc">&laquo; Previous</a></span>
+    
+    
+      <span><a href="../MulticallExtension/" style="color: #fcfcfc">Next &raquo;</a></span>
+    
+  </span>
+</div>
+    <script src="../../js/jquery-3.6.0.min.js"></script>
+    <script>var base_url = "../..";</script>
+    <script src="../../js/theme_extra.js"></script>
+    <script src="../../js/theme.js"></script>
+      <script src="https://cdn.jsdelivr.net/npm/highlightjs-solidity@2.0.6/dist/solidity.min.js"></script>
+      <script src="../../search/main.js"></script>
+    <script>
+        jQuery(function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        });
+    </script>
+
+</body>
+</html>

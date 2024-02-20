@@ -1,0 +1,861 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><link rel="canonical" href="https://docs.hexpay.day/api/Bank/" />
+      <link rel="shortcut icon" href="../../img/favicon.ico" />
+    <title>Bank - Stake Manager</title>
+    <link rel="stylesheet" href="../../css/theme.css" />
+    <link rel="stylesheet" href="../../css/theme_extra.css" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" />
+        <link href="../../extra.css" rel="stylesheet" />
+    
+      <script>
+        // Current page data
+        var mkdocs_page_name = "Bank";
+        var mkdocs_page_input_path = "api/Bank.md";
+        var mkdocs_page_url = "/api/Bank/";
+      </script>
+    
+    <!--[if lt IE 9]>
+      <script src="../../js/html5shiv.min.js"></script>
+    <![endif]-->
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/languages/bash.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/languages/javascript.min.js"></script>
+      <script>hljs.highlightAll();</script> 
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+    <div class="wy-side-scroll">
+      <div class="wy-side-nav-search">
+          <a href="../..">
+          <img src="../../logo.jpeg" class="logo" alt="Logo"/>
+        </a><div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+      <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../..">Stake Manager</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../../Features/">Features</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../../ToughConversation/">ToughConversation</a>
+                </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Api</span></p>
+              <ul class="current">
+                  <li class="toctree-l1"><a class="reference internal" href="../AuthorizationManager/">AuthorizationManager</a>
+                  </li>
+                  <li class="toctree-l1 current"><a class="reference internal current" href="./">Bank</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../CurrencyList/">CurrencyList</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../EarningsOracle/">EarningsOracle</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../EncodableSettings/">EncodableSettings</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../ExistingStakeManager/">ExistingStakeManager</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../GoodAccounting/">GoodAccounting</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../HSIStakeManager/">HSIStakeManager</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../IsolatedStakeManager/">IsolatedStakeManager</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../IsolatedStakeManagerFactory/">IsolatedStakeManagerFactory</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../Magnitude/">Magnitude</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../MaximusStakeManager/">MaximusStakeManager</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../MulticallExtension/">MulticallExtension</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../Ownable2Step/">Ownable2Step</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../SingletonCommunis/">SingletonCommunis</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../SingletonMintManager/">SingletonMintManager</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../StakeEnder/">StakeEnder</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../StakeInfo/">StakeInfo</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../StakeManager/">StakeManager</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../StakeStarter/">StakeStarter</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../Tipper/">Tipper</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../TransferableStakeManager/">TransferableStakeManager</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../UnderlyingStakeManager/">UnderlyingStakeManager</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../UnderlyingStakeable/">UnderlyingStakeable</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../Utils/">Utils</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="#">Interfaces</a>
+    <ul>
+                <li class="toctree-l2"><a class="reference internal" href="../interfaces/Communis/">Communis</a>
+                </li>
+                <li class="toctree-l2"><a class="reference internal" href="../interfaces/ExternalPerpetualFilter/">ExternalPerpetualFilter</a>
+                </li>
+                <li class="toctree-l2"><a class="reference internal" href="../interfaces/GasReimberser/">GasReimberser</a>
+                </li>
+                <li class="toctree-l2"><a class="reference internal" href="../interfaces/HEX/">HEX</a>
+                </li>
+                <li class="toctree-l2"><a class="reference internal" href="../interfaces/HEXStakeInstanceManager/">HEXStakeInstanceManager</a>
+                </li>
+                <li class="toctree-l2"><a class="reference internal" href="../interfaces/Hedron/">Hedron</a>
+                </li>
+                <li class="toctree-l2"><a class="reference internal" href="../interfaces/IUnderlyingStakeable/">IUnderlyingStakeable</a>
+                </li>
+                <li class="toctree-l2"><a class="reference internal" href="../interfaces/MaximusPerpetual/">MaximusPerpetual</a>
+                </li>
+                <li class="toctree-l2"><a class="reference internal" href="../interfaces/Multicall/">Multicall</a>
+                </li>
+                <li class="toctree-l2"><a class="reference internal" href="../interfaces/PublicEndStakeable/">PublicEndStakeable</a>
+                </li>
+                <li class="toctree-l2"><a class="reference internal" href="../interfaces/StakeReceiver/">StakeReceiver</a>
+                </li>
+    </ul>
+                  </li>
+              </ul>
+      </div>
+    </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+      <nav class="wy-nav-top" role="navigation" aria-label="Mobile navigation menu">
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../..">Stake Manager</a>
+        
+      </nav>
+      <div class="wy-nav-content">
+        <div class="rst-content"><div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../.." class="icon icon-home" aria-label="Docs"></a></li>
+          <li class="breadcrumb-item">Api</li>
+      <li class="breadcrumb-item active">Bank</li>
+    <li class="wy-breadcrumbs-aside">
+    </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+            <div class="section" itemprop="articleBody">
+              
+                <h2 id="bank">Bank</h2>
+<h3 id="collectunattributedtoken">CollectUnattributedToken</h3>
+<pre><code class="language-solidity">event CollectUnattributedToken(address token, address to, uint256 amount)
+</code></pre>
+<p>notes that a previously unattributed token has been
+collected and attributed to an address</p>
+<h4 id="parameters">Parameters</h4>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>token</td>
+<td>address</td>
+<td>the token that is being collected by the caller</td>
+</tr>
+<tr>
+<td>to</td>
+<td>address</td>
+<td>the address that the tokens are being attributed to</td>
+</tr>
+<tr>
+<td>amount</td>
+<td>uint256</td>
+<td>the number of tokens being collected for the to address</td>
+</tr>
+</tbody>
+</table>
+<h3 id="attributed">attributed</h3>
+<pre><code class="language-solidity">mapping(address =&gt; uint256) attributed
+</code></pre>
+<p>keeps a global mapping of attributed funds that the contract is custodying</p>
+<h3 id="withdrawablebalanceof">withdrawableBalanceOf</h3>
+<pre><code class="language-solidity">mapping(address =&gt; mapping(address =&gt; uint256)) withdrawableBalanceOf
+</code></pre>
+<p>keeps a mapping of the withdrawable funds that the contract is custodying
+the contract may also be custodying tips, but an amount held within
+a tip is not withdrawable so it cannot be held in this mapping</p>
+<h3 id="_getunattributed">_getUnattributed</h3>
+<pre><code class="language-solidity">function _getUnattributed(address token) internal view returns (uint256 amount)
+</code></pre>
+<p>gets unattributed tokens floating in the contract</p>
+<h4 id="parameters_1">Parameters</h4>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>token</td>
+<td>address</td>
+<td>the address of the token that you wish to get the unattributed value of</td>
+</tr>
+</tbody>
+</table>
+<h4 id="return-values">Return Values</h4>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>amount</td>
+<td>uint256</td>
+<td>representing the amount of tokens that have been deposited into the contract, which are not attributed to any address</td>
+</tr>
+</tbody>
+</table>
+<h3 id="_getbalance">_getBalance</h3>
+<pre><code class="language-solidity">function _getBalance(address token, address owner) internal view returns (uint256 amount)
+</code></pre>
+<p>get the balance and ownership of any token</p>
+<h4 id="parameters_2">Parameters</h4>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>token</td>
+<td>address</td>
+<td>the token address that you wish to get the balance of (including native)</td>
+</tr>
+<tr>
+<td>owner</td>
+<td>address</td>
+<td>the owner address to get the balance of</td>
+</tr>
+</tbody>
+</table>
+<h4 id="return-values_1">Return Values</h4>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>amount</td>
+<td>uint256</td>
+<td>of a balance custodied by this contract</td>
+</tr>
+</tbody>
+</table>
+<h3 id="getunattributed">getUnattributed</h3>
+<pre><code class="language-solidity">function getUnattributed(address token) external view returns (uint256 amount)
+</code></pre>
+<p>gets the amount of unattributed tokens</p>
+<h4 id="parameters_3">Parameters</h4>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>token</td>
+<td>address</td>
+<td>the token to get the unattributed balance of</td>
+</tr>
+</tbody>
+</table>
+<h4 id="return-values_2">Return Values</h4>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>amount</td>
+<td>uint256</td>
+<td>of a token that can be withdrawn</td>
+</tr>
+</tbody>
+</table>
+<h3 id="deposittoken">depositToken</h3>
+<pre><code class="language-solidity">function depositToken(address token, uint256 amount) external payable returns (uint256)
+</code></pre>
+<p>transfer a given number of tokens to the contract to be used by the contract's methods
+an extra layer of protection is provided by this method
+and can be refused by calling the dangerous version</p>
+<h4 id="parameters_4">Parameters</h4>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>token</td>
+<td>address</td>
+<td></td>
+</tr>
+<tr>
+<td>amount</td>
+<td>uint256</td>
+<td>the number of tokens to transfer to the contract</td>
+</tr>
+</tbody>
+</table>
+<h3 id="deposittokento">depositTokenTo</h3>
+<pre><code class="language-solidity">function depositTokenTo(address token, address to, uint256 amount) external payable returns (uint256)
+</code></pre>
+<p>deposit an amount of tokens to the contract and attribute
+them to the provided address</p>
+<h4 id="parameters_5">Parameters</h4>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>token</td>
+<td>address</td>
+<td></td>
+</tr>
+<tr>
+<td>to</td>
+<td>address</td>
+<td>the account to give ownership over tokens</td>
+</tr>
+<tr>
+<td>amount</td>
+<td>uint256</td>
+<td>the amount of tokens</td>
+</tr>
+</tbody>
+</table>
+<h3 id="_deposittokento">_depositTokenTo</h3>
+<pre><code class="language-solidity">function _depositTokenTo(address token, address to, uint256 amount) internal returns (uint256)
+</code></pre>
+<p>deposit a token to a given address - usually the transaction sender's</p>
+<h4 id="parameters_6">Parameters</h4>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>token</td>
+<td>address</td>
+<td>the token address being deposited</td>
+</tr>
+<tr>
+<td>to</td>
+<td>address</td>
+<td>the account to attribute tokens</td>
+</tr>
+<tr>
+<td>amount</td>
+<td>uint256</td>
+<td>the number of tokens to attribute</td>
+</tr>
+</tbody>
+</table>
+<h3 id="collectunattributed">collectUnattributed</h3>
+<pre><code class="language-solidity">function collectUnattributed(address token, bool transferOut, address to, uint256 amount) external payable returns (uint256)
+</code></pre>
+<p>collect unattributed tokens and send to recipient of choice
+when 0 is passed, withdraw maximum available
+or in other words, all unattributed tokens</p>
+<h4 id="parameters_7">Parameters</h4>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>token</td>
+<td>address</td>
+<td></td>
+</tr>
+<tr>
+<td>transferOut</td>
+<td>bool</td>
+<td>transfers tokens to the provided address</td>
+</tr>
+<tr>
+<td>to</td>
+<td>address</td>
+<td>the address to receive or have tokens attributed to</td>
+</tr>
+<tr>
+<td>amount</td>
+<td>uint256</td>
+<td>the requested amount - clamped to the amount unattributed</td>
+</tr>
+</tbody>
+</table>
+<h4 id="return-values_3">Return Values</h4>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>[0]</td>
+<td>uint256</td>
+<td>withdrawable the amount attributed to the to account</td>
+</tr>
+</tbody>
+</table>
+<h3 id="_collectunattributed">_collectUnattributed</h3>
+<pre><code class="language-solidity">function _collectUnattributed(address token, bool transferOut, address to, uint256 amount, uint256 max) internal returns (uint256 withdrawable)
+</code></pre>
+<p>collect any tokens that have a delta between balanceOf for this address
+and attributed (total) such that the difference can be withdrawn by anyone
+max param must be the unattributed delta
+or less to preserve correct accounting</p>
+<h4 id="parameters_8">Parameters</h4>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>token</td>
+<td>address</td>
+<td>the token to collect unattributed of</td>
+</tr>
+<tr>
+<td>transferOut</td>
+<td>bool</td>
+<td>should transfer out to the "to" address</td>
+</tr>
+<tr>
+<td>to</td>
+<td>address</td>
+<td>the address to attribute or transfer to</td>
+</tr>
+<tr>
+<td>amount</td>
+<td>uint256</td>
+<td>the number of tokens to attribute or transfer</td>
+</tr>
+<tr>
+<td>max</td>
+<td>uint256</td>
+<td>the maximum number of tokens that can be withdrawn</td>
+</tr>
+</tbody>
+</table>
+<h3 id="collectunattributedpercent">collectUnattributedPercent</h3>
+<pre><code class="language-solidity">function collectUnattributedPercent(address token, bool transferOut, address recipient, uint256 basisPoints) external payable returns (uint256 amount)
+</code></pre>
+<p>collect a number of unattributed tokens as basis points
+collecting unattributed percentages should
+be used before a blanket collection
+in order to reduce rounding errors</p>
+<p><em>please be sure to run blanket collect unattributed
+calls to collect any remaining tokens</em></p>
+<h4 id="parameters_9">Parameters</h4>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>token</td>
+<td>address</td>
+<td>the token that you wish to collect</td>
+</tr>
+<tr>
+<td>transferOut</td>
+<td>bool</td>
+<td>whether to transfer token out</td>
+</tr>
+<tr>
+<td>recipient</td>
+<td>address</td>
+<td>the recipient of the tokens</td>
+</tr>
+<tr>
+<td>basisPoints</td>
+<td>uint256</td>
+<td>the number of basis points (100% = 10_000)</td>
+</tr>
+</tbody>
+</table>
+<h4 id="return-values_4">Return Values</h4>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>amount</td>
+<td>uint256</td>
+<td>number of tokens attribued to the recipient</td>
+</tr>
+</tbody>
+</table>
+<h3 id="withdrawtokento">withdrawTokenTo</h3>
+<pre><code class="language-solidity">function withdrawTokenTo(address token, address to, uint256 amount) external payable returns (uint256)
+</code></pre>
+<p>transfer an amount of tokens currently attributed to the withdrawable balance of the sender</p>
+<h4 id="parameters_10">Parameters</h4>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>token</td>
+<td>address</td>
+<td>the token to transfer - uses address(0) for native</td>
+</tr>
+<tr>
+<td>to</td>
+<td>address</td>
+<td>the to of the funds</td>
+</tr>
+<tr>
+<td>amount</td>
+<td>uint256</td>
+<td>the amount that should be deducted from the sender's balance</td>
+</tr>
+</tbody>
+</table>
+<h4 id="return-values_5">Return Values</h4>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>[0]</td>
+<td>uint256</td>
+<td>the amount of tokens withdrawn</td>
+</tr>
+</tbody>
+</table>
+<h3 id="_gettokenbalance">_getTokenBalance</h3>
+<pre><code class="language-solidity">function _getTokenBalance(address token) internal view returns (uint256)
+</code></pre>
+<p>get the balance of a given token</p>
+<h4 id="parameters_11">Parameters</h4>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>token</td>
+<td>address</td>
+<td>the balance of a given token - 0x00 is ether</td>
+</tr>
+</tbody>
+</table>
+<h4 id="return-values_6">Return Values</h4>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>[0]</td>
+<td>uint256</td>
+<td>the balance of the given token</td>
+</tr>
+</tbody>
+</table>
+<h3 id="_addtotokenwithdrawable">_addToTokenWithdrawable</h3>
+<pre><code class="language-solidity">function _addToTokenWithdrawable(address token, address to, uint256 amount) internal
+</code></pre>
+<p>adds a balance to the provided staker of the magnitude given in amount</p>
+<h4 id="parameters_12">Parameters</h4>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>token</td>
+<td>address</td>
+<td>the token being accounted for</td>
+</tr>
+<tr>
+<td>to</td>
+<td>address</td>
+<td>the account to add a withdrawable balance to</td>
+</tr>
+<tr>
+<td>amount</td>
+<td>uint256</td>
+<td>the amount to add to the staker's withdrawable balance as well as the attributed tokens</td>
+</tr>
+</tbody>
+</table>
+<h3 id="_deductwithdrawable">_deductWithdrawable</h3>
+<pre><code class="language-solidity">function _deductWithdrawable(address token, address account, uint256 amount) internal returns (uint256 value)
+</code></pre>
+<p>deduce an amount from the provided account
+after a deduction, funds could be considered "unattributed"
+and if they are left in such a state they could be picked up by anyone else</p>
+<h4 id="parameters_13">Parameters</h4>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>token</td>
+<td>address</td>
+<td></td>
+</tr>
+<tr>
+<td>account</td>
+<td>address</td>
+<td>the account to deduct funds from</td>
+</tr>
+<tr>
+<td>amount</td>
+<td>uint256</td>
+<td>the amount of funds to deduct</td>
+</tr>
+</tbody>
+</table>
+<h3 id="_deposittokenfrom">_depositTokenFrom</h3>
+<pre><code class="language-solidity">function _depositTokenFrom(address token, address depositor, uint256 amount) internal returns (uint256 amnt)
+</code></pre>
+<p>deposits tokens from a staker and marks them for that staker</p>
+<h3 id="deposittokenunattributed">depositTokenUnattributed</h3>
+<pre><code class="language-solidity">function depositTokenUnattributed(address token, uint256 amount) external
+</code></pre>
+<p>deposit a number of tokens to the contract</p>
+<h4 id="parameters_14">Parameters</h4>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>token</td>
+<td>address</td>
+<td>the address of the token to deposit</td>
+</tr>
+<tr>
+<td>amount</td>
+<td>uint256</td>
+<td>the number of tokens to deposit</td>
+</tr>
+</tbody>
+</table>
+<h3 id="_withdrawtokento">_withdrawTokenTo</h3>
+<pre><code class="language-solidity">function _withdrawTokenTo(address token, address to, uint256 amount) internal
+</code></pre>
+<p>transfers tokens to a recipient</p>
+<h4 id="parameters_15">Parameters</h4>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>token</td>
+<td>address</td>
+<td></td>
+</tr>
+<tr>
+<td>to</td>
+<td>address</td>
+<td>where to send the tokens</td>
+</tr>
+<tr>
+<td>amount</td>
+<td>uint256</td>
+<td>the number of tokens to send</td>
+</tr>
+</tbody>
+</table>
+<h3 id="_attributefunds">_attributeFunds</h3>
+<pre><code class="language-solidity">function _attributeFunds(uint256 settings, address token, address staker, uint256 amount) internal
+</code></pre>
+<h4 id="parameters_16">Parameters</h4>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>settings</td>
+<td>uint256</td>
+<td>the settings to determine if a token should be withdrawn to the staker</td>
+</tr>
+<tr>
+<td>token</td>
+<td>address</td>
+<td>the token address currently being targeted</td>
+</tr>
+<tr>
+<td>staker</td>
+<td>address</td>
+<td>the staker address - this account will have access to tokens either to withdraw or by dint of having access to the key</td>
+</tr>
+<tr>
+<td>amount</td>
+<td>uint256</td>
+<td>the number of tokens to attribute or transfer</td>
+</tr>
+</tbody>
+</table>
+              
+            </div>
+          </div><footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+  </div>
+
+  Built with <a href="https://www.mkdocs.org/">MkDocs</a> using a <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+          
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" aria-label="Versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    
+    
+      <span><a href="../AuthorizationManager/" style="color: #fcfcfc">&laquo; Previous</a></span>
+    
+    
+      <span><a href="../CurrencyList/" style="color: #fcfcfc">Next &raquo;</a></span>
+    
+  </span>
+</div>
+    <script src="../../js/jquery-3.6.0.min.js"></script>
+    <script>var base_url = "../..";</script>
+    <script src="../../js/theme_extra.js"></script>
+    <script src="../../js/theme.js"></script>
+      <script src="https://cdn.jsdelivr.net/npm/highlightjs-solidity@2.0.6/dist/solidity.min.js"></script>
+      <script src="../../search/main.js"></script>
+    <script>
+        jQuery(function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        });
+    </script>
+
+</body>
+</html>

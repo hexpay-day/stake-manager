@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="description" content="None" /><link rel="canonical" href="https://docs.hexpay.day/" />
+      <link rel="shortcut icon" href="img/favicon.ico" />
+    <title>Stake Manager</title>
+    <link rel="stylesheet" href="css/theme.css" />
+    <link rel="stylesheet" href="css/theme_extra.css" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" />
+        <link href="extra.css" rel="stylesheet" />
+    
+      <script>
+        // Current page data
+        var mkdocs_page_name = "Stake Manager";
+        var mkdocs_page_input_path = "README.md";
+        var mkdocs_page_url = "/";
+      </script>
+    
+    <!--[if lt IE 9]>
+      <script src="js/html5shiv.min.js"></script>
+    <![endif]-->
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/languages/bash.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/languages/javascript.min.js"></script>
+      <script>hljs.highlightAll();</script> 
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+    <div class="wy-side-scroll">
+      <div class="wy-side-nav-search">
+          <a href=".">
+          <img src="logo.jpeg" class="logo" alt="Logo"/>
+        </a><div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="./search.html" method="get">
+      <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+                <li class="toctree-l1 current"><a class="reference internal current" href=".">Stake Manager</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="Features/">Features</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="ToughConversation/">ToughConversation</a>
+                </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Api</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="api/AuthorizationManager/">AuthorizationManager</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="api/Bank/">Bank</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="api/CurrencyList/">CurrencyList</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="api/EarningsOracle/">EarningsOracle</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="api/EncodableSettings/">EncodableSettings</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="api/ExistingStakeManager/">ExistingStakeManager</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="api/GoodAccounting/">GoodAccounting</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="api/HSIStakeManager/">HSIStakeManager</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="api/IsolatedStakeManager/">IsolatedStakeManager</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="api/IsolatedStakeManagerFactory/">IsolatedStakeManagerFactory</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="api/Magnitude/">Magnitude</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="api/MaximusStakeManager/">MaximusStakeManager</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="api/MulticallExtension/">MulticallExtension</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="api/Ownable2Step/">Ownable2Step</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="api/SingletonCommunis/">SingletonCommunis</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="api/SingletonMintManager/">SingletonMintManager</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="api/StakeEnder/">StakeEnder</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="api/StakeInfo/">StakeInfo</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="api/StakeManager/">StakeManager</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="api/StakeStarter/">StakeStarter</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="api/Tipper/">Tipper</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="api/TransferableStakeManager/">TransferableStakeManager</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="api/UnderlyingStakeManager/">UnderlyingStakeManager</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="api/UnderlyingStakeable/">UnderlyingStakeable</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="api/Utils/">Utils</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="#">Interfaces</a>
+    <ul>
+                <li class="toctree-l2"><a class="reference internal" href="api/interfaces/Communis/">Communis</a>
+                </li>
+                <li class="toctree-l2"><a class="reference internal" href="api/interfaces/ExternalPerpetualFilter/">ExternalPerpetualFilter</a>
+                </li>
+                <li class="toctree-l2"><a class="reference internal" href="api/interfaces/GasReimberser/">GasReimberser</a>
+                </li>
+                <li class="toctree-l2"><a class="reference internal" href="api/interfaces/HEX/">HEX</a>
+                </li>
+                <li class="toctree-l2"><a class="reference internal" href="api/interfaces/HEXStakeInstanceManager/">HEXStakeInstanceManager</a>
+                </li>
+                <li class="toctree-l2"><a class="reference internal" href="api/interfaces/Hedron/">Hedron</a>
+                </li>
+                <li class="toctree-l2"><a class="reference internal" href="api/interfaces/IUnderlyingStakeable/">IUnderlyingStakeable</a>
+                </li>
+                <li class="toctree-l2"><a class="reference internal" href="api/interfaces/MaximusPerpetual/">MaximusPerpetual</a>
+                </li>
+                <li class="toctree-l2"><a class="reference internal" href="api/interfaces/Multicall/">Multicall</a>
+                </li>
+                <li class="toctree-l2"><a class="reference internal" href="api/interfaces/PublicEndStakeable/">PublicEndStakeable</a>
+                </li>
+                <li class="toctree-l2"><a class="reference internal" href="api/interfaces/StakeReceiver/">StakeReceiver</a>
+                </li>
+    </ul>
+                  </li>
+              </ul>
+      </div>
+    </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+      <nav class="wy-nav-top" role="navigation" aria-label="Mobile navigation menu">
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href=".">Stake Manager</a>
+        
+      </nav>
+      <div class="wy-nav-content">
+        <div class="rst-content"><div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="." class="icon icon-home" aria-label="Docs"></a></li>
+      <li class="breadcrumb-item active">Stake Manager</li>
+    <li class="wy-breadcrumbs-aside">
+    </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+            <div class="section" itemprop="articleBody">
+              
+                <h1 id="stake-manager">Stake Manager</h1>
+<p><a href="https://github.com/hexpay-day/stake-manager/actions/workflows/test.yml"><img alt="Tests" src="https://github.com/hexpay-day/stake-manager/actions/workflows/test.yml/badge.svg" /></a>
+<a href="https://coveralls.io/github/hexpay-day/stake-manager?branch=master"><img alt="Coverage Status" src="https://coveralls.io/repos/github/hexpay-day/stake-manager/badge.svg?branch=master" /></a></p>
+<p>build the contracts</p>
+<pre><code class="language-bash">yarn run build
+</code></pre>
+<p><strong><em>NOTE: sometimes tests fail if your network connection is a little slow at the time and are running for the first time after a fresh install or deleting the cache</em></strong></p>
+<p>run tests</p>
+<pre><code class="language-bash">yarn run foundry:test
+yarn run test
+yarn run test --trace-error # with error traces
+</code></pre>
+<h3 id="verification">Verification</h3>
+<p>Verification should occur with git hash <code>f1180beb5322796abeaa5fd2371afb3f6a880d62</code> to have the correct bytecode for contract <code>0x209b1C66cB0Ea99DC2d4Ad13C35859DD1c258988</code> on Ethereum mainnet.</p>
+<h3 id="run-traces">Run Traces</h3>
+<pre><code class="language-bash">npx hardhat trace --hash 0xdeadbeef... # tx hash
+</code></pre>
+<h3 id="local-development">Local Development</h3>
+<p>to run a node locally, simply run</p>
+<pre><code class="language-bash">npx hardhat node
+</code></pre>
+<p>then, in another terminal, you can run the <code>local-development</code> script to fund your deploy mnemonic (env: <code>DEPLOY_MNEMONIC</code>)</p>
+<pre><code class="language-bash">./local-development
+</code></pre>
+<p>in the case of the hexpay.day developers, they may wish to provide the following series of envs and run the local development script as noted above in order to test in a browser</p>
+<pre><code class="language-bash"># where stakes will be ended / managed from
+TEST_ADDRESS=0xE971e07BF9917e91DFbeD9165f2ea8e6FF876880
+# where contracts will be deployed from
+# must be first address of `DEPLOY_MNEMONIC`
+DEPLOY_ADDRESS=0x73CaB6c9EDA8aBc28099aF9F5dBd100Aa998Ae72
+</code></pre>
+<h3 id="auditors">Auditors</h3>
+<p>The contracts that need to be reviewed are in the <code>contracts</code> folder and excludes the <code>interfaces</code> and <code>test</code> folders. The <code>reference</code> folder contains 3 contracts: <a href="https://etherscan.io/token/0x2b591e99afe9f32eaa6214f7b7629768c40eeb39#code">HEX.sol</a>, <a href="https://etherscan.io/token/0x3819f64f282bf135d62168c1e513280daf905e06#code">HEDRON</a> and <a href="https://etherscan.io/token/0x8bd3d1472a656e312e94fb1bbdd599b8c51d18e3#code">HSIM</a>, and <a href="https://etherscan.io/token/0x5A9780Bfe63f3ec57f01b087cD65BD656C9034A8#code">COMM</a>. The contracts folder is ~2400 sloc. The reference contract <a href="./reference/Hex.sol">HEX.sol</a> is ~1640 SLOC. The <a href="https://etherscan.io/token/0x3819f64f282bf135d62168c1e513280daf905e06#code">HEDRON</a> and <a href="https://etherscan.io/token/0x8bd3d1472a656e312e94fb1bbdd599b8c51d18e3#code">HSIM</a> contracts are ~2700 sloc combined. The <a href="./reference/Communis.sol">COMM</a> contract is ~1200 sloc.</p>
+<p>NOTE: the contracts in this repo do not care about any tokens except for the ones listed above and the <a href="https://github.com/hexpay-day/stake-manager/master/contracts/MaximusStakeManager.sol#L30-L34">maximus perpetuals</a> (custodial contract for a hex stake). That being said, it would be great if you familiarized yourself with the quirks of these 3 token contracts as they do break common practices.</p>
+<p>Metrics for the repo can be generated by running <code>yarn run metrics</code>.</p>
+<pre><code class="language-bash"># ethereum
+npx hardhat --network external write:existing:end-bundle:base --wait --mev
+# if the above command fails, then run
+npx hardhat --network external write:existing:end-bundle:base --wait
+
+# pulsechain
+npx hardhat --network external write:existing:end-bundle:base --wait
+</code></pre>
+              
+            </div>
+          </div><footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+  </div>
+
+  Built with <a href="https://www.mkdocs.org/">MkDocs</a> using a <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+          
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" aria-label="Versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    
+    
+    
+      <span><a href="Features/" style="color: #fcfcfc">Next &raquo;</a></span>
+    
+  </span>
+</div>
+    <script src="js/jquery-3.6.0.min.js"></script>
+    <script>var base_url = ".";</script>
+    <script src="js/theme_extra.js"></script>
+    <script src="js/theme.js"></script>
+      <script src="https://cdn.jsdelivr.net/npm/highlightjs-solidity@2.0.6/dist/solidity.min.js"></script>
+      <script src="search/main.js"></script>
+    <script>
+        jQuery(function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        });
+    </script>
+
+</body>
+</html>
+
+<!--
+MkDocs version : 1.5.3
+Build Date UTC : 2024-02-20 03:54:14.355988+00:00
+-->
