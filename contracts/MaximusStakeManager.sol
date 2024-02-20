@@ -69,7 +69,7 @@ contract MaximusStakeManager is HSIStakeManager {
    * @param perpetual the perpetual contract to check
    * @return isPerpetual when address has passed through the filter or extended filter
    */
-  function checkPerpetual(address perpetual) external payable returns(bool isPerpetual) {
+  function checkPerpetual(address perpetual) external payable returns(bool) {
     return _checkPerpetual({
       perpetual: perpetual
     });
@@ -80,7 +80,7 @@ contract MaximusStakeManager is HSIStakeManager {
    * @return isPerpetual when address has passed through the filter or extended filter
    * after passing through extended filter, the result is cached
    */
-  function _checkPerpetual(address perpetual) internal returns(bool isPerpetual) {
+  function _checkPerpetual(address perpetual) internal returns(bool) {
     if (perpetualWhitelist[perpetual]) return true;
     address _externalPerpetualFilter = externalPerpetualFilter;
     if (_externalPerpetualFilter == address(0)) return false;
@@ -120,10 +120,9 @@ contract MaximusStakeManager is HSIStakeManager {
       endable.endStakeHEX(ZERO, uint40(stakeId));
       // by now we have incremented by 1 since the start of this function
       uint256 currentPeriod = endable.getCurrentPeriod();
-      rewardsTo[perpetual][currentPeriod] = rewarded;
       // add 1 because the period will increment at the next stake start (1 week's time)
       // so this contract should also recognize that range until the end
-      rewardsTo[perpetual][currentPeriod + 1] = rewarded;
+      rewardsTo[perpetual][currentPeriod / 2] = rewarded;
     }
   }
   /**
@@ -141,7 +140,7 @@ contract MaximusStakeManager is HSIStakeManager {
    * @param endable the endable perpetual contract
    * @return isEndable verifies that the provided address is endable
    */
-  function checkEndable(address endable) external view returns(bool isEndable) {
+  function checkEndable(address endable) external view returns(bool) {
     return _checkEndable(PublicEndStakeable(endable));
   }
   /**
@@ -182,7 +181,7 @@ contract MaximusStakeManager is HSIStakeManager {
       bal = _getTokenBalance({
         token: token
       }) - bal;
-      address to = rewardsTo[perpetual][period];
+      address to = rewardsTo[perpetual][period / 2];
       emit CollectReward(perpetual, period, token, bal);
       _addToTokenWithdrawable({
         token: token,
