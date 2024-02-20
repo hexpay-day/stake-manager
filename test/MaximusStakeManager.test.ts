@@ -68,7 +68,7 @@ describe('MaximusStakeManager.sol', () => {
           [x.gasReimberser, x.maximusStakeManager, signerA],
           [oneEther * -1n, oneEther, 0],
         )
-      await expect(x.maximusStakeManager.rewardsTo(x.base, currentPeriod + 1n))
+      await expect(x.maximusStakeManager.rewardsTo(x.base, (currentPeriod + 1n) / 2n))
         .eventually.to.equal(signerA.address)
       await expect(x.maximusStakeManager.flush(x.gasReimberser.getAddress(), x.base, currentPeriod, [x.hex.getAddress()]))
         .changeTokenBalances(x.hex,
